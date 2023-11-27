@@ -1,0 +1,280 @@
+[
+    {
+        "id": "1jvEqBYnU2",
+        "forum": "Z8UfDs4J46",
+        "replyto": "Z8UfDs4J46",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_6hPB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_6hPB"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper focuses on the problem of sequential decision making with signal delay. \n\nThat means observations on the current state do not arrive immediately after an action is taken, but arrive several steps after. \n\nThis delay in signal effectively makes the problem a POMDP, even when the agent always observes the underlying environment state.  \n\nTthe authors propose the formalization for such setting, called delayed osbervation MDP, and show that in fact it is a special case of POMDP. \n\nWhile we can potentially see this kind of problem as a POMDP and use standard DRL algorithms for POMDPs, the authors argue and show that these algorithms struggle in such setting. \n\nAs the main contribution of this paper, several techniques are proposed to improve the performance of DRL algorithms, in particular, actor critic methods, in this setting. \n\nThese techniques mainly rely on using priviledged information, e.g., access to the true current state, during offline training to improve the learning of actor and critic. \n\nSpecifically, for the critic, the authors propose to condition the critic on the true current state instead of the history of observations or the current observation which might be the true state a few steps earlier during training. Because the critic is not used during inference or deployment, this approach is possible as long as we have access to the true states during training. \nFor the actor, the authors propose to add actions taken in the past to the inputs of the actor as this will provide useful information to help the actor to predict the true current state. \n\nExperiments are performed to test the effectiveness of these proposed techniques. To do so, the authors take SAC, a strong model-free baseline, and build upon it with the proposed techniques. Results show that these techniques are indeed generally useful, especially when the delay is longer."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "This is an interesting paper. \n\nIt looks at a problem that is somewhat ignored in the literature, indentifies the failure of existing algorithms, and proposes several techniques to improve the baselines, which are shown to be effective. \n\nMany baselines are considered and compared in the experiments."
+            },
+            "weaknesses": {
+                "value": "My biggest concern on this paper is that many of the proposed techniques, if not all, are not new, and the paper misses a large body of closely relevant works. In Section 4.1, the authors propose to condition the critic on the true current state (without delay) to improve learning. The idea of using priviledged information during training by conditioning the critic on the ground-truth state in actor critic methods has been widely explored by both the POMDP and MARL communities. For example, see [1] and [2] for the former case and [3] for the latter case. Section 4.1 basically describes a trivial application of this idea to DOMDPs, which are special cases of POMDPs. Furthermore, the authors mention that the efficay of such asymmetric architecture has been demonstrated by past previous studies. However, in [2], it has been shown that conditioning the critic (only) on the true state is fundamentally questionable as it leads to biased gradients. \n\nThen in Section 4.2, the authors propose to give the actor past actions to help it infer the state at the current step. I don't understand why is this not done by default. In my understanding, DOMDPs are POMDPs and in POMDPs, past actions and observations should always be given to the policy for optimal control. I don't see how this is an innovation. \n\nThe method that is proposed in Section 4.3 has also been explored for the general POMDP settings. For example, in [4,5,6], people have explored auxiliary losses (to predict the next observation, state, reward) for improving the representation learning of RNNs when learning optimal policies in POMDPs. \n\nIn the beginning of Section 3, baseline DRL methods are tested in delay signal settings and they are demonstrated to struggle in such a setting. Reasons are guessed for why they fail. However, I do not think that the failure of these baselines methods are studied well enough. I would like to see more ablation study on understanding how exactly they fail, which I believe will greatly help readers understand in what way DOMDPs are different to POMDPs and what are their unique challenges. Is it really due to the signal delay? Or like in general POMDPs, the RNNs cannot come up with good representations for decision making? For example, if these methods struggle to learn representations that support effective decision making, then one can test the accuracy of using these learned representations to predict the true current state. There are possible causes mentioned in paper but I find them rather vague and are not enough to motivate the proposed algorithmic changes. \n\nI also find lots of experimental details are missing from the paper, such as the architectures of networks, and the hyperparameters. Also, for the baselines, such as DDPG, TD3, SAC, are they also RNN based? It would be strange to use a non-recurrent baseline in a POMDP environment. And are the past actions passed to the actors in these baseline methods? Regarding hyperparameters, it would also be useful to know how are the hyperparameters tuned for each baseline and the proposed method to ensure fair comparison. \n\n[1] Baisero, Andrea, Brett Daley, and Christopher Amato. \"Asymmetric DQN for partially observable reinforcement learning.\" Uncertainty in Artificial Intelligence. PMLR, 2022.\n\n[2] Baisero, Andrea, and Christopher Amato. \"Unbiased Asymmetric Reinforcement Learning under Partial Observability.\" Proceedings of the 21st International Conference on Autonomous Agents and Multiagent Systems. 2022.\n\n[3] Foerster, Jakob, et al. \"Counterfactual multi-agent policy gradients.\" Proceedings of the AAAI conference on artificial intelligence. Vol. 32. No. 1. 2018.\n\n[4] Igl, Maximilian, et al. \"Deep variational reinforcement learning for POMDPs.\" International Conference on Machine Learning. PMLR, 2018.\n\n[5] Subramanian, Jayakumar, et al. \"Approximate information state for approximate planning and reinforcement learning in partially observed systems.\" The Journal of Machine Learning Research 23.1 (2022): 483-565.\n\n[6] Lambrechts, Gaspard, Adrien Bolland, and Damien Ernst. \"Informed POMDP: Leveraging Additional Information in Model-Based RL.\" arXiv preprint arXiv:2306.11488 (2023)."
+            },
+            "questions": {
+                "value": "In Figure 3, I find it weird to argue that baseline methods are failing by saying that there is a significant drop in performance from no delay to one-step delay. With different delay steps, we essentially have different POMDPs, which may inherently have different difficulty levels and different optimal performance. As such, the drop in performance I think is not sufficient to say the baseline methods are failing. However, a comparison to the optimal performance or performance from a better method would work. \n\nminor:\n- in Figure 3, colors correspond to delay lengths different in (d) than in other subplots. this can be confusing for readers."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Reviewer_6hPB"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3360/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698612124734,
+        "cdate": 1698612124734,
+        "tmdate": 1699636286103,
+        "mdate": 1699636286103,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xRguUdx8pw",
+        "forum": "Z8UfDs4J46",
+        "replyto": "Z8UfDs4J46",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_dZmE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_dZmE"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper considers the delay in MDP (e.g., inference delay, observation delay, action delay) and formulates Delayed-Observation MDP setting. Effective approach is proposed to deal with Delayed systems."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The studied problem is interesting and meaningful. Delayed systems in widely and well studied in control community, see [1] [2] for example. There are thousands of works addressing classic concerns such as system stability and safety. I would suggest the authors to survey and (briefly) compare more control papers in this field because control theory and reinforcement learning are highly related and share similar concerns.\n\n2. The experimental results are encouraging and promising.\n\n3. I think this paper is well-written and easy to follow and understand.\n\n\n[1] Richard, J.P., 2003. Time-delay systems: an overview of some recent advances and open problems. automatica, 39(10), pp.1667-1694.\n[2] Cacace, F., Germani, A. and Manes, C., 2010. An observer for a class of nonlinear systems with time varying observation delay. Systems & Control Letters, 59(5), pp.305-312."
+            },
+            "weaknesses": {
+                "value": "My main concern is the real-world application. Delayed systems investigation is motivated from the real systems, so I think the approach/theory developed for delayed systems should be examined through real-world experiments such as robotic, autonomous vehicles rather than just artificial simulations."
+            },
+            "questions": {
+                "value": "No question."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3360/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698806241176,
+        "cdate": 1698806241176,
+        "tmdate": 1699636286028,
+        "mdate": 1699636286028,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "iMLRdsURP8",
+        "forum": "Z8UfDs4J46",
+        "replyto": "Z8UfDs4J46",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_aPPk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_aPPk"
+        ],
+        "content": {
+            "summary": {
+                "value": "This study tackles a significant yet frequently underestimated issue in the integration of reinforcement learning agents into real-world applications: signal delay. The authors establish a formal framework for this problem by framing it as delayed-observation Markov decision processes. They then introduce a novel algorithm designed to effectively address this challenge. The empirical findings from experiments reveal that the proposed method consistently demonstrates strong performance, even in scenarios with multiple steps of signal delay. This research sheds light on a crucial aspect of reinforcement learning in practical settings, offering a promising solution for mitigating the impact of signal delays on agent performance."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Clarity and Readability: The manuscript is well written, making it easy for readers to comprehend the presented concepts and findings. The clear and coherent writing style enhances the accessibility of the research.\n\n2. Significant Problem Addressed: This paper takes on an important and frequently underestimated issue, which has often been overlooked in prior research. \n\n3. Impressive Performance: The achieved performance, when compared to conventional vanilla algorithms, is notably robust and impressive. This showcases the effectiveness and practicality of the proposed approach, making it a noteworthy contribution to the field."
+            },
+            "weaknesses": {
+                "value": "One potential weakness of the paper lies in its handling of experiments in a probabilistic state transition setting. While the study explores action space perturbation, such as sticky action and noisy action, it could benefit from a more comprehensive consideration of the stochasticity within the state space. This might involve scenarios with dynamic background images or robots with joint angular positions sampled from a normal distribution with high variance. Incorporating these additional sources of uncertainty would provide a more realistic and robust evaluation of the proposed algorithm's performance under varied conditions."
+            },
+            "questions": {
+                "value": "1. Could the performance of the method be further enhanced by considering advanced world models, like the one developed for model-based RL in Dreamer[1], as an alternative for the architecture of the state augmentation and prediction module?\n\n[1] Hafner, Danijar, et al. \"Mastering diverse domains through world models.\" arXiv preprint arXiv:2301.04104 (2023)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3360/Reviewer_aPPk"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3360/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699172341852,
+        "cdate": 1699172341852,
+        "tmdate": 1699636285850,
+        "mdate": 1699636285850,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "dLxjzkSqyk",
+        "forum": "Z8UfDs4J46",
+        "replyto": "Z8UfDs4J46",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_eRXT"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3360/Reviewer_eRXT"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors study the impact of signal delay in reinforcement learning problems. Their results show that even minor delays in receiving states can negatively impact the performance of various existing deep-learning algorithms. The authors formalize delay as the Delayed Observation Markov Decision Process and show theoretically grounded means to modify existing actor-critic algorithms to account for the delay. They propose augmenting the state with previous actions and consider conditioning on reconstructed observations at deployment. Their experiments suggest combining both techniques can mitigate the effects of signal delay."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Overall, the paper is well written. The authors succinctly characterize the issues of observation delay and motivate it thoroughly across various domains. Each section transitions well to the next and is accessible to readers. We appreciate the author's approach of formalizing the problem and then providing general solutions. Identifying a missing property in RL algorithms and generally applicable techniques is a good approach, and the performed experiments offer compelling evidence of their efficacy. We feel the authors do due diligence with their investigations to validate their solutions, and we appreciate them focusing on accessible solutions and ablating them in the paper."
+            },
+            "weaknesses": {
+                "value": "One issue with the paper is the proposed use of previous actions in the augmented state representation. Some previous work suggests, particularly for sequence models [1], that this can be problematic, and it seems the results may mean this is the case as the Transformer and RNN results seem to benefit less from the state augmentation approach, especially as the horizons increase. We consider this a future work that the authors might consider discussing. Theorem 4.1 might require a few additional words to emphasize whether the provided proof is from previous work, mainly as the authors cite a paper when talking about this theorem.\n\nAlthough we overall find the paper accessible, some parts could be better written or expand on important details. Specifics below:\n\n1.)  Section 3 could benefit from clarifying the experimental setup or informing the reader where to find such information, for example. Additional comments below:\n\n2.) Including the % error cap for Figure 3 d. Consider including information on the calculations for these are done. \n\n3.) Figure 4 needs to be clarified what the robot is observing. Perhaps some thought bubble or other intermediate object to distinguish where the robot is versus where it THINKS it might help if, for example, if s_t - \\Delta T is supposed to be the information the robot is currently making decisions from, that was unclear. \n\n4.) Consider moving Table 1 to the appendix and use plots to highlight trends the authors observed from the results. It's difficult to process and follow all the observations. \n\n5.) Figure 6 is a bit difficult to dissect the details of the work. I suggest adding additional annotations to plots to make it more transparent what each subplot visualizes.\n\n\nCitation:\n[1] Shaking the foundations: delusions in sequence models for interaction and control. Ortega et al. 2021."
+            },
+            "questions": {
+                "value": "1.) Aren't delayed rewards already accounted for via the value function? Consider removing this wording in the introduction or clarify that your research looks at delays in states, as we could not find a discussion on addressing delays in received rewards. \n2.) The transition probability in section 2.2 is confusing. The next state only transitions if s\u2019^{-t+ = s^{-t+1} and otherwise would return 0 if any states don't match. Is this correct, or a misunderstanding?\n3.) What were the parameters used in the experiments of Section 3? Including experimental details is reasonable for reproducibility. If they are in the appendix, please mention this in the section\n4.) What about including the time since the last received sample as a state feature?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3360/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699322723472,
+        "cdate": 1699322723472,
+        "tmdate": 1699636285782,
+        "mdate": 1699636285782,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

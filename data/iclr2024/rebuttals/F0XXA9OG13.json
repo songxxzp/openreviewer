@@ -1,0 +1,561 @@
+[
+    {
+        "title": "MediTab: Scaling Medical Tabular Data Predictors via Data Consolidation, Enrichment, and Refinement"
+    },
+    {
+        "review": {
+            "id": "xgnzn9c3QG",
+            "forum": "F0XXA9OG13",
+            "replyto": "F0XXA9OG13",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_bkYv"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_bkYv"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work proposes an approach for developing learning prediction models using heterogenous tabular data sources and schemas and across tasks. The approach relies on large language models to represent structured data in natural language as a common representation across contexts, aggregate datasets from like and unlike tasks and populations, and do zero and few-shot prediction. The approach is applied to several medical data (primarily clinical trials with some retrospective observational data). The approach generally outperforms fully-supervised baselines and further performs well in zero and few-shot settings."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "* The method appears to yield performant predictive models across datasets and tasks, and without requiring significant amounts of labeled target data. \n* The approach to representing and harmonizing structured data in natural language using LLMs is general and plausibly would continue to work well outside of the context evaluated in this work."
+                },
+                "weaknesses": {
+                    "value": "* I have several concerns related to clarity and lack of detail given to some important aspects of the methodology and experiments. These are elaborated on in the Questions section below.\n* The datasets chosen are relatively small and relatively low-dimensional (e.g. ~10s of fields at most). An area where this method might be useful is with tabular data of much greater dimensionality, as is typical in healthcare contexts."
+                },
+                "questions": {
+                    "value": "* How are the \u201cExternal Patient Databases\u201d used (MIMIC-IV and PMC-Patients)? Are they used as supplementary databases during the psuedolabeling step? \n* How is the MIMIC-IV data processed? The information in Table 1 that shows that there are only 2 categorical, 1 binary, and 1 numerical feature in MIMIC-IV. As MIMIC-IV is much richer (potentially thousands of features) it is unclear which components of the database are actually used and no details are provided.\n* In section 2.4, why is the initial model trained on all available training data from $T_1$ considered a multi-task model (designated by $f_{MTL}$)? If I understand correctly, this model is trained on one task, but several datasets.\n* The description of the psuedolabeling step is not entirely clear to me. Is the idea to take the initial model for the target task, make predictions for the target task on data collected for other tasks, and then use those predictions as pseudo-labels for further training? This seems peculiar because it is not clear that this should fundamentally improve performance for the target task given that the pseudo-labels are essentially just predictions of the target label derived from information in the target task database(s).\n* If available, it would be relevant to compare to baselines that pool over datasets with rule-based schema harmonization. For example, in the context of electronic health records and claims data, there are standards such as the OMOP Common Data Model that provide the means of mapping data from disparate sources to a shared schema.\n* An ablation experiment that removes the auditing steps (both the LLM sanity check and the Data Shapley checks) and the pseudolabeling step would help gain insight into the marginal value that they provide, especially as they are positioned as the novel methodological contributions of this work relative to TabLLM (if I understand correctly)."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission988/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission988/Reviewer_bkYv",
+                        "ICLR.cc/2024/Conference/Submission988/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission988/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698526565416,
+            "cdate": 1698526565416,
+            "tmdate": 1700517562790,
+            "mdate": 1700517562790,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "5a19b3xnRu",
+                "forum": "F0XXA9OG13",
+                "replyto": "xgnzn9c3QG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer bkYv (1/2)"
+                    },
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your valuable feedback! Here are our responses to each point in order:\n\n- How are the \u201cExternal Patient Databases\u201d used (MIMIC-IV and PMC-Patients)? Are they used as supplementary databases during the pseudo-labeling step?\n\nExactly! In Step 2, MediTab retrieves samples from external databases and tries to annotate and audit the samples to build a clean, augmented dataset. That data will then be involved in enhancing the training of MediTab to obtain better performances.\n\n- How is the MIMIC-IV data processed? \n\nTo simplify the setup, we use the simple baseline features of the patients, including their age and gender, and their clinical discharge notes as the external datasets to obtain shapley values and pseudolabels. \n\n- Is the idea to take the initial model for the target task, make predictions for the target task on data collected for other tasks, and then use those predictions as pseudo-labels for further training? \n\nYes you are correct! The model is trained on the same outcome prediction (predicting binary patient survival), and we refer to this as different tasks as they come from very different clinical trial datasets. We have clarified this in the text in section 2.2 step 1. We primarily use the pseudolabels to facilitate training the zero-shot (no access to the original data) and are not meant to improve the performance of the original supervised model. Thank you for pointing out this point, and we have clarified this in section 2.2 step 3."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434638052,
+                "cdate": 1700434638052,
+                "tmdate": 1700434667845,
+                "mdate": 1700434667845,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "CNPxJwGOqz",
+                "forum": "F0XXA9OG13",
+                "replyto": "xgnzn9c3QG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer bkYv (2/2)"
+                    },
+                    "comment": {
+                        "value": "- An ablation experiment that removes the auditing steps and the pseudolabeling step would help gain insight\n\nThis is a great point! We have added ablations regarding choice of downstream model (biobert vs clinicalbert vs bert), as well as further comparisons with TABLLM. We performed ablation on the percentile cutoff for the data-importance shapley score. \n\nData importance ablation (Please see the Appendix G Table 11 on page 29! ): after each percentile was calculated, a single epoch of training was performed to obtain the ROC-AUC and PR-AUC. We see that empirically, using the 50 percentile cutoff performs the best. A small cutoff allows in too many irrelevant examples, and a high cutoff may remove too much diversity from the data.\n\n| Trial Name        | Metric | 10\\%  | 25\\%  | 50\\%  | 90\\%  |\n|-------------------|--------|-------|-------|-------|-------|\n| Breast Cancer 1   | ROCAUC | 0.529 | 0.495 | 0.582 | 0.503 |\n|                   | PRAUC  | 0.086 | 0.082 | 0.083 | 0.080 |\n| Breast Cancer 2   | ROCAUC | 0.608 | 0.633 | 0.719 | 0.668 |\n|                   | PRAUC  | 0.065 | 0.288 | 0.168 | 0.326 |\n| Breast Cancer 3   | ROCAUC | 0.537 | 0.552 | 0.719 | 0.556 |\n|                   | PRAUC  | 0.348 | 0.338 | 0.357 | 0.337 |\n| Colorectal Cancer | ROCAUC | 0.558 | 0.567 | 0.636 | 0.557 |\n|                   | PRAUC  | 0.170 | 0.191 | 0.175 | 0.152 |\n| Lung Cancer 1     | ROCAUC | 0.426 | 0.384 | 0.684 | 0.355 |\n|                   | PRAUC  | 0.925 | 0.913 | 0.919 | 0.915 |\n| Lung Cancer 2     | ROCAUC | 0.499 | 0.534 | 0.660 | 0.496 |\n|                   | PRAUC  | 0.540 | 0.583 | 0.597 | 0.545 |\n| Lung Cancer 3     | ROCAUC | 0.571 | 0.536 | 0.857 | 0.357 |\n|                   | PRAUC  | 0.741 | 0.735 | 0.909 | 0.699 |\n\nDifferent serialization strategies ablation (Appendix G Table 10, page 28)\n\n|     Trial Name    | Metric | Simple Text | Praphrase | Audited Paraphrase |\n|:-----------------:|:------:|:-----------:|:---------:|:------------------:|\n|  Breast Cancer 1  | ROCAUC |    0.607    |   0.620   |        0.617       |\n|                   |  PRAUC |    0.098    |   0.107   |        0.105       |\n|  Breast Cancer 2  | ROCAUC |    0.753    |   0.753   |        0.876       |\n|                   |  PRAUC |    0.083    |   0.083   |        0.135       |\n|  Breast Cancer 3  | ROCAUC |    0.760    |   0.758   |        0.764       |\n|                   |  PRAUC |    0.452    |   0.481   |        0.476       |\n| Colorectal Cancer | ROCAUC |    0.695    |   0.691   |        0.705       |\n|                   |  PRAUC |    0.259    |   0.264   |        0.256       |\n|   Lung Cancer 1   | ROCAUC |    0.699    |   0.737   |        0.717       |\n|                   |  PRAUC |    0.975    |   0.979   |        0.972       |\n|   Lung Cancer 2   | ROCAUC |    0.699    |   0.697   |        0.716       |\n|                   |  PRAUC |    0.679    |   0.680   |        0.715       |\n|   Lung Cancer 3   | ROCAUC |    0.607    |   0.893   |        0.929       |\n|                   |  PRAUC |    0.697    |   0.957   |        0.968       |\n\n\nOur results indicated that the basic approach of using \"column name: column value,\" similar to what's demonstrated in TabLLM, was effective. However, we also observed that enhancing this format with paraphrased examples led to better performance. Furthermore, we find that audited examples improve performance the most. We believe that this performance benefit is useful and serves to justify our usage of more advanced paraphrasing and auditing techniques to address our points of addressing model hallucinations and data augmentation.\n\nWe hope that these revisions help address some of your concerns regarding the paper, and look forward to further discussion!"
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434659629,
+                "cdate": 1700434659629,
+                "tmdate": 1700614348674,
+                "mdate": 1700614348674,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "jLgc88n2dI",
+                "forum": "F0XXA9OG13",
+                "replyto": "CNPxJwGOqz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_bkYv"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_bkYv"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the clarification and running those additional ablation studies. \n\nI am planning to keep my overall score of 6 (weak accept) the same and increase my presentation sub-score to 3.\n\nI generally agree with reviewer R9Te that the ability for MediTab to leverage information from multiple training datasets and tasks (i.e. multiple \"domains\") to a plausible explanation for its performance improvement over baselines. To be clear, I don't consider this to be a weakness. However, if this hypothesis were to be tested, it's important to evaluate against other approaches to leveraging data from multiple disparate datasets.\n\nA couple of follow-up questions:\n  * How should we interpret the low performance across board for the data importance ablation? Is this just because only one epoch of training was performed? Given the large difference in performance between these results and those reported elsewhere in the paper, do you expect those results to be informative in terms of selecting the best threshold?\n  * Could you please add the description of the variables selected for each dataset to the paper, including MIMIC-IV, so that the procedure could be reproduced."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700517527754,
+                "cdate": 1700517527754,
+                "tmdate": 1700517527754,
+                "mdate": 1700517527754,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "DZBAvGIDc9",
+            "forum": "F0XXA9OG13",
+            "replyto": "F0XXA9OG13",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The manuscript proposes a framework utilizing LLM to perform alignment between different datasets for the same and different tasks. The framework prompts ChatGPT to summarize each row in a table into text and utilizes BioBERT as a classification model that takes text as input. Moreover, it trains an init model to annotate data from datasets of other tasks and clean such data with Shapley scores into supplementary data samples."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "- The paper is well-written and easy to follow."
+                },
+                "weaknesses": {
+                    "value": "- The framework is quite straightforward, and there is not much technical contribution. It is mostly a combination of multiple existing models. And the idea of transferring tabular data into text is not novel at all. There are a bunch of existing works [1][2][3], including one of their baselines TabLLM[4]. The further incorporation of text information from samples from other datasets is just one trivial step forward. Furthermore, [4] actually proved that a template for transferring the tabular data works better than an LLM. Yet, in this paper, there is no comparison for such serialization methods.\n\n- The author didn\u2019t specify what exact features are included in these experimental datasets. Also, it is unclear how many columns are overlapped between different datasets. Yet, if there is a large portion of feature overlapping, maybe simple concatenation and removing or recoding of the missing columns will work just as well. There is no discussion regarding this whatsoever.\n\n- The step 2 in section 2.2 is confusing:\n    - The authors claimed that they used active learning in step 2. Is the \u201cactive learning pipeline\u201d method the same as traditional active learning that select informative samples to label? If not, the description can mislead the readers.\n    - The authors claimed that they cleaned supplementary dataset T_{1, sup} with a data audit module based on data Shapley scores. More experiments are expected to demonstrate the effectiveness of the audit module. Moreover, it would be better if the authors conducted more ablation studies to show whether the supplementary dataset improve the prediction performance. \n\n- The datasets in Table 1 contain less than 3000 patients. It is very easy for the LLMs (e.g., BioBERT) to overfit the training set. It is unclear how the authors prevent overfitting during the fine-tuning phase.\n\n- In Table 3, the proposed MediTab exhibits the capability to access multiple datasets during its training, in contrast to the other baseline models, which are constrained to employing a single dataset. This discrepancy in data utilization introduces an element of unfairness in the comparison. It would be more appropriate to conduct a comparison against models that have undergone training on multiple datasets. For instance, TabLLM, being a large language model, can readily undertake multi-dataset training with minor adjustments to its data preprocessing procedures. Therefore, a more equitable comparison would involve evaluating MediTab and TabLLM under identical conditions, both in the context of training on a single dataset and across multiple datasets. \n\n- Most medical data, like MIMIC-IV, includes timestamp information of the patients\u2019 multiple visits or collections. This framework completely ignores this part of the medical data, which limits their application to real-world clinical environments.\n\nReference:\n1. Bertsimas, Dimitris & Carballo, Kimberly & Ma, Yu & Na, Liangyuan & Boussioux, L\u00e9onard & Zeng, Cynthia & Soenksen, Luis & Fuentes, Ignacio. (2022). TabText: a Systematic Approach to Aggregate Knowledge Across Tabular Data Structures. 10.48550/arXiv.2206.10381.\n2. Yin, Pengcheng & Neubig, Graham & Yih, Wen-tau & Riedel, Sebastian. TaBERT: Pretraining for Joint Understanding of Textual and Tabular Data. ACL 2020.\n3. Li, Y., Li, J., Suhara, Y., Doan, A., and Tan, W.-C. (2020). Deep entity matching with pre-trained language models. Proc. VLDB Endow., 14(1):50\u201360.\n4. Stefan Hegselmann, Alejandro Buendia, Hunter Lang, Monica Agrawal, Xiaoyi Jiang, and David Sontag. Tabllm: Few-shot classification of tabular data with large language models. arXiv preprint arXiv:2210.10723, 2022."
+                },
+                "questions": {
+                    "value": "1. All questions in the above section.\n\n2. Are there any overlaps of columns between the tabular data for the same tasks? Is it hard to do a simple concatenation? What\u2019s the traditional method for dealing with the missing columns? Are they applicable to this situation?\n\n3. For the choice of BioBERT and the QA model for salinity check, the author did not provide a reason for choosing these models."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission988/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698806529740,
+            "cdate": 1698806529740,
+            "tmdate": 1699636024741,
+            "mdate": 1699636024741,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "FFBqOodEqa",
+                "forum": "F0XXA9OG13",
+                "replyto": "DZBAvGIDc9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer R9Te (1/3)"
+                    },
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your valuable feedback! Here are our responses to each point in order:\n\n- The framework is quite straightforward..\n\nThanks for pointing out the potential confusion about the difference between our method and previous papers. In TabLLM [1], the authors explore a suite of serialization strategies on nine public tabular prediction datasets and find the text template method works the best, better than the table-to-text variant. However, we would like to highlight that we propose two important aspects for the serialization:\n\nWe account for the potential *errors* (or *hallucinations*) that may occur during the table-to-text translation process (called *paraphrasing* in this paper), which we found to undermine the performance of the models because wrong information or noises are added to the translated data. We propose a new *auditing* process to control this type of error.\nWe also propose to distill the knowledge from large language models by augmenting the tabular data in this serialization process via multiple paraphrasing. \n\nEmpirically, we found that both the above two aspects are crucial to the superior performance of MediTab, as shown in the table added to Appendix G Table 10, page 27:\n\n|     Trial Name    | Metric | Simple Text | Praphrase | Audited Paraphrase |\n|:-----------------:|:------:|:-----------:|:---------:|:------------------:|\n|  Breast Cancer 1  | ROCAUC |    0.607    |   0.620   |        0.617       |\n|                   |  PRAUC |    0.098    |   0.107   |        0.105       |\n|  Breast Cancer 2  | ROCAUC |    0.753    |   0.753   |        0.876       |\n|                   |  PRAUC |    0.083    |   0.083   |        0.135       |\n|  Breast Cancer 3  | ROCAUC |    0.760    |   0.758   |        0.764       |\n|                   |  PRAUC |    0.452    |   0.481   |        0.476       |\n| Colorectal Cancer | ROCAUC |    0.695    |   0.691   |        0.705       |\n|                   |  PRAUC |    0.259    |   0.264   |        0.256       |\n|   Lung Cancer 1   | ROCAUC |    0.699    |   0.737   |        0.717       |\n|                   |  PRAUC |    0.975    |   0.979   |        0.972       |\n|   Lung Cancer 2   | ROCAUC |    0.699    |   0.697   |        0.716       |\n|                   |  PRAUC |    0.679    |   0.680   |        0.715       |\n|   Lung Cancer 3   | ROCAUC |    0.607    |   0.893   |        0.929       |\n|                   |  PRAUC |    0.697    |   0.957   |        0.968       |\n\n\nThis work builds upon TabLLM by including data auditing of the paraphrased results as well as using external datasets for medical tabular prediction. \n\nOur results indicated that the basic approach of using \"column name: column value,\" similar to what's demonstrated in TabLLM, was effective. However, we also observed that enhancing this format with paraphrased examples led to better performance. Furthermore, we find that audited examples improve performance the most. We believe that this performance benefit is useful and serves to justify our usage of more advanced paraphrasing and auditing techniques to address our first 2 points of addressing model hallucinations and data augmentation.\n\n[1] Hegselmann S, Buendia A, Lang H, et al. Tabllm: Few-shot classification of tabular data with large language models[C]//International Conference on Artificial Intelligence and Statistics. PMLR, 2023: 5549-5581.\n\n\n- The author didn\u2019t specify what exact features are included in these experimental datasets\u2026\n\nWe have added more information regarding the dataset columns in Table 5, Appendix C.2, Page 17 and a discussion. \n\n|     Trial Name    | # Vars Shared | # Vars Total |\n|:-----------------:|:-------------:|:------------:|\n|  Breast Cancer 1  |       4       |      15      |\n|  Breast Cancer 2  |       15      |      48      |\n|  Breast Cancer 3  |       7       |      18      |\n| Colorectal Cancer |       5       |      16      |\n|   Lung Cancer 1   |       1       |      17      |\n|   Lung Cancer 2   |       6       |      41      |\n|   Lung Cancer 3   |       7       |      26      |\n\nThe columns are all quite diverse in terms of semantic meaning, and we believe that traditional methods like data imputation or renaming/removing would not apply here, as we have fundamentally different features. \n\n- Is the \u201cactive learning pipeline\u201d method the same as traditional active learning that select informative samples to label? \n\nThank you for pointing this out! Step 2 (Page 3) in the pipeline is conceptually similar to the active learning process. First, the model retrieves samples from other datasets that have different target variables to predict. Second, the model annotates the retrieved samples to build a noisy-label dataset. Third, the model runs the data audit process to select the samples that are most likely to be annotated correctly. Nonetheless, we agree that this was not the best choice of wording and have rephrased the sentence."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434324033,
+                "cdate": 1700434324033,
+                "tmdate": 1700434360509,
+                "mdate": 1700434360509,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "AyA2b4LbJR",
+                "forum": "F0XXA9OG13",
+                "replyto": "DZBAvGIDc9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Kindly reminder of the end of the rebuttal period"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer R9Te,\n\nAs the discussion period is coming to an end tomorrow, we kindly ask you to review our response to your comments and let us know if you have any further queries. Alternatively, if you could raise the score of the paper, we would be extremely grateful. We eagerly anticipate your response and are committed to addressing any remaining concerns before the discussion period concludes.\n\nBest regards,\n\nAuthors"
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700616163052,
+                "cdate": 1700616163052,
+                "tmdate": 1700616163052,
+                "mdate": 1700616163052,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "vspaqLxiBm",
+                "forum": "F0XXA9OG13",
+                "replyto": "AyA2b4LbJR",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your response and the appended experiments.\n- The main contribution of the paper is the proposed audit paraphrase. The authors sent patients\u2019 data to LLM (OpenAI\u2019s API) to generate text, which raises the increased risk of patient data leakage. Is this allowed by the Cancer Research Platform DUA? (Physionet prohibits sharing access to the data with third parties, including sending it through APIs provided by companies like OpenAI - https://physionet.org/news/post/415) Moreover, the model cannot handle the temporal nature of clinical tabular data, which significantly limits its applications to real clinical environments.\n- It is unclear whether the authors use the validation dataset (e.g., in Table 1, 2). What does it mean \u201ctraining and validating the best model on training data\u201d in Section 2.5? How did the authors determine that 3 epochs for pretraining and 1 epoch for finetuning were optimal without validation sets? Are the optimal number of epochs the same in various tasks? How to use the model (e.g., to find the best number of epochs for pretraining and finetuning) for new datasets and tasks?\n- The inconsistency in generated texts from multiple runs with LLM raises concerns about its impact on model output. Experimentation results (e.g., in Table 3, 4) are expected to exhibit standard deviations. Additionally, it would be beneficial for the authors to verify whether the model predicts consistent risks for different texts generated from the same patients.\n- Besides, it is very straightforward to apply TabLLM to multiple dataset settings. For instance, representing each patient's data as text and utilizing TabLLM for training and testing is a straightforward process, independent of the dataset source. It would be better if the authors compared MediTab with TabLLM in the same settings (i.e., with multiple datasets during training).\n- \u201cActive learning\u201d still appears in Figure 1 of the updated version.\n\nOverall, the paper can still be further improved and I will keep my score."
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700620039316,
+                "cdate": 1700620039316,
+                "tmdate": 1700620039316,
+                "mdate": 1700620039316,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "UpwFV70WS2",
+                "forum": "F0XXA9OG13",
+                "replyto": "U2r6rya8Xt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_R9Te"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your response.\n- I am still not very clear about the implementation of this work. What do \"synthetic patient trial samples\" refer to? Is this work conducted on real patient data or synthetic patient data? How to generate text based on the patients' data if the raw data are not sent to OpenAI\u2019s API?\n- About the main contribution - What is the main difference between TabLLM (Multisource) and MediTab (Simple Text)? When removing paraphrasing and audit paraphrasing in MediTab, is the model similar to TabLLM (Multisource)? If yes, why does the model performance vary a lot (for example, TabLLM (Multisource): 0.610 in Table 3 and MediTab (Simple Text): 0.760 in Table 10 on AUROC for Breast Cancer 3 dataset)?\n- For the learning part - directing using 3 epochs for training and 1 epoch for finetuning is not rigorous, especially for those baselines. How did the author select hyperparameters for the baselines? If they are selected in the same way, the experiment results are not convincing. The training of baselines might be suboptimal without parameter optimization.\n- Inconsistency in generated texts: More experiments are expected to demonstrate the reliability of the model (for example, whether the model will generate the same risk with various texts from the same patients).\n- In Table 3, why TabLLM(Multisource) doesn't converge, but MediTab does. Are they feeding with the same amount of training samples in the comparisons?"
+                    }
+                },
+                "number": 25,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700686598887,
+                "cdate": 1700686598887,
+                "tmdate": 1700686598887,
+                "mdate": 1700686598887,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "x2FJRLVVaD",
+            "forum": "F0XXA9OG13",
+            "replyto": "F0XXA9OG13",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_zDeD"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission988/Reviewer_zDeD"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes to scale medical tabular data predictors (MediTab) to handle diverse tabular inputs with varying features. The approach involves utilizing a large language models (LLMs) to merge tabular datasets, addressing the challenges presented by tables with different structures.  Additionally, it establishes a process for aligning out-of-domain data with the specific target task through a \"learn, annotate, and refinement\" pipeline."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The core concept behind MediTab, involving the consolidation, enrichment, and refinement modules, is well-founded in its aim to improve the scalability of predictive models designed for medical tabular data.\n2. Implementing a sanity check through Large Language Model (LLM) Reflection is particularly important in the medical domain.\n3. The paper is clearly written; the quality is sound.\n4. The empirical evaluation in the paper is strong; relevant baselines are considered.\n5. The coverage of related work is extensive, with clear distinctions drawn from other studies."
+                },
+                "weaknesses": {
+                    "value": "1. It is not clear, how was splitting into train/val/test organised?\n2. The statement \u201cAfter the quality check step, we obtain the original task dataset $T$ and the supplementary dataset $T_{sup}$ and have two potential options for model training. The first is to combine both datasets for training, but we have found that this approach results in suboptimal performance.\u201d is a bit unclear. Why it is suboptimal, could authors elaborate on this?\n3. Are these datasets prone to missing values, which is a critical concern in the medical domain? If so, what would be the recommended strategy for handling these missing values?\n4. Results on Ablation studies on Different Learning strategies are provided. Could authors provide  Ablation studies on the different model components?"
+                },
+                "questions": {
+                    "value": "1. Could the authors elaborate more on the LLM sanity check, as well as the results and tests provided in Appendix C.4-C.5? It has been discussed that it is crucial to conduct thorough evaluations of LLMs in healthcare, with particular attention to aspects of safety, equity, and bias [a]. Could the authors provide their thoughts on why they believe their model satisfies these requirements?\n2. Could authors provide more detailed explanation of empirical studies and address points in Weakness section?\n\na. Singhal et al., Large language models encode clinical knowledge. Nature 620, 172\u2013180 (2023)."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission988/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission988/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission988/Reviewer_zDeD"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission988/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698939218014,
+            "cdate": 1698939218014,
+            "tmdate": 1699636024672,
+            "mdate": 1699636024672,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ti7FdipDIN",
+                "forum": "F0XXA9OG13",
+                "replyto": "x2FJRLVVaD",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your valuable feedback! Here are our responses to each point in order:\n\n - It is not clear, how was splitting into train/val/test organised?\n\nThank you for pointing this out, as this was accidentally left out during paper editing. We have added this info to the dataset description in Tables 1 and 2.\n\n- The statement \u201cAfter the quality check step, we obtain the original task dataset and the supplementary dataset and have two potential options for model training. The first is to combine both datasets for training, but we have found that this approach results in suboptimal performance.\u201d is a bit unclear. Why it is suboptimal, could authors elaborate on this?\n\nOf course, we found that it was suboptimal due to the empirical lower performance obtained via simple pretraining on both the supplemental and the original task dataset, as opposed to the approach we used in the paper, which is the pretrain on the supplemental + model\u2019s noisy labels and then finetune on the original task dataset with the real labels. We hypothesize that this is due to the much larger amount of supplemental data vs the real data.\n\n- Are these datasets prone to missing values, which is a critical concern in the medical domain? If so, what would be the recommended strategy for handling these missing values?\n\nIn tabular prediction, it is a common practice to deal with missing values in the inputs\u2014the same is true in clinical patient outcome prediction. The proposed method can conveniently deal with missing values: it serializes a row in tabular data into sentences and models on the textual description of the sample.  \n\n- Results on Ablation studies on Different Learning strategies are provided. Could authors provide Ablation studies on the different model components?\n\nThis is a great point! We have added ablations regarding the choice of downstream model (BioBERT vs. ClinicalBERT vs. BERT), as well as further comparisons with TabLLM. Please see Appendix G Table 9 on page 27! \n\nIn detail, we compared NEW ablations of different base models (BERT, BioBERT, ClinicalBERT, and TabLLM) in terms of downstream performance, trained from scratch, respectively, as shown in the table below, about their average performance across seven datasets.\n\n| Trial Name        | Metric | BERT  | ClinicalBERT | BioBERT | TabLLM |\n|-------------------|--------|-------|--------------|---------|--------|\n| Breast Cancer 1   | ROCAUC | 0.588 | 0.581        | 0.591   | -      |\n|                   | PRAUC  | 0.097 | 0.082        | 0.094   | -      |\n| Breast Cancer 2   | ROCAUC | 0.485 | 0.724        | 0.803   | -      |\n|                   | PRAUC  | 0.023 | 0.026        | 0.060   | -      |\n| Breast Cancer 3   | ROCAUC | 0.696 | 0.734        | 0.721   | 0.616  |\n|                   | PRAUC  | 0.392 | 0.366        | 0.437   | 0.302  |\n| Colorectal Cancer | ROCAUC | 0.613 | 0.700        | 0.705   | -      |\n|                   | PRAUC  | 0.233 | 0.186        | 0.267   | -      |\n| Lung Cancer 1     | ROCAUC | 0.555 | 0.479        | 0.699   | -      |\n|                   | PRAUC  | 0.962 | 0.949        | 0.971   | -      |\n| Lung Cancer 2     | ROCAUC | 0.544 | 0.616        | 0.711   | 0.619  |\n|                   | PRAUC  | 0.483 | 0.616        | 0.691   | 0.562  |\n| Lung Cancer 3     | ROCAUC | 0.357 | 0.893        | 0.893   | 0.804  |\n|                   | PRAUC  | 0.695 | 0.957        | 0.957   | 0.826  |\n\n\nWe observed that the model selection choice is similar for BioBERT and ClinicalBERT. However, TabLLM does not converge for 4 out of the 7 datasets. We believe this may be due to the small amount of training data, but further research should be done to investigate this behavior fully."
+                    },
+                    "title": {
+                        "value": "Response to Reviewer zDeD (1/2)"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700432504867,
+                "cdate": 1700432504867,
+                "tmdate": 1700434490559,
+                "mdate": 1700434490559,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "bwNe1tK7vp",
+                "forum": "F0XXA9OG13",
+                "replyto": "x2FJRLVVaD",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer zDeD (2/2)"
+                    },
+                    "comment": {
+                        "value": "In the second experiment, we performed a NEW ablation on the effect of different serialization strategies. We\u2019ve added the results to Appendix G Table 10, page 28, in the new version.\n\n|     Trial Name    | Metric | Simple Text | Praphrase | Audited Paraphrase |\n|:-----------------:|:------:|:-----------:|:---------:|:------------------:|\n|  Breast Cancer 1  | ROCAUC |    0.607    |   0.620   |        0.617       |\n|                   |  PRAUC |    0.098    |   0.107   |        0.105       |\n|  Breast Cancer 2  | ROCAUC |    0.753    |   0.753   |        0.876       |\n|                   |  PRAUC |    0.083    |   0.083   |        0.135       |\n|  Breast Cancer 3  | ROCAUC |    0.760    |   0.758   |        0.764       |\n|                   |  PRAUC |    0.452    |   0.481   |        0.476       |\n| Colorectal Cancer | ROCAUC |    0.695    |   0.691   |        0.705       |\n|                   |  PRAUC |    0.259    |   0.264   |        0.256       |\n|   Lung Cancer 1   | ROCAUC |    0.699    |   0.737   |        0.717       |\n|                   |  PRAUC |    0.975    |   0.979   |        0.972       |\n|   Lung Cancer 2   | ROCAUC |    0.699    |   0.697   |        0.716       |\n|                   |  PRAUC |    0.679    |   0.680   |        0.715       |\n|   Lung Cancer 3   | ROCAUC |    0.607    |   0.893   |        0.929       |\n|                   |  PRAUC |    0.697    |   0.957   |        0.968       |\n\n\nOur results indicated that the basic approach of using \"column name: column value,\" similar to what's demonstrated in TabLLM, was effective. However, we also observed that enhancing this format with paraphrased examples led to better performance. Furthermore, we find that audited examples improve performance the most. We believe that this performance benefit is useful and serves to justify our usage of more advanced paraphrasing and auditing techniques to address our points of addressing model hallucinations and data augmentation. For the QA model, we chose to use the most powerful version of UnifiedQA, a popular and effective model for general QA tasks, that we could reasonably run on all the paraphrased datasets. Although we explored using larger models such as LlaMA2, we found that running these models would take too much time for it to be practical.\n\n- Could the authors elaborate more on the LLM sanity check, as well as the results and tests provided in Appendix C.4-C.5? It has been discussed that it is crucial to conduct thorough evaluations of LLMs in healthcare, with particular attention to aspects of safety, equity, and bias. Could the authors provide their thoughts on why they believe their model satisfies these requirements?\n\nAbsolutely! They check to ensure that ChatGPT\u2019s paraphrasing is accurate, and we see that it sometimes is not, based on the results of our QA model. Despite this, we only use the publicly available, open-source, pre-trained models from Huggingface as our base models and baselines. This reduces the chance of data contamination and improves safety and equity in terms of access to our methods. We evaluate across diverse datasets with different groups of patients to ensure it doesn't perpetuate bias or disparities, and all datasets are obtained, with permission, from Project Data Sphere, Github, and clinicaltrials.gov (for trial outcome prediction), where anyone can obtain the data for research purposes. The only private model is ChatGPT, but that is a current research direction we are looking into to further increase transparency and reproducibility. We have also added this discussion in Appendix A.\n\nWe hope that these revisions address some of your concerns regarding the paper, and look forward to further discussion!"
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434108009,
+                "cdate": 1700434108009,
+                "tmdate": 1700434504261,
+                "mdate": 1700434504261,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Dy6gLOya5O",
+                "forum": "F0XXA9OG13",
+                "replyto": "bwNe1tK7vp",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_zDeD"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission988/Reviewer_zDeD"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the clarification and for conducting those additional ablation studies. I appreciate your efforts and am planning to maintain my overall score as it stands.\nI do have one follow-up question regarding the missing data. It would be interesting to understand how the performance of the approach is affected by different missing data ratios, such as 5%, 10%, or 20%, etc. While this is not a critical aspect for the current study, gaining insight into this could be valuable."
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission988/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700565624136,
+                "cdate": 1700565624136,
+                "tmdate": 1700565624136,
+                "mdate": 1700565624136,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

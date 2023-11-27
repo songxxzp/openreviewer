@@ -1,0 +1,214 @@
+[
+    {
+        "id": "Rk40QKmAC6",
+        "forum": "H3IUunLy8s",
+        "replyto": "H3IUunLy8s",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_LzY5"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_LzY5"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents parallel smaller rank multiple low-rank metrices to approximate the frozen model's performance via low rank approximation, during the fine-tuning phase. To do this, the authors propose CAPABOOST, a sparse low-rank approximation with random sparse mask that remain frozen throughout the fine-tuning phase. The authors show results with CAPABOOST to perform better than LoRA, pre-fix tuning and adapter based approaches."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The results are impressive.\n\n2. The paper is well written with related works being presented thoroughly to motivate and differentiate the proposed solution from the existing ones.\n\n3. The baselines and comparison points cover multiple variants of low rank approximation of PEFT."
+            },
+            "weaknesses": {
+                "value": "1. This sentence is not clear, \"Furthermore, experiments conducted in Lialin et al. (2023) reveal that transformers with low-rank updates significantly underperform compared to full-rank baselines during pre-training.\".. does it mean the Low rank adaptation during fine-tuning perform poorly? If so, how the LoRA or similar models perform close to baseline full-model fine-tuning? I suppose event the foundation of this paper, assumes that low rank adaptation is useful, and then tries to improve their rank. So, please clarify here.\n\n2. Generation of mask randomly does increase storage cost, as we need to store the index location of the mask while performing forward and backward pass. So, it being storage free is not really a correct statement.\n\n3. The authors claims of speeding up the sparse operation via Nvidia sparse tensor core, however, that is only applicable for N:M sparsity, which the current sparse mask generation process does not satisfy.\n\n4. Can you explain with an example how with sparsity of 0.5 you can have more low rank matrices? And at what point it surpasses the params for a scenario when the sparsity is 1.0 (meaning that of Eq. 2)\n\n5. Isn't capaboost with d>2 would require more fine-tuning params with s=0.5?"
+            },
+            "questions": {
+                "value": "1. When the author says training phase with the random generated frozen mask, does he/she mean fine-tuning phase?\n\n2. The author should not claim as \"for free\", as with sparsity = 0.5 would often need storage that can be more than that with no sparsity. Also, additional tensor sparse operation  is needed making the latency to grow a little up, as it is not really N:M sparsity. So, please tone down on your claim, title, and writing."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5620/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698647246386,
+        "cdate": 1698647246386,
+        "tmdate": 1699636580886,
+        "mdate": 1699636580886,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eCivthqLEm",
+        "forum": "H3IUunLy8s",
+        "replyto": "H3IUunLy8s",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_7oiV"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_7oiV"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper provides an approach to improving the performance of PEFT methods. They propose to \"expand\" the effective rank of the learned  low-rank matrices by generating different masks for masking the same base low-rank matrix. \nThey show through ablations and experiments that their approach is complementary with other PEFT methods."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "In general, I think the method is a clever idea. I believe this idea of generating \"pseudo-independent\" parallel matrices whilst saving storage by applying masks to a base matrix is novel. In the presence of specialized hardware, the sparse matrix form and the use of random-seed to mark masks could lead to considerable memory and compute savings."
+            },
+            "weaknesses": {
+                "value": "## Weaknesses\n* Flop improvement from method only exist in the presence of specialized hardware for sparse matrices. \n* Were any of the non-capaboost methods regularized ?  One possible explanation for the improvements of capaboost -- is that the random masking creates implicit regularization. It would be good to compare the performance to other methods, once they also enjoy some level of regularization.\n* I find it hard to understand / believe Table 1 for multiple reasons. First, the claim is that you generally get a d - 1 increase over LoRA (remark 3.3) but  you consistently report dx instead (d - 1)x increase. Second, the basis for the intuition for the dx expansion, is theorem 3.1 which assumes that X and Y are generated independently from Gaussians. In general, this would be the upper bound on the rank of the sum. The matrices you instantiate are not independent (since they are generated from the same B,A combination -- though masked) ... but somehow your results (from Table 1) suggest that you are always achieving this upper bound which is quite surprising. And what about the case where the rank of A, B = 1 ?\n\nThere seem to be quite a few inaccurate statements peppered through the paper : \n1. \"Fine-tuning large pre-trained foundation models, such as the 175B GPT-3, has become the prevailing approach for downstream tasks.\" -- I don't think this is true -- the defacto approach for using models at these scales is prompting and not fine-tuning.\n\n2. \"..... replacing a single layer\u2019s heavyweight matrix w \u2208 Rd1\u00d7d2 with two consecutive layers possessing much smaller inner dimension r, such as B \u2208 Rd1 \u00d7r , A \u2208 Rr\u00d7d2 . This approach results in a significant reduction in parameter count (evident in Adapters and LoRA), achieving performance comparable to full-size fine-tuning while retaining only 1% of trainable parameters\" -- the original matrices are not \"replaced\" by these smaller ones but this statement makes it seem like the full parameter versions are swapped for the low-rank version\n\n\nIn general, I am not sure I am convinced that the method works for the reasons mention in the paper. I am skeptical of the proposed rank expansion framing -- and I am more convinced that there might be some effective regularization occurring due to the random masks.\n\nNote : I am willing to raise my score if my concerns / questions  are addressed."
+            },
+            "questions": {
+                "value": "1. How do you measure/compute the flops in your paper ? You only mention that its \"relative to lora\"\n2. I am surprised that full finetuning from Figure 4b performs substantially worse that the low rank methods. What hyper-parameters were used ? Was there regularization when training this model ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Reviewer_7oiV"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5620/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698789577019,
+        "cdate": 1698789577019,
+        "tmdate": 1700617715560,
+        "mdate": 1700617715560,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "9Vqxe6SEoB",
+        "forum": "H3IUunLy8s",
+        "replyto": "H3IUunLy8s",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_ZJAd"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5620/Reviewer_ZJAd"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, CAPABOOST is introduced as a versatile framework with the aim of amplifying model capacity in a range of Parameter Efficient Fine-Tuning (PEFT) methods, including those like Adapters and LoRA. This is achieved by integrating techniques such as model pruning and weight sharing. CAPABOOST's primary objective is to expand model capacity without adding extra computational overhead, leading to enhanced performance compared to conventional PEFT approaches. The paper provides empirical evidence of CAPABOOST's effectiveness by highlighting significant performance enhancements, reduced parameter counts, and equivalent or reduced floating-point operations (FLOPs)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1) The central concern addressed in this paper pertains to a key issue in existing PEFT methods: while they effectively reduce the parameter count, they often impose limitations on the model's rank.\n2) Through extensive empirical results, it is evident that CAPABOOST surpasses current benchmarks by achieving substantial reductions in parameter count while preserving the same or fewer FLOPs.\n3) The authors commit to providing both the code and benchmarks, which holds the potential to enhance the reproducibility of their research."
+            },
+            "weaknesses": {
+                "value": "Regarding the computer vision (CV) task experiments, the paper only presents results for LoRA and LoRA+CAPABOOST. It would be advantageous to incorporate the results of other baseline methods, such as ProPETL[1], to provide a more comprehensive comparison.\n\n[1] One network, many masks: Towards more parameter efficient transfer learning"
+            },
+            "questions": {
+                "value": "Kindly refer to the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5620/Reviewer_ZJAd"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5620/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698794494144,
+        "cdate": 1698794494144,
+        "tmdate": 1699636580641,
+        "mdate": 1699636580641,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

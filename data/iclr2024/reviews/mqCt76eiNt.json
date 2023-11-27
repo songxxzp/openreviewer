@@ -1,0 +1,345 @@
+[
+    {
+        "id": "dKXf7nlPh0",
+        "forum": "mqCt76eiNt",
+        "replyto": "mqCt76eiNt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_HeZ6"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_HeZ6"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an offline RL algorithm which uses CVAE to map the actions into the latent space and then perform latent space TD3+BC for policy optimization. The key design as claimed by the authors is to introduce the projected advantage values as an additional conditional input in CVAE, which can help better distinguish data quality. The proposed method lacks concrete theoretical backing on why it will work, and seems to require careful hyperparameter tuning to maintain stability and achieve good performance. See the following strengths and weaknesses for detailed comments."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The paper is easy to read.\n- Relatively comprehensive evaluations on MuJoCo and antmaze tasks. Reasonable performance. Though I find some antmaze task scores seem to be problematic."
+            },
+            "weaknesses": {
+                "value": "- The design of adding advantage values into a jointly trained CVAE can lead to extra training instability. As the value functions are gradually learned, the advantage value can keep changing during the CVAE training. This means that the conditioning information in CVAE is not stationary, causing the learning of CVAE to also fluctuate. It can become worse when using the latent representation from a non-stationary CVAE, which can further cause instability in the value and policy learning. This is evident as the authors have admitted that the training step $K$ of CVAE needs to be carefully tuned, and as shown in Fig. 5, the proposed method can fail miserably if using an improper $K$ value.\n- The references on offline RL algorithms are mostly restricted to those before 2022. As this field is rapidly developing, there are many strong offline RL algorithms have been proposed in 2023 but lack acknowledgment or comparison. The reported scores are only comparable to some of the newer but more lightweight in-sample learning algorithms like XQL[1] and SQL[2], and less performant than some recent methods that use diffusion policies [3, 4]. Given the proposed method is somewhat heavy (needs to learn an additional, potentially unstable CVAE), I don't think the proposed method offers impressive performance.\n- The value and policy learning procedure is essentially TD3+BC[5], but conducted in the latent space. However, TD3+BC is never mentioned in Section 4.2. Even in the codes provided by the author, the corresponding method names are \"TD3BC_critic_loss\" and \"TD3BC_actor_loss\". Same as TD3+BC, the actual implementation needs to use a $\\lambda$ hyperparameter to trade off max Q and minimize the BC penalty. However, this is not mentioned in Eq.(8). This extra hyperparameter is intentionally omitted and corresponding hyperparameter tuning is not discussed. If this hyperparameter is carefully tuned for each task, even the original TD3+BC is likely to have strong performance.\n- I feel the proposed method is essentially doing some kind of representation learning over TD3+BC, but unlike other representation learning methods, it could be more unstable. It is suggested that the proposed method should also be compared with existing offline RL baselines with representation learning.\n- In the experiments, adding additional experiments on datasets mixed with random data is not very meaningful for practical settings. As nobody will use bad random data to train their offline RL policy in practice. Moreover, BPPO is a flawed offline RL algorithm and is not worth comparison. In its code implementation, it hides online evaluation during offline training, which is a kind of cheating in the offline RL setting. It is a shame that such a paper even gets accepted in ICLR 2023. On the other hand, some recent strong and rigorous offline RL algorithms should be compared.\n\n**References:**\n\n[1] Garg, D., Hejna, J., Geist, M., & Ermon, S. Extreme Q-Learning: MaxEnt RL without Entropy. ICLR 2023.\n\n[2] Xu, H., et al. Offline RL with no OOD actions: In-sample learning via implicit value regularization. ICLR 2023.\n\n[3] Wang, Z. et al. Diffusion policies as an expressive policy class for offline reinforcement learning. ICLR 2023.\n\n[4] Hansen-Estruch, P. et al. Idql: Implicit q-learning as an actor-critic method with diffusion policies. arXiv preprint arXiv:2304.10573, 2023.\n\n[5] Fujimoto, S., & Gu, S. S. A minimalist approach to offline reinforcement learning. NeurIPS 2021."
+            },
+            "questions": {
+                "value": "- The scores for antmaze-m-d and antmze-l-d look strange, CQL and IQL are reported to have reasonable scores in the IQL paper as well as in previous references [1-2,4], however, their scores are all zero in this paper. Moreover, the proposed A2PO's performance looks very bad, inferior to scores of baselines as reported in other papers. Why is that?\n- Please report the max-Q and BC trade-off hyperparameter values in the TD3+BC style policy improvement step (Eq.(8)). Has it been tuned for different tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5263/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698215411647,
+        "cdate": 1698215411647,
+        "tmdate": 1699636525840,
+        "mdate": 1699636525840,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "i0Uk82WZF5",
+        "forum": "mqCt76eiNt",
+        "replyto": "mqCt76eiNt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_Mmfe"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_Mmfe"
+        ],
+        "content": {
+            "summary": {
+                "value": "This manuscript proposes an Advantage-Aware Policy Optimization (A2PO) method for offline RL problem. The authors first disentangled behavior policies with CVAE, then combine the  advantage-aware method for policy improvement and optimization.  The superiority of the A2PO method is validated from single-quality and mixed-quality datasets of the D4RL."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The problem of mixed behavior policy data is very interesting, and the main idea of this manuscript is easy to follow. \n2. The empirical studies shows that the A2PO method significantly outperforms the competitors in most cases."
+            },
+            "weaknesses": {
+                "value": "1. Some details in methodologies are not clear.  How to select the $\\xi^*$ in equation (7) and the optimal selected action $\\alpha^*_\\xi$. As the $\\xi$ is transformed by the tanh function, what if there are no (s,a) pairs with $\\xi^*=1$? This is an very important step for understanding the main idea of this paper. \n2. Follow the last point, if the $\\xi$ is normalized to [0,1], the largest value of $\\xi=1$ only corresponds to single data point in the mixed dataset, how do you learn the action distribution from CVAE with this single data point?\n3. The information in pseudocode in Algorithm 1 is limited, it is suggested to add some important details in Algorithm."
+            },
+            "questions": {
+                "value": "1. Some offline-RL baselines, such as BEAR/AWAC are missed in experiment, and the recent popular SPOT [1] method is not considered in experiments as well.  It is suggested to consider the baselines in offline-RL methods. \n2. The author suggested CVAE to disentangle policies from mixed data. However, the CVAE may not be a good choice for distinguish data from different sources from [1] and [2]. So I wonder why A2PO could achieve significant results in empirical experiments. \n3. In the experiment, the authors manually combines the single-quality datasets to setup the mixed datasets. The details of mixed data combination should be provided, and some ablation studies about the amount of each single-quality data are also suggested. \n\n[1] Supported Policy Optimization for Offline Reinforcement Learning. https://arxiv.org/abs/2202.06239\n\n[2] A Behavior Regularized Implicit Policy for Offline Reinforcement Learning. https://arxiv.org/pdf/2202.09673.pdf\n\n[3] EMaQ: Expected-Max Q-Learning Operator for Simple Yet Effective Offline and Online RL. https://arxiv.org/pdf/2007.11091.pdf"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5263/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5263/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5263/Reviewer_Mmfe"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5263/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698488003207,
+        "cdate": 1698488003207,
+        "tmdate": 1699636525744,
+        "mdate": 1699636525744,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Ksbr6QxSB4",
+        "forum": "mqCt76eiNt",
+        "replyto": "mqCt76eiNt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_R6oW"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_R6oW"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents an offline advantage-aware policy optimization method, which uses a generative model to describe the action distribution conditioned on states and advantage values, then samples from this model for high-advantage actions to conduct offline policy optimization. The method is motivated by the argument that mixed-quality dataset may have conflicting constraints if each sample is treated equally, hence some differentiation is needed. The proposed advantage-aware differentiation is verified on datasets of single- and mixed-quality. The empirical results show their method outperforms baselines and especially works well on a dataset with mixed-quality. Ablations are also provided to analyze the method design choices."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The empirical results are strong compared to baselines.\n2. The paper presents a detailed ablation analysis for the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. The contribution is a bit incremental, by mainly moving the advantage values from weight coefficient of the loss function (as in LAPO equation [7]) to condition variables (as in this paper equation [5]).\n2. It looks to me that the policy optimization part is not the same as LAPO, which uses TD3. The differences make the performance comparison between A2PO and LAPO not fair, and make it hard to justify the benefits of conditioning the generative model using advantage values."
+            },
+            "questions": {
+                "value": "1. A minor typo on Page 8: \u201cThe performance comparison of different discrete advantage conditions for test is given in Figure **4**\u201d.\n2. I wonder how A2PO compares to LAPO if the policy optimization steps are made the same."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5263/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698631697909,
+        "cdate": 1698631697909,
+        "tmdate": 1699636525631,
+        "mdate": 1699636525631,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "tfEMupixaA",
+        "forum": "mqCt76eiNt",
+        "replyto": "mqCt76eiNt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_TZv3"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_TZv3"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper develops an offline RL method for mixed-quality datasets. Their algorithm alternates between (1) performing actor-critic-style policy optimization and (2) disentangling policy quality within the latent space of the actor. (2) is accomplished by CVAE training in which prediction is conditioned on both the state and the current advantage value. The novelty of this paper is the choice to condition on the current advantage value. They show that their method (A2PO) outperforms baselines such as CQL, IDL, MOPO, LAPO, etc on D4RL navigation and locomotion tasks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This is a sound and well-presented paper. I would place the readability and cleanliness of presentation in the top 5% of papers. A2PO outperforms baselines on most D4RL navigation and locomotion tasks. The ablation analysis in Figure 4 shows that the resulting policy is very responsive to advantage conditioning. I think this is a powerful and elegant way of handling the underestimation issue that has been recurrent in work on off-line RL. I think the experimental results and algorithmic contribution will be useful to the offline RL community."
+            },
+            "weaknesses": {
+                "value": "The main weakness of this paper is lack of empirical depth. Many of the baselines also show strong performance on sparse-reward/manipulation tasks within D4RL and it's not clear why these tasks have been omitted here. It would be helpful for the authors to clarify if this approach is specific to navigation and locomotion or to show results on a manipulation tasks such as FrankaKitchen or Adroit. For a concrete reference, please see Table 2 of the CQL paper. \n\nThe idea of conditioning on a proxy for policy return (i.e., the advantage) itself is not novel. It would be helpful for the authors to include a reference to reward-conditioned supervised learning [Brandfonbrener et. al., 2023].\n\n- Brandfonbrener et. al. When does return-conditioned supervised learning work for offline reinforcement learning? https://arxiv.org/abs/2206.01079"
+            },
+            "questions": {
+                "value": "Why do the authors ablate discrete vs continuous advantage variables within the CVAE? For a distribution that is inherently categorical, I could understand why this ablation would be useful, but because the space of advantages is continuous anyways I don't understand what the reader should takeaway from this experiment.\n\nThe margins for improvement between A2PO and the baselines is quite narrow in some cases. It's possible that the ordering of the results could change with more or less tuning. Can the authors clarify what hyper parameters were tuned within A2PO vs the baselines?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5263/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698692871626,
+        "cdate": 1698692871626,
+        "tmdate": 1699636525539,
+        "mdate": 1699636525539,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3Du13ZGZcq",
+        "forum": "mqCt76eiNt",
+        "replyto": "mqCt76eiNt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_KGRx"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5263/Reviewer_KGRx"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce A2PO, which aims to learn an advantage-aware policy from offline RL datasets containing mixed-quality data. The proposed method first trains a CVAE over the actions and optimizes the advantage-aware policy towards high advantage values over the learned action embeddings. The experiments show that their method can outperform baselines such as CQL and LAPO."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper is easy to understand.\n2. The experiments in the paper demonstrate the effectiveness of A2PO. The agent can learn to sample different actions based on the given advantages and can achieve good performance when given large advantages."
+            },
+            "weaknesses": {
+                "value": "1. A comparison with diffusion-based methods is lacking. Figure 2 shows that one feature of the proposed method is its ability to model multi-modal actions conditioned on the given state. Recently, diffusion models have become a popular approach for this purpose. How does your method compare to diffusion-based methods? Here are some related papers:\n  - Diffusion Policies as an Expressive Policy Class for Offline Reinforcement Learning\n  - Planning with Diffusion for Flexible Behavior Synthesis\n  - IDQL: Implicit Q-Learning as an Actor-Critic Method with Diffusion Policies\n2. As shown in Figure 45, the CVAE over the action space is sensitive to the number of training steps. How can we determine the optimal number of training steps before training an offline RL agent? Is this stage time-consuming?"
+            },
+            "questions": {
+                "value": "Is it possible to use this algorithm in various robot manipulation environments, such as Meta-World and ManiSkill? Additionally, is this stage time-consuming?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5263/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5263/Reviewer_KGRx",
+                    "ICLR.cc/2024/Conference/Submission5263/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5263/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698802367662,
+        "cdate": 1698802367662,
+        "tmdate": 1700687512919,
+        "mdate": 1700687512919,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

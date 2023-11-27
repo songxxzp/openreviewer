@@ -1,0 +1,268 @@
+[
+    {
+        "id": "YT4WcTXWh2",
+        "forum": "yLgr02IsXY",
+        "replyto": "yLgr02IsXY",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_4gRQ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_4gRQ"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose AMPIPE, an optimization technique that improves the training speed of MoE models with pipeline parallelism. AMPIPE splits the attention computation and MLP computation into smaller chunks and schedules them to overlap with the all2all communication, reducing the cricial path in comparison to training an MoE model with pipeline parallelism enabled. The authors evaluate AMPIPE on several GPT-MoE models and show that it can achieve higher throughput than an existing MoE system Tutle without affecting convergence."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The paper applies chunking to both Attention and MLP layers in a Transformer block to create a better pipeline scheme that exploits the overlapping potential between attention, MLP, and all2all communication in MoE models.\n- The paper demonstrates the effectiveness of AMPIPE on low-performance interconnects."
+            },
+            "weaknesses": {
+                "value": "1. The technical novelty of the work is limited. Particularly, the idea of breaking GeMM computation into smaller chunks and overlapping those chunks with communication collectives has been previously studied, such as in Tutle. The main contribution of the work is to extend that to the Attention layer in an MoE model.\n\n2. There is a big misconnection between the motivation of the work and the evaluation. Pipeline parallelism for MoE models is usually used for massive MoEs (e.g. hundreds of billions or even trillion-scale models) when the model cannot fit on aggregated GPUs with data parallelism, expert parallelism, and tensor parallelism. However, the tested MoE models are relatively small, with the largest one having only 12 layers and a hidden dimension 1600. This raises questions in terms of whether pipeline parallelism is even needed for this scale of models, i.e., the authors might have compared with a very sub-optimal configurations that are unnecessarily slow or have compared with configs that do not need pipeline parallelism. Indeed, from Figure 8, we see that as the model size increases, the gap between AMPIPE and Tutle decreases. To be more convincing, the paper should either test larger-scale models where pipeline parallelism is actually needed or use stronger baselines that sweep over different parallelism combinations. \n\n3. The paper lacks many important implementation details. In particular, while the projection of Q, K, V can be chunked along the sequence dimension, the softmax operation in the attention calculation requires all tokens in a sentence to calculate the normalized attention score. Therefore, it does not seem to be correct to claim that chunking Q does not affect the output of attention calculation unless additional synchronization is added. Also, the paper overlooks the normalization operations in its analysis, which are crucial for Transformer effectiveness and efficiency (as they may introduce additional synchronization that affects the pipeline's schedule. Unfortunately, the paper has been very vague on how these important operators are handled, e.g., in terms of how those operations are handled, the paper simply says \"these operations are also amendable to chunking\", but how and how would they affect the pipeline efficiency? \n\n4. The experiment setup is sub-optimal. The model is evaluated on a single node with 4xA10G and 8xA800, but uses a pipeline depth of 4, which seems to be unnecessarily deep. The paper does not justify this choice of parallelism config and why this is a reasonable baseline. For the given model and hardware, is the parallelism config really a good choice in practice? It is not very difficult to improve a weak baseline, and not choose the best-performing baseline for the given model and hardware undermines the attractiveness of the proposed method."
+            },
+            "questions": {
+                "value": "1. If DP + EP + TP already produces a configuration that provides much faster training speed why bother using pipeline parallelism?\n\n2. Do the results in Figure 8 include normalization operations, such as softmax, layer norm, etc.\n\n3. The paper simulates low data communication speed by adding artificial delays to all-to-all communication. How would the proposed technique perform on real commodity GPU clusters?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3434/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698413267541,
+        "cdate": 1698413267541,
+        "tmdate": 1699636295558,
+        "mdate": 1699636295558,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3y01oiO2e0",
+        "forum": "yLgr02IsXY",
+        "replyto": "yLgr02IsXY",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_wCG9"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_wCG9"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposes AMPipe, a method to accelerate Mixture-of-Experts (MoEs) training when the sequence length is long. The basic idea is to split the sequence dimension into blocks so that the computation of one block can be overlapped with the communication of the next block."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- Training large language models for long sequence length is a timely and important topic.\n- The design of computation-communication overlap is sound."
+            },
+            "weaknesses": {
+                "value": "For me, this paper reads more of a technical report or technical blog introducing a nicely designed engineering effort. The major contribution is a chunking method along the sequence dimension to overlap the computation of FlashAttention and the All-to-All communication of MoEs for two consecutive chunks, which has limited novelty and takes barely one page (i.e., Section 3) to illustrate. I am afraid it may fail to provide significant insights to the community."
+            },
+            "questions": {
+                "value": "(1) To support training on extremely long sequence length, memory is also important to consider. I would like to know whether AMPipe saves memory.\n\n(2) Sequence parallel and tensor parallel are also important techniques to support lengthy sequences by amortizing the memory onto different GPUs. It would be interesting to see how to integrate AMPipe with them.\n\n(3) Table 1 does not report the number of layers, the number of experts, and the size (number of parameters) of each model.\n\n(4) According to the specification of A800, the NVLink bandwidth should be 400GB/s. It should be elaborated how the data communication speed is limited to 20GB/s in Section 4.3 (e.g., by transmitting 20x of data volume?) Moreover, although the intention to simulate commodity communication bandwidth is nice to have, I am afraid limiting the NVLink bandwidth to 1/20 of the origin (from 400GB/s to 20GB/s) is a good choice since the computing power (i.e., flops) of A800 is quite performant. \n\n(5) If I understand well, AMPipe requires token-level communication in MoE layers, so I would like to ask whether it can be applied to sequence- or task-level MoEs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3434/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698573704251,
+        "cdate": 1698573704251,
+        "tmdate": 1699636295484,
+        "mdate": 1699636295484,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "BNm7LSAje4",
+        "forum": "yLgr02IsXY",
+        "replyto": "yLgr02IsXY",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_aNzs"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_aNzs"
+        ],
+        "content": {
+            "summary": {
+                "value": "Using the observation that the transformer attention layer can be chunked, AMPipe notes that the chunked computation can be pipelined with other work being done in a transformer network. Namely, the A2A data movement of MoE networks is can be dispached in chunks and overlapped with the chunked attention computation. This is similar to and builds on the Intra-MoE pipelining done by the tutel paper."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The work shows how pipelining the all2all MoE communication with attention computation can improve throughput by 1.4x over training with no pipelining (where the pipelining in tutel shows improvement of 1.3x)."
+            },
+            "weaknesses": {
+                "value": "- When taking into account the tutel baseline, AMPipe provides a 7% improvement at best? (1.4x vs 1.3x speedup). This is effectively low impact.\n- The work does not show how this scales to large gpu clusters (where the majority of MoE training happens given MoE networks are relatively large).\n- while novel, the novelty is limited to combining tutel based pipelineing with pipelining based on chunked attention computation (an already existing concept)\n- This is generally more useful for long context length settings. But the majority of pretraining happens at seq len = 2k or 4k and long context length training only happens for a small subset of the total training time. This meta-point lowers the overall impact of works targeting improvements at really long context lengths."
+            },
+            "questions": {
+                "value": "- Can a variant of figure 8 be creates which combines the fwd and bwd pass? this allows the reader to see the total end to end speedup at different degrees instead of just seeing it in table 2 in tabular form."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3434/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698731722048,
+        "cdate": 1698731722048,
+        "tmdate": 1699636295408,
+        "mdate": 1699636295408,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "EhTe2FG1TE",
+        "forum": "yLgr02IsXY",
+        "replyto": "yLgr02IsXY",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_Ai23"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3434/Reviewer_Ai23"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a method to speedup MoE inference and training by moving the pipeline parallelism to begin earlier in the layer's execution.  Specifically, the attention operation is split over queries along the sequence dimension into chunks which can be ran separately, before the same pipelining is applied to the feed forward networks in MoE layer.  This introduces a significant increase in throughput of 10-40% across many different configurations.  Code is provided where they add their AMPipe to the MegatronLM code."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* MoE is becoming very relevant for the current scaling of models as dense models are impractical at the trillion parameter scale, which makes this work relevant.\n* Code is provided that is an extension of the MegatronLM code.  I skimmed their AMPipe implementation and it seems fairly simple which makes it easier to integrate into existing systems.\n* They test on a variety of model scales and context lengths"
+            },
+            "weaknesses": {
+                "value": "* This work is conceptually very incremental, as they are simply moving the parallelism earlier in the layer's execution.  I am not familiar enough with the related work to evaluate how significant this work is in relation to others.\n\nNevertheless, I am voting to accept this paper as the quantitative speedups are significant and the method appears effective and simple enough to implement, which is very important in practice."
+            },
+            "questions": {
+                "value": "**Setup** \"As a baseline, we constructed MoE models based on GPT-3\u201d\n* GPT-3 is not an open source model, I believe you mean GPT-2, considering the description of the model in Table 1\n\n**Table 1** I think it would be useful to the reader to add the # of layers and # of parameters to compare the different models\n\n\u201cWith an implementation consisting of more than 1k lines of code (LoCs)\u201d\n* The fact that you provided code is great, but lines of code is not an informative metric.  The optimum number of lines of code is the minimum necessary to have performant and readable code.\n\nIt is worth explicitly defining what \"pipe degree\" is rather than keeping it implicit.  Perhaps say that pipe degree = n and chunk length = N / n, etc.\n\nTypos: \n\u201cunofficially reported to use MoE paradigm.\u201d - - - > \u201cunofficially reported to use the MoE paradigm.\u201d\nFor MoE, sharding the input batch along seqeunce dimension\u201d - - > \u201cFor MoE, sharding the input batch along sequence dimension"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3434/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698812962661,
+        "cdate": 1698812962661,
+        "tmdate": 1699636295287,
+        "mdate": 1699636295287,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

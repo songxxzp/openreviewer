@@ -1,0 +1,280 @@
+[
+    {
+        "id": "9joI7sQTRt",
+        "forum": "Gl4AsqInti",
+        "replyto": "Gl4AsqInti",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_cVpc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_cVpc"
+        ],
+        "content": {
+            "summary": {
+                "value": "It is common for papers studying the Hessian of neural networks to approximate the Hessian by the so-called \"Gauss-Newton matrix\", which is the exact Hessian of a locally linearized model.   This paper aims to study the issues involved with making this approximation.  The paper is about aspects of deep learning that can only be explained by looking at the non-Gauss-Newton portion of the Hessian, which is termed the Nonlinear Modeling Error (NME) matrix.\n\nThe paper has two empirical findings:\n\n 1. The authors compare SAM and Gradient Norm Penalty on both ReLU nets and GeLU nets, and find that at large $\\rho$, SAM does well on both ReLU and GeLU, but GP does well only on GeLU, and performs poorly with ReLU (Figure 2).  The authors furthermore study an activation function, $\\beta$-GeLU, which interpolates between ReLU and GeLU, and they show that the performance of GP continually deteriorates as the activation is made more like ReLU (Figure 3).  The authors try to explain the poor performance of GP for ReLU nets by noting that the GP gradient involves a Hessian-vector product, and the Hessian for ReLU nets is an unreliable local model for the loss landscape.  (The paper calls it a \"high variance estimator\" because the NME diagonals are zero at most points but nonzero at the measure-zero set of boundaries of the piecewise linear regions.)\n\n  2.  The authors compare training with weight noise (i.e. the gradient is always computed at a gaussian-perturbed point), and the related Hessian trace penalty, to a Gauss-Newton trace penalty, and find that the latter works better, which the authors treat as evidence that it is beneficial to not penalize the NME."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- It's important for the field to understand what information is lost when approximating the Hessian by the Gauss-Newton matrix\n- The experiments showing that gradient norm penalty (\"penalty SAM\") fails for ReLU networks at large rho is novel and interesting.  Understanding the cause of this experimental result is surely an important problem.\n- Similarly, it's interesting that penalizing the Hessian underperformed penalizing the Gauss-Newton matrix.  Understanding the cause of this experimental result, too, is an important problem."
+            },
+            "weaknesses": {
+                "value": "**Concerns with abstract and introduction**\n\nThe submission uses the phrase \"second order methods\" in a sense that is very different from the standard meaning of this phrase in the field.  I am concerned that unless this aspect of the submission is changed, most readers will take away false conclusions from this paper.   The phrase \"second order methods\" is usually used to refer to optimization algorithms that utilize Hessian information to converge faster.   Thus, most readers would interpret the sentence \"second order methods may be more sensitive\nto the choice of activation functions than first order methods\" as a claim about these kinds of optimizers.  However, if I am understanding the submission correctly, the authors are **not attempting to make any claim** about these kinds of optimizers, and are instead using the phrase \"second order methods\" to refer to various regularizers such as a gradient norm penalty, because computing the gradient of this penalty involves computing a hessian-vector product.  If this understanding is correct, I would urge the authors to better clarify the scope of their claim.  On the other hand, if I am misunderstanding the word choice, and the authors _are_ attempting to make a claim about second-order optimization algorithms, then that claim is **completely unsupported** by the evidence in the paper.\n\n**Concerns with section 2**\n\nThe submission says that the NME \"is related to exploring the effects of switching to different linear regions.\"  Firstly, this statement can only possibly make sense in the context of ReLU networks or other piecewise linear activation functions like hardtanh.  Secondly, even for ReLU networks, I don't understand what this assertion means precisely.\n\n\n**Concerns with section 4**\n\nI think the claims of this section are not convincingly proven. The outlined logic in the paper would seem to go: at large rho, the gradient-norm-penalty algorithm on ReLU networks does not find \"truly\" flat regions, because even though it finds regions where the Hessian is small, the Hessian is a bad local model for the objective, and the objective turns upwards a bit farther away.  However, the failure of gradient norm regularization in Figure 2 (a,b) does not look like this hypothetical.  We see in this figure that the test accuracy of gradient norm penalty with large rho is smaller than that of _unregularized_ training.  This does not look like \"insufficient regularization\", it looks like some other kind of failure.  **Could the authors please spell out the precise claimed logical linkage between \"quadratic approximation on ReLU nets gives bad local model\" and the failure we see in Figure 2 (a,b)?**\n\nThere really are a lot of potential confounders here.  For large $\\rho$, the dynamics of SAM and gradient norm penalty can conceivably be very different, especially at large learning rates.  For example, perhaps the issue in Figure 2 (a,b) is that ReLU units die, while GeLU units do not die?  Could you experiment with leaky-ReLU (which I believe should suffer less from the dead relu problem) to rule out this possibility?  If leaky ReLU (with a decently large leak size) breaks down at large rho, that would support your hypothesis; if it doesn't, that would support my hypothesis.\n\nAnother experiment I'd like to see would be to re-run these experiments at a considerably smaller learning rate, and to see if there is still a difference between ReLU and GeLU at large rho.  If there is still a difference, that would support your hypothesis; if there is no difference at small learning rates, that would go against your hypothesis, since (as far as I can tell) your hypothesis contains no mechanism by which learning rate would have an effect.\n\n**Concerns with section 5**\n\nOne of the paper's main claims is that penalizing Gauss-Newton trace yields better performance than penalizing Hessian trace (which is done implicitly by weight noise).  However, I do not believe this point has been convincingly proven.  For one thing, the authors use one-sample random estimators for both Hessian trace and Gauss-Newton trace.  These one-sample estimators do not seem to be directly comparable to one another -- in one, a different random Gaussian is sampled for each parameter, while in the other, a single class label is sampled.  It seems totally plausible to me that these estimators have different properties e.g. variance that are responsible for the experimental results in this section, and that an ideal penalization of Gauss-Newton trace would not outperform an ideal penalization of Hessian trace.   I would feel much better about this claim if the authors checked how their findings hold as the number of Monte Carlo samples is made larger.  Do the findings keep holding if the authors use 2, then 5 Monte Carlo samples?  Or do the findings start to change as the number of Monte Carlo samples is made larger?\n\nOverall, I found section 5 to be very conceptually confusing.  I had a hard time keeping track of the various claims that were being made.  As discussed above, one of the claims was clearly that an idealized penalization of Gauss-Newton trace would be better than an idealized penalization of Hessian trace (which is similar to weight noise).  However, the section _also_ seemed to be comparing these three approaches to gradient norm penalty (referred to here as \"penalty SAM\"). It was not clear to me what was the goal of the comparisons to GNP.  How do these comparisons relate to the paper's broader point about NME?  \n\nThe introduction says:  \"We show that weight noise does not perform as well as the gradient penalty it is thought to approximate.\"  Sorry, which gradient penalty is being referred to here?  If this sentence is referring to a _loss_ gradient norm or squared _loss_ gradient norm, then it is not correct to say that weight noise is thought to approximate this penalty."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698777160526,
+        "cdate": 1698777160526,
+        "tmdate": 1699636330239,
+        "mdate": 1699636330239,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "OzgqYQpJxj",
+        "forum": "Gl4AsqInti",
+        "replyto": "Gl4AsqInti",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_Xtsh"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_Xtsh"
+        ],
+        "content": {
+            "summary": {
+                "value": "While the inclusion of second-order information of the SAM method can enhance generalization, methods such as weight noise and gradient penalties often fall short in providing such benefits. This paper aims to address this issue by investigating the effectiveness of these methods in relation to the structure of the Hessian of the loss. The authors demonstrate that the Nonlinear Modelling Error matrix (NME), which has been largely overlooked in previous literature, plays a crucial role in understanding the underperformance of gradient penalties for certain architectures. Additionally, the authors present an evidence that the assumption of equivalence between weight noise and gradient penalties may not hold, as it relies on the unreasonable assumption of disregarding the NME. Drawing from their findings that regulating feature exploitation rather than feature exploration yields comparable performance to SAM, the authors emphasize the importance of appropriately controlling regularization on the two components of the Hessian for the success of various second-order methods."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This paper demonstrates the importance of the Nonlinear Modeling Error (NME) matrix, which has previously been considered insignificant due to its vanishing nature at interpolation points. \n\nBased on the quantitative interpretation of the Hessian decomposition, they provide a new insights into the effectiveness of various regularization techniques, including SAM, weight noise, and gradient penalties. Numerical experiments illustrate their opinions."
+            },
+            "weaknesses": {
+                "value": "The article's findings rely on empirical observations rather than theoretical proofs or extensive experiments.\n\nBesides, the numerical comparison is only conducted for computer vision tasks. I suggest the authors to add more experiments on various network architecture to make their conclusion more convincing."
+            },
+            "questions": {
+                "value": "When the loss function is not smooth, we can not get its second derivative. In that case, the NME matrix may not be well-defined, how can we analyze the sharpness regularization by using Hessian structures?\n\nCan the findings on the NME matrix be used to inspire the development of the second-order methods(not the penalty regularization methods)? And how to use it? \n\nWhat is Cat(z) in eq. (24)?\n\nThere are some typos in Appendix B, like ''[cite our ICML]'', ''[cite ICML 2023 paper]''.\n\nHow the conclusion are obtained ''These results are evidence that the NME term of the Hessian should not be dropped when applying\nthe analysis of (Bishop, 1995) to weight noise for modern networks.''? As mentioned at the beginning of section 5.2, the Hessian trace penalty consider the NME term but not perform well for both tasks. However, Gauss-Newton penalty do not consider the NME but perform better? Therefore, it seems that NME plays negative effect on this task. Could you please explain this for me?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Reviewer_Xtsh"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698861417217,
+        "cdate": 1698861417217,
+        "tmdate": 1699636330178,
+        "mdate": 1699636330178,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4Z82gRrPQa",
+        "forum": "Gl4AsqInti",
+        "replyto": "Gl4AsqInti",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_Me8D"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_Me8D"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper delves into the nuances of the effectiveness of various sharpness regularization methods, such as SAM, weight noise, and gradient penalties, which are seemingly similar methods. To elucidate this, they highlight an often-overlooked term in the Hessian, named the nonlinear modeling error matrix (NME). This term, involving the second derivative of model features and activation functions (unlike the Gauss-Newton term), is proposed as a key factor in understanding these performance differences. Experiments reveal that incorporating the NME into the loss is detrimental, the choice of activation functions is crucial for gradient penalty methods, and the original SAM appears robust to such choices due to its implicit incorporation of the second-order information."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- This paper provides a plausible explanation for the varying performance of sharpness regularization methods with similar motivations, which will likely be of significant interest to the community.\n- The experiments are well-designed to substantiate the paper's claims about the importance of the NME term in explaining performance discrepancies among different sharpness regularization methods."
+            },
+            "weaknesses": {
+                "value": "- The experimental settings appear to lack sufficient robustness for the results, necessitating further justification to ensure the reliability of the findings. Notably, the experiments rely on only two seeds, and the approximation of expectations in Gauss-Newton and Hessian-trace penalty methods relies on a single sample.\n- The argument regarding the relationship between feature learning and the NME term is unclear and lacks concrete support. Including intuitive examples to illustrate this connection would be helpful."
+            },
+            "questions": {
+                "value": "- The activation Hessians do not reach an exact zero when $\\beta$-GELU is used. What criteria are applied to consider the activation function Hessian as zero in Figure 4?\n- Given the approximations outlined in Section 5.1, the hyperparameter $\\rho$ can be aligned with specific weight noise conditions for different methods in Section 5.2. Wouldn\u2019t it then be necessary to compare the results under these matched hyperparameters to draw more precise conclusions regarding the discrepancy between methods?\n- In the case of the Hessian-trace penalty, not only $\\rho$ but also the noise standard deviation in the trace estimator can be varied to control the regularization strength. Is the performance similar when both hyperparameters are controlled to achieve comparable regularization strength? If not, can the results be explained through the lens of the NME?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3742/Reviewer_Me8D"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699243404650,
+        "cdate": 1699243404650,
+        "tmdate": 1699636330085,
+        "mdate": 1699636330085,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "VY9Sml7RwH",
+        "forum": "Gl4AsqInti",
+        "replyto": "Gl4AsqInti",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_jCBc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3742/Reviewer_jCBc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work analyzes why imposing the gradient norm penalty does not work as well as using SAM, despite the two matching in objectives when the loss is approximated up to the first order. The paper shows how this issue does not seem to occur with GeLU as opposed to ReLU, and then attributes it to ReLU's almost zero everywhere curvature which, as a result, does not get properly manifested in the indefinite part of the Hessian. This is then somewhat corroborated by interesting evidence on ImageNet and CIFAR10. Lastly, a similar perspective is attempted in order to understand and compare the weight noise regularization as opposed to other methods."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "- Interesting perspective that would emphasize the need to take additional care when accessing second-order information for networks with ReLU activation\n- Help reconcile the seemingly worse behaviour of various gradient penalty algorithms. More generally, by studying gradient penalty methods, further insights could be achieved into the inner workings of sharpness-regularizing algorithms and the loss landscape at large."
+            },
+            "weaknesses": {
+                "value": "- **Feature exploitation and exploration analogy is interesting but also crude:** Sure, the second term in the Hessian tells more directly about feature exploration than the GN part. But the GN term during training is not fixed, but evolves. And its evolution or change is naturally dependent on the second term in the Hessian. Generally speaking, the linearization argument isn't fully correct either, as that inherently considers a fixed Hessian (like linearize around initialization or about some other point). Consequently, the whole analogy is rather crude and rife with ambiguities. \n\n&nbsp;\n\n- **Explanation of gradient penalty via the activation function:** I do agree that this could be a valuable perspective in general, and indeed the various experimental results do offer a partial hint towards what may be the core issues that impede the efficacy of using gradient norm penalty for networks with ReLU. Yet, I don't think the argument is convincing enough to fully attribute this to the nature of the activation function. (a) The off-diagonal terms in the NME will still have a highly non-trivial contribution, and these are present regardless the almost everywhere zero entries on its diagonal. There is not much of a quantification as to the precise significance of the diagonal entries of the NME, and in what manner it influences the overall Hessian. (b) The results in Figure 3 seem somewhat misleading for they do not quite match the value corresponding to ReLU ($\\beta \\rightarrow \\infty$) shown in Figure 2. For instance, with $\\rho=0.1$, the accuracy in ImageNet and CIFAR10 for PSAM with ReLU seems to be about 69% and 94% from naked eye. But that in Figure 3 seems to be much smaller. This weakens the presented argument. \n\n&nbsp;\n\n- **Weight noise does not work:** This section as said elsewhere is poorly written, and perhaps due to that or in general, comes across as a bit disconnected, and is also not properly fleshed out. I do get more or less the whole pretext around this, but the execution is lacking. The \"roughly matches\" the results of the Hessian trace penalty is a bit too rough. Besides, how are the results in the case of ReLU? Right now, with the fairly decent results, I would also not claim that weight noise does not work. \n\n&nbsp;\n\n\n- **Wrong citations and a general sloppiness in discussing related work:**\n\n   - Moosavi-Dezfooli et al. 2019 citation about regularizing the Hessian to improve generalization is an incorrect in this context. They are talking about Hessian with respect to the inputs, not parameters as is the focus of this paper. It kind of betrays the rigour (or lack of it) when such a thing happens on the second citation of the paper.\n   - The more accurate citation for USAM is Andriushchenko & Flammarion (2022),  not what it currently comes across to be as Agarwala & Dauphin 2023. \n   - \"The second term to our knowledge does not have a name so we call it the Nonlinear Modeling Error matrix\": It has been called functional Hessian in the works of Singh et al., 2021, 2023 analyzing Hessian rank for instance, --- where this matrix has also been analyzed in theoretical detail. \n   - Many second-order optimizers approximate Hessian only with Gauss-Newton: It would make the discussion balanced by adding that the reason for doing so is to also  ensure guaranteed decrease in loss at each step (through  a PSD precondition).\n\n&nbsp;\n\n\n- **Imprecise writing:**\n    - Section 5 onwards the quality of writing drops, and there is often a lack of coherence across the neighboring paragraphs. It seems very hastily written. \n    -  I don't think it's a great idea to introduce sections by saying the key idea of this paper is to explain the phenomenon discussed in some other section 3. \"The key hypothesis of this paper is that the structure of the Hessian can be used to explain the empirical phenomena of Sections 4 and 5.\"\n    - \"rescue the performance of gradient penalty\": really 'rescue'? :) \n   - 'mysteries': i don't think the touched upon issues are so grave or so mind-bending to be qualified as mysteries. all it serves right now is to purposefully and unnecessarily lend it a 'mysterious' air. we all could also use some earnestness when naming our papers. \n\n----\n\nI would have liked to give a better score, but the crucial issues above, plus a somewhat insufficient contribution (section 5 only dilutes, not supplements the analysis before), makes me inclined towards rejection."
+            },
+            "questions": {
+                "value": "Please look at the Weaknesses section. Besides, I have some other minor questions:\n\n- Can you add the training accuracy for the plots in Figure 2?\n- How is the gradient norm penalty exactly implemented? I guess using a mini-batch? Of the same size as that for SAM?\n- Figure 4: Is this computed across all neurons? Over the entire dataset?\n- The Hessian trace is approximated over how many samples?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699325033679,
+        "cdate": 1699325033679,
+        "tmdate": 1699636329996,
+        "mdate": 1699636329996,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

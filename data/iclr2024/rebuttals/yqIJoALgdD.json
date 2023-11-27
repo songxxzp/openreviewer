@@ -1,0 +1,544 @@
+[
+    {
+        "title": "Towards Zero Memory Footprint Spiking Neural Network Training"
+    },
+    {
+        "review": {
+            "id": "0Ypu04tLny",
+            "forum": "yqIJoALgdD",
+            "replyto": "yqIJoALgdD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_j4UM"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_j4UM"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Training normal spiking neural networks (SNNs) directly incurs a significant memory cost. To tackle this issue, this paper introduces a reversible spiking neural node that eliminates the need to store intermediate states during backpropagation by recalculating the states on-the-fly. The authors claim good performance and memory reduction of the proposed SNN node in several vision classification tasks."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The research topic is both intriguing and important. The substantial training cost associated with SNNs, particularly the considerable memory overhead, has troubled the research community, undermining the potential of SNNs. Therefore, it is imperative to propose various methods to curtail the training cost.\n\n2. The experiments demonstrate a substantial reduction in memory usage."
+                },
+                "weaknesses": {
+                    "value": "1. The description of the neural node in Section 3.2 is convoluted and hard to follow. The underlying logic of the proposed neural node remains unclear. The motivation behind introducing such a neural node is ambiguous. The rationale for segregating the states into two groups at each time step is not motivated. The necessity of introducing $\\hat{V^t}$ (Eqs. 3 and 6) is not clearly justified. Moreover, is $[Y_1,Y_2]$ identical to $[X_1,X_2]$ of the next layer? Is $[\\hat{V_1^t},\\hat{V_2^t}]$ identical to $[V_1^{t+1},V_2^{t+1}]$? To enhance clarity, I recommend that the authors initially expound upon the LIF model, introduce the components of the model that prompt dissatisfaction, and subsequently describe their modifications based on the LIF model.\n\n2. Based on my understanding, $[Y_1, Y_2]$ represents the transmitted signal to other SNN nodes. The issue at hand is that these signals are not binary spikes according to eqs. 2 and 5. However, one of the appealing aspects of SNNs is their utilization of binary events for information processing. In essence, a spiking neuron is active only when it encounters spikes, enabling an event-driven regime and an energy-efficient system. However, the proposed neuron nodes deviate from this advantageous feature by transmitting real-valued signals: neurons are active all the time, and the communication cost is high. \n\n3. Why the neural node can achieve layer reversibility during training? Considering the feedforward connection from the l-th layer to the (l+1)-th layer, $x^{l+1}[t] = W * y^l[t]$, where W is not invertible. I am curious about the approach taken to recalculate $y^l[t]$ from $x^{l+1}[t]$. After all, VGG is used as the network architecture, where the weight matrice are not invertible.\n\n4. While the issue of high training costs is particularly pronounced for large-scale datasets such as ImageNet, this work exclusively tests the proposed method on small-scale datasets (including Tiny-ImageNet). Consequently, the results may not be as convincing, primarily because the training cost for small-scale tasks is relatively affordable. It would be beneficial to extend the evaluation to more computationally demanding datasets to underscore the true efficacy and efficiency of the proposed method."
+                },
+                "questions": {
+                    "value": "See Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2819/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698391072754,
+            "cdate": 1698391072754,
+            "tmdate": 1699636225525,
+            "mdate": 1699636225525,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "yP32b9mbPL",
+                "forum": "yqIJoALgdD",
+                "replyto": "0Ypu04tLny",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your valuable feedback on our work. We would like to address each of the queries you have raised regarding our work in turn.\n\n**Response to *Weakness 1.1 Clarification on spiking neuron Description***: \n\nThe rationale behind introducing the reversible spiking neuron lies in enabling the recalculation of activation values during backpropagation. This approach eliminates the need to store activation values during the forward propagation phase, thereby significantly reducing memory usage. To facilitate the recalculation, our model incorporates a symmetric design, wherein states are divided into two groups.\n\nFor a more comprehensive understanding of this process, please refer to **Common Question 1** in the **Global Response** section, where we detail how our reversible spiking neuron substantially reduces memory usage and explain the reversibility of our spiking neuron.\n\n**Response to *Weakness 1.2 Symbol classification***: \n\nTo address your concern about clarifying the variables in our equations, we have provided a detailed explanation of the symbol system employed in our paper within **Common Question 2** of the **Global Response** section. We used the original LIF model as an example to explicitly delineate the meanings of various symbols in our formulas. This illustration helps to distinguish the symbols used in our work from those in the original LIF models.\n\nAdditionally, we would like to address the two specific questions you raised in the reviews:\n- The symbols $[Y_1,Y_2]$ represent the output of each spiking neuron. After passing through intermediate layers, such as CNN or LayerNorm layers, they transform into the input $[X_1,X_2]$ for the next spiking neuron. \n- The notation $[\\hat{V_1^{t}},\\hat{V_2^{t}}]$ is the same as $[{V_1^{t}},{V_2^{t}}]$. The hat symbol over $V$ was used to denote that the voltage $V$ undergoes in-place modification during the computation process. We have replaced $\\hat{V}$ with $V$ for clarity in our revised version. \n\n**Response to *Weakness 2. signal transmission real-valued vs. binary spikes***: \n\nDespite the intrinsic appeal of SNNs due to their use of binary events for information processing, the exploration of real-valued outputs in SNNs is a dynamic area of research. A noteworthy example can be found in the work of Guo et al. [1] (ECCV 2022). Their research demonstrates the feasibility of utilizing real-valued spikes in SNNs while maintaining the advantages of binary spikes.  \n\n**Response to *Weakness 3. Explanation for layer reversibility during training***:\n\nFirstly, it is important to highlight that in our model, the transmission of input features $X$ through the spiking neuron does not involve any weight computation. \n\nSecondly, for layers where weights play a role, such as CNN layers, constructing reversible layers is feasible. A notable illustration of this concept is found in the work of Gomez et al. [2] (NIPS 2017). Since weights are updated only after the completion of the gradient calculation, it allows for the precise recalculation of the original activation values using the unchanged, original weights.\n\nTo ensure the integrity of our model, we have rigorously verified the consistency between all inputs in the forward operation and the outputs from the inverse operation. This verification was conducted using `torch.allclose(rtol=1e-06, atol=1e-10)`, confirming the accuracy and reliability of our layer reversibility approach during training.\n\n**Response to *Weakness 4. Training Cost and Scalability***:\n\nThank you for highlighting this important aspect. In response, we have included an additional experiment in the **Common Question 3** of our **Global Response** section. This experiment specifically targets heavy GPU load tasks, with a focus on training on ImageNet-1k using a single GPU with 24GB memory. The results demonstrate that our method successfully avoids out-of-memory issues even at high batch sizes. We believe this additional data will effectively address your concerns regarding the scalability and computational efficiency of our approach in more demanding scenarios.\n\nThank you once again for your insight reviews! We hope that our responses have adequately addressed and resolved your doubts. Should you have any further concerns or questions at any time, please do not hesitate to let us know. We greatly appreciate your continued guidance and support.\n\n**Reference**\n\n[1] Guo, Y., Zhang, L., Chen, Y., Tong, X., Liu, X., Wang, Y., ... & Ma, Z. (2022, October). Real spike: Learning real-valued spikes for spiking neural networks. In the European Conference on Computer Vision (pp. 52-68). Cham: Springer Nature Switzerland.\n\n[2] Gomez, A. N., Ren, M., Urtasun, R., & Grosse, R. B. (2017). The reversible residual network: Backpropagation without storing activations. Advances in neural information processing systems, 30."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699950579247,
+                "cdate": 1699950579247,
+                "tmdate": 1699950579247,
+                "mdate": 1699950579247,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "USck7dtPQ1",
+                "forum": "yqIJoALgdD",
+                "replyto": "yP32b9mbPL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_j4UM"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_j4UM"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "The rebuttal addresses some of my concerns. Now I am clear about the underlying logic of the proposed neural node. However, the real-valued communication signal still concerns me. \n\nFirst, although Guo et al. [1] proposes to use real-valued 'spikes' during training, the trained SNNs can be recovered to emit binary spikes. Therefore, the obtained models are still standard SNNs that can be implemented on some common neuromorphic hardware, maintaining the event-driven architecture and the good energy efficiency.\n\nSecond, if the transmitted signals are real-valued in an SNN, such an SNN is not as effective as the corresponding DNN, is not energy-efficient on hardware, and is hard to train. Then it is better to simply use DNNs."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700731755914,
+                "cdate": 1700731755914,
+                "tmdate": 1700731755914,
+                "mdate": 1700731755914,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "KSCb05LKO2",
+            "forum": "yqIJoALgdD",
+            "replyto": "yqIJoALgdD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_JXdn"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_JXdn"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposed a framework for zero memory footprint spiking neural network training, which includes a reversible SNN node design and a streamlined backpropagation algorithm. The contributions of the paper are the reduction of memory usage and training time, making SNNs more feasible for resource-limited environments such as IoT-Edge devices."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. This study provides vivid illustrations for the computations of the proposed model, which makes it easy and clear for readers to follow.\n\n2. The experimental results look like convincing."
+                },
+                "weaknesses": {
+                    "value": "Certainly, the authors provide a detailed introduction to spiking computations. However, it is unclear which component or computational step contributes to the memory savings. This lack of clarity might give the impression that the paper reads like a technical report. Providing further elaboration on the modifications and corresponding improvements proposed by this work would be highly beneficial.\n\nIn addition, there are a few instances of unclear phrasing:\n\nIt is preferable to use \"spiking neuron\" instead of \"spiking neural node\" in the machine learning community.\n\nThe overall layout of the paper could benefit from improvement, especially on pages 4-6, which can be somewhat arduous to read.\n\nWhile the derivation of the formula is quite clear, there are still areas that could be refined. For example, using notation like $[V_{11}, V_{21}; V_{12}, V_{22}]$ may be more effective than the current [v_1, v_3; v_2, v_4], which is then divided into V[1] and V[2]. Additionally, the case distinction between V and v may not be of significant importance."
+                },
+                "questions": {
+                    "value": "See weaknesses.\n\nI will consider raising my score if the authors fixed my doubts."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2819/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698397788084,
+            "cdate": 1698397788084,
+            "tmdate": 1699636225451,
+            "mdate": 1699636225451,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "h6p7Rc90ML",
+                "forum": "yqIJoALgdD",
+                "replyto": "KSCb05LKO2",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your valuable feedback on our work. We would like to address each of the queries you have raised regarding our work in turn.\n\n**Response to your first concern *it is unclear which component or computational step contributes to the memory savings***:  \n\nOur approach eliminates the necessity to store activation values, which traditionally consume substantial memory. Instead, the neuron in our work can recalculate the activation values during the backpropagation phase of SNN training, thereby achieving significant memory efficiency.\n\nFor a more comprehensive understanding of this process, please refer to **Common Question 1** in the **Global Response** section, where we detail how our reversible spiking neuron substantially reduces memory usage and explain the reversibility of our spiking neuron.\n\n**Response to your *Improving Terminology Consistency* concern**: \n\nWe are now using \"spiking neuron\" throughout the revised version of our paper to align with common usage in the machine learning community.\n\n**Response to your *Refining Notation and Formula Presentation* concern on pages 4-6**:\n\nWe have revised the notation throughout our paper, as evident in the updated **Figure 3**. In the refined approach, uppercase variables represent matrices, while lowercase variables denote elements within those matrices. For instance, $V$ denotes the input voltage matrix, and $\ud835\udc97_{11}$ refers to the first element of matrix $V$. \n\nAdditionally, we have replaced $\\hat{V}$ with $V$ for clarity. Previously, the hat symbol above $V$ was intended to indicate that $V$ is an in-place changing variable. \n\nThank you once again for your valuable insights and feedback. We hope that our responses have adequately addressed and resolved your doubts. Should you have any further concerns or questions at any time, please do not hesitate to let us know. We greatly appreciate your continued guidance and support."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699949707489,
+                "cdate": 1699949707489,
+                "tmdate": 1699949707489,
+                "mdate": 1699949707489,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "y1HQWAv5nc",
+                "forum": "yqIJoALgdD",
+                "replyto": "h6p7Rc90ML",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_JXdn"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_JXdn"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Responses"
+                    },
+                    "comment": {
+                        "value": "After reviewing the rebuttals and comments, several uncertainties have been addressed. However, it remains unclear which component or computational step is responsible for the observed memory savings. To be more precise, how efficient is the inverse function saving?\n\nI've noticed that other reviewers have posed similar questions. It is hoped that the authors can provide a more explicit response to this inquiry."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699950369473,
+                "cdate": 1699950369473,
+                "tmdate": 1699950369473,
+                "mdate": 1699950369473,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "7GvauWy6gJ",
+            "forum": "yqIJoALgdD",
+            "replyto": "yqIJoALgdD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_u1jx"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_u1jx"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new reversible spiking module to circumvent the high memory cost of storing the spatial-temporal computational graph needed for (surrogate) gradient-based training spiking neural networks. Their method trades memory for additional computation during the backward pass, but they introduce a more efficient way to compute the gradient of the reversible module compared to how it is done usually in revertible neural networks. They demonstrate quantitative improvements in terms of memory and compute time of the gradient compared to many previous SNNs approaches, on various vision tasks (CIFAR10/100, DVCGesture, Tiny-ImgaNet...) and network architectures, while maintaining the same level of accuracy."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "**Originality:** The paper is original because it combines research from different fields: invertible neural networks and spiking neural networks. To my knowledge it has never been done before.\n\n**Quality:** The quality is good, the paper is very detailed, very quantitative and thorough in its comparison with other work.\n\n**Clarity:** The paper is clearly written, though some sentences could be better formulated.\n\n**Significance:** The approach is significant since compute is generally cheaper than memory access in hardware, so to me it makes sense to trade one for the other in the context of edge AI, which is the main use case of SNNs."
+                },
+                "weaknesses": {
+                    "value": "The paper is already good, but one weakness I see is that the approach is only tested on static vision benchmarks that arguably do not require a lot of temporal processing. \n\nThe paper would become great if the RevSNN approach was tested on benchmarks that require long sequences, and where the other approaches fail because of out-of-memory. An example of such a task could be image classification from sequences of pixels, as described in [1], but other tasks are possible. The goal is to find a setting where only RevSNN manages to learn the task thanks to its low memory requirement.\n\n[1] Tay, Yi, et al. \"Long range arena: A benchmark for efficient transformers.\" arXiv preprint arXiv:2011.04006 (2020)."
+                },
+                "questions": {
+                    "value": "Questions:\n\n- Does the reversible nature of the RevSNN imposes any constraint on the dimensionality of the layers? I am thinking that the dimensions have to be the same for the module to be invertible. If yes, how is it handled in architectures like VGG?\n\n- I don't understand why Figure 4 mentions GNN (Graph Neural Network?), whereas the architectures in the tables are all ConvNets?\n\n- It would be nice if the plots in Figure 6 shared the same y-axis, so that comparison is easier when varying the timesteps.\n\nThe authors might want to consider citing [2] and [3], as I think they are related to their approach.\n\n[2] Bauer, Felix C., et al. \"EXODUS: Stable and efficient training of spiking neural networks.\" Frontiers in Neuroscience 17 (2023): 1110444.\n[3] Gomez, Aidan N., et al. \"The reversible residual network: Backpropagation without storing activations.\" Advances in neural information processing systems 30 (2017)."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2819/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2819/Reviewer_u1jx",
+                        "ICLR.cc/2024/Conference/Submission2819/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2819/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698674837109,
+            "cdate": 1698674837109,
+            "tmdate": 1700642156324,
+            "mdate": 1700642156324,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Xb9FuvvgBu",
+                "forum": "yqIJoALgdD",
+                "replyto": "7GvauWy6gJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you very much for your recognition of our work! Here are our responses to your questions:\n\n**Response to *Weakness1***: \n\nWe agree that evaluating our approach on a mix of both static and dynamic benchmarks is crucial for a comprehensive assessment.  To this end, in the paper we discussed the comparison of our work with the SOTA methods on two static vision datasets, CIFAR10 and CIFAR100, as well as on two dynamic vision datasets, **DVS-CIFAR10** and **DVS128-Gesture**.  These comparative results are comprehensively detailed in **Table 1** of our paper, demonstrating the effectiveness of our approach on varied types of datasets.\n\n**Response to *Weakness 2***: \n\nThank you for highlighting this important aspect. In response, we have included an additional experiment in the **Common Question 3** of our **Global Response** section. This experiment specifically targets heavy GPU load tasks, with a focus on training on ImageNet-1k using a single GPU with 24GB memory. The results demonstrate that our method successfully avoids out-of-memory issues even at high batch sizes. We believe this additional data will effectively address your concerns regarding the scalability and computational efficiency of our approach in more demanding scenarios.\n\n**Response to *Question 1***: \n\nRevSNN imposes no constraints on the dimensionality of the layers.  However,  the dimension of a specific layer does have to be the same for the layer to be invertible. \n\nIn a SNN adapted from conventional VGG architectures, a spiking neuron is typically  added after the CNN layers at the construction stage. In pseudocode,  this step is to modify `layer += [nn.Conv2d(in_channels, out_channels]`  to `layer += [nn.Conv2d(in_channels, out_channels], neuron.LIFNode()]`. The reversibility of the two type of layers are discussed below:\n* Spiking neuron: Reversibility is inherently ensured due to its identical input and output dimensions\n* CNN layers:\nFor CNN layers with identical input and output dimensions, we can apply the techniques from your suggested reference, *The Reversible Residual Network: Backpropagation Without Storing Activations*, to facilitate reversibility.\nFor CNN layers with different  input and output dimensions, reversibility cannot be achieved due to the inherent discrepancy in dimensions. However, CNN layers in most VGG models have identical input and output dimensions, leaving this issue with minor affect to the overall memory cost.\n\n**Response to *Question 2***: \n\nThanks a lot for pointing out our typo. We have carefully reviewed and corrected this typo in the revised version of our paper. We hope this amendment addresses your concern and enhances the clarity and accuracy of our work.\n\n**Response to *Question 3***: \n\nThank you for your valuable suggestion. To facilitate easier comparison, we have updated **Figure 6** so that all plots now share the same y-axis. We hope this alignment can enhance clarity and improve the interpretability of the comparisons. \n\n**Response to *Citation Suggestion***:  \n\nWe appreciate your valuable suggestion. In line with your recommendation, we have included citations to the two works you suggested in our revised paper.\n\nThank you once again for your recognition of our work! We hope that our responses have adequately addressed and resolved your doubts. Should you have any further concerns or questions at any time, please do not hesitate to let us know. We greatly appreciate your continued guidance and support."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699949339188,
+                "cdate": 1699949339188,
+                "tmdate": 1699949339188,
+                "mdate": 1699949339188,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "QMdDYtJh4C",
+                "forum": "yqIJoALgdD",
+                "replyto": "Xb9FuvvgBu",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_u1jx"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_u1jx"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for answering my points and providing additional experiments, I increased my confidence score accordingly."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700642127139,
+                "cdate": 1700642127139,
+                "tmdate": 1700642127139,
+                "mdate": 1700642127139,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "FsImEtGrQ2",
+            "forum": "yqIJoALgdD",
+            "replyto": "yqIJoALgdD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_Umsy"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2819/Reviewer_Umsy"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper addresses the challenge of memory consumption in the training of Spiking Neural Networks (SNNs). The authors design a special forward and backward computation pattern for SNNs and it does not need to store the intermediate features. Experiments were conducted to show the GPU memory efficiency."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "+ The paper studies how to reduce the memory footprint of the SNNs during training, which could be an important issue. \n\n+ Though the presentation is not clear, the proposed framework seems to be novel."
+                },
+                "weaknesses": {
+                    "value": "- The methodology part of this work is not well-presented. There are no intuitions or motivations to demonstrate why we have to design this symmetric forward/backward implementation. The notation system is very chaotic, the authors did not mention what is the input/output/membrane potential, and how you denote traditional LIF nodes' implementation. The figures are just copies of the equation. \n\n- This work did not reach the same level of accuracy as the recent SOTA SNN works. For example: TEBN [1], MPBN [2].\n\n- Compared to the original SNNs, this new framework increases the training latency. It is okay to have a little bit higher latency, since most memory efficiency methods trade space for time. However, in that case, I hope the authors can demonstrate the real challenging case, i.e. heavy GPU load tasks, like ImageNet-1k training with a single GPU. How much batch size can this method and the traditional method reach and what are the accuracies? These results are missing. \n\n\n[1] Duan et al., Temporal Effective Batch Normalization in Spiking Neural Networks. \n[2] Guo et al., Membrane Potential Batch Normalization for Spiking Neural Networks."
+                },
+                "questions": {
+                    "value": "See my weakness above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2819/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698957306195,
+            "cdate": 1698957306195,
+            "tmdate": 1699636225312,
+            "mdate": 1699636225312,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "UzN6u5p4hz",
+                "forum": "yqIJoALgdD",
+                "replyto": "FsImEtGrQ2",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your valuable suggestions and the recommended references. We sincerely appreciate your time in evaluating our work. Our point-to-point responses to your comments are given below.\n\n**Response to *Weakness 1.1: Clarification on Spiking Neural Description***: \n\nThe rationale behind introducing the reversible spiking neuron lies in enabling the recalculation of activation values during backpropagation. This approach eliminates the need to store activation values during the forward propagation phase, thereby significantly reducing memory usage. To facilitate the recalculation, our model incorporates a symmetric design, wherein states are divided into two groups. \n\nFor a more comprehensive understanding of this process, please refer to **Common Question 1** in the **Global Response** section, where we detail how our reversible spiking neuron substantially reduces memory usage and explain the reversibility of our spiking neuron.\n\n**Response to *Weakness 1.2: Symbol classification***: \n\nTo address your concern about clarifying the variables in our equations, we have provided a detailed explanation of the symbol system employed in our paper within **Common Question 2** of the **Global Response** section. We used the original LIF model as an example to explicitly delineate the meanings of various symbols in our formulas. This illustration helps to distinguish the symbols used in our work from those in the original LIF models.\n\nTo directly respond to your specific query regarding the definitions of input, output, and membrane potential:\n1. **Input potential** at time $t$ is denoted by $V^{t-1}$, representing  the neuron's potential at the previous time step.\n2. **Output potential** at time $t$  is denoted by $V^{t}$, indicating the neuron's potential at the current time step.\n3. **Membrane potential** at time $t$ is denoted as $M^{t}$, bridging the neuron's states between the previous and the current time step. \n\n**Response to *Weakness 2***:\n\nWe appreciate your comparison with recent SOTA SNN works. Contrary to the concern raised, our results not only achieve higher accuracy than TEBN but also match the accuracy levels of MPBN.\n\nIn our research, we have incorporated our reversible spiking neuron into several existing SOTA SNN methodologies, as detailed in **Table 2**. This was done while maintaining other aspects of their setups unchanged, allowing for a direct comparison of the impact of our innovation on accuracy. Our RevDSR model achieves an accuracy of $95.35$% on CIFAR-10 and $78.21$% on CIFAR-100. Upon reviewing TEBN and MPBN, we found that TEBN attains a maximum accuracy of $94.71$% on CIFAR-10 and $76.41$% on CIFAR-100. Meanwhile, MPBN shows a variable accuracy range from $92.22$% to $96.47$% on CIFAR-10 and $70.79$% to $79.51$% on CIFAR-100 under different settings.\n\n**Response to *Weakness 3***:\n\n Thank you for highlighting this important aspect. In response, we have included an additional experiment in the **Common Question 3** of our **Global Response** section. This experiment specifically targets heavy GPU load tasks, with a focus on training on ImageNet-1k using a single GPU with 24GB memory. The results demonstrate that our method successfully avoids out-of-memory issues even at high batch sizes. We believe this additional data will effectively address your concerns regarding the scalability and computational efficiency of our approach in more demanding scenarios.\n\nThank you once again for your valuable insights and feedback. We hope that our responses have adequately addressed and resolved your doubts. Should you have any further concerns or questions at any time, please do not hesitate to let us know. We greatly appreciate your continued guidance and support."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699948941599,
+                "cdate": 1699948941599,
+                "tmdate": 1699948941599,
+                "mdate": 1699948941599,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "zb8wgY7n9j",
+                "forum": "yqIJoALgdD",
+                "replyto": "UzN6u5p4hz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_Umsy"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2819/Reviewer_Umsy"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply"
+                    },
+                    "comment": {
+                        "value": "Thanks for your response. Part of my concerns have been addressed. However, some key weakness still remains.\n\n- Lack of intuition and motivation. Even though the authors provided the original LIF formula, it is unclear what aspects of the original LIF or existing work make GPU training heavy, which part of LIF are you trying to solve, what motivates you to design this reversible neuron. The reviewer expects to see a detailed motivation in Section 3.1. Currently, it is just an example showing memory gains and nothing more. \n\n- Compared to SOTA work, RevDSR reaches the same accuracy level but not under the same #timesteps. What is the accuracy of RevDSR using T=2? Is it the same with TEBN? What is the neural architecture, #timesteps in ImageNet experiments and does it have similar accuracy with TEBN, too?"
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2819/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700521072330,
+                "cdate": 1700521072330,
+                "tmdate": 1700521072330,
+                "mdate": 1700521072330,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

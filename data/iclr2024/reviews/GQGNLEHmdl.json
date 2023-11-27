@@ -1,0 +1,213 @@
+[
+    {
+        "id": "aYM3ZMIpwW",
+        "forum": "GQGNLEHmdl",
+        "replyto": "GQGNLEHmdl",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_m8Q2"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_m8Q2"
+        ],
+        "content": {
+            "summary": {
+                "value": "When serving large-scale deep learning models, their memory requirements are one of the major hurdles. Unlike the parameter memory, optimizations for the activation memory have not been much studied. Since the activation memory is variable depending on the context length, it is important to reduce the activation memory pressure for long context inference. In this research, the authors propose AutoChunk, an automatic compiler system that finds an efficient execution plan with low activation memory pressure. Their evaluation results show that AutoChunk can reduce 50~60% activation memory without speed loss, or 80% activation memory while maintaining speed loss within 10%."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper suggests an important problem; optimizing the activation memory because the context length is rapidly increasing.\n- Unlike the existence of DL compilers related to parallel execution, the paper presents a new type of DL compiler."
+            },
+            "weaknesses": {
+                "value": "- Little bit unclear how \"activation memory\" is measured. Unlike training, we can reuse memory in inference. For example, the MLP module of the Transformer layer has the following structure (not assuming gated linear).\n  ```\n  Y = UP_PROJ(X)\n  Z = DOWN_PROJ(Y)\n  ```\n  In this case, X and Z can use the same memory region. Did the paper consider such a characteristic? It is confusing because Figure 4 shows the activation memory distribution of each node.\n- More analysis for experiments will be helpful. For example, what is a chunking strategy that AutoChunk finds for the GPT model in Figure 5? For now, it is just a black-box compiler.\n- For the GPT model, if AutoChunk can reduce the activation memory by half, we can allocate more memory for the key-value cache. It will lead to an end-to-end throughput increase. Are there any results about this? The first paragraph of Section 4 says that the prefill stage is assumed for the GPT case."
+            },
+            "questions": {
+                "value": "- Could you explain the reason why AutoChunk can even accelerate inference for AlphaFold (B=4, S=512) and UNet (B=1, S=192) cases?\n- Is batch dimension also considered as a candidate for chunking? If so, should we run the search algorithm for every execution? It might incur runtime overhead.\n- How long does AutoChunk take to search chunking strategy?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Reviewer_m8Q2"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5012/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698498151566,
+        "cdate": 1698498151566,
+        "tmdate": 1699636489603,
+        "mdate": 1699636489603,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "AdQo0SYmJs",
+        "forum": "GQGNLEHmdl",
+        "replyto": "GQGNLEHmdl",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_Ypeq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_Ypeq"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors define a formal model for breaking up neural net computations into chunks and sequentially executing them to save on memory footprint. They then formulate it as a search space optimization problem and provide an efficient search algorithm. They show that sequential execution of chunks on a limited set of ops is sufficient to provide good memory use gains while keeping overhead low."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "- By formalizing the definition of legal chunk flows and providing a cost function, AutoChunk turns a programmer intuition (\"certain computations can be sequentialized to save space\") into an computational optimization problem. This breaks down of a lot of barriers to entry. Wrapping everything up into a single function call that statically optimizes a compute graph is a testament to just how end-to-end the authors have made their solution.\n- Dimension slicing and tiling normally has a stupidly large optimization space. The authors provide several straightforward and effective means for reducing that space to a tractable size and then show that DP is sufficient to get good results.\n- The observations on the need for sequential chunking across all operators (fig 4) is useful in understanding the intuition behind why overhead can be kept low. This is generally helpful beyond just its applicability to chunking (even if it has been observed before).\n- I appreciated the measure of effectiveness in the presence of other memory optimization (i.e.- fused kernels). Often times, memory optimizations (sparsification, pruning, compression, etc.) partially or fully cannibalize each others benefits when used in conjunction. Good to see these play nicely together."
+            },
+            "weaknesses": {
+                "value": "- The paper uses a *lot* of bespoke jargon and sometimes uses terms before they are formally introduced. For reference, the following terms are used with the form \"chunk ___\": flow, region, dimension, size, search, space, setting, selection, formulation, strategy, plan, candidate. If I don't read the word \"chunk\" again for a while, I'll be happier for it.\n- The benefits of AutoChunk vs. expert plans are a bit middling. This is less a weakness of AutoChunk's algorithm and more an observation that the expected benefits from AutoChunk will come from *unchunked* models rather than those already using a chunking strategy. In other words, AutoChunk is more useful when spreading the benefits of chunking to a broader set of models rather than improving on those that already use it."
+            },
+            "questions": {
+                "value": "- While activation memory is generally correlated with model complexity, chunkable activations seem heavily dependent on the model type. Obviously the models chosen for evaluation in the paper are amenable (which is not a strike against the work---these models are relevant and important). Can the authors give some intuition or generalizations on the classes of neural net architectures that fail to chunk nicely (vs those that do)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5012/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698826174677,
+        "cdate": 1698826174677,
+        "tmdate": 1699636489514,
+        "mdate": 1699636489514,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "H5NEiWjDPB",
+        "forum": "GQGNLEHmdl",
+        "replyto": "GQGNLEHmdl",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_Tqhc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5012/Reviewer_Tqhc"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper considers the memory consumption during inference of large deep neural networks on long input sequences. To reduce the activation memory, the paper proposes an adaptive compiler to automatically configure chunking strategies."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "- The paper tackles an important issue that is becoming increasingly relevant as model sizes continue to grow.\n\n- The empirical evaluation of the proposed method appears thorough."
+            },
+            "weaknesses": {
+                "value": "- The paper employs substantial jargon and undefined terms. For readers who are not deeply familiar with the topic, sections of the paper are somewhat difficult to comprehend. For instance, it is unclear what portion of activation memory is contained within a chunk. \n\n- The ablation study is arguably somewhat restricted in scope."
+            },
+            "questions": {
+                "value": "How does the splitting across points inside a batch work?\nHow exactly does the dynamic programming approach work to solve Equation 11?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5012/Reviewer_Tqhc"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5012/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1700510831485,
+        "cdate": 1700510831485,
+        "tmdate": 1700510831485,
+        "mdate": 1700510831485,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

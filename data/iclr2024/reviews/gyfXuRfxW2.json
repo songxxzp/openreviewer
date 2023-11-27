@@ -1,0 +1,206 @@
+[
+    {
+        "id": "82AyLxJYX5",
+        "forum": "gyfXuRfxW2",
+        "replyto": "gyfXuRfxW2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_J1SQ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_J1SQ"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper considers the problem of learning how to provide SDP positivity certificates for polynomials. This problem can be solved using convex solvers but this is typically rather time consuming. \n\nThe paper observes that the mapping from positive polynomials to their `maximal entropy' SDP solution is SL(d) equivariant. Focusing on the d=2 case,the paper suggests an SL(2) equivariant architectures based on the Clebsch-Gordan methodology often used for SO(3) and other groups. In practice, this architecture does not perform as well as augmentation based on SO(2) equivariant baselines. The paper suggests an interesting theoretical find to (possibly) explain this: While the Clebch-Gordan architecture can construct all equivariant polynomials, the equivariant function considered in the paper cannot be approximated by equivariant polynomials."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. I am not aware of previous work considering the problem the paper considered: learning SDP positivity certificates. Given the high time complexity of these solvers, their centrality in convex programming, and the fact that certificates are verifiable as explained in the paper, I believe this is a very interesting problem to consider and should be considered further. The paper does a good job, in my opinion, of setting up a first empirical and theoretical baseline to consider this problem. \n\n2. Writing is good, it is an interesting story to read.\n\n3. Theorem 1 regarding non-universality seems an interesting result (despite possible error, and needing some tuning down or context as I discuss in the questions part)"
+            },
+            "weaknesses": {
+                "value": "1. I have some issues re the technical details of the main theorem and the premises of the method, see below. If these issues prove to be non-issues I will raise the score\n2. The architecture that actually works is rather basic: MLPs with augmentations. On the other hand one could credit the paper in finding the equivariant structure and hence what the relevant augmentations are.\n3. The argument that the SL_2(R) equivariant architecture doesn't work because of lack of universality is difficult to actually substantiate. There are many reasons why an architectures may not work well. Maybe a different SL_2 equivariant architecture will work better?"
+            },
+            "questions": {
+                "value": "The formulation of finding the positive-definite witness with maximal determinant assumes that there are many such witnesses. Are there many witnesses? e.g. when we discuss polynomials of degree 2 and the monomail vector is (x,y) I think that a symmetric matrix uniquely Q uniquely defines a quadratic polynomial (x,y)Q(x,y).\nWhen we discuss polynomials of higher degree there are ambiguities that come from the fact that, say, (x^2)(y^2)=(xy)(xy). But this can be dealt with directly by adding more symmetry constraints into the matrix. In other words, the matrix should be a moment matrix as defined in [Lasserre 2001]. Once these constraints are added I believe that there will be no more ambiguities. Do you agree? If so wouldn't it make sense to incorporate the symmetries and forget about optimizing over logdet?\n\nI have two issues with the non-universality proof. The first issue has to do with the correctness of the proof. In the proof of theorem 1 you display the matrix f(x^8+y^8) (let's call it M) which was computed numerically using Mosek. Is this matrix really a factorization of x^8+y^8? \nIf I understood everything correctly, denoting v=[x^4, x^3y,...,y^4]^T we should have that for all x,y\nx^8+y^8=v^TMv\nis this correct? Trying this on numpy with the M you specified and x=1, y=1 I get \nv^TMv=1.76\nwhile for x=1 y=1\nx^8+y^8=2\nNote also that the trivial factorization of x^8+y^8 would be M0=diag(1,0,0,0,1). which is not in the domain since det(M0)=0. Thus I would suspect that this polynomial is not in the domain of f. Is that true? Or is it possible for a polynomial to have different factorizations of different ranks? Authors please let me know if there is something I misunderstood of if there is some error. Due to this possible error I'm currently setting the rating at 5 and soundness at 2. I will be happy to raise the rating if there is in fact no error. \n\n\nA second issue is with the result concerning the non-universality of the SL(2) network is not correctness but just about the exposition. It is neat that you prove that the function f you're actually  interested in cannot be approximated by SL(2) equivariant polynomials. But I do think you should note that your function f is not defined on all of the vector space: namely f(p) is only defined if p is indeed positive, and moreover there exists a *strictly* positive definite matrix verifying this. So f is defined on some subset of your vector space. The universality results in [Bogatskiy] pertain to the complex SL_2, but also to functions continuous on the whole domain, and this may end up being the more substantial difference. Another example: in  [Villar et al.] all continuous functions invariant with respect to the non-compact Lorenz group action are shown to be approximated by polynomials. Here again the continuous functions are defined on all of the domain.\n\nAnother angle to think of these issues is: For non-compact groups often distinct orbits cannot be separated by continuous functions. For example: consider the action of SL_d on d by d matrices by multiplication from the right: you can see that a d by d matrix which does not have full rank, say A=diag(0,1,1,...,1), is not in the same orbit as the zero matrix, but its orbit contains all matrices of the form diag(0,epsilon,..,epsilon) and thus any SL_d *invariant* function F continuous on all of the domain will satisfy F(A)=F(0). For more on this see [Dym and Gortler] Section 2.5 and Section 1.4, especially the paragraph titled `algebraic separation vs. orbit separation'.  \n\nSo to be concrete about this: I think you should mention in the paper that the function f is not defined everywhere, and would suggest to change the paragraph `why is SL(2,R) different' and other places where this issue is discussed, to note that this also might be a reason for the difference between universality results elsewhere and your non-universality result here.\n\nOther remarks, questions, suggestions, according to order in the paper and not importance:\nSomewhere in the paper- explain why you decided to restrict yourselves to polynomials of two variables.\n\nIn your discussion of Schur's Lemma in page 6: the lemma applies to complex representations and not real. Do you address this (if not, maybe just add a disclaimer)?\n\nPage 4: when you introduce the function f discuss its domain. Mention that in its domain the function is well defined since the opimization problem has a unique maximizer. \n\nPage 6: I didn't understand your explanation of the last layer.\n\nPage 8 timing: The accuracy you achieve is not bad, but probably can be achieved by first order methods which can be much fast than Mosek. You should at least mention this, even if you do not compare against such a method in practice.\n\nPage 9: you reference the wrong paper by Puny. You meant [Puny 2021] not [Puny 2023]\n\n\n \n\n\nReferences mentioned above:\n[Villar et al.]  Scalars are universal: Equivariant machine learning,\nstructured like classical physics\n[Dym and Gortler] Low Dimensional Invariant Embeddings for Universal Geometric\nLearning\n[Puny 21]  Frame averaging for invariant and equivariant network design\n[Lasserre 2001] Global Optimization with polynomials and the problem of moments."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6163/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6163/Reviewer_J1SQ",
+                    "ICLR.cc/2024/Conference/Submission6163/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6163/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697535831232,
+        "cdate": 1697535831232,
+        "tmdate": 1700399358445,
+        "mdate": 1700399358445,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "OuiqNwHVjI",
+        "forum": "gyfXuRfxW2",
+        "replyto": "gyfXuRfxW2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_b6w7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_b6w7"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a novel approach to learning polynomial problems with -equivariance. The authors demonstrate the effectiveness of neural networks in solving polynomial problems in a data-driven fashion, achieving tenfold speedups while retaining high accuracy. They also adapt their learning pipelines to accommodate the structure of the non-compact group , including data augmentation and new -equivariant architectures. The paper presents a thorough analysis of the proposed approach, including theoretical proofs and experimental results."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+The paper presents a novel approach to solve polynomial problems with -equivariance, which is a significant contribution to the field.\n+ The authors provide a detailed analysis of the mathematical properties of the proposed approach, including its equivariance and homogeneity properties. This analysis is essential for understanding the theoretical foundations of the approach.\n+The authors provide a detailed comparison with existing methods, highlighting the advantages of their approach."
+            },
+            "weaknesses": {
+                "value": "- The paper could benefit from more detailed explanations of some of the technical concepts and methods used, particularly for readers who are not familiar with the field. For example, the paper could provide more details on the mathematical background of  and its relevance to the problem at hand.\n\n- The paper could provide more details on the implementation of the proposed approach, including the datasets used in the experiments, the choice of neural network architecture and optimization algorithm. \n\n- The paper could benefit from a more detailed discussion of the limitations and potential future directions of the proposed approach.\n\n- While the proposed architecture is effective for learning equivariant polynomials, the LACK OF UNIVERSALITY mentioned could limit its applicability to more complex or diverse datasets. This could be a potential drawback when applying the proposed approach to real-world problems.\n\n- While the experimental results are promising, the authors could provide more detailed analysis and discussion of the results to further support their claims. For example, the paper could provide more details on the sensitivity of the proposed approach to hyperparameters and the robustness of the approach to noisy data."
+            },
+            "questions": {
+                "value": "Please check the Weaknesses listed above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6163/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698825952339,
+        "cdate": 1698825952339,
+        "tmdate": 1699636669289,
+        "mdate": 1699636669289,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0wUkuuqQhN",
+        "forum": "gyfXuRfxW2",
+        "replyto": "gyfXuRfxW2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_AJ4x"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6163/Reviewer_AJ4x"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper poses to solve certain polynomial optimization problems using architectures which respect the SL(2,R) symmetry. \n\nBut most of the critical details are looking very opaque."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper has definitely identified a very novel use case for neural nets \u2013 like positivity certification for polynomials. \n\nThe experimental data also seems reasonable."
+            },
+            "weaknesses": {
+                "value": "What is this $\\psi_n$ function in equation 2? This does not look like a Clebsch-Gordon coefficient.  \n\nSection 4.2 is extremely vague. The pseudocode is almost unreadable because it is calling functions (in lines 8 and 10) which has never been defined. Also, the entire motivation of this Section seems unclear to me, even if I assume the correctness of Lemma 1. How is this related to the training problem that eventually seems to be the target?  \n\nThe issues delineated in Section 4.3 do not seem relevant to the immediate question at hand which are all about certain polynomial optimizations. Or am I missing something? It would have been much better to use the space to explain what the experimental setup. Like it seems pretty critical to understand what is the author\u2019s idea of a \u201cnatural\u201d polynomial and these details are missing from the main paper! The loss functions used in this experiment also seem to be not clearly specified and that makes it further challenging to understand what is happening."
+            },
+            "questions": {
+                "value": "Q1. \n\nWhy is SL(2,R) equivariance crucial to the usecases identified here? \n\nIts not possible to make the connection between this group and the problem as stated in equation 1.  \n\nQ2. \n\nWhat is the training time for the nets involved in Table 2? I guess what is reported as \u201cMLP times\u201d are just the inference times, right? \n\nBut the timings specified for the other methods are probably the \u201ctotal\u201d time they take to run and there are no other time costs there.  \n\nQ3. \n\nWhat is the full and explicit specification of the loss function that is being optimized in the experiment in Section 5? \n\nAnd how does this respect SL(2,R)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6163/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698971476772,
+        "cdate": 1698971476772,
+        "tmdate": 1699636669183,
+        "mdate": 1699636669183,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

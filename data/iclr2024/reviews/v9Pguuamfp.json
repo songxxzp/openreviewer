@@ -1,0 +1,360 @@
+[
+    {
+        "id": "hRGgLxm7ki",
+        "forum": "v9Pguuamfp",
+        "replyto": "v9Pguuamfp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_iW9p"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_iW9p"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose that In-Context Learning (ICL) in Large Language Models can be explained as kernel regression (KR).\n\nGiven a set of training examples, $\\{(x_i, y_i)\\}_{i=1}^N$ and a kernel that measures similarity between inputs, $K(x_i, x_j)$, KR makes predictions for a test input $x$ as a weighted average over the training points, where the weights come from the kernel similarity between test and training points, $\\hat{y}=\\frac{\\sum_i y_i K(x_i, x)}{\\sum_i K(x_i, x)}$.\n\nPrior work proposes ICL implements Bayesian inference over latent concepts implied by the context. The authors show theoretically that, as the number of samples in the context increases, the Bayesian posterior converges to a KR.\n\nThe authors then appeal to intuitive arguments about the similarity of KR and the attention mechanism in Transformers.\n\nTo investigate whether transformers actually implement KR they claim KR allows one to understand why (a) retrieving similar examples improves ICL, (b) ICL is sensitive to the formatting of labels, (c) ICL is sensitive to the input distribution of examples.\n\nFurther, they provide a set of experiments that seeks to provide supporting evidence for KR in ICL.\nThey perform these experiments using a GPT-J-6B model on a variety of popular ICL tasks.\n\nFirst, they display average attention maps from inputs to the test query across layers and heads of a transformer with a typical ICL task as input. They find attention values are concentrated around the labels of the input examples, which they take as evidence for a prediction similar to KR.\n\nFurther, they show instead of using the LLM to predict, one can also extract attention values and plug those into the KR equation as a substitute for the kernel. For attention values at particular depths/heads, this 'kernel regression with an LLM attention kernel' retains much of the accuracy of full ICL predictions. They take this as evidence that attention values measure similarity between inputs similar to a regression kernel.\nThey show that attention values between two inputs also correlate with the similarity of the labels predicted for them.\n\nLastly, they investigate if 'value' vectors of the attention mechanism encode label information and whether 'key' vectors encode information about which label is predicted.  \n(They take key and value vectors around the position of the input labels at ta variety of layers and heads.)\nThey find that a ridge regression model is able to predict both.\n\nIn summary, they claim 'the model\u2019s attention and hidden features during ICL are congruent with the behaviors of kernel regression'."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Methods that provide useful interpretations of ICL are valuable to the community.\nThe authors interpretation of ICL as kernel regression (KR) is novel and their experiments are interesting.\nI think that analogies between ICL and kernel regression are intuitively appealing, and potentially valuable to the community \u2013\u00a0if interpreted correctly.\nThe results suggest (clarifications pending) that some of the attention values in an LLM can be interpreted as a kernel similarity\u00a0measure between ICL inputs.\nThe paper is written well and the presentation is mostly clear."
+            },
+            "weaknesses": {
+                "value": "A) _It cannot be true that ICL directly implements KR._ I think the authors themselves are aware of this. For example, they note that the dependence of ICL to the order of examples is not congruent with this explanation.\nHowever, instead of clearly rejecting that ICL directly implements KR, they just say this is 'mysterious' and point to the fact that prior work also ignores this.\n(For the same reason, ICL also does not implement exact Bayesian inference.)\n\nNow, the authors do not directly claim anywhere that \"ICL=KR\" holds exactly. However, I believe their language, and that of prior work for that matter, is highly misleading.\nFor example, they write that \"LLMs can simulate kernel regression\" or that \"the model\u2019s attention and hidden features during ICL are congruent with the behaviors of kernel regression\".\nThis language is not wrong, however, I find it vague and intentionaly misleading.\nAlready, I hear too many people claim \"ICL=Bayesian Inference\" or \"ICL=Gradient Descent\" because papers are written with similar misleading language.\n\nI do think there are clear benefits to analogies between ICL and KR.\nHowever, I implore the authors to make their phrasing more honest.\nThe field does not benefit when careless readers of the paper take away that \"LLMs can simulate kernel regression\".\n\nInstead, I would like to see a paper that explores analogies between ICL and KR: what can we learn from them and where do they fall short?\n\nB) I think S. 4.2 'Insights provided by the explanation' requires significant improvement.\n\nB1) Another reason why ICL does not implement KR directly are the label flipping experiments of Wei et al. (2023, https://arxiv.org/abs/2303.03846) and Kossen et al. (2023, https://arxiv.org/abs/2307.12375).\nThey show that LLM performance generally suffers when 'flipping' the label relationship, e.g. changing labels from positive/negative to negative/positive for a sentiment analysis task.\nHowever, the kernel regression equation would predict that the performance of ICL does not depend on what tokens are used to encode the labels.\nI would appreciate it if the authors would add these observations to their discussion section.\n\n\nB2) Relatedly, I cannot follow the authors when they say that kernel regression predicts that 'ICL performance relies on the label format'.  I would appreciate if you could specify which of the experiments of Min et al. (2022b) you are referring to here. If it is their experiments in S. 5.2 which they call 'removing the format' (Impact of Input-Label Pairing) I would suggest you rephrase the paragraph here. In their experiments,  Min et al. here completely remove either the labels or demonstrations from the input. Such input is entirely incompatible with KR.\n\nB3) I agree that KR provides an explanation for why similar samples help and why OOD samples (with high distance input space to the test query) may be harmful. However, I think it is highly misleading to claim that Min et al. (2022b) show that 'out-of-distribution (OOD) demonstrative samples will degrade ICL accuracy'.  It is important to note that what they call 'OOD' does not conform to standard expectations. In their OOD experiments they construct a set of input features that are 'randomly sampled from an external corpus', i.e. they completely destroy the input label relationship. This is different for classical OOD, e.g. samples from the same p(X, Y) but for rare or unusual X.\n\nB4) Lastly, in their 'Remaining Challenges' section, the authors refer to Min et al. (2022b)'s claim of 'LLM\u2019s robustness to perturbed or random labels'. Luckily for the authors, it seems these claims do not always hold up to scrutiny (which is good for analogies between ICL and KR), see Kossen et al. (2023, https://arxiv.org/abs/2307.12375).\n\nB5) The MNLI ICL performance numbers you report in Table 2 are not better than random guessing performance (\\~30%). Yet one of the attention head KR variants obtains performance _much_ better than random guessing (\\~97%). If ICL performance is not good overall, I would not expect it to be outperformed by the 'head KR' variant. This makes me suspicious that there is some sort of overfitting going on here. I.e. the space of attention values is large (num_layers x num_heads) and one of them just happens to predict the true labels well. Do you have train/test splits for selecting and evaluating the KR head variant? Do you evaluate this over the full datasets or just a subset?\n\nC) It would be great to see experiments with additional models, e.g. LLaMA/Falcon/Mistral models, to show your experimental observations do not depend on the GPT-j architecture.\n\nD) The abstract/title/intro are somewhat misleading. The title focuses on 'emergent' ICL and the abstract asks 'how pretrained LLMs acquire such capabilities' and later the authors claim they 'make a preliminary step towards understanding ICL as a special case of LM capacity emergence'.\nI do not think this work provides any understanding towards _how_ ICL emerges. \nInstead they propose a mechanism for how ICL functions _given_ that is has emerged already.\nI would suggest the authors remove references to such claims.\n\n\nD) I am not too familiar with proofs around KR and Bayesian inference. However, could you elaborate where Theorem 1 depends on examples being presented 'in-context'? It seems to me that, perhaps, theorem 1 could hold true for all inference problems?\n\n\nE) The connection between kernel regression and Transformer attention is currently quite hand-wavy, with one paragraph pointing at similarities in the equation. Perhaps the biggest difference is the change from a kernel to the $\\exp(q, k)$ from the attention. The authors say this \"can be regarded as a kernel trick\". I think that more discussion here would strengthen the submission. How do the differences here change prediction behavior? Does softmax attention imply a particular form for the kernel?\n\n\nF) what is $T_x$ in Equation 4? I don't see a definition for it in the main text. Later you write 'semantic vectors of sample inputs', but that does not help. Is it related to the transition matrix?\n\nG1) Figure 2: We observe that attention is high around the labels of the examples, as well as the input features of the test query.  You write that 'This conforms to the intuition in kernel regression explanation in Theorem 1 that the inference on in-context learning prompts is a weighted average over sample labels.'\nHowever, looking at kernel regression, I would have expected the attention to compare _different input features_, i.e. the kernel is $K(x, x_i)$ and not $K(x, y)$.\nI would appreciate if you could comment on this.\n\nFurther, there seems to be a disconnect between the simplicity of kernel regression equation (features are directly available and separate from labels) and the reality of ICL (inputs are just a sequence of tokens, with features following labels, features (and labels) consist of multiple tokens).\nI would like to see the authors engage with these differences.\n\nFor example, to implement KR with a Transformer, it seems to me one would need three steps:\n1) compute similarity between example features and query features\n2) pick out labels of the inputs \n3) then weight labels by similarity\n\nI think the current discussion of the authors on how ICL could implement KR is insufficient.\n\nG2) Here is an experiment I would like to see.  Can the KR head approximation introduced in S. 5.2 still recover the models accuracies if you randomly permute the input features? I.e. for each input `[(x1, y1), (x2, y2), (x3, y3), ...] + [x_{test}]` and you permute the features `[(x3, y1), (x10, y2), (x5, y3) ,.... ] + [x_test]`.\nObviously, ICL performance will suffer from this. However, if the KR hypothesis holds true, you should still be able to approximate the models predictions from attention values just as well, as this just corresponds to a permutation of the kernel terms. However, can you actually reproduce Figure 3 with this setup?\n(This would also be interesting to explore for the label _flipping_ experiment I mentioned above.)\n\nH) It would be interesting to see Figure 2 for individual examples.\n\nI) \"This is similar to our prediction in Section 4.1: not many attention layers are needed for kernel regression, as long as the required features have been computed by preceding layers\" --> That makes sense. However, it how many layers you need to compute adequate features could vary a lot between tasks. Therefore, the KR hypothesis does not allow you to make any hypothesis about the number of layers needed for ICL. Maybe if you had a toy experiment where the embeddings were perfect already?\n\nJ) \"whether key vectors encode LLM prediction information P(o|xi).\" --> Based on Equation 5, I would have expected the key vectors to encode information about the input features x_i and not the predicted labels.\n\n\n\n## Nits\n\nK) \"They focus on a different goal and setting and propose to substitute attention mechanisms for more calibrated predictions\" \u2192 I've looked at the related work here, and I agree it is quite different. However your description here is rather vague. I suggest you replace this with something mroe concrete.\n\nL) Equation 7: Should the sum here be over $j$?\n\nM) Please position the captions for tables above the table as per style guide.\n\nN) Please GPT-j instead of just providing a link. The authors prefer the citation given at https://github.com/kingoflolz/mesh-transformer-jax.\n\nO) Please at labels to the axes of Figure 3 and 5."
+            },
+            "questions": {
+                "value": "P) \"Specifically, for each attention head, we use the maximal attention value ai within the range of [xi, yi] as the kernel weight\" -->  Interesting, based on your previous motivation I would have thought you would just take the attention value at y_i? why maximal value? If this is an ad-hoc choice, make that clear. How well does average work?\n\n[edit] Changed score to 6 after author rebuttal. (It seems the authors cannot see my reply to their rebuttal. My score increase is conditioned on the promise of the authors to fully clear up my concern A in the camera ready version. I hope they will be able to see my full response by then.)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Reviewer_iW9p"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5819/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698400954699,
+        "cdate": 1698400954699,
+        "tmdate": 1700823457395,
+        "mdate": 1700823457395,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "YY0RSZQ21p",
+        "forum": "v9Pguuamfp",
+        "replyto": "v9Pguuamfp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_oa7R"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_oa7R"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper investigates the in-context learning (ICL) capability of large language models (LLMs) and aims to understand how LLMs acquire this capability after pre-training on a general language corpus. The authors propose a hypothesis that LLMs can simulate kernel regression with internal representations when faced with in-context examples. They prove that Bayesian inference on in-context prompts can be asymptotically understood as kernel regression. Through empirical investigation, they find that the attention and hidden features in LLMs during ICL exhibit behaviors similar to kernel regression. The paper's theory provides insights into various phenomena observed in the ICL field, including the benefits of retrieving similar demonstrative samples, sensitivity to output formats, and the advantages of selecting in-distribution and representative samples for ICL accuracy."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper addresses a timely and important question regarding the acquisition of in-context learning capability in large language models (LLMs). By adopting a kernel regression perspective, the authors provide an insightful explanation for empirical phenomena observed in the literature, such as the sensitivity to label format and the poor performance caused by out-of-distribution (OOD) demonstrative examples. This theoretical framework sheds light on the underlying mechanisms of in-context learning in LLMs and offers valuable insights into the field."
+            },
+            "weaknesses": {
+                "value": "As mentioned in the paper's limitations, the current Kernel Regression hypothesis falls short in explaining the impact of sample orderings and the robustness to perturbed labels. Additionally, there is a gap between the simulated experiments and real sequential data and models in the current experiments. However, given the immense challenge of learning the in-context learning (ICL) capability of large language models (LLMs), I appreciate the intuitive nature of the Kernel Regression hypothesis presented in this paper. It aligns with the idea that LLMs infer results based on information from similar demonstrations (represented by $x_i$) and compute a weighted sum of their labels ($y_i$).\n\nMinor issues:\n\n1. The symbol $p(o)$ appears to have an incorrect LaTeX expression under Equation 3 in this paper.\n2. The penultimate sentence in the discussion on Sensitivity to Label Format may contain grammatical errors."
+            },
+            "questions": {
+                "value": "The distribution of test data and the demonstration examples is straightforward to understand and analyze. However, unlike traditional kernel regression, in-context learning necessitates a deeper comprehension of the relationship between pre-trained models and the input demonstrations. Specifically, it is important to understand how the kernel regression hypothesis explains the influence of pre-trained models on the similarity between $x_i$ and $x_{test}$, as well as the label space of $y_i$. In Section 4.2, the authors did not address this specific point. I am curious to know if the Kernel Regression hypothesis can provide any insights in understanding this aspect."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Reviewer_oa7R"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5819/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698589766168,
+        "cdate": 1698589766168,
+        "tmdate": 1699636614321,
+        "mdate": 1699636614321,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "l0OXBZaXtd",
+        "forum": "v9Pguuamfp",
+        "replyto": "v9Pguuamfp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_kMXk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_kMXk"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors try to connect kernel regression with in-context learning (ICL) and explain\u00a0some of its phenomenology established in prior work. Unlike prior works on the topic that often rely on synthetic setups, e.g., linear regression problems, the authors try to focus their experimental study on realistic/practical setups with open source LLMs and standard NLP datasets. That said, the theoretical framework used for hypothesis generation is grounded in a Hidden Markov model, as originally conceived by Xie et al., 2021."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The relation with kernel regression, in a sense, is a more formal take on the several recent works casting ICL as task selection (often such works also focus on real LLM setups). Even though I'm skeptical of this framework's ability to explain ICL in its entirety, and as the authors find it does at times fail to do so, I definitely find this perspective useful in the sense that it provides for provable/refutable hypothesis generation---such work is important for scientific development of black box systems like LLMs.\n\nI also really like the experiments conducted in the paper: they are more mechanistic than prior task selection work in real LLMs, hypothesizing even a precise protocol for task selection, and more realistic than synthetic setups with linear regression or related tasks."
+            },
+            "weaknesses": {
+                "value": "My primary apprehension with the paper is that the presentation is quite lacking. For example, in the theoretical model introduced in the main paper, the notion of observations is defined in regards to an HMM, but it is unclear if a datapoint $x$ is the same as these observations. In the proof in the appendix, though the algebra itself is accurate, somehow a datapoint $x$ is connected to the observations now and the HMM operates on them---this was rather unclear to me. \n\nSimilar to the above, the figures are often quite confusing. I can gather the primary takeaway based upon the experimental protocol, but the captions are very unclear and often axes are missing labels (e.g., in Figures 4/5). At times the figure itself is confusing as well: for example, in Figure 2, it is unclear to me how the attention maps have been plotted. The tokens in $x_{test}$ attend to prior tokens, but what is the y-axis per layer? I can guess it's the number of heads, but this should not be left to guess work.\n\nOverall, I'm currently rejecting the paper despite having a position perspective on its contributions. Since ICLR allows changing the paper during rebuttals, if the presentation issues above can be addressed, I'm happy to update my score towards an accept.\n\nA minor weakness/nitpick I want to point is that the paper often over-emphasizes, in my opinion, its theoretical contribution. I think the theoretical connection between ICL and kernel regression, for which the authors make asymptoticity assumptions, is best seen as a model to predict ICL's behavior. It would help to de-emphasize the theoretical contribution by primarily casting the paper's narrative as a model for *predicting*, not *explaining*, ICL's behaviors. As the authors note, the model does break at points (e.g., see page 6, remaining challenges). This implies claiming the model as an \"explanation\" is too strong.\n\n\n**Post rebuttals comment:** Thank you for the response. Reading through the rebuttals above, discussion in other reviewers' comments, and rebuttals to them, I'm updating my score to a 6. I think the paper is well rounded and provides a nice predictive model for ICL. As another reviewer also noted however, the emphasis in the paper must reduce on \"Explaining ICL\"---the theory is making strict assumptions and is unable to explain all phenomenology. I'm raising the score hoping the authors will ensure making these changes."
+            },
+            "questions": {
+                "value": "I'm curious as to what the authors think of related work on ICL that casts it as an optimization algorithm, such as (P)GD, over a model's layers. Such works are arguably taking a different ground than task selection / similarity search, as this paper does. Would you deem these works incorrect or, if not, then how do you think the two perspectives can be bridged?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Reviewer_kMXk"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5819/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699060176894,
+        "cdate": 1699060176894,
+        "tmdate": 1700930485276,
+        "mdate": 1700930485276,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "IMQE49VHHo",
+        "forum": "v9Pguuamfp",
+        "replyto": "v9Pguuamfp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_Hu7i"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_Hu7i"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors derive that In-Context Learning in LLMs can be viewed as kernel regression and also explores some practical investigation to support this idea."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper tries to establish/proof that ICL can be seen as kernel regression and conducts some practical investigation to back the theoretical claims."
+            },
+            "weaknesses": {
+                "value": "Theoretical: The authors primary assumption in Section 2.1 states that \u201cas the number of samples n increase ...  converges to a\nkernel-regression for\u201d. The reviewer thinks this is a very strong assumption since this begs two questions (i) How does ICL work so well for only 2-3 examples especially for large models and (ii) Why does ICL performance saturate usually after 10-15 examples?\n\nPractical: The practical investigation in this paper is weak. While the investigations of the attention layers are interesting, but they are neither enough to back the theoretical findings nor show practical benefits of the findings. The reviewer liked Section 4.2 and would have liked to seen these explored practically in the paper."
+            },
+            "questions": {
+                "value": "Theoretical: The authors primary assumption in Section 2.1 states that \u201cas the number of samples n increase ...  converges to a\nkernel-regression for\u201d. The reviewer thinks this is a very strong assumption since this begs two questions (i) How does ICL work so well for only 2-3 examples especially for large models and (ii) Why does ICL performance saturate usually after 10-15 examples?\n\nPractical: The practical investigation in this paper is weak. While the investigations of the attention layers are interesting, but they are neither enough to back the theoretical findings nor show practical benefits of the findings. The reviewer liked Section 4.2 and would have liked to seen these explored practically in the paper.\n\nI would love the authors' responses on the limitations listed above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5819/Reviewer_Hu7i"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5819/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699267682292,
+        "cdate": 1699267682292,
+        "tmdate": 1700833849202,
+        "mdate": 1700833849202,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "YeioFJjp6w",
+        "forum": "v9Pguuamfp",
+        "replyto": "v9Pguuamfp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_Gjpv"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5819/Reviewer_Gjpv"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper tackles the challenge of elucidating the mechanism enabling in-context learning in LLMs and its being acquired through autoregressive pretraining. The hypothesis put forth in the paper is that Transformer-based LLMs pretrained in this way acquire the capability to perform in-context learning by performing a kernel regression operation based on the demonstration present in the context window. The paper analyses this hypothesis formally by modeling pretraining over text sequences as learning an HHM within the OOM formalism. This allows to formally relate the in-context prediction to the HHM modeling the pretraining dataset."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* Interesting and novel approach to the problem of explaining in-context learning in LLMs using an intriguing modeling approach (OOM formalism to model HHMs).\n* The main hypothesis put forth by the paper is crisply stated and clear to understand."
+            },
+            "weaknesses": {
+                "value": "* Connection with OOM formalism is intriguing but not explored in what seems like it's full quantitative potential to provide practical guidance for LLMs pretraining or prompt engineering.\n* As mentioned also in the paper, the kernel regression formalism does not capture some crucial phenomenology observed in in-context learning, like the sensitivity to in-context samples order, and there are no indications provided in the paper of how this shortcoming in the formalism could be addressed moving forward.\n* The notation developed in the paper mostly results in an analysis (based on the heuristic similarity between QKV-attention and kernel regression) of the last tranformer layer.\n* Formatting and notation of the article is somehow problematic with some symbols not being defined by the time they are used in the text. This makes understanding the details of the paper potentially tough, diminishing its impact. For instance, $\\Sigma_{p_{pre-train}}$ appearing below eq (3) in the definition of $\\epsilon_\\theta$ is not defined."
+            },
+            "questions": {
+                "value": "* Is this specific to transformers? How about LMs based on RNNs or attention-free architectures?\n* Did the authors test a toy benchmark where the pretraining sequences are generated from a known HHM where one can control size of the pretraining datasets and complexity of the HHM to empirically verify the convergence in Theorem 1? This seems like it would be a great way to verify the main theory result.\n* Theorem 1  mentions that triangular brackets indicate the inner product, but this notation is not used in the theorem.\n* Eq (7): sum over j but the index used is i."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5819/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699268050697,
+        "cdate": 1699268050697,
+        "tmdate": 1699636614014,
+        "mdate": 1699636614014,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

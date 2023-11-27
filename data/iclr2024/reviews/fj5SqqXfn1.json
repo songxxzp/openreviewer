@@ -1,0 +1,280 @@
+[
+    {
+        "id": "FfCHDWnsNh",
+        "forum": "fj5SqqXfn1",
+        "replyto": "fj5SqqXfn1",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_G1qb"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_G1qb"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses potential pitfalls when using so called numerical privacy accounting to compute the $(\\varepsilon,\\delta)$-guarantees for compositions of DP algorithms. Especially, the paper focuses on two points (citations from the paper):\n\na) \"some privacy accountants assume that the privacy guarantees for the composition of a subsampled mechanism are determined by self-composing the worst-case datasets for the uncomposed mechanism\" \n\nand \n\nb) \"Poisson subsampling is sometimes assumed to have similar privacy guarantees compared to sampling without replacement.\"\n\n\nSome background: Using the R\u00e9nyi divergence has been a popular way of analysing compositions of DP mechanisms since the works of Abadi et al. (2016) and Mironov (2017), especially due to the tightness of the RDP accounting compared to purely analytical approaches. So called numerical accounting and was proposed in works by Sommer et al. (2019), Koskela et al. (2020) and Gopi et al. (2021). It directly approximates the hockey-stick divergence and often gives tighter bounds than the RDP approach which incurs a small loss when converting the RDP parameters to $(\\varepsilon,\\delta)$-bounds. Zhu et al. (AISTATS 2022, https://proceedings.mlr.press/v151/zhu22c/zhu22c.pdf) set the hockey-stick divergence based methods on a more rigorous footing by introducing the concept of dominating pairs of distributions. This also allows obtaining rigorous $(\\varepsilon,\\delta)$-bounds for adaptive compositions of DP mechanisms."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Generally well-written paper and a timely topic. The auditing methods are getting all the time more accurate at estimating the $\\varepsilon$-values, so it would be good to get the accurate computing of the formal guarantees right. It seems there are still no clear subsampling amplification result in the literature for, e.g., carrying out accounting using the dominating pairs of distributions in case of substitution neighbourhood relation of datasets (related to the \u201csecond pitfall\u201d), so it makes sense to consider this problem."
+            },
+            "weaknesses": {
+                "value": "All in all, I think the contribution of the paper is very limited. And I think the paper is outdated in a sense that neither of the mentioned issues are actually pitfalls in numerical accounting (explained below). \n\nAbout the pitfalls:\n\nThe point a) was addressed by the work of Zhu et al. (2022) which considers the dominating pairs of distributions. As the authors point out, generally there are no neighboring datasets $X$ and $Y$ such that the $(\\varepsilon,\\delta)$-bound for pairs of outcomes $\\big(\\mathcal{M}(X),\\mathcal{M}(Y)\\big)$ would be $(\\varepsilon,\\delta)$-bounds for all neighboring datasets. Outside of the mechanisms that use additive Gaussian noise, there are numerous such examples. Consider, e.g., the exponential mechanism, for which obtaining accurate $(\\varepsilon,\\delta)$-bounds is very tedious:\n\nDong, J., Durfee, D., & Rogers, R. (2020, November). Optimal differential privacy composition for exponential mechanisms. In International Conference on Machine Learning (pp. 2597-2606). PMLR.\n\nThe issue that you don't have a worst-case pair of datasets is exactly what the definition of the dominating pairs of distribution addresses. Also, Zhu et al. (2022) also show that a tightly dominating pair distributions always exists for a given mechanism.\n\nFor the pitfall b) I agree that the claim that the pair of distributions $P = q \\cdot \\mathcal{N}(1,\\sigma^2) + (1-q) \\cdot \\mathcal{N}(0,\\sigma^2)$, $Q = q \\cdot \\mathcal{N}(-1,\\sigma^2) + (1-q) \\cdot \\mathcal{N}(0,\\sigma^2)$ gives a dominating pair of distributions in case of subsampling without replacement and substitute neighbourhood relation of datasets is not correct. I believe it is true for the Poisson subsampling in case of substitute neighbourhood relation of datasets, I think you can show this as in case of the R\u00e9nyi divergence and use the analysis for the Poisson subsampling and add/remove neighborhood relation of datasets, which is given in\n\nMironov, I., Talwar, K., & Zhang, L. (2019). R\\'enyi differential privacy of the sampled gaussian mechanism. arXiv preprint arXiv:1908.10530.\n\nThe correct bound for hockey-stick divergence in the case of subsampling without replacement and substitute neighbourhood relation of datasets is given in Proposition 30 by Zhu et al. (2022). So, as far as I see, this problem is solved, and in the most well-known software libraries that use numerical accounting and dominating pairs of distributions, namely the \"autodp\" by Wang et al. and \"PRV accountant\" by Gopi et al., Opacus and Google DP library, correct formulas are used.\n\nI think that the claim that \"Poisson subsampling is sometimes assumed to have similar privacy guarantees compared to sampling without replacement\" is not true in that Proposition 30 by Zhu et al. (2022) gives bounds for both. And they are of the same form, but in of them the pair $(P,Q)$ is a dominating pair under the add/remove relation and in the other one under the substitute relation, so it is clear that the latter leads to higher $\\varepsilon$-values. The bounds are in two parts and one can determine a numerical dominating pair of distributions using, e.g, methods by\n\nDoroshenko, V., Ghazi, B., Kamath, P., Kumar, R., & Manurangsi, P. (2022). Connect the Dots: Tighter Discrete Approximations of Privacy Loss Distributions. Proceedings on Privacy Enhancing Technologies, 4, 552-570."
+            },
+            "questions": {
+                "value": "- What is special about the hockey stick divergence when thinking about the worst-case pairs of datasets and worst-case pairs of distributions? All the potential problems w.r.t. to finding the worst-case pair of distributions for the hockey-stick divergence would be problems for RDP accounting (or when using other $f$-divergences than the $\\alpha$-divergence) as well, right? Commonly the worst-case pairs of distributions are 1-dimensional and can be seen as some sort of general post-processing of the outcomes from neighboring datasets, and then the worst-case distributions for the hockey-stick divergence would similarly be worst-case distributions for other $f$-divergences and for the R\u00e9nyi divergence as they satisfy the data-processing inequality.\n\n- Comment: it would be interesting to see some new results related to this topic, e.g., on how would the analytically expressed pair of dominating distributions look like under the subsampling amplification (in all cases) as the bounds of Proposition 30 by Zhu et al. (2022) (which you also cite) are given in two parts."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698769408064,
+        "cdate": 1698769408064,
+        "tmdate": 1699636679980,
+        "mdate": 1699636679980,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "RrULuwTFwd",
+        "forum": "fj5SqqXfn1",
+        "replyto": "fj5SqqXfn1",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_xTEX"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_xTEX"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper clarifies common problems with privacy accounting. In particular, the paper shows that rigorous privacy accounting is affected by the method of sampling batches (Poisson subsampling or sampling without replacement). The paper also shows that self-composing worse-case datasets for the uncomposed mechanism is not in general valid."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper provides some novel theoretical results that develop our understanding of composition and subsampling with DP. I believe with small presentational edits (see weaknesses), this paper could serve as an important reference work for future research on subsampling with DP, as well as DP practitioners. \n\nIn general, the presentation is very clear and the authors on the whole provide welcome intuition to support the mathematical results."
+            },
+            "weaknesses": {
+                "value": "I am concerned that the paper presents somewhat of a straw-man (e.g. the two points of 'common' confusion in the abstract). It would be useful to provide evidence (even something anecdotal\n) that these are common pitfalls in practice. This would make the overall contribution of the paper much more convincing.  \n\nThe two recommendations for practitioners in the discussion section are welcome but I believe spelling out the implications of this work for practitioners (who will not read through the theory in detail) merits an entire section of the paper, and would enhance its practical utility and potential impact. \n\nDefinitions 3-5 would each benefit from a one sentence explanation for those less familiar with the prior research."
+            },
+            "questions": {
+                "value": "It would be interesting to understand whether empirical privacy (e.g. measured via auditing/MIA) of Poisson subsampling and sampling with replacement differs as much as the theoretical analysis implies (e.g. epsilon =1 vs 10!). Do you have priors about this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Reviewer_xTEX"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698779970214,
+        "cdate": 1698779970214,
+        "tmdate": 1699636679869,
+        "mdate": 1699636679869,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wo9oVzPMye",
+        "forum": "fj5SqqXfn1",
+        "replyto": "fj5SqqXfn1",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_LTUo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_LTUo"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work studies privacy accounting for compositions of subsampled DP mechanisms. The authors show that a pair of worst-case datasets for a subsampled mechanism may no longer be a worst-case after composition, and privacy accounting can be very different for different sub-sampling strategies. These findings call for more care when applying privacy accounting in practice."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Privacy accounting of DP is an important problem when applying differential privacy in practice.\n2. The findings have important practical implications and help to avoid unintended privacy leakage.\n3. The theoretical construction of the bad cases is solid. \n4. The presentation is clear and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The authors did not provide a viable technical solution for dealing with the worst-case dataset problem under replacement DP.\n2. While constructing the bad cases on lower dimensional datasets is sufficient to demonstrate the claims, it would be nice to include empirical results on more realistic datasets to show that these pitfalls can actually appear in practice."
+            },
+            "questions": {
+                "value": "For replacement DP, is there a good way to find a good approximation of privacy curves when the exact worst-case dataset is hard to obtain?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698791764254,
+        "cdate": 1698791764254,
+        "tmdate": 1699636679752,
+        "mdate": 1699636679752,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ZutVOPMJBu",
+        "forum": "fj5SqqXfn1",
+        "replyto": "fj5SqqXfn1",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_dGjF"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6226/Reviewer_dGjF"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper exposes several cases where mismatches between privacy accounting and its implementation gives incorrect results. The authors show that the noise required to achieve a certain privacy guarantee can differ significantly between Poisson sampling and sampling without replacement; and that the worst-case dataset for a single iteration of a subsampled mechanism might give incorrect results for the composed mechanism. They also demonstrate issues with computing tight DP bounds under the substitution relation of neighboring datasets."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper\u2019s findings could be highly impactful on the practice of privacy accounting, as they demonstrate that a method\u2019s implementation should match its accounting. The paper also includes a good call-to-action on how these issues can be addressed by DP practitioners. And despite this paper being about pointing out mistakes in other works, the authors of the paper are tactful and include some interesting discussions in the paper."
+            },
+            "weaknesses": {
+                "value": "While I think this paper has a powerful message, there are issues with presentation / rigor which make me question whether it\u2019s ready for publication. For example, Proposition 11 is proved by a picture (Figure 1). I also feel that it\u2019s hard to follow the discussion in Section 7 because the counterexample is for something that is stated without any great formality.\n\nThe paper is also a bit sparse (there is no appendix). I would have liked to see more substance. The paper does in my opinion do something very important, but in its current state I don't feel it has the solidity of an ICLR paper."
+            },
+            "questions": {
+                "value": "In Theorem 10, I think there is a bit of a typo: $(1 - \\gamma)P + Q$ should be $(1 - \\gamma)P + \\gamma Q$.\n\nThe proof of Proposition 9 seems to take for granted that we know the dominating pair for the Gaussian mechanism! But I think this should be stated formally somewhere as otherwise the \u201cNow, from Theorem 10 we know that\u2026\u201d sentence is unclear.\n\nCombining the plot and the table into a single Figure 3 seems a bit ambitious. At first glance I thought that they were related somehow, and only after reading the caption realized that they were not. I think it would be clearer to separate them into different figures.\n\nThe plot in Figure 3 could maybe also be split into two plots? It is a little hard to see the takeaways as is. It might be nice to have one plot showing Poisson for $\\epsilon \\in [1, 2, 5, 10]$ (to illustrate the \u201ctwo regions\u201d of high / low sampling rate) and another plot showing Poisson + WOR for $\\epsilon=10$ (to illustrate the \u201chinge\u201d)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6226/Reviewer_dGjF"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698795961035,
+        "cdate": 1698795961035,
+        "tmdate": 1699636679637,
+        "mdate": 1699636679637,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

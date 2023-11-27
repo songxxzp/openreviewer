@@ -1,0 +1,218 @@
+[
+    {
+        "id": "2NiK6wbO2M",
+        "forum": "cJ7XuW5JaH",
+        "replyto": "cJ7XuW5JaH",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_gCmo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_gCmo"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a new method for extracting batch label counts from gradients. The method uses auxiliary data to estimate the network probabilities for data coming from different classes and uses that knowledge to approximate the batch label counts. Additionally, the authors show that their framework is more generic and allows attacking more than the softmax + CE losses used in previous work, instead also handling the focal family of losses. Finally, they provide a theoretical analysis of the label leakage problem through the lens of the exponential family. They demonstrate that their algorithm recovers label counts efficiently in several settings, including under class imbalance, label smoothing, different network activations, different model depths, and different batch sizes."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- Good practical results - beats SOTA everywhere\n- Experiments  with many different settings on the CE + softmax loss \n- Provides extension of the method to the focal loss - not considered before in the literature\n- Possibly an interesting idea to look at the exponential family and their respective losses to explain label leakage, however, the analysis is currently too simplistic"
+            },
+            "weaknesses": {
+                "value": "- **The focal loss**:    \nThe focal loss definition is confusing. It doesn't seem to be internally consistent throughout the paper, and it does not seem to be exactly following [1] either. This makes it very hard to check the associated maths. In particular, in Eq. 1, $t$ is just an index of the sum, while in the first paragraph of page 4, it is the \"target class.\" Further, the sum over $t$ in Eq. 1 does not appear in the original description in [1]. As currently defined, where $y$ appears in Eq. 1 is not clear - according to the text on page 4, it is embedded in $p_t$ (in a different way from how it is embedded in [1]), but according to the proof in Appendix A.1 that is not the case and $p_t$ is simply the post-softmax probability. According to [1], $\\alpha_t$ depends on $y$, but the paper specifies nothing about this. Further, the temperature parameter $\\tau$ and the smoothed labeling options are only passingly defined. Finally, in the proof in Appendix A.2, the sum over $t$ that is given in Eq. 1 seems to disappear.    \nThe problem is further exacerbated by inconsistent notations. In particular, $i$s and $t$s are used interchangeably in the first paragraph on page 4, even though the authors themselves claim to differentiate them. For example, see the definition of $p_t$, and $\\mathcal{L}_\\text{CE} (p_t)$ .  \nFinally, in [1], the focal loss is defined in the case of multiple foreground classes and a single background class, which, to my understanding, are treated slightly differently from each other and which also results in loss slightly different than $\\mathcal{L} _\\text{CE} (p_t)$ when $\\gamma=0$ and $\\alpha_t=1$. Do the authors consider the same setup or not, and how are these discrepancies resolved?\n - **Theoretical analysis of the label leakage:**   \nThe authors claim their analysis gives valuable insights regarding the origin of label leakage. I find their analysis falls very short from this promise for a few reasons.   \nOn the one hand, the derivation of the gradient of the network loss is not done for the full exponential family but only for a single member (the exponential probability that gives rise to the softmax and cross-entropy loss), jeopardizing the generality of the proposed conclusions.\nOn the other hand, even in that one case, the proposed derivations are not novel, as they follow directly from plugging the results of the standard theory for deriving the cross entropy loss and the softmax, which the authors should more explicitly refer to, into the gradient of these functions which have been derived in the context of label leakage multiple times ( as the authors acknowledge in their background section ).   \nThis leaves as possible contributions of the authors' analysis only describing the gradient of the logits of softmax in the context of the exponential family notions and definitions. This is also not a strong contribution, however, as the authors do not spend more than two sentences on this interpretation. In particular, the authors do not discuss how computation is saved by the exponential family at all and do not explain how the exponential family poses a privacy threat beyond the CE + softmax combination. \n- **Missing Comparisons and Citations:**\n1. The authors should cite [3] and [4] as relevant prior work on label leakage. They are both very relevant as [4] works on non-positive activations similarly to this work, while [3] talks about the possibility of using auxiliary data to estimate quantities that can be used to estimate the label counts. I think comparing to [3] will be good also. \n2. The paper will benefit from better discussion about differences to prior work and, in particular, [2], [3], and [5]. All these works, similarly to the proposed method, estimate a quantity that they later plug into $p - y$ to compute the label counts $\\lambda_j$. Further, at least [3] and [5] talk about using auxiliary data to do so, again similarly to this work.\n3. In the background section, the paper can benefit from discussing the how auxiliary data have been used in gradient inversion attacks before - e.g. [8-11]\n- **Proposed additional evaluations and missing evaluation details:**\n1. What dataset/model/batch size/epoch/label distribution is used in Table 3? Are $\\tau$ and $\\epsilon$ assumed to be known by the attacker? Can you redo the experiments in a setting where we do not get 100% accuracy?\n2. What is the performance if there is a distribution shift between the auxiliary data used for label recovery and the client data?\n3. In Sec 6.1/6.2, do you use the focal or cross-entropy loss? \n4. [2] has a proposed version that works on models trained for several epochs. The authors should compare their method to it. \n5. [3] and [5] can be applied using auxiliary data. The authors should compare those methods to the proposed method under the same auxiliary data.\n6. Why in Sec. 6.3 do the authors use models trained for one epoch?\n7. In Sec. 6.3 the authors say, \"Since we have the prior distribution of the training data, we can constrain and regularize the estimated labels to improve the success rate of label recovery.\" Is that something the authors do in their experiments, and if so, how exactly?\n8. What label distributions do the authors use in 6.1? Uniform at random?\n- **Typos and other Nits**:\n1. Figure 2 will benefit from a box plot instead of the current figure, as the variance of the positives is huge, and it becomes hard to judge where means/medians are.\n2. Bolding in Table 2 should be applied to all 1.000, not only the proposed method for consistency. \n3. On the first line of the derivation of $\\nabla_{z_j}\\mathcal{L}_{FL}$ in Appendix A.1, there is missing $z_t$ in the last sum\n4. On the last line of the derivation of $\\nabla_{z_j}\\mathcal{L}_{FL}$ in Appendix A.1, $\\Psi\\rightarrow \\Phi$\n5. Second summand in the second line of the derivation of $\\nabla b_j$ in Appendix A.2, $(B-\\lambda)\\rightarrow(B-\\lambda_j )$\n6. First part of the derivation of $\\lambda_j$  in Appendix A.2, there is no division by $\\varphi_j$\n- **Other:**  \nThe terminology used in the paper is slightly non-standard and this makes the abstract and intro hard to read. In particular, without reading deep into the paper, it is not clear what is meant by \"classification variants\" - the authors can just say different classification losses and network activation functions. Further, talking about posterior probability distributions is a bit confusing too - you can just call them the probabilities predicted by the network or post-softmax probabilities. Finally, \"approximate probability distributions\" do not clearly convey that you are talking about approximating from data the distributions of the elements of the output of the softmax."
+            },
+            "questions": {
+                "value": "- Can the authors fix consistently throughout the paper and appendix the definition and usage of the focal loss?\n- Can the authors provide an extension of the current theoretical analysis to the general exponential family or at least to the subset of the exponential family covering the focal loss? \n- Can the authors expand the discussion about the interpretation of their theoretical findings, in particular explaining in more detail their computational and privacy arguments in the context of the full exponential family?\n- Can the authors expand the focal loss experiments to more settings, especially ones where the success rate is not 100%? For a paper that focuses on proposing a generic method that works on multiple losses that are subversions of the focal loss, the paper provides surprisingly few experiments with that loss.\n- Can the authors provide a discussion about why the focal loss is significant in particular? Are there other common classification losses that it covers as sub-cases? Are there other common classification losses not covered by the focal loss that might be more secure?\n- Can the authors provide a comparison with [2] for networks trained for several epochs?\n- Can the authors provide a discussion of how their method compares to prior work - e.g. [2,3,5]? All these methods and the author's proposed method in practice approximate some quantities related to $p_t$ and plug them in the same formula to get $\\lambda_j$. Thus, as of now, I have no idea why the author's proposed approximation is better than prior work.\n- Can the authors provide a comparison with [3] or [5] when auxiliary data is used for estimating their parameters?\n- Can the authors test their methods in a FedAvg setting (check [3,6,7])?\n- Do the authors know why the SELU activation results in so much more variance in the estimates of its posterior probability distribution?\n- Can the authors provide the missing information mentioned in the weakness section?\n- Can the authors provide code? \n\nAll in all, I find the experimental part of this paper strong. Thus, I am leaning toward acceptance. However, the focal loss definition problem is significant, as it makes it hard to fully check the mathematics. Further, the theoretical analysis in its current form does not contribute to the paper despite its interesting idea. Additionally, I really want to see a discussion about the differences to prior work ( discussion also sorely missed in prior work ), as many works in the field are slight variations of each other, and it is hard to understand where improvements between the papers, including this one, comes from. Finally, additional discussion of why the focal loss matters and more experiments with it just make a lot of sense in the context of this paper as it is one of the biggest claimed contributions.\n\n[1] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollar. Focal loss for dense object detection. In Proceedings of the IEEE International Conference on Computer Vision, pp. 2980\u20132988, 2017.  \n[2] Kailang Ma, Yu Sun, Jian Cui, Dawei Li, Zhenyu Guan, and Jianwei Liu. Instance-wise batch label restoration via gradients in federated learning. In The Eleventh International Conference on Learning Representations, 2023.   \n[3] Geng, Jiahui, et al. \"Towards general deep leakage in federated learning.\" arXiv preprint arXiv:2110.09074 (2021).   \n[4] Trung Dang, Om Thakkar, Swaroop Ramaswamy, Rajiv Mathews, Peter Chin, and Franc\u00b8oise Beaufays. Revealing and protecting labels in distributed training. Advances in Neural Information Processing Systems, 34:1727\u20131738, 2021.   \n[5] Aidmar Wainakh, Fabrizio Ventola, Till Mu\u00dfig, Jens Keim, Carlos Garcia Cordero, Ephraim Zimmer, Tim Grube, Kristian Kersting, and Max Muhlh \u00a8 auser. User-level label leakage from gradients in federated learning. Proceedings on Privacy Enhancing Technologies, 2:227\u2013244, 2022.  \n[6] Dimitrov, Dimitar Iliev, et al. \"Data leakage in federated averaging.\" Transactions on Machine Learning Research (2022).  \n[7] Zhu, Junyi, Ruicong Yao, and Matthew B. Blaschko. \"Surrogate model extension (SME): A fast and accurate weight update attack on federated learning.\" arXiv preprint arXiv:2306.00127 (2023).  \n[8] Zhuohang Li, Jiaxin Zhang, Luyang Liu, and Jian Liu. Auditing privacy defenses in federated learning via generative gradient leakage. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 10132\u201310142, 2022.  \n[9] Wu, Ruihan, et al. \"Learning To Invert: Simple Adaptive Attacks for Gradient Inversion in Federated Learning.\" Uncertainty in Artificial Intelligence. PMLR, 2023.  \n[10] Dongyun Xue, Haomiao Yang, Mengyu Ge, Jingwei Li, Guowen Xu, and Hongwei Li. Fast generation-based gradient leakage attacks against highly compressed gradients. IEEE INFO316 COM 2023 - IEEE Conference on Computer Communications, 2023.  \n[11] Garov, Kostadin, et al. \"Hiding in Plain Sight: Disguising Data Stealing Attacks in Federated Learning.\" arXiv preprint arXiv:2306.03013 (2023)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "The authors should include an ethics statement discussing how their work can be used by malicious actors and how to defend against it."
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4626/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4626/Reviewer_gCmo",
+                    "ICLR.cc/2024/Conference/Submission4626/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4626/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697549251883,
+        "cdate": 1697549251883,
+        "tmdate": 1700740881714,
+        "mdate": 1700740881714,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "2B1SKkmzDF",
+        "forum": "cJ7XuW5JaH",
+        "replyto": "cJ7XuW5JaH",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_zaUc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_zaUc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposed a label recovery attack by estimating the posterior probabilities. The authors first obtain the relationship between the gradient of focal loss and posterior probability. Then, they explain the essential reasons for such findings from the perspective of the exponential family. They also empirically observe that positive (negative) samples of a class have approximate probability distributions. Experiments on different datasets validate the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The proposed method is well supported by theoretical analysis.\n* The proposed method empirically works."
+            },
+            "weaknesses": {
+                "value": "* The proposed method requires an auxiliary dataset with the same distribution of training data. This requirement is impractical in FL.\n* The writing is not clear. For example, I cannot find the exact definition of 1) negative probabilities and positive probabilities in Sec 5.1, class-wise labels in Theorem 2.\n* [Minor] The second equation in the proof for theorem 3, Appendix A.1 should be\n\n$$\n\\nabla_{z_j}L_{FL}\n=\\sum_{t=1}^K\\alpha_t\\frac{\\partial\\bar{h}}{\\partial z_j}\\log\\sum_{k=1}^Ke^{z_k}+\\sum_{t=1}^K\\alpha_t(1-p_t)^{\\gamma}p_j-\\sum_{t=1}^K\\alpha_t\\frac{\\partial\\bar{h}}{\\partial z_j}\\textcolor{red}{z_t}-\\alpha_j(1-p_j)^\\gamma.\n$$\n\n$z_t$ is missing in the equation."
+            },
+            "questions": {
+                "value": "The performance of the proposed attack in Theorem 2 relies on the quality of posterior probability. To my understanding, The posterior probability increases when the training epoch increases. Therefore, the performance should increase with the training epoch. However, in Figure 4, the performance decreases as the training epoch increases. Could you please provide more explanation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4626/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698721734868,
+        "cdate": 1698721734868,
+        "tmdate": 1699636441783,
+        "mdate": 1699636441783,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "slIEDpadda",
+        "forum": "cJ7XuW5JaH",
+        "replyto": "cJ7XuW5JaH",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_AjeW"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4626/Reviewer_AjeW"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper analyses root cause of label leakage from gradients and propose a novel attack which estimates the posterior probabilities from an auxiliary dataset."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Analysis of label leakage is novel and insightful, and the conclusion is interesting: combining cross-entropy loss and Softmax is intended to reduce computation but opens a backdoor to privacy attacks.\n2. Novelty is clear. \n3. Writing is easy to follow."
+            },
+            "weaknesses": {
+                "value": "A small weakness: the attack assumes adversary can use an auxiliary data with the same distribution of training data, which in reality is not always true. I hope there can be some more discussions on how the results can be if auxiliary datasets and training datasets have considerable distribution shift."
+            },
+            "questions": {
+                "value": "1. MNIST and CIFAR10 are relatively small and easy datasets. I wonder if the posterior probability estimation accuracy can scale up, if the data is more complex and the task is more challenging? For example, in ImageNet there are more vague and hard samples, the variance in the data distribution will be larger. Can you show us what will be the case in ImageNet or other large datasets?\n\n2. In Figure 4 rightmost subfigure, why instance accuracy drops with model training?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4626/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4626/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4626/Reviewer_AjeW"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4626/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699208319636,
+        "cdate": 1699208319636,
+        "tmdate": 1699636441696,
+        "mdate": 1699636441696,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

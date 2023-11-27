@@ -1,0 +1,283 @@
+[
+    {
+        "id": "65jeoNOeWh",
+        "forum": "o7BwUyXz1f",
+        "replyto": "o7BwUyXz1f",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_p3gB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_p3gB"
+        ],
+        "content": {
+            "summary": {
+                "value": "The submission studies the problem of negative transfer between tasks in a continual RL (CRL) setting. The authors posit that this issue is distinct from the plasticity/stability trade-off studied in the majority of the CRL literature. The manuscript contains an initial evaluation on pairs of Meta-World tasks that demonstrates that indeed learning a new task might be negatively affected because of the learning of a previous task. Then a new approach is proposed to simply re-initialize the network upon training each new task and then distill knowledge from the trained network into a shared network trained across all tasks. An evaluation on Meta-World tasks demonstrates that the approach avoids negative transfer."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "######## Strengths ########\n- The proposed method is clearly explained\n- The evaluation on Meta-World demonstrates that the method is capable of learning complex tasks\n- The empirical evaluation covers multiple baselines, sequences of tasks, and a few ablation studies"
+            },
+            "weaknesses": {
+                "value": "######## Weaknesses ########\n- The problem of negative transfer between RL tasks has been well known for a long time -- though not as extensively explored, indeed\n- The proposed solution is underwhelming -- in order to avoid negative transfer, the approach also rids itself of the possibility of achieving positive transfer\n- The most closely related approach, Progress & Compress (P&C) was apparently misunderstood by the authors, leading to a misleading evaluation\n- There is no distinct related work section\n\n######## Recommendation ########\n\nUnfortunately, I recommend that this manuscript is not accepted in its current form. While I agree with the authors that negative transfer has been understudied in continual RL, the phenomenon has been well known for a long time (e.g., [1]). A paper in this space should provide some novel insight or understanding of the problem, which I don't believe the current submission provides. The proposed solution, instead of seeking to avoid negative transfer while maintaining the possibility to achieve positive transfer, simply trains _without_ transfer, trivially sidestepping the problem (and the advantages of positive transfer). Critically, there is a fundamental flaw in the authors' understanding and implementation of P&C (and extensions to P&C), which I discuss in detail below. This error makes P&C unsuitable for avoiding negative transfer, which is in fact an issue that the P&C authors discussed in their original paper in 2018. \n\n######## Arguments ########\n- It is unclear what is the novelty of the setting studied in this work\n    - The problem of negative transfer in RL is well known. Indeed, in the continual setting it has been somewhat tied with plasticity/capacity (probably incorrectly)\n    - The authors' discussion of how it differs from these other issues is an interesting first step, but fails to provide any clear insight\n    - What is the reason for this negative transfer? When does it happen? How can we avoid it?\n    - There is a recent treatment of a very similar issue in [2] which the authors fail to reference in their work. In [2], the authors explicitly study one particular setting where negative transfer occurs: when two tasks require executing different actions in the same state. \n    - It's unclear why the results of Figure 2 cannot be explained via loss of capacity/plasticity. While I do agree that that's probably not the cause (because finetuning doesn't restrict capacity or plasticity), I don't believe there's a clear enough argument in the result to clearly establish that claim. \n- The solution doesn't really address the problem, but sidesteps it\n    - The problem the authors are trying to address is that, when attempting to transfer knowledge from one task to the next, sometimes that leads to negative transfer\n    - Instead of aiming to determine when this is the case or somehow prevent it from happening, the proposed solution simply _doesn't_ transfer any knowledge across tasks. Trivially, this solution avoids negative transfer -- but it also avoids positive transfer! \n    - I encourage the authors to continue down this path, and seek to develop a solution that maintains the benefits of positive transfer when available, and avoids negative transfer when it would occur.\n- There is a critical flaw in the authors' implementation of P&C\n    - The authors claim that P&C is restricted to \"one active column... without any re-initialization.\" Quoting from the original P&C paper: \"Note that one could make this phase similar to naive finetuning of a network trained on previous tasks by not resetting the active column or adaptors upon the introduction of a new task. Empirically, we found that this can improve positive transfer when tasks are very similar. For more diverse tasks however, we recommend re-initialising these parameters, which can make learning more successful.\"\n    - The first implication of this is that the authors' evaluation of P&C is incorrect.\n    - The second, and perhaps more important, is that P&C already explicitly addressed the issue of negative transfer 5 years ago. Of course, P&C is not an end-all solution, but it clearly is a mechanism that seeks to avoid negative transfer, and they do this while still maintaining positive forward transfer.\n    - Moreover, while indeed P&C originally didn't use replay, it is a trivial adaptation of P&C, which has already been successfully tried (Mendez et al., 2022).\n- There is no distinct related work section. While the authors do a somewhat complete treatment scattered throughout the paper of continual learning and CRL approaches, they miss any mention to existing studies of negative transfer (e.g., [1,2]).\n\nAs one additional point, the choice of tasks that can be trained within 3 million steps is especially well suited for an algorithm that achieves no forward transfer -- it's trained only on the easy tasks, which we can learn by definition with no forward transfer.\n\n\n[1] Taylor & Stone, \"Transfer Learning for Reinforcement Learning Domains: A Survey.\" JMLR, 2009.\n\n[2] Kessler et al., \"Same State, Different Task: Continual Reinforcement Learning without Interference.\" AAAI, 2022."
+            },
+            "questions": {
+                "value": "######## Additional feedback ########\n\nThe following points are provided as feedback to hopefully help better shape the submitted manuscript, but did not impact my recommendation in a major way.\n\n\nIntro\n- I question the claim toward the end of the intro that says that because the agent can still learn window-close, then it's not due to loss of capacity\n    - First, are we just doing finetuning? Then why would there be a loss of capacity?\n    - Second, maybe window close is more \"compatible\" with sweep-into and therefore doesn't require additional capacity -- it somehow \"fits in the same space\"\n- I still think this roughly boils down to the idea of Kessler et al., where it's not possible for a single model to perform well on two tasks that require \"opposite\" behaviors given the same state. I hoped to see some discussion about this. \n\nSec 2\n- The authors should clearly anticipate in the intro and in Sec 2.2 why behavior cloning is mentioned at all. When I got here I assumed it was to do something similar to Wolczyk et al., but was confused about why this wasn't mentioned before. \n\nSec 3\n- The experimental setting for Figure 2 is not very clear. \n    - Why are the first words supposed to denote whether tasks are similar? For example button press is a lot more similar to coffee button than to button press topdown wall\n    - Are the 8 groups all size 3 or are they different sizes? Do they all have at least 2 tasks?\n    - I think what confused me was that the authors stated that they used _all_ to refer to groups and not tasks, while I was expecting the evaluation to be over all pairs of _tasks_. Perhaps a bit of rephrasing could help make this clearer. \n- How should we interpret the results over 13 tasks? Does this mean training 13 tasks in sequence? How are they chosen, why...?\n\nSec 5\n- Figure 3/5 seems to only show the performance of the offline network. for R&D. If that's the case, then the curves should look like \"steps\" -- there's no reward improvement on during the training of each individual task, and then there's a jump at the end when the online model is distilled. \n- Do Figure 3/5 show the performance averaged across all tasks so far or only the current task?\n- The use of \"long task sequence\" throughout the paper to refer to sequences of 8 tasks is quite underwhelming.\n- \"To check that either CReLU or InFeR can be compatible to the CL baseline\" -- what does this mean?\n\nThere is no related work section \n\nTypos/style/grammar\n- Final paragraph of Sec 1 -- section --> Section\n- The citation format seems odd. Why is there a parenthesis within each parenthetical citation for the year? \n- Sec 3, paragraph 2 -- single task --> single-task"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2524/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698347949453,
+        "cdate": 1698347949453,
+        "tmdate": 1699636189081,
+        "mdate": 1699636189081,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wq7bawA8u9",
+        "forum": "o7BwUyXz1f",
+        "replyto": "o7BwUyXz1f",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_oDoz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_oDoz"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper focuses on continual reinforcement learning (CRL) and negative transfer. They show using Meta-World RL environments where the negative transfer occurs. For negative transfer, they delve into severe plasticity degradation depending on the learned task sequence. With this negative transfer phenomenon they propose an effective method denoted as Reset & Distill (R&D) thereby mitigating negative transfer and forgetting. For negative transfer they use MetaWorld and utilize SAC and PPO to show the negative transfer scenario in 8 task groups. In Table 1, they showcase how their method R&D has the lowest negative transfer and forgetting while comparing among fine-tuning, EWC, P&C, ClonEx, ClonEx+CReLU, and ClonEx+InFeR."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Great amount of experiments and a good amount of baselines to show why your method performs better than the others. In addition, an interesting set of experiments especially with the longer sequence. Plus you have three different settings: easy, hard, and random to simulate different varying conditions.\n\nThe introduction is quite motivating and makes it quite easy to understand the motivation. Plus you provide a plethora of previous works and mention what you are particularly working on in terms of negative transfer. For Figure 1, that is a good example to show how the negative transfer happens and makes it very easy to understand why you are wanting to work on this problem, much kudos."
+            },
+            "weaknesses": {
+                "value": "Experiments:\nFor the experiments with CReLU or InFeR, why is R&D not compared, it would help bolster your method if in both scenarios R&D shows benefit. If not, it would be helpful to state why R&D is not put here. I can understand from logic, you state that it is not helpful. Yet, you used R&D, in a separate application, so it feels like there is a missing component since you used R&D in a different application.\n\nWriting & Visualization:\nFor Figures 3 and 5, it may benefit to have each SAC and PPO separate. I understand that the paper limit is a hard problem. Consider in the supplementary material, to have each SAC and PPO plots in there so it makes it easier to see the separation. \n\nFor some of the captions like Table 1 or Figure 6, you state the information but it would be helpful to provide a conclusion of the results so it can spell to the reader what the message of the figure or table is.\n\nAlso in the second paragraph you mention that you ran 10 different random seeds,  how is that different from Figure 2 where you mentioned 3 seeds? May you please provide more details into it?\n\nIn 7.3 you mention statistical significance but where are the p-values?"
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "n/a"
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Reviewer_oDoz"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2524/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698378955190,
+        "cdate": 1698378955190,
+        "tmdate": 1699636189003,
+        "mdate": 1699636189003,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "72sxD1MyLR",
+        "forum": "o7BwUyXz1f",
+        "replyto": "o7BwUyXz1f",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_u4tG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_u4tG"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, they address the issue of negative transfer in continual reinforcement learning by adding reset and distill strategies. They use the resetting strategy for online actor-critic and use distillation for the offline actor. They show on Meta-world tasks that these strategies mitigate both catastrophic negative transfer and forgetting in CRL."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The papers is well written and organized."
+            },
+            "weaknesses": {
+                "value": "- The innovation is not enough as a contribution.\n- Other works show that resetting works for continual learning. It is not new to add Resetting and KL divergence to the loss function to mitigate forgetting. \n- In the section 5.1, it compares fig 2 with fig 4 roughly. However it is not enough for the claim. It is needed to compare precisely the numbers in the two figures. \n- There is not evidence or proof for remark 1 to say the reason is reward signal. There are different reasons for loss of plasticity. \n- How is the offline actor trained?"
+            },
+            "questions": {
+                "value": "- What is the beneficial use of R&D vs just training each task from scratch like just doing resetting?\n- The results in table 1 are very close together. It is not sufficient to compare just the numbers. It needs to clarify if they are significantly different. \n- What is exactly the expert buffer?\n- In the baselines, it would be worth to compare with just resetting agent or training an agent from scratch.\n- What is the evidence for Remark 1? any proof?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2524/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698780479934,
+        "cdate": 1698780479934,
+        "tmdate": 1699636188936,
+        "mdate": 1699636188936,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "s0rkJeyLtP",
+        "forum": "o7BwUyXz1f",
+        "replyto": "o7BwUyXz1f",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_274b"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2524/Reviewer_274b"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper investigated a new empirical phenomenon in continual RL, dubbed catastrophic negative transfer. Particularly, algorithms tend to fail (lack plasticity) in the new task initialized from the previous task, even without incorporating the techniques to mitigate catastrophic forgetting. Next, the authors proposed a new strategy called Reset and Distill highly based on the behavior cloning approach to eliminate the catastrophic negative transfer phenomenon."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "* The paper is well-organized, well-written and easy to follow.\n\n* The experiments are extensive given the considered algorithms and environments."
+            },
+            "weaknesses": {
+                "value": "* The conclusion is skeptical and not reliable, which needs further investigation.\n\n* The proposed algorithm is straightforward and lacks technical contribution, although it is effective and technically sound in my opinion."
+            },
+            "questions": {
+                "value": "The authors claimed a new phenomenon is overlooked in continual RL, but personally, the resulting conclusion is counterintuitive, and skeptical and may not be reliable without further investigations. Here are my explanations.\n\n* Based on my knowledge in Q learning in the tabular setting, the convergence of Q learning (related to theoretical parts in certain stochastic processes and approximations) does not rely on initialization. Please refer to the well-accepted proof in [1], especially Theorem 1, although it is only a manuscript. This implies at least in the tabular setting, even with a very bad initialization, Q learning can always converge to an optimal one in the new environment under mild conditions. This result conflicts with the current manuscript, although this paper targets on deep RL setting. Thus, it is too early to conclude that catastrophic negative transfer commonly exists, and the reason that happens especially in deep RL settings should be carefully investigated and discussed. However, this paper has failed to do that. It would be more reasonable for me if the conclusion is this phenomenon is very unlikely to happen in tabular settings, while it is prone to occur in deep RL cases as the optimization/plasticity is hard in the current task under many initializations from the previous tasks. Therefore, I am not convinced by the current conclusions and strongly suggest more investigation and discussion about this phenomenon.\n\n* The reason behind this phenomenon is also not convincing to me. This paper hypothesizes that the reward in the current tasks is not sufficient to guarantee convergence. Although I mostly agree with the claim, personally the deeper reasons may be the initializations from the previous tasks have a detrimental effect on the current tasks, especially in deep RL settings. Another hypothesis or potential concern is the training time is not sufficient, or the algorithm is not advanced enough to tolerate different initializations. For example, although SAC and PPO are commonly used, they may not be advanced enough to converge very well in these environments. I am thus skeptical of the conclusion. I even think some acceleration techniques used in RL algorithms can also help to mitigate this phenomenon, and thus the issue this paper studies may not be critical.\n\n\n* The proposed algorithm is too straightforward. In my opinion, this resulting algorithm, although I agree it is well-motivated, effective and technically sound, is highly based on behavior cloning. It seems that it is equivalent to behavior cloning that additionally considers the memory buffer in the current task. The deficiency is also apparent as it can almost double the training costs (need to train an extra policy). As such, the proposed algorithm lacks technical contribution.\n\n### More Detailed questions and comments\n\n* What is the difference between the catastrophic negative transfer and plasticity? In my opinion, they are almost the same.\n\n* Although Metaworld is commonly used, the empirical study on this environment may not generalize to broader environments. Also, the results of PPO and SAC cannot be generalized to all RL algorithms as claimed in this paper.\n\n* In Figure 4, why PPO+CReLu performs even worse than PPO in the two-task continual learning? Why CReLu is not useful here? \n\n* How many seeds are used in Table 1? It seems R&D is competitive with ClonEX without significant improvement. \n\n* The considered baselines are limited and the straightforwardly using behavior cloning in the proposed algorithm may not be superior to other state-of-the-art continual RL baselines.\n\nOverall, although this paper studies an overlooked phenomenon and did extensive experiments, empirical results tend to be fragile and may not generalize to broader settings. Some conclusions may be misleading and should be further investigated in the future before made faithfully.\n\n[1] http://users.isr.ist.utl.pt/~mtjspaan/readingGroup/ProofQlearning.pdf"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2524/Reviewer_274b"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2524/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699080264911,
+        "cdate": 1699080264911,
+        "tmdate": 1699636188839,
+        "mdate": 1699636188839,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,274 @@
+[
+    {
+        "id": "eBu9f4L9Nr",
+        "forum": "nLxH6a6Afe",
+        "replyto": "nLxH6a6Afe",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_ygGy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_ygGy"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an alternative to RL-based methods (e.g.: RLHF) for improving the quality of generations from instruction-tuned models by distilling preferences from other language models and using them in a supervised finetuning setup. Particularly, a teacher LLM is used to improve a student LLM by 1) generating a rubric (or criteria for good responses) for each instruction in an instruction-tuning dataset, and 2) iteratively rewriting the student's response given the rubric and the current response.\n\nThe student is initialized by training it on the instruction tuning dataset using SFT and then continued to be trained to rewrite its responses given the targets from the teacher. At inference time, a rubric is retrieved from the set generated for the training data, and an iterative process is followed to generate the student's response.\n\nThis process is used to train a Llama-7B model on the Alpaca dataset, and it is evaluated against SFT, RLHF,  RRHF (Yuan et al., 2023; RLHF with ranking instead of pairwise preferences) and RAFT (Dong et al. 2023; use reward model to select training data) in terms of win-rate according to GPT-4 on a held-out subset of Alpaca, reading comprehension, factual knowledge, and commonsense datasets."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Exploring alternatives to RL algorithms using sparse feedback to improve LM generations is highly relevant and timely. This paper presents some good ideas, particularly using feedback from other LMs in the form of rubrics as rewrites, that can contribute to this research area."
+            },
+            "weaknesses": {
+                "value": "Algorithm: The student is trained as a response rewriter given a rubric during the iterative process. This raises the following concerns:\n\n- Because of this formulation the student model requires a rubric and a version of the response to rewrite at inference time. The dependence on additional inputs might impact the generalizability of the student model as obtaining. Particularly, the rubrics generated for the training data may not generalize to the new instructions at inference time.\n- Moreover, the inference process is required to be iterative due to this algorithm, and hence requires additional compute.\n- Since the student is initialized using SFT on the instruction tuning dataset, the initial draft responses produced by the model may be of good quality, but continuing to train it to be a rewriter might affect the original instruction following capabilities. An evaluation of the original drafts produced by the student after the iterative training might be helpful.\n\nOne solution to address the concerns above could be to train a separate rewriter (conditioned on the rubric and the previous responses), and iteratively finetune the student model only on the instruction following task (i.e., not condition its outputs on the rubric and previous responses)\n\nBaselines: This paper proposes multiple changes compared to the current RL from feedback setup for improving instruction tuning models: having the teacher generate a rubric, continued training of models with SFT, curriculum learning with minimal rewrites given by a teacher. These are all orthogonal improvements and can be evaluated separately. The current evaluation setup conflates these changes. I propose the following additional baselines:\n- Effect of continued training: Simply train the student model with additional SFT steps, and do not use a teacher model at all. The current comparison between CITING and SFT is not entirely fair because CITING uses additional training steps.\n- Effect of the rubrics: Use the teacher model to generate a rubric and train the student model with additional SFT steps also conditioned on the rubric.\n- Fairer comparison with RLHF: RLHF might perform better with better pairwise preference data. A good baseline would be to generate rewrites from a teacher model and use them to train a reward model and perform RLHF."
+            },
+            "questions": {
+                "value": "- The details of the baselines are missing. How exactly are the RLHF models trained? Do they use preferences on the same 1000 instances used for CITING?\n- How do you ensure that the teacher minimally edits the student responses in the CITING algorithm? Do you actually see that the edits are minimal?\n- How do you select the number of iterations at training time and inference time in CITING?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2223/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2223/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2223/Reviewer_ygGy"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2223/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698769738415,
+        "cdate": 1698769738415,
+        "tmdate": 1699636155756,
+        "mdate": 1699636155756,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "vgbcAFxACg",
+        "forum": "nLxH6a6Afe",
+        "replyto": "nLxH6a6Afe",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_TqZ2"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_TqZ2"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a method to train large language models using AI feedback instead of human feedback. The method, called Curriculum Instruction TunING (CITING), uses a teacher LLM to create rubrics and revisions for different types of instructions, and a student LLM to learn from them. The paper shows that CITING outperforms existing methods on four datasets in terms of articulation, depth, and comprehensiveness."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper proposes a novel method to train large language models using AI feedback instead of human feedback, which reduces the cost and difficulty of scaling LLM development.\n2. This paper introduces curriculum instruction tuning, which leverages a teacher LLM to create rubrics and revisions for different types of instructions, and a student LLM to learn from them. This is an interesting use case of LLM as a planner for training another LM.\n3. This shows that CITING outperforms existing methods on four datasets in terms of articulation, depth, and comprehensiveness."
+            },
+            "weaknesses": {
+                "value": "1. The technical novelty may be limited. The method is also complicated.\n2. This paper does not evaluate the robustness or generalization of CITING to unseen or adversarial instructions. This could be an issue as the teacher model only teaches in-domain curriculums. I'd like to see discussion on this."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2223/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698827576946,
+        "cdate": 1698827576946,
+        "tmdate": 1699636155680,
+        "mdate": 1699636155680,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ofUJKUg61L",
+        "forum": "nLxH6a6Afe",
+        "replyto": "nLxH6a6Afe",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_4C6N"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_4C6N"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes an instruction tuning method, which first employs a teacher LLM to craft the rubrics for evaluating the answers to various types of questions, and then trains the student LLM to follow the rubrics and perform self-correction from the revision by the teacher. The authors have shown its effectiveness on four datasets, comparing with several baseline methods."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "**Clarity**\n\n- The presentation of this work is clear and easy to follow. \n- The method is simple and effective and has shown clear improvement over baselines."
+            },
+            "weaknesses": {
+                "value": "My main concern about this work is about novelty and clarity. Even though the method proposes using criteria as a guidance to augment instruction tuning data, the overall method, still, can be viewed as a complex version of data distillation. Recently there have been tons of works proposing pretty similar ideas, such as Orca [1], WizardLM [2], MAmmoTH [3], etc., which all leverage data augmentation (guided by certain criteria/score function, etc.). It might be good to compare CITING with these methods, or at least discuss why the contribution of this work is significant.\n\nI'm not fully convinced about the method of how you assign quality scores to the generated data. In Section 3.2, why does the fact that the candidate instructions have their embeddings near those of rubrics mean that the candidates are legit? In terms of the Appendix, the so-called rubrics are basically some descriptions or requirements of a certain task --- do we really need a complex pipeline like CITING or we can simply include them as the \"system message\" in the few-shot examples (for augmentation)?\n\nAlso, there is no code and data uploaded as supplementary materials, which causes some difficulties for me to fully understand your method.\n\n[1] Orca: Progressive Learning from Complex Explanation Traces of GPT-4\n\n[2] WizardLM: Empowering Large Language Models to Follow Complex Instructions\n\n[3] MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning"
+            },
+            "questions": {
+                "value": "How did you implement RLHF? There is no official implementation of that and your method has shown significant improvement over RLHF. Could you upload your code if possible (or point to some open-sourced implementation you are using)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No"
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2223/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698847690115,
+        "cdate": 1698847690115,
+        "tmdate": 1699636155590,
+        "mdate": 1699636155590,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "af5WPBQtej",
+        "forum": "nLxH6a6Afe",
+        "replyto": "nLxH6a6Afe",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_6BWB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2223/Reviewer_6BWB"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a novel approach named Curriculum Instruction TunING (CITING) for the development and scaling of Large Language Models (LLMs). Instead of a heavy reliance on human-crafted instruction datasets and human alignment, CITING employs a teacher LLM to guide and train student LLMs. This methodology mirrors the traditional tutor-student dynamic, where students refine their skills using rubrics and revisions. The process entails the teacher LLM offering evaluation criteria, with the student LLM subsequently learning to self-correct based on these guidelines. Experimental findings indicate that CITING surpasses contemporary leading methods like RLHF across several benchmarks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The Curriculum Instruction TunING approach is innovative. Using teacher LLMs to guide student LLMs, which mirrors the tutor-student relationship, is a fresh perspective in this field.\n\n2. The paper delineates a meticulously crafted methodology, ranging from rubric design with the teacher model to the iterative fine-tuning of the student LLM.\n\n3. The narrative is lucid, providing a thorough explanation of the CITING methodology."
+            },
+            "weaknesses": {
+                "value": "1. Over-reliance on Teacher LLM: There's a potential risk if the teacher LLM possesses biases or inaccuracies, as it could transfer these shortcomings to the student LLM. Consequently, the effectiveness of CITING is largely contingent on the quality and resilience of the teacher LLM.\n\n2. Test Phase Limitations: During the test phase, the model's potential might be constrained by the extent of criteria it can retrieve from a fixed corpus.\n\n3. Evaluation Metrics: The paper predominantly emphasizes the winning rate for comparing with other techniques. Yet, in scenarios like QA or RC, shouldn't the method also be evaluated using standard metrics?"
+            },
+            "questions": {
+                "value": "1. How does CITING address potential biases or inaccuracies if the teacher LLM possesses them?\n\n2. During the test phase, how does the model overcome the limitations of retrieving criteria from a fixed corpus?\n\n3. Beyond the winning rate, have other standard metrics been considered for evaluating CITING, especially in QA or RC scenarios?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2223/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698899607202,
+        "cdate": 1698899607202,
+        "tmdate": 1699636155530,
+        "mdate": 1699636155530,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

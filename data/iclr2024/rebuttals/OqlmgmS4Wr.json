@@ -1,0 +1,473 @@
+[
+    {
+        "title": "AgentTuning: Enabling Generalized Agent Abilities for LLMs"
+    },
+    {
+        "review": {
+            "id": "bOyBMAIfZ4",
+            "forum": "OqlmgmS4Wr",
+            "replyto": "OqlmgmS4Wr",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_iTiT"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_iTiT"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies mixing state and action trajectories with general instruction tuning corpus to improve open-source LLM agents\u2019 decision making capabilities while keeping their generalization performance. The authors propose a 3 stage approach: generating instructions, collecting trajectories, and filtering them based on task reward. For tasks where instructions are not already given, the paper uses similar auxiliary tasks or zero-shot prompts the LLM to construct a task input and outputs. Trajectories are collected by prompting the LLM agent using ReAct to generate actions, running in the environment to collect rewards and extra feedback, and continuing in a loop till an episode is terminated. Trajectories are filtered based on task specific thresholds. Finally, this trajectory corpus is combined with ShareGPT corpus to train a Llama-2 model. The authors show that the model improves baseline Llama-2 on decision making tasks while keeping its general capabilities and is competitive with GPT-4."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper is written well and easy to follow. It presents a set of expensive experiments, showcasing that open-source LLMs can be competitive with proprietary LLMs when trained on the right data."
+                },
+                "weaknesses": {
+                    "value": "While the empirical contribution is significant, the paper overall feels incremental with straightforward improvements over prior instruction tuning and knowledge distillation. Some of the design decisions are also not explained.\n\n1. While the agent trajectories are very valuable and costly to collect, they are mainly extracted from public tasks/benchmarks by using ReAct with GPT models. The overall process with instruction generation, trajectory collection, and filtering can be useful for other data collection efforts but they are relatively straightforward. For example, ReAct/COT prompting is used with no significant change, reward filtering is also a standard practice in imitation learning. I suggest highlighting main challenges and how significant they are in addition to remedies that you introduced.\n\n2. Using an already available corpora with ReAct and filtering trajectories based on a threshold seems to be reducing the size of the data drastically. For example, in Mind2Web, only a tiny fraction is kept. It is not clear if the benefit of COT annotated trajectories can overcome the reduction in the data size. Can you present results where you make use of the data as much as possible even if you can\u2019t inject COT annotations?\n\n3. How did you choose $\\eta$? Given that it denotes the tradeoff between broader generalization vs agent-task performance, it is important to highlight its impact. Are your models sensitive to this parameter? \n\n4. Similarly, how did you decide 1:4 ratio for GPT-4 vs GPT-3.5?\n\n5. What is GPT-4\u2019s interaction trajectory with the DB? How did you end up collecting multi-turn dialogues? Are you using rule-based turn generation to convert DB response into a prompt?\n\n6. Is ShareGPT not leaking any of the test-time task data? It would be helpful to clarify."
+                },
+                "questions": {
+                    "value": "1. What are main challenges that you had and how significant they are?\n\n2. Can you make use of the available data as much as possible? Would that improve the results even without the COT annotations?\n\n3. How did you choose $\\eta$ And 1:4 ratio?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Reviewer_iTiT"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7956/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698814284584,
+            "cdate": 1698814284584,
+            "tmdate": 1700756722525,
+            "mdate": 1700756722525,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "HWqoUnaCT7",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "bOyBMAIfZ4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer iTiT (1/4)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your insightful comments and constructive feedback on our paper. Your questions have provided us with an opportunity to clarify certain aspects of our work, which we hope will enhance the overall quality and understanding of our research.\n\n> Weakness 1: While the agent trajectories are very valuable and costly to collect, they are mainly extracted from public tasks/benchmarks by using ReAct with GPT models. The overall process with instruction generation, trajectory collection, and filtering can be useful for other data collection efforts but they are relatively straightforward. For example, ReAct/COT prompting is used with no significant change, reward filtering is also a standard practice in imitation learning. I suggest highlighting main challenges and how significant they are in addition to remedies that you introduced.\n\nWe appreciate your insights regarding the perceived straightforward nature of our methodology. However, we would like to emphasize some unique aspects and significant contributions of our work:\n\n- **Limitations of prior works:** Existing studies on LLMs as agents have thus far largely focused on designing prompts or a framework for completing one particular agent task [1][2], rather than fundamentally enhancing the agent capabilities of the LLMs themselves. In addition, many efforts are dedicated to improving LLMs in specific aspects, involving fine-tuning the LLMs using datasets tailored to specific tasks [1][3]. This overemphasis on specialized capabilities comes at the expense of the LLMs\u2019 general abilities and also compromises their generalizability.\n- **First General Agent Model to Match GPT-3.5-turbo:** As illustrated in Figure 1(b), there is a substantial gap between open-source and API-based models like GPT-3.5 and GPT-4. Our work introduces the first open-source model, AgentLlama-70B, which **matches the capabilities of GPT-3.5-turbo in general (unseen) agent tasks while preserving its general abilites**. We believe this makes a significant contribution **both academically and in the development of downstream applications**.\n- **First attempt to instruct-tune LLMs with agent trajectories across multiple tasks:** To the best of our knowledge, **we are the first to use agent trajectories from multiple tasks for instruction tuning**, achieving performance comparable to GPT-3.5-turbo. Furthermore, our error analysis (Cf Sec 3.3) shows that the lack of alignment is the main issue with the agent capabilities of models, which can be greatly improved with minimal data training. We believe this will provide insights into how to enhance the inherent agent capabilities of models.\n- **Automated and Scalable Trajectory Collection Methodology:** Given that agent trajectories are precious and challenging to collect, we have established an **automated and scalable method for collecting agent trajectories and have verified its effectiveness**. For the Instruction Generation process, we used two methods, Self-Instruct and Task Derivation, to supplement tasks lacking training instructions. This **ensures that we have sufficiently diverse agent trajectories**. In the Trajectory Collection process, we interact using GPT-4 and aggressively apply a filtering of $r=1$ to almost all trajectories, **ensuring we have high-quality agent trajectories**. Both of these steps **require no manual intervention and can be easily extended to other agent tasks**. By fine-tuning the model on 1,866 trajectories from 6 held-in tasks, there was a significant improvement in performance on 6 held-out (unseen) Agent tasks, demonstrating the effectiveness of our method.\n\nRegarding your concerns about the innovativeness of using the ReACT/CoT prompt method. We wish to emphasize that while previous works [4][5] have indeed innovated in prompting methods to enhance the performance of API-based models, **they have not focused on improving the agent capabilities of the models themselves**, which is the main focus of our paper. Considering the fact that open-source models are far behind API models in agent capabilities, we have for the first time **elevated the general-purpose agent capability of an open-source model to the level of GPT-3.5-turbo**, even just by using the common ReACT prompt method. We consider this to be a significant contribution. Of course, we believe that more advanced prompting methods are very worthwhile to research, and we intend to make this our next direction of exploration."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700512503989,
+                "cdate": 1700512503989,
+                "tmdate": 1700512503989,
+                "mdate": 1700512503989,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "rkDKDzEV89",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "bOyBMAIfZ4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Reviewer_iTiT"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Reviewer_iTiT"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the update."
+                    },
+                    "comment": {
+                        "value": "Thank you for the detailed response and additional experiments. It helped clarify many of my concerns. I raised my score accordingly.\n\nI would like to further discuss my point about weakness 2. I am curious about just fine-tuning Llama on all \"originally available training data that a task has\". For example, WebAgent [1] uses all available trajectories from WebShop to fine-tune a T5 model. It is not a generalist agent and it doesn't utilize CoT rationales but it can use all available training data. I think the problem stems from using GPT to collect interaction trajectories; since GPT can lead to unsuccessful trajectories, without filtering them you would be training on unsuccessful trajectories; which could also be why you get worse result without filtering. An alternative would be using GPT to **supplement every trajectory that a task originally has with thoughts using ReAct prompting, instead of collecting trajectories using GPT**. My understanding is that you do this only for trajectories generated using task derivation but please clarify if I am mistaken.\n\nOne additional thing about **training corpus for AgentLlama-7B (w/o CoT)**. Did you use the same set of demonstrations as in AgentLlama-7B but just removed CoT rationales?\n\n[1] A Real-World WebAgent with Planning, Long Context Understanding, and Program Synthesis, Gur et al. https://arxiv.org/abs/2307.12856"
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700605613735,
+                "cdate": 1700605613735,
+                "tmdate": 1700605613735,
+                "mdate": 1700605613735,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "GFHfYmYp8G",
+            "forum": "OqlmgmS4Wr",
+            "replyto": "OqlmgmS4Wr",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_cRHd"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_cRHd"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors present to fine-tuning LLMs for agent behaviors with a new dataset collected using demonstrations of GPT models, and demonstrated that LLAMA models achieve significantly better performance on the held-out test set after fine-tuning."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "4 excellent"
+                },
+                "strengths": {
+                    "value": "1. Agent tuning is an exciting and important direction to study for the LLMs as intelligent agents.\n2. The authors' data/training/model have been well-documented. The results should be reproducible"
+                },
+                "weaknesses": {
+                    "value": "1. Figure 1 (b), I don't think the message is fair for this figure, since you trained on AgentBench (although partly), but the other LLMs have not trained on AgentBench. One of the down-sides for open-source LLMs is the ability to generalize to `different' settings from training, but the proposed work has essentially made AgentBench in-distribution by training.\n2. It seems that GPT models are heavily relied on for generating training data. Do we have some sense of how to go beyond GPT models? Suppose we want to push the boundaries of GPT-4, then GPT-4 data may not work as well.\n3. I have concerns for generalization to other agent tasks that are distinct, but not captured in agent-bench. For example, driving or operating Minecraft.\n\nOverall, my main concern is that the improvements might have come from better instruction following, not agent reasoning.\n\nMinor issues:\n- Figure 1 (a), Where does the overall score stand against GPT-4, from which you collected training data?"
+                },
+                "questions": {
+                    "value": "1. How does AlfWorld results in table 4 compare to [1], which reported higher score than the highlighted best open-source model?\n\n\n\n\n[1] Micheli, Vincent, and Fran\u00e7ois Fleuret. \"Language models are few-shot butlers.\" arXiv preprint arXiv:2104.07972 (2021)."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Reviewer_cRHd"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7956/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698966328548,
+            "cdate": 1698966328548,
+            "tmdate": 1699636977855,
+            "mdate": 1699636977855,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "p7egJlggdn",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "GFHfYmYp8G",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer cRHd  (1/2)"
+                    },
+                    "comment": {
+                        "value": "We would like to express our sincere gratitude for your insightful comments and constructive criticism regarding our paper. Your feedback is invaluable in enhancing the quality and clarity of our research. We understand your concerns and are happy to provide further explanations as follows:\n\n> Weakness 1: Figure 1 (b), I don't think the message is fair for this figure, since you trained on AgentBench (although partly), but the other LLMs have not trained on AgentBench. One of the down-sides for open-source LLMs is the ability to generalize to \\`different\\' settings from training, but the proposed work has essentially made AgentBench in-distribution by training.\n\nFirstly, it is important to emphasize that AgentBench was not the primary benchmark used to validate the agent capabilities of our model. The purpose of Figure 1 (b) was primarily to **illustrate the performance gap between open-source models and API-based models**.\n\nMoreover, we have conducted **systematic evaluation on 6 held-out agent tasks**, which was not included in the training set. This demonstrate the robust generalization performance of our models. The results from these tests, as detailed in our paper (Cf Sec. 3.2), show that our model exhibits strong agent capabilities on held-out agent tasks.\n\n> Weakness 2: It seems that GPT models are heavily relied on for generating training data. Do we have some sense of how to go beyond GPT models? Suppose we want to push the boundaries of GPT-4, then GPT-4 data may not work as well.\n\nThe use of GPT-4 generated data in our experiments was a strategic choice, primarily for its convenience of data generation and the quality of the trajectories.\n\nWe believe that AgentTuning can serve as a **foundational method that can be readily combined with other data-centric approaches to foster improvements that are not dependent on the external models like GPT-4**. For instance, a key step in AgentTuning is trajectory filtering, which rejects trajectories with poor performace with environment reward. Self-instruct may be combined with trajectory filtering to perform AgentTuning, where a model can be iteratively self-improving, like [1], while preserving general abilities through hybird instruction tuning.\n\n> Weakness 3: I have concerns for generalization to other agent tasks that are distinct, but not captured in agent-bench. For example, driving or operating Minecraft.\n\nWe deeply appreciate your feedback concerning our agent's generalization ability. Your insights are crucial in ensuring the robustness of our research. In fact, generalization ability is one of our main goals, and we carried out extensive experiments to show that **our models hold strong generalization ability**.\n\nAs described in our evalution setup (Cf Sec. 3.1), we conducted experiments on 6 held-out tasks that are not covered in our training set, with **5 of them not from AgentBench**. The tasks vary greatly in their respective domains. Specifically, the 6 tasks cover tasks of digital card games, daily computer tasks, science experiments, web interaction, wiki retrieval and question answering. As shown in *Section 3.2 Main Results*, our models **achieve huge improvement on these held-out tasks despite they have never seen them before**, with our 70B model getting +176% improvement in the overall score of held-out tasks, which nearly matches the score of GPT-3.5. This clearly shows that our model can generalize to other unseen agent tasks well.\n\nPlaying Minecraft is a rather hard task that **even GPT-3.5 performs poorly** according to [3]. They carried out experiments and found out that GPT-3.5 and open-source LLMs cannot deal with playing Minecraft well. In their experiments, substituting GPT-4 with GPT-3.5 in code generation leads to a sharp performance degradation, with over 80% drop in number of unique items obtained.\n\nBesides, [3] utilizes a set of complicated prompts to enable GPT-4 to play the game effectively. However, our work focuses on **improving the inherent agent ability of models**, which will naturally benefit from improvements on prompting methods.\n\nTherefore, in current stage, we did not test our models on these highly difficult tasks. Instead, we leave further enhancing the agent ability of LLMs and finally enabling LLMs to tackle these hard tasks as a future working direction."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700509425642,
+                "cdate": 1700509425642,
+                "tmdate": 1700509425642,
+                "mdate": 1700509425642,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "6QS0DT9F9Z",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "GFHfYmYp8G",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer cRHd (2/2)"
+                    },
+                    "comment": {
+                        "value": "> Overall, my main concern is that the improvements might have come from better instruction following, not agent reasoning.\n\nIn our work on AgentTuning, our primary goal was to enhance the performance of LLMs in generalized, unseen agent tasks. Through our experiments, we observed a notable improvement in the instruction-following capabilities, as demonstrated in Figure 3(a). This enhancement in instruction following for the Llama-2-chat models, was significant in reducing simple errors that are often lacking in many open-source models. We believe that this improvement in instruction following, which is essential for the successful completion of agent tasks, stands as a significant contribution of our work.\n\nRegarding agent reasoning, we acknowledge its importance in the interaction of LLMs with real world scenarios. However, we think agent reasoning is hard to precisely evaluated. As observed the held-out tasks, AgentTuning has enhanced the generalized agent performance of LLMs on unseen tasks. We welcome this opportunity for an open discussion to further explore and clarify this concept.\n\n> Figure 1 (a), Where does the overall score stand against GPT-4, from which you collected training data?\n\nOur main results in paper show both GPT-4's overall score in both held-in/held-out tasks (Cf Tab. 4). As we choose Llama 2 as our base model, which is a strong open-source model with capabilities comparable to GPT-3.5-turbo in general domains, but there is a huge gap between it and GPT-3.5-turbo in agent tasks. We believe it's possible to surpass GPT-4 using open-sourced LLMs in a specific agent task. Howerver, **as our focus is on general agent capabilities**, we think that using GPT-3.5-turbo as a baseline for comparison of agent capabilities is reasonable.\n\n> Question 1: How does AlfWorld results in table 4 compare to [1], which reported higher score than the highlighted best open-source model?\n\nThe ALFWorld evalutaion setting in [1] is different from the evalution setting used in AgentTuning (which follows the setting in an [2]), so the evaluation scores are not directly comparable. Also, the model in [1] used task specific fine-tuning from a pre-trained model and can only solve ALFWorld task. That model probably has **no capability to follow general instructions and cannot perform generalized agent tasks**. This also makes this model unsuitale for a direct comparason.\n\n\n### References\n\n[1] Micheli, Vincent, and Fran\u00e7ois Fleuret. \"Language models are few-shot butlers.\" arXiv preprint arXiv:2104.07972 (2021).\n\n[2] Liu, Xiao, et al. \"Agentbench: Evaluating llms as agents.\" arXiv preprint arXiv:2308.03688 (2023).\n\n[3] Wang, Guanzhi, et al. \"Voyager: An open-ended embodied agent with large language models.\" arXiv preprint arXiv:2305.16291 (2023)."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700509472838,
+                "cdate": 1700509472838,
+                "tmdate": 1700509472838,
+                "mdate": 1700509472838,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "0fTd0UFpYT",
+            "forum": "OqlmgmS4Wr",
+            "replyto": "OqlmgmS4Wr",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_7D3A"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7956/Reviewer_7D3A"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents AgentTuning, a methodology designed to enhance the capabilities of Large Language Models (LLMs) when they are employed as agents, while preserving their broader language understanding and generation abilities. It introduces AgentInstruct, a specialized instruction-tuning dataset, and an integrated instruction-tuning approach that combines it with publicly accessible instructions spanning various domains. Through experimental evaluations conducted on AgentLLaMA (instruction-tuned LLaMA2 series), the paper demonstrates that AgentTuning substantially improves the performance of LLMs in agent roles while maintaining the LLMs' foundational language understanding and generation capabilities. Notably, AgentLLaMA-70B exhibits comparable performance to GPT-3.5-turbo on unseen agent-related tasks."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The motivation to improve the agent ability of open-sourced LLM is good.\n- It is well-written and the idea it presents is clear.\n- The evaluation is extensive and the results look promising."
+                },
+                "weaknesses": {
+                    "value": "- Some details of the dataset construction is unclear.\n- The training strategy used for instruction-tuning is limited.\n- The rationale behind some design choice needs more explanations."
+                },
+                "questions": {
+                    "value": "This paper proposes the instruction-tuning dataset and hyprid instruction-tuning to improve the agent ability of open-sourced LLM (i.e., LLaMA2). I think it is a significant contribution to the LLM community. However, I have some concerns as the following.\n- The authors claim that they use a reward $r$ to filter out low-quality trajectories, but how this reward is calculated/generated is unclear to me. Besides, as the trajectories are generated by GPT3.5/4, I think the trajectories may contain some misleading information. I wonder whether there is a human evaluation of the correctness of the trajectories.\n- It leverages a hybrid instruction-tuning strategy, which is a simple multi-task training in essence. Based on my understanding, improving the agent ability while preserving the general language understanding ability is close to a continual learning scenario. So I think it is important to discuss some typical training strategies like weight regularization[1] and parameter allocation[2] used in continual learning. And it would be better if you can further provide some results when such strategies are applied to see whether these strategies can benefit training.\n- The rationale behind some design choices is not well-explained. For example, why is the ratio of sampling between GPT3.5 and GPT4 set as 1:4 and why is the threshold of reward $r$ is set as 2/3? Are there any rules or experimental explanations for these choices?  \n\n[1] Kirkpatrick et al. Overcoming catastrophic forgetting in neural networks. Proceedings of the National Academy of Sciences 2017.  \n[2] Serra et al.  Overcoming catastrophic forgetting with hard attention to the task. ICML 2018."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7956/Reviewer_7D3A"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7956/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699025315030,
+            "cdate": 1699025315030,
+            "tmdate": 1699636977743,
+            "mdate": 1699636977743,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "kTwsfI6pWa",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "0fTd0UFpYT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 7D3A (1/3)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your valuable feedback and insightful questions regarding our manuscript. We appreciate the opportunity to clarify the methodology used in our study.\n\n> Question 1: The authors claim that they use a reward r to filter out low-quality trajectories, but how this reward is calculated/generated is unclear to me. Besides, as the trajectories are generated by GPT3.5/4, I think the trajectories may contain some misleading information. I wonder whether there is a human evaluation of the correctness of the trajectories.\n\n**Clarification on Reward Calculation** As we adopt 6 held-in agent tasks from AgentBench [1], the detailed reward calculation formula for each task could be found in appendix of AgentBench. Reward represents the completion status of a task, with values ranging between $[0, 1]$, where 1 indicates that the task is fully completed. \nFor a quick clarification, we have summarized 6 held-in tasks as a table below:\n\n|   Task   |        Description        |                     Example                      |       Reward       |                      Reward Calculation                      |\n| :------: | :-----------------------: | :----------------------------------------------: | :----------------: | :----------------------------------------------------------: |\n| ALFWorld | Daily Household  Routines |                    Heat food                     |    Success Rate    |           If task is finished, r=1, otherwise r=0            |\n| WebShop  |      Online Shopping      |                   Buy a shirt                    |       Reward       |     Score for selecting the correct item during shopping     |\n| Mind2Web |    Website Navigation     |                  Book a ticket                   | Step Success  Rate | Evaluate the predicted action correctness compared to reference actions. |\n|    KG    | Retrieve Entity from  KG  | Which team won the 2014 AFC  Championship Game?  |         F1         | Compare the model\u2019s predicted answers to the gold standard answers |\n|    DB    |   Database  Operations    | How many games did the badgers  play in october? |    Step Success    |           If MySQL query is correct, r=1, otherwise r=0            |\n|    OS    |    Interacting with OS    |               Count specific files               |    Step Success    |           If result from operating system is correct, r=1, otherwise r=0            |\n\n**Human Evaluation and Dataset Verification** We fully understand your concern about the correctness of the trajectories, and we will explain the effectiveness of our data construction method without the need for manual intervention, as well as how we ensure the quality of the data. Since we have used trajectory filtering with $r=1$ for most tasks (except for MindWeb due to its difficulty), we can **ensure the correctness of the trajectories in these tasks**. Combining the Self-Instruct and Task Derivation methods for Instruction Generation, our data construction process **does not require manual participation, making our method scalable and easily extendable to other agent tasks**. Table 2 in the paper demonstrates that using trajectory filtering to eliminate incorrect trajectories significantly enhances the model's capabilities in Agent tasks. As for using GPT-4 to generate the Chain of Thought (CoT) reasoning process, its effectiveness has been verified by many works [2][3], and we have also conducted a set of comparative experiments showing that training with the CoT process yields better performance for the model.\n\n|  | AgentLlama-7B (w/ CoT) | AgentLlama-7B (w/o CoT) |\n| :---: | :---: | :---: |\n| Held-in | **1.96** | 1.38 |\n| Held-out | **0.67** | 0.56 |\n| General | **0.63** | 0.57 |"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700507580597,
+                "cdate": 1700507580597,
+                "tmdate": 1700507580597,
+                "mdate": 1700507580597,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "QUd5E2cI8V",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "0fTd0UFpYT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 7D3A (2/3)"
+                    },
+                    "comment": {
+                        "value": "> Question 2: It leverages a hybrid instruction-tuning strategy, which is a simple multi-task training in essence. Based on my understanding, improving the agent ability while preserving the general language understanding ability is close to a continual learning scenario. So I think it is important to discuss some typical training strategies like weight regularization[1] and parameter allocation[2] used in continual learning. And it would be better if you can further provide some results when such strategies are applied to see whether these strategies can benefit training.\n\nThank you very much for your valuable suggestion regarding the discussion of typical continual learning strategies with AgentTuning methodology. We certainly agree that discussing and comparing our approach with established continual learning methods like weight regularization and parameter allocation would enrich the paper.  However, **there are specific challenges in directly applying many continual learning techniques to the fine-tuning of large language models (LLMs)**.\n\nFor example, Elastic Weight Consolidation (EWC) necessitates access to the original supervised fine-tuning (SFT) data from the first task to estimate Fisher information for each parameter. Similarly, Hard Attention to the Task (HAT) requires the original SFT data to learn a task embedding with the original SFT data and modifications to the model architecture, such as adding gates between layers. However, the fine-tuning data for many open-source LLMs, like the Llama series, is not typically available. (Still, it's not totally impossible to combine these methods. For EWC, the fisher information of each parameter could be estimated with extra general task data like shareGPT. For HAT, the task embedding may also be esitmated through extra data also.)\n\nAnother challenge the of implementing EWC/HAT entails the techniques used to train language models with huge parameters, like model/pipeline parallelism, distributed optimizers, etc. It requires huge modifications to Megatron training infrastructures (for example, reducing over the square of gradients, and accessing all parameters for EWC loss terms calculation) and would likely necessitate considerable effort in tuning method-specific hyper-parameters.\n\nUnderstanding the value of your suggestion to include discussions and comparisons with continual learning methods, we propose a different approach. Instead of integrating EWC and HAT methods, **we plan to explore LoRA and P-Tuning, both of which are prevalent and parameter-efficient fine-tuning methods in the realm of LLMs and are frequently applied in the continual learning of LLMs**. LoRA learns a low rank delta for the parameter matrices, while P-Tuning introduces an additional prefix in each layer. We will conduct experiments with these methods and include a comprehensive and detailed discussion in the Appendix. We are truly grateful for your constructive feedback and are confident that it will significantly enhance the depth and rigor of our study."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700507735666,
+                "cdate": 1700507735666,
+                "tmdate": 1700507735666,
+                "mdate": 1700507735666,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BB5l4bYh9V",
+                "forum": "OqlmgmS4Wr",
+                "replyto": "6QS0DT9F9Z",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7956/Reviewer_7D3A"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7956/Reviewer_7D3A"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate the authors for the additional experiments and further clarification. I think my concerns are mainly addressed and I choose to keep the points."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7956/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700714599615,
+                "cdate": 1700714599615,
+                "tmdate": 1700714599615,
+                "mdate": 1700714599615,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

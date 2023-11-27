@@ -1,0 +1,208 @@
+[
+    {
+        "id": "t6PueZbff8",
+        "forum": "2dLMPOY0HW",
+        "replyto": "2dLMPOY0HW",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_zabj"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_zabj"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the problem of node classification given node features and the graph structure information. The author propose a crude estimate on the extent to which node features cover graph structure information. Based on the idea of maximizing the mutual information between node embeddings and the graph structure, the authors introduce a novel regularization-based MLP model termed InfoMLP. InfoMLP consists of a preprocessing step and a learning step. Only the preprocessing step requires utilizing the graph structure information. Once the raw node features are preprocessed, InfoMLP has the same efficiency as a standard MLP during both the training and testing phases. Empirically, the proposed method demonstrates competitive performance over a few small benchmark datasets, while being much more efficient than existing graph neural networks."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- Efficiency is a major problem for the application of conventional GNNs in the industry, where practitioners often have to deal with graphs of massive size. This paper proposes an alternative and efficient method for node classification while utilizing both the raw node features and the graph structure.\n\n- The idea to construct node embeddings during a preprocessing stage by explicitly maximizing the mutual information between node embeddings and the graph structure information is interesting, although not surprising. I liked this perspective.\n\n- The empirical results over the selected benchmark datasets are promising, as shown throughout Section 4 in the paper.  (The additional results in the appendix, however, are on the pessimistic side, more on this later.)"
+            },
+            "weaknesses": {
+                "value": "- A number of claims in Section 3.1 are not well justified by either theoretical or empirical evidence. Here are some examples:\n  - At the end of page 3, the authors claim that \"We hypothesize that this is due to the high degree of overlap between the information conveyed by node features X and the graph structure A\", and then proceed with an \"analysis\" using the cartoons in Figure 1. First of all, I do not think that the hypothesis is correct in general. As a very simple example, consider a balanced stochastic block model with 2 equal-sized classes, inter-class edge probability q=0 and intra-class edge probability p=1. That is, consider a graph that consists of two complete subgraphs, with one subgraph corresponds to class 0 and the other subgraph corresponds to class 1. Furthermore, assign node IDs 1,2,...,N to the nodes uniformly at random, and let the node features be the one-hot encodings of node IDs. This makes I(X;A) = 0 since X and A are independent. However, it should be clear to see that, even in this case, a strong Laplacian regularization would make an MLP to perform nearly as good as, e.g., GCN. In my example above I am omitting details regarding the representation (which concerns with the ability to approximate/represent certain functions)  and generalization (which concerns with sample complexity) capabilities of MLP and GCN. I welcome the authors' feedback on this example. In any case, I would recommend the authors be careful about stating a hypothesis, in particular, when certain assumptions are required for a claim to be true.\n  - I found that the authors were very vague in their discussion about comparing MLPs with GNNs. For example, in the second paragraph on page 4, when discussing Figure 1(b), the authors claim that \"Thus, MLPs are expected to have the same capacity as GNNs in this context\". The term capacity is a very vague term, here, do the authors refer to representational power, or do the authors refer to generalization capability? Note that when an MLP has a worse test accuracy than a GNN, it could be due to either expressiveness or generalization or both. Overall, I really could not appreciate the discussion in Section 3.1. I am not convinced by the authors' conclusion that the performance gap between MLP and GNN is determined by the mutual information. I would recommend the authors constrain the problem context by explicitly stating the required assumptions and focus on specific data generative models. Otherwise, the current claims feel very unsupported.\n  - As another example, at the top of page 4, the authors claim that \"..., a well-trained MLP model might implicitly derive an estimated graph structure matrix from the outset. It could then implicitly leverage both the estimated graph structure and the raw node features to generate node embeddings, thereby achieving performance similar to that of GNNs.\" This claim is neither theoretically justified nor empirically verified in this paper. Even in the extreme case where one considers augmented feature matrix X' = [X; A], so that the graph structure is completely covered by X', it is unclear if an MLP acting on X' can achieve similar performance to that of GNNs.\n  - To be honest, I think the paper might be better if the authors simply delete Section 3.1. Alternatively, the authors should be very careful in the writing. Clearly state all necessary assumptions on the data/model/architecture, clearly define and use proper technical terms, and avoid using vague terms. Otherwise, I find it very hard to be convinced by the messages which the authors try to convey in Section 3.1.\n\n- There is a clear gap between $H(A|X)$ and $H(A|\\hat{A})$ in equation 1, and the paper does not provide a bound on $|H(A|X)-H(A|\\hat{A})|$. Therefore, it is difficult to determine how useful the proposed metric $H(A|\\hat{A})$ is. The authors should at least discuss the reason to choose the $\\ell_2$ distance for $\\hat{A} = f(X)$.\n\n- Although the empirical results over small datasets in Section 4 look promising, the additional results over larger datasets in the appendix are not very good. Since one of the major advantages of MLPs over GNNs is efficiency, the performance of InfoMLP over larger datasets is more relevant and important. I think the authors should provide results on larger datasets in the main text, and place the results over small datasets in the appendix. However, over larger datasets, InfoMLP is outperformed by simple GNN architectures such as GCN or even SGC which does not suffer from efficiency issues."
+            },
+            "questions": {
+                "value": "- In Theorem 1, why do we necessarily have that $H(A|X) = \\inf_f H(A|\\hat{A})$ (i.e. equality holds)? Based on the proof I think it should be $H(A|X) \\le \\inf_f H(A|\\hat{A})$?\n\n- For training and testing time of SGC reported in Table 5: I think that once preprocessing is done, SGC is basically a liner logistic regression. Why does it have slower training and testing time than InfoMLP?\n\n- At the end of page 6, the authors claim that \"Furthermore, the node embeddings $Z_{aug}$ are utilized to predict the node labels.\" Based on the description of the method, shouldn't $Z_{mlp}$ be utilized to predict the node labels? In any case, I think the authors should report the performance achieved by both $Z_{aug}$ and $Z_{mlp}$ for comparison purposes."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6120/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698241549627,
+        "cdate": 1698241549627,
+        "tmdate": 1699636662347,
+        "mdate": 1699636662347,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "FBuHzgdDRH",
+        "forum": "2dLMPOY0HW",
+        "replyto": "2dLMPOY0HW",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_YPT6"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_YPT6"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addresses the question of how to incorporate structural information to MLPs. \nIn other words, the latent question is: How structured must be MLPs? \nQuoting the authors: \"In this work, we first aim to understand the reasons behind the successes \nof previous MLP-structured models for learning node representations\". \nThe main idea is to quantify the overlap between the node features and graph structures (it is \nwell known that MLPs perform better than GNNs when the node feaures are uncorrelated with \nthe graph structure/adjacency). As a result, the authors propose to maximize the mutual information \nbetween node embeddings and adjacency as a pre-processing step. \n\nInfoMLP, the proposed method, works as follows: \"1) the generation of a graph-augmented node\nfeature matrix that encapsulates extensive graph structure information, and 2) the maximization of\nmutual information between node representations learned from the original node features and the\ngenerated graph-augmented node features.\". \n\nConditional probability between existing edges and feature correlations feeds an entropy estimator \nthat proves to illustrate the overlap between feature distribution and structure (links) in well-known \ndatasets. This leads to an upper bound of the H(A|X): conditional entropy of A given X.  \n\nThen, 1) is addressed in order to facilitate information maximization. This leads to $X_{aug}$ as a \nfunction of powers of the transition matrix. 2) is addressed through standard MI maximization. \nHowever, for the sake of efficiency, the MI Loss during training is simply an Euclidean loss. Overall, \n\"InfoMLP has the same complexity as a vanilla MLP in both training and testing\".\n\nExperiments show that InfoMLP is good in cold-start settings and outperforms significantly \nthe state-of-the-art only in Pubmed. It fails in Cora."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* Nice methodology for comparing/integrating MLPs-GNNs.\n* Good analysis of mutual information."
+            },
+            "weaknesses": {
+                "value": "* Not good results in standard datasets (e.g. Cora). \n* This is probably due to the terse definition of the augmented features. Multi-hop diffusion seems to me not sufficient even when $K$ is adapted properly."
+            },
+            "questions": {
+                "value": "* How critical is the augmented representation? \n* How critical is the MI simplified Loss? (please see R\u00e9nyi estimators). \n* Entropy estimation is very terse (positive vs negative distribution). Please, measure the overlap between positive and negative distribution using the Chernoff bound, for instance."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6120/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698749615590,
+        "cdate": 1698749615590,
+        "tmdate": 1699636662196,
+        "mdate": 1699636662196,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "g3rE59dBzE",
+        "forum": "2dLMPOY0HW",
+        "replyto": "2dLMPOY0HW",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_o93U"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6120/Reviewer_o93U"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies an Information-Theoretic Perspective on node classification on graphs, specifically, it focuses on the problem of when and why MLP can achieve good performances in graph representation learning tasks. The conclusion drawn from this paper is that when there is significant structural information contained within node features, MLP can achieve relatively good performances, since it does not require additional operators to introduce topological information. Motivated by this finding, the authors proposed a solution named InfoMLP, which aims to learn a node embedding that maximizes the mutual information between node feature and graph structure."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. The most notable contribution of this paper is it explained how and why MLP can achieve relatively good performances in node classification on certain graph datasets, the mutual information justification is intuitive and serves as a strong argument.\n\n2. Based on the observation that, MLP can only achieve good performances when graph structure information is partially contained in node features, authors proposed a mutual-information maximization approach to enhance the performance of MLP on the graph, which is novel and interesting.\n\n3. The proposed method exhibits strong improvements over baselines, notably, this improvement is valid on both homophilous and heterophilic graphs."
+            },
+            "weaknesses": {
+                "value": "1. Despite the insights and meaningful findings of this paper, the information-theoretic perspective is still rather empirical (solely based on observations), and lacks theoretical guarantee.\n\n2. What are the differences between $Z_{aug}$ and $Z_{mlp}$? The term \"ideal\" node representation is vague, a more rigorous definition might be needed here. \n\n3. The maximization of $H(A|X)$ is not clear, I can only see a non-parametric mapping that somehow fuses the representation of $X$ and $A$ together into a single representation. However, there is no guarantee nor intuitive explanation of why and how $X_{aug}$ maximizes $H(A|X)$. If no theoretical justification can be provided, authors should try to explain this from an intuitive standpoint, supported by an ablation study that can illustrate or verify the mutual information contained within $X_{aug}$."
+            },
+            "questions": {
+                "value": "No questions at the moment."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6120/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6120/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6120/Reviewer_o93U"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6120/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698831250788,
+        "cdate": 1698831250788,
+        "tmdate": 1699676403370,
+        "mdate": 1699676403370,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

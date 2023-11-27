@@ -1,0 +1,375 @@
+[
+    {
+        "id": "U6kl4ISokp",
+        "forum": "Wx97sznZwB",
+        "replyto": "Wx97sznZwB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_VdeC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_VdeC"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a new reward function and task specification strategy for RL on Minecraft. First, ChatGPT is used to extract a target object from a given language instruction. Then, a modified version of MineCLIP is used to convert the target object and current observation image into a segmentation map that highlights the location of the target object in the image. The authors propose a shaped reward function that incentivizes both increasing the area of the target object in the segmentation map and centering the target object in the frame. Instead of conditioning the policy on the language instruction, the policy is conditioned on the segmentation map. PPO is used to optimize the policy against the proposed shaped reward (plus the original sparse reward). Experiments show that this method outperforms prior methods (STEVE-1, Cai et al) and ablations on language-conditioned Minecraft tasks. Additionally, the experiments show that the learned policy can generalize zero-shot to new instructions."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper addresses reinforcement learning of open-world, open-vocabulary instruction following which is a problem of significant interest to the community. Building on prior work, the authors use Minecraft as a test-bed for their method. Minecraft is becoming a standard benchmark for these types of methods and so this choice will allow for easier comparison to prior work. The proposed method is a novel modification of existing work (MineCLIP). The motivation and explanation of the method is clear. The experiments ablate the different components of the method and compare to prior work."
+            },
+            "weaknesses": {
+                "value": "My main concern is that this method makes more assumptions than the prior work it is compared to. Specifically, this method assumes the task involves navigating to a target object that is specified in the instruction. An example of an instruction where this method would not work as well is \"build a tower\" (since there is no target object to move toward). Notably, MineCLIP, STEVE-1, and Cai et al do not make this assumption.\n\nAdditionally, the comparison to imitation learning methods like STEVE-1 and Cai et al should be justified since the proposed method does online RL. Do the imitation learning methods see more or less relevant data for the evaluations tasks? Imitation learning and online RL are different classes of methods so some explanation is needed here.\n\nSmaller comments:\n- Throughout the paper it seems that \"open-vocabulary\" is used to mean \"unseen instructions\" For instance, the \"open-vocabulary\" section in the experiments describes testing generalization to unseen instructions. While a method must be open-vocabulary to accept unseen instructions, it would be more clear to specifically state that the capability these experiments test is zero-shot generalization to unseen instructions.\n- In Figures 7 and 8 it would be good to indicate in the plots which tasks involve unseen instructions and which just involve an unseen biome (since it seems both are tested). \n- In Figure 8, it seems like the success rate plots (b and c) could be combined (with some indication of which tasks involve unseen instructions/biomes) like in Figure 7."
+            },
+            "questions": {
+                "value": "- Why wasn't EmbCLIP evaluated on unseen instructions in the hunt domain?\n- Why is \"shear a sheep\" considered an unseen instruction when it's part of the instructions seen during training? (\"open vocabulary generalization\" section, second paragraph)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Reviewer_VdeC"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3362/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698680694120,
+        "cdate": 1698680694120,
+        "tmdate": 1699636286546,
+        "mdate": 1699636286546,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "JE1e8eKh9f",
+        "forum": "Wx97sznZwB",
+        "replyto": "Wx97sznZwB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_NgQ4"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_NgQ4"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a method for improving CLIP-guided rewards for Reinforcement Learning for completing open-vocabulary tasks within the game of Minecraft.\n\nThe approach builds on top of MineCLIP, a VLM trained on internet-scale Minecraft videos, used as an auxiliary reward model for training PPO to solve Minecraft tasks expressed in the form of natural language. Instead of using the original MineCLIP image embedding and computing its individual cosine distance with the MineCLIP language encoding of the task to obtain a reward, the authors propose leveraging recent techniques for open-vocabulary segmentation with CLIP to produce a \u201c2d confidence map\u201d for the open-vocabulary task target over the image visual field. This 2d confidence map is computed by obtaining CLIP embeddings for \u201cpatches\u201d of the image, and obtaining the normalized cosine distance of each patch with the embedding for the target text (with a subsequent \u201cdenoising\u201d step making use of several negative prompts). This 2d map is used as an additional input to the policy MLP. Moreover, to then obtain a reward, one must integrate over this 2d confidence map, weighting the entries with a gaussian kernel (obtaining a \u201cfocal\u201d reward). This reward is then multiplied by a constant and summed to the vanilla environment reward.\n\nThe authors conduct several experiments on tasks belonging to the \u201chunting\u201d domain, comparing their baseline (COPL) with other techniques for auxiliary rewards, such as the original MineCLIP. They also test the generalization of their method on tasks belonging to the \u201chunting\u201d and \u201charvesting\u201d domains, generalizing the target of the task to unseen objects in an open-domain fashion. Over these experiments, COPL reliably performs better than alternatives."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The proposed method addresses a specific shortcoming of MineCLIP, a previous approach for auxiliary semantic rewards for Minecraft tasks. Essentially, the problem with MineCLIP is that it serves as a very noisy and not well shaped reward signal for language based tasks. A well-shaped RL reward for several Minecraft tasks should involve distance to a target object, and COPL fixes this problem with its 2d confidence map technique.\n\nThe experiments seem to show a clear improvement over baselines for the chosen hunting tasks, showing that COPL indeed works as a better-shaped CLIP reward for such tasks."
+            },
+            "weaknesses": {
+                "value": "Overall, the main problem with the approach is that it does not seem to be very \u201cgeneral\u201d. This would not be a problem per se (not all ICLR papers should aim at \u201cgeneral\u201d solutions to problems), if not for the fact that the work builds directly on top of MineCLIP, which was aimed at producing a multi-task \u201cgeneral\u201d agent for open-ended Minecraft tasks.\n\nTo be more specific: the original MineDojo paper involved attempting to solve all kinds of Minecraft tasks based on their language descriptions (\u201cmilk a cow\u201d, \u201chunt a sheep\u201d, \u201ccombat a zombie\u201d, \u201cfind a nether portal\u201d, \u201cdig a hole\u201d, \u201clay a carpet\u201d). For this reason, they proposed a \u201cgeneral\u201d method making use of a MineCLIP encoder, encoding image sequences and language commands, which is not limited to a specific \u201ctask domain\u201d. The MineCLIP encoder can in principle encode image sequences for every Minecraft task, be it hunting, combat, pure world exploration, or tasks that do not involve focusing on a game \u201centity\u201d, such as simply digging a hole. (Whether it achieved satisfactory results is another matter)\n\nIn this paper, the MineCLIP encoder is instead taken as a building block, to then do image segmentation based on individual \u201centity\u201d labels such as \u201ccow\u201d, \u201cpig\u201d and \u201csheep\u201d. This means that essentially, in order to improve performance on some specific task domains such as hunting, the method\u2019s generality was reduced to be only suitable for tasks involving focusing on and getting closer to specific game entities (it is no longer possible to conceivably use this technique to learn the task \u201cdig a hole\u201d, or \u201clay a carpet\u201d). Essentially, the \u201cCOPL\u201d technique consists of a method for turning a suitable open-vocabulary image segmentation model into a 2d confidence map that helps both as a better task-conditioned input for the policy MLP, and as a more well-shaped reward model, biased towards looking at entities and getting close to them. \n\nIn the experiment section, most results that paint the COPL method in a clearly positive light belong to the \u201chunt\u201d domain. Essentially, what needs to be learnt within this domain is to identify an entity in the world based on a word, keep it within the center of the screen, attack it and pursue it while it flees. It is apparent why the specific biases of the focal COPL reward function would help in this case, to the point it could be considered as \u201coverfitted\u201d to tasks similar to this. For the \u201charvesting\u201d domain (which still involves in practice finding a specific \u201centity\u201d in the world, getting close to it, and collecting it), the benefits of the technique already appear smaller or not present. No other open-ended tasks have been tried, and it\u2019s doubtful that the COPL technique would even be applicable for them (how to do so for \u201cdig a hole\u201d?).\n\nWhat I\u2019m getting at is, if the specific domains and settings for this method to be useful have to be so restricted, what stops us from directly using traditional reward shaping in the state space of the Minecraft world (not general purpose, but strong)? In any case, we no longer support free-form text prompts and are overfitted to hunting tasks. I would appreciate further elaboration on this point."
+            },
+            "questions": {
+                "value": "I have the following questions:\n* Could you elaborate on the experiment design for the experiment in Figure 8? Why are learning curves so similar for all methods in panel (a), but not in the panels (c) and (d), where MineCLIP seems to perform worse than COPL? Why is there no \u201cone hot\u201d in panels (b), (c) and (d)?\n* From a cursory look, it seems that the MineCLIP baseline agent for tasks such as \u201chunt a cow\u201d seems to severely underperform relative to the one from the original MineCLIP paper. Can you comment on this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Reviewer_NgQ4"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3362/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698765946910,
+        "cdate": 1698765946910,
+        "tmdate": 1699636286401,
+        "mdate": 1699636286401,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "cXgXDMszff",
+        "forum": "Wx97sznZwB",
+        "replyto": "Wx97sznZwB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_9Xm8"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_9Xm8"
+        ],
+        "content": {
+            "summary": {
+                "value": "COPL (Clip-guided Open vocabulary Policy Learning), the proposed algorithm in this paper, attempts to solve the problem of open vocabulary language instructed reinforcement learning (RL) -- the task of accomplishing a goal described in natural language without having any constraints (ideally) on the words used to specify the instruction. The paper works in a setting where the behaviors are still fixed, for instance, the agent still has to perform a similar sort of sequence of actions like hunting, but the object of hunting is chosen from objects that did not occur during training and are rather chosen from other available objects that can be hunted. COPL works as follows: first, the object that is to be acted on is segmented out using a modified version of MineCLIP. This gives a confidence map. This confidence map, combined with a focal objective that tries to get the desired object in the center of the frame and nearer to the agent, forms what is called as focal reward. The agent looks at the current observation from the environment in addition to the confidence map derived and is asked to take action. These actions are then optimized using standard RL algorithms such as PPO on a combination of focal reward with reward coming from the environment. \n\nThe experimental analysis involves (i) showing how the proposed (selective segmentation + focus)  works on a single task, e.g., only hunting a pig, (ii) working of the algorithm on multi-task settings, e.g., hunting a pig and hunting a sheep (plus, cow and chicken), and (iii) open-vocabulary testing of agent's capabilities. The approach is compared with different reward combinations and ablations of the proposed reward."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Writing and presentation quality is very high. The paper is dense with content and I enjoyed going through the paper multiple times. The architecture description is neat, although I had to assume few things about the implementation while evaluating the correctness. \n\nThe sections are introduced in a logical order, and every choice behind the focal reward is well-motivated. As I understand it, the focal objective is very similar to how a human would accomplish the task of, say, 'hunting a pig', by being confident about the animal that is to be approached and getting a better focus. This description might seem to overfit the case of hunting, but other tasks that require inferring the intended object correctly and approaching it efficiently are also covered. This also stems from other problems, which I discuss in the weakness section.\n\nThe approach described in the paper is compared with relevant baselines while comparing single-task, multi-task, and open vocabulary capabilities.\n\nMore importantly, I find this work important from the point of view of starting a discussion on how open-vocabulary instructions can be used in conjugation with RL. The overall methodology and evaluation framework outlined is quite systematic and serves as a guide for future research in this area."
+            },
+            "weaknesses": {
+                "value": "**Limits of confident and focused seeking of object**: From my limited knowledge of Minecraft as a game, it is an open-ended environment where the agent can build by gathering resources and surviving. It is open-ended in the sense that one gets to express complex ideas, which involves using resources through intents. I am not sure all this open-endedness is captured in being confident about the desired object and focusedly approaching it. Put another way, the approach might be overfitting only a part of the actual space of possible Minecraft behaviors. \n\n**Issue with negative words**: For segmenting out the object in the intent, the method uses negative words. While this approach would work in domains such as Minecraft, where the entities are finite and known, I am unsure whether it will hold when applied to real-world cases where entities could be unknown and infinite.\n\n**Comment on novelty**: I am not fairly acquainted with Minecraft research. From the related works pointed out in the paper, it does seem that the approach presented is novel in its entirety. But, from the computer vision perspective, both prompt-based local segmentation and focal vision are pretty standard. The use of CLIP for Minecraft is the prior work that COPL builds on. So, I find the novelty of COPL in applying everything in a functional manner to test the open-vocabulary capabilities of the assembled system."
+            },
+            "questions": {
+                "value": "I have the following questions for the authors:\n1. By limiting the CLIP model to a set of pre-determined negative words, isn't the paper limiting the scope and moving away from the actual aim of being open vocabulary? \n2. To extend the previous question, is it possible to perform a similar analysis, but instead of negative words, use the entire vocabulary?\n3. Would it make sense to keep the objects fixed and change the intended behavior to a similar but nuanced variant of the behavior? Again, I have limited knowledge of Minecraft as a game and have limited knowledge about possible behaviors. However, it seems very logical to me to test open vocabulary capabilities where the agent might 'catch' an animal rather than 'kill' an animal where catching is out of distribution. These behaviors are not very different from training behavior as 'exploring the world' is to it."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Reviewer_9Xm8"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3362/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698773183662,
+        "cdate": 1698773183662,
+        "tmdate": 1699636286330,
+        "mdate": 1699636286330,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "aiipJrUST7",
+        "forum": "Wx97sznZwB",
+        "replyto": "Wx97sznZwB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_6CKq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_6CKq"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a new intrinsic reward for open-vocabulary tasks in minecraft. The proposed technique first applies existing dense CLIP methods to the MineCLIP model and discovers similar open-vocabulary segmentation property. The authors then proposes an intrinsics reward that motivates the agent to approach the segmented object. With this intrinsics reward, the paper allows the minecraft agent to learn to perform certain open-vocabulary tasks. The authors demonstrate the effectiveness of the method in terms of single tasks, multi-tasks, and open-vocabulary setting."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The writing of the paper is clear. Method and motivations are discussed thoroughly.\n- The paper introduces spatial priors for its intrinsics reward which was missing in vanilla way of using MineCLIP\n- Evaluation is thorough despite limitations I will mention in the weakness section."
+            },
+            "weaknesses": {
+                "value": "While I acknowledge the soundness of the approach and the presentation, I don't find this paper's contribution significant enough for acceptance. This is the main reason of my rating. \n\nThe core contribution of the paper is an intrinsics reward for minecraft with a lot of limitations. 1. the reward seems to be specifically tailored for minecraft's first-person-view setting, and specifically towards tasks that involves approaching an object 2. the tasks have to be object-centric, and the generalization is mostly object level. \n\nWhile the promise of this paper / minecraft itself is about open-vocabulary, the presented method is limited to approaching objects in fpv setting. This is also reflected in the evaluation, where the task covered are no way near open-world. This also has been mentioned by multiple other reviewers. The authors should tune down their claim about open-world.\n\nThe proposed open-vocab segmentation seems to be very similar to previous methods like [1]. Even if I disregard this fact, it seems to me that if this reward is already tailored for minecraft (first-person view + task is mainly approach object), one may well use some open-vocabulary detection model tailored for the few tasks the paper benchmarked in. Once one detects the objects from text, the reward the authors propose seems an obvious thing to do. The evaluation, as a result of the limitations of such reward, are also constrained to be very object centric ones, which breaks the purpose of MineCLIP. I would not claim the proposed technique to be effective for general open-vocabulary tasks.\n\nAfter the rebuttal, I decide to lift my score from 3 to 5 for added result and also raise my confidence from 4 to 5. This is because I had personal experience trying almost every single component the paper used, and have tried some them on the figures the authors provided during rebuttal period. I believe the current approach have its merit, but would belong to a more system/experiment heavy paper where such a reward only plays part of the role. At its current state, I reiterate my belief that such a reward alone, under the broken promise of open-worldness, doesn't constitute the technical contribution a full ICLR paper needs.\n\n[1] https://arxiv.org/pdf/2112.01071.pdf"
+            },
+            "questions": {
+                "value": "1. I am not exactly sure whether the authors claim the architecture in figure 2 to be a main contribution. If so, the authors should probably discuss previous approaches and how is your approach different, either when you mention MaskCLIP for the first time or in related work.\n\n2. From my understanding, for this reward to work properly, the object has to be already in FOV, correct?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Reviewer_6CKq",
+                    "ICLR.cc/2024/Conference/Submission3362/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3362/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698822659872,
+        "cdate": 1698822659872,
+        "tmdate": 1700716864509,
+        "mdate": 1700716864509,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "PFqeNGXUb9",
+        "forum": "Wx97sznZwB",
+        "replyto": "Wx97sznZwB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_Q4te"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3362/Reviewer_Q4te"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a method for training an open-vocabulary policy on Minecraft tasks via RL guided by CLIP. Intrinsic rewards for the RL policy are computed based on the patch-wise CLIP similarity between the mentioned target object in a given language instruction and the image of the enviornment. Confidence maps based on the patch-wise similarity are passed into the policy in addition to visual information. The choices for the intrinsic rewards and inputs to the policy allow for some invariance in behavior to be learned across target objects, permitting some generalization when performing a seen task on an unseen object."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- Overall, the paper is clear and easy to read.\n- The paper has some interesting insights about using CLIP guidance in the Minecraft context -- including the focal reward, the subtraction the probabilities of negative classes as a denoising procedure, and the way in which the patch similarities/probabilities are determined from MineCLIP.\n- The paper includes ample architecture and implementation details in the Appendix which promotes reproducibility."
+            },
+            "weaknesses": {
+                "value": "- The broad idea of using VLMs to allow for open-vocabulary manipulation with objects has been explored previously (e.g. MOO, Stone et al. 2023), though the paper does have some interesting insights about applying VLM guidance that are particular to the Minecraft setting, as mentioned above.\n- As is common with many reward shaping approaches, the hyperparameter $\\lambda$ must be tuned to determine the weighting on the focal reward. According to Figure 11 in the Appendix, the choice of this hyperparameter can have a significant effect on the results. Is the same value of $\\lambda$ optimal across multiple task families?\n- The approach does have some hand-crafted components that are specific to this domain. For example, the Gaussian kernel in the focal reward relies on the fact that interaction in Minecraft occurs \"when the cursor in the center of the agent view aligns with the target\" and also guides the agent to focus on a single target rather than multiple. How was this kernel chosen and how sensitive is the performance of the method to the specific choice of kernel? Another example is the negative word list; while effective for denoising, it is determined in a domain-specific fashion, so it is unclear if the benefit of this procedure would be helpful for other domains.\n- The choice of adding the unified 2D confidence map to the policy input is an interesting way to get some invariance across objects. But removing the natural language input constrains the policies to be single task instead of multi-task policies. What is the advantage of removing natural language? One rationale might be that unseen objects which are OOD for the policy do not have to be encoded by the text encoder--but these unseen objects are already being encoded by the visual encoder, so it is unclear if this is the reason. Was the choice of not including text as a policy input ablated?"
+            },
+            "questions": {
+                "value": "- How sensitive is $\\lambda$ across multiple task families?\n- How was the Gaussian kernel constructed?\n- Why were natural language instructions not included as an input to the policy?\n- Given that the language instructions are fairly simple, what is the rationale for using an LLM to find the target object?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3362/Reviewer_Q4te"
+                ]
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3362/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698830878749,
+        "cdate": 1698830878749,
+        "tmdate": 1699636286116,
+        "mdate": 1699636286116,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

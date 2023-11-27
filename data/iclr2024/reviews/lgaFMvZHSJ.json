@@ -1,0 +1,290 @@
+[
+    {
+        "id": "NHP6ag6O5l",
+        "forum": "lgaFMvZHSJ",
+        "replyto": "lgaFMvZHSJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_avuo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_avuo"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a contrastive learning framework called CARE, which stands for Contrastive Augmentation-induced Rotational Equivariance. CARE extends the InfoNCE loss by including a term that enforces an equivariant constraint with respect to the image transformations employed during training, as opposed to the traditional contrastive learning that attempts to induce invariance.\n\nThe central concept behind CARE is to ensure that transformations in the input space correspond to local orthogonal transformations in the representation space, a property known as orthogonal equivariance. This is achieved by minimizing a loss term (L_equi) that encourages the angles between pairs of images and their transformed counterparts to remain ideally the same, thus promoting orthogonal equivariance. The authors show theoretically that satisfying their proposed loss (i.e., L_equi = 0) implies orthogonal equivariance. \n\nTo avoid a common issue where all data points collapse to the same location in the representation space, the authors introduce an additional term (L_uni) inspired by the work of Isola and Wang. L_uni encourages representations within a batch to be evenly distributed. However, the combination of L_equi and L_uni alone underperforms compared to traditional contrastive learning frameworks like SimCLR. To address this, the authors introduce a term (L_inv) traditionally used to induce invariance with respect to the applied transformations. The final loss function comprises these three terms: \\lambda * L_equi (minimize angle differences) + L_inv (minimize differences among positive pairs) + L_uni (maximize uniformity).\n\n\u2028The authors assess CARE on a protein point cloud dataset (Protein Data Bank), they also demonstrate that CARE can better induce orthogonal equivariance compared to SimCLR using metrics like Whaba's problem and Relative Rotational Equivariance applied to the embedding of a Resnet-18 architecture trained on CIFAR-10. They qualitatively compare CARE and SimCLR in an image retrieval task, and finally evaluate CARE against SimCLR, MoCo-V2, and BYOL in the linear probing image classification task on various datasets: CIFAR10, CIFAR100, STL10, and ImageNet100."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper tackles an important issue: that of training more generic representation. I appreciate the idea of mixing invariance and equivariance for this objective.\n\nI also find the idea of representing equivariance using angle preservation as a neat idea."
+            },
+            "weaknesses": {
+                "value": "I think this work has some interesting intuitions and hope that if it is not accepted the authors will continue to make it stronger. While I like the idea of mixing invariance and equivariance I think this work could be strengthened by a more thoughtful use of the contrastive framework and a more solid experimental evaluation. Let me elaborate on both these points. Since the experimental evaluation is, in my opinion, a more impactful weakness I start there, and follow with the use of the contrastive framework. \n\nThe experimental protocols should be improved in order to highlight the benefit of CARE. Results are not clearly showing why one should adopt CARE, some key experiments for this work are missing (transfer learning), and other experiments do not seem comparable with previously presented results.  Specifically,\n\n- The experiments that use the Wahba\u2019s Problem and the Relative Rotation Equivariance should contain some stronger baselines. Wouldn't the authors say that it is expected that CARE achieves better results in terms of equivariance compared to SimCLR (that does not try to achieve orthogonal equivariance)? SimCLR could be a lower bound but it is difficult to say if the results shown by CARE are \"good\" as no other strong comparison is provided. A stronger result would be to show that CARE is comparable or superior to other equivariant inducing algorithms. \n\n- The results on linear probing seems to report results on a not very common setting (training on CIFAR-10, 100, STL, ImageNet100, as opposed to training on ImageNet or ImageNetTiny and testing a linear probe on those datasets). For example see table Table 3 of BYOL, or Table 8 of SimCLR , or Table 3 (RRC column) of Duet. All these results were obtained training on ImageNet and testing on other datasets (including Cifar10 and Cifar100) and report much stronger results. I believe these results (i.e. Transfer Learning) are crucial for this work because they could support the claim that by using equivariance one can learn more generic and transferable features. Training and testing on the same dataset it is less interesting in my opinion. \n\n- Even for the few results that can be found about training SimCLR on CIFAR-10 (for example) the results reported seem below previously reported numbers. The original SimCLR paper reports results on CIFAR 10 in the Appendix and the accuracy is 94% (compared to 90.98%). My experience with contrastive frameworks is that once the pre-training pipeline is optimized and the training scales up (in terms of datasets, batch size, and epochs) the initial advantages one might observe by tweaking the model reduce until they (very often) disappear altogether. It would be great to show that this does not happen with equivariance.\n\n- On the protein point clouds experiments I find unclear to assess what is the desired (correct) trajectory. Perhaps this is due to my lack of experience with this protein task but the manuscript could explain more clearly what is the expected result (Figure 3). Also, it is known that SimCLR requires large batches (hence large datasets), I am not familiar with this dataset but what I wonder if its size makes it a suitable application for pre-training with SimCLR. Maybe a better test would be to pre-train on a larger dataset and fine tune on this dataset?\n\n- Similarly, the qualitative results on the image retrieval tasks are difficult to assess. I thought the results from SimCLR were better. This task should be explained more clearly and it would be even better to employ some quantitative evaluation (if possible). I also do not fully understand what is the role of the \u201cinput\u201d compared to that of the \u201cquery\u201d. \n\nIn terms of the contrastive learning framework, if I understand correctly all three terms of the proposed algorithm act on the same representation space (after projection head). This however introduces an ambiguity: is the objective to induce invariance or equivariance? While it is true that invariance satisfies equivariance it is also true that satisfying equivariance through invariance leads to the loss of information typical of the invariance-inducing algorithms (as the authors correctly mention in the paper). It is also why the common contrastive learning algorithms based on invariance impose this constraint after the projection head but use the representation before (where \"hopefully\" invariance is not achieved strongly). Therefore, while the equivariance idea is great and the use of angles is an interesting idea, its application seems to have \"just\" a regulation effect (especially given that the \\lambda value is so small). A more interesting (albeit I recognize this comment falls in the realm of speculations) use of the contrastive framework would be to impose equivariance on the embedding before the projection head (the embedding that are actually used for downstream tasks) and invariance after the projection head. By doing so, one can hope to take full advantage of the equivariant properties while still leveraging the constructive learning framework and the benefit of the invariance loss."
+            },
+            "questions": {
+                "value": "My question mostly revolve around the weaknesses listed above. Is there any misunderstanding in the list I provided above?\n\nIn addition\n- Would you agree that it make sense to compare Wahba\u2019s Problem and the Relative Rotation Equivariance with another equivariance inducing method (in addition to SimCLR which is not inducing equivariance)? And that without this comparison it's difficult to assess \"how good\" the results shown are.\n- Would you be able to provide transfer learning results? Would you agree that those are ideal to show that CARE is learning more generic features?\n- Could you resolve the issue on the CIFAR-10 classification results? Why SOTA report 94% accuracy while your version is at 90%?\n- Could you provide more clarity on the protein folding experiment? \n- Could you provide more clarity (and maybe quantitative metrics) on the image retrieval task?\n- One of the claim is that CARE can handle composition of transformations but it is unclear if there is any experiment that support this claim. I understand that this can be proven theoretically, however, L_equi is never zero and its contribution if further reduced by the \\lambda factor, hence in practice it remains to be seen if CARE can handle equivariance of composition of transformations. Or is it the case that the augmentations are random resize crop + rotation, hence the equivariance is achieved for the combination of these two?\n- Lastly, not a question but I hope you take on the suggestion of trying to impose the equivariance constraint on the embeddings used for downstream task rather than the one after the projection head."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Reviewer_avuo"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1028/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698745667701,
+        "cdate": 1698745667701,
+        "tmdate": 1700495480999,
+        "mdate": 1700495480999,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "UomgAA86ZQ",
+        "forum": "lgaFMvZHSJ",
+        "replyto": "lgaFMvZHSJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_MvBZ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_MvBZ"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a self-supervised loss that demonstrably enforces a connection between latent embeddings of related complex augmentations through \"simple\" linear (rotational) transformations.\nThe loss is theoretically analyzed, showing that rotational equivariance emerges when scalar product in the embedding space are preserved under augmentations. Furthermore, the generalization of this fact to other bilinear forms and geometries is discussed.\nThe approach is assessed and demonstrated to enhance linear probing performance on image datasets. Additionally, it is qualitatively evaluated and shown to capture equivariance as intended by the suggested loss."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Overall the paper is well written and easy to follow.\n\nThe suggested loss simplifies existing equivariant techniques as it alleviates the need to learn the equivariance transformation, making it emerge solely as a result of an optimized loss term.\n\nThe method is theoretically analyzed. The analysis seems to be solid.  I appreciate the discussion about the possible generalizations to different geometries."
+            },
+            "weaknesses": {
+                "value": "It seems that the main weakness of the paper is in the evaluation section.\nFirst, I would expect to see both qualitative (figure 9)   and quantitative comparisons to methods that learn the equivariant transformation (such as Garrido et al.). \nSecondly, the evaluation metric suggested in the Wahba\u2019s Problem, seems to be another possible alternative loss to the suggested equivariance loss. Why shouldn\u2019t it be used to optimize directly?\nLastly, it would also be interesting to compare to explicit parametrization of R_a.\n\nAdditionally, I found Figure 8 and the paragraph discussing relative rotational equivariance to be somewhat unclear. It appears that they could benefit from a revision to enhance clarity."
+            },
+            "questions": {
+                "value": "No specific questions. I would appreciate a response with respect to the weakness stated above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1028/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698811071620,
+        "cdate": 1698811071620,
+        "tmdate": 1699636029118,
+        "mdate": 1699636029118,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "M4fcU8BKiP",
+        "forum": "lgaFMvZHSJ",
+        "replyto": "lgaFMvZHSJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_4N3v"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_4N3v"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a novel approach to self-supervised learning, adding geometric structure to the embedding space such that input transformations correspond to linear transformations in the embedding space. In the context of contrastive learning, the study presents an equivariance objective, which theoretically ensures that data augmentations in the input space align with rotations in the spherical embedding space. This method, named CARE, not only enhances performance in subsequent tasks but also captures essential data variations, like color, which standard methods overlook."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The proposed equivariant contrastive learning method that maps transformations of the input to local orthogonal transformations in the embedding space is new. The authors provide theoretical arguments and show empirical evidence for the desired structure of the embedding space. Both the method and its justification are novel and valuable.\n* The analysis of the structure of the learned representation space is solid and interesting. Fig. 9 is a particularly insightful and sheds light on the merits of the proposed method."
+            },
+            "weaknesses": {
+                "value": "* It would be beneficial to delve deeper into the influence of the choice of A\u2014the space of transformations experienced during training\u2014on the structure and caliber of the representations derived. An intriguing question to address is the method's capacity to generalize: Can the structures learned be effectively transferred to other classes or varied transformation parameter ranges? Exploring these nuances could further solidify the robustness and versatility of the method.\n* While observing the performance metrics, one notices that the performance gap between CARE and SimCLR on CIFAR10 and STL10 is <1%.  It raises the question of the actual significance and practical implications of this difference. For a more comprehensive understanding, it would be great if Table 1 could also report the variance alongside the mean.\n* The analysis is limited to ResNet networks. How well do the findings generalize to other architectures? How does the architecture affect the properties of the learned representations? How well does the proposed method generalize to other domains beyond the standard computer vision datasets?"
+            },
+            "questions": {
+                "value": "* In many practical applications input transformations may not preserve distances and angles. What does CARE learn in this case?\n* Fig. 8 is confusing: no legend, all three plots are the same (?)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Reviewer_4N3v"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1028/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698830927494,
+        "cdate": 1698830927494,
+        "tmdate": 1699636029028,
+        "mdate": 1699636029028,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "bqfUkL0htu",
+        "forum": "lgaFMvZHSJ",
+        "replyto": "lgaFMvZHSJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_Dtcq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1028/Reviewer_Dtcq"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors consider learning an embedding $f$ for high-dimensional data into a\nstructured latent space using (unsupervised) contrastive-learning-type methods.\nThey propose a new loss function (in implementation, effectively a new\nregularizer) for learning this embedding, which builds on prior work on\nequivariant regularizers. The regularizer asks not for the embedding $f$ to be\ninvariant to augmentations $a(x)$ of the input $x$, as in previous contrastive\nlearning methods such as SimCLR, but that it maps those augmentations to simple\nlinear transformations of the input, say $f(a(x)) = T_a f(x)$; it does this\nindirectly via an equivariance regularizer that the authors prove yields the\naforementioned structure on $f$ when exactly minimized. The precise\nimplementation becomes using this regularizer on top of existing contrastive\nlearning losses, such as SimCLR or InfoNCE, to prevent trivial embeddings and to\nencourage (in some sense) $a \\mapsto T_a$ to be \"continuous\". Experiments\ndemonstrate on simple datasets that the method improves the embeddings with\nrespect to two equivariance metrics; it improves linear probe performance on\nImageNet-100 scale image classification over SimCLR/MoCo-v2 (in the best case,\nby a significant margin); and that its design choices are necessary for these\nimprovements, via ablations."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper is very well written. Conceptual explanations are clear, theoretical\n  results are precisely phrased and explained (mercifully, the representation\n  theory is kept to an absolute minimum, which seems uncommon in this area), and\n  the general writing is engaging and compelling.\n\n- The experimental evaluation is solid: it proposes reasonable metrics to assess\n  learned equivariance, shows that CARE improves over baselines on these\n  metrics, demonstrates improved linear probe performance at reasonable scale,\n  and gives some useful ablations in the appendix.\n\n- The inclusion of a theoretical (mostly conceptual-type) basis for the method\n  is valuable, and completes a well-rounded presentation of the method and its\n  motivations."
+            },
+            "weaknesses": {
+                "value": "- The use of both an invariant and equivariant loss in the overall objective\n  function seems conceptually strange (although the ablations show it leads to\n  superior performance). I would like to understand what might be being learned\n  with this combination of losses -- my reading of the explanation in section 3\n  is that, among embeddings that *minimize* the equivariant regularizer (following\n  proposition 1), those that achieve a small invariant loss will prefer small,\n  rather than large, orthogonal transformations. However, it is not clear to me\n  why this setting should arise in experiments -- why not a situation where the\n  invariance loss is minimized, and the equivariant regularizer is only small?\n  I am also unsure how this connects with the discussion in the \"Relative\n  rotational equivariance.\" paragraph later.\n\n\n- It would be ideal if the authors could assert theoretically some degree of\n  approximate invariance given approximate minimization of their regularizer\n  (see a comment to this effect below). It seems important to precisely\n  understand what happens in this setting, given the fact that a mixture of\n  equivariant and invariant losses are required for strong practical\n  performance.\n\n\n### Minor issues\n\n- After equation (4): better to not reference a figure in the appendix without\n  adding something like \"In the appendix, we show ...\"\n\n- The claim after Proposition 1 that \"[c]onsequently, low [CARE] loss converts\n  'unstructured' augmentations in input space to have a structured geometric\n  interpretation as rotations in the embedding space\" does not seem to follow\n  from Proposition 1 or the preceding discussion (since the proposition requires\n  exact minimization of the loss, rather than just a low value). It is not clear\n  to me that the proof generalizes, because it relies on an external result from\n  invariant theory (which might be algebraic).\n\n- Bottom of page 5: principle -> principal"
+            },
+            "questions": {
+                "value": "- Is there an \"approximate\" version of the results from invariant theory that\n  the authors use to establish their theoretical results? If one digs into the\n  proof of the result from invariant theory (say, specialized to\n  $\\mathrm{SO}(n)$), what obstructions are there to having an \"approximate\"\n  version of the result?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1028/Reviewer_Dtcq"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1028/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699460653342,
+        "cdate": 1699460653342,
+        "tmdate": 1700681968197,
+        "mdate": 1700681968197,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

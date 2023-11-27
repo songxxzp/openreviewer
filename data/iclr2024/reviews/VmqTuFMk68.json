@@ -1,0 +1,288 @@
+[
+    {
+        "id": "jPrM5Nn0kL",
+        "forum": "VmqTuFMk68",
+        "replyto": "VmqTuFMk68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_LDni"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_LDni"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper provides a construction for a large transformer as a simulator, called TINT, such that it can simulate (on the auxiliary model / the smaller model) the forward pass, do back propagation to update the parameters, and then simulate another forward pass to output the final results. To improve the parameter efficiency, they provided the construction to approximate the layer norm, self-attention matrix, and their back-propagation process. Prior work focused on doing a forward pass one step of gradient descent on linear models or some much easier models, but they showed that actually a larger Transformer can simulate the forward and backward pass for another smaller Transformer. They showed that a GPT2 model can serve as a simulator to train a 125M OPT model in the forward  pass (of larger model) and showed that the perplexity can be improved by 0.3-0.7 on average.\n\nThis idea is very creative and worth investigating in the future. The theory result seems good and solid, but I still have some questions about the motivation and the theory part (see below). It is possible for me to change my score based on author's response and other reviewers' opinion."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The idea of doing forward ad backward pass of a Transformer in the single forward pass of another larger Transformer is creative. \n\n2. They spent lots of efforts on improving the parameter efficiency of the larger Transformer (the simulator) by approximation the derivatives  of softmax-attention layer and layer norm, which is very good. The theory looks solid and correct, and the way to approximate linear Transformers using non-linear Transformers (especially the soft-max Transformers) is a topic that may be of separate interest of some community.\n\n3. The experiments look good and there is a good improvement on the performance when trained this OPT model on larger GPT model."
+            },
+            "weaknesses": {
+                "value": "1. The theory part, although the proof seems correct, it is better to have a theorem to include all results of approximating each part of a forward/backward pass of fine-tune a Transformer. For example, this should look like 'there is a transformer with XXX layers and XXX heads, and XXX dimensions such that, when you have an auxiliary model with XXX layers/heads/dimension and a sequence of tokens, it can approximation the objective function (something you want to approximate in the forward pass of the simulator) with an error of at most epsilon'. I think adding a result like this in your main result section (section 2) after the basic setup is essential.\n\nThe most important issue in the theorem above is that how many parameters you need in the simulator Transformers to approximate the in-context learn the fine-tuning objective of the auxiliary Transformer (with XX parameters). The proportion of the number of parameters (parameter size of big TF / param size of auxiliary one) matters since you claim that your construction is more parameter efficient than the construction in previous works [1,2]. \n\nBased on the proportion of parameter size, you can then determine that in the experiments, in order to train an OPT model with 125M params in a single forward pass of the simulator, what size model do you need to use as a simulator.\n\n2. The structure of the paper, I believe, is not optimal, since you put lots of details of definitions and the results of approximating each part of TF in the main text, which I believe can be postponed to the appendix. This makes the paper harder to follow. I believe the authors may need to include more motivations and high-level description in the main text, as well as the the 'global theorem' I suggested in the first point. Then, the concrete way to approximating the back-propagation of soft-max and some details can be deferred in the appendix. I think the 'key component' section is especially hard to follow and I think maybe it will be slightly better to illustrate the structure of simulators in more detail in this subsection, instead of providing some formal definitions (like 2.3,2.6,2.7) in the main text (these are well-known definitions after all).\n\n3. Why do you want to implement/approximate the forward/backward pass of Transformers in-context? \n\nMy understanding is that, you want to do something like 'in-context fine-tuning' for Transformers, because by doing this in-context, you do not need to 'do actual parameter updates' (in classical fine-tuning procedure, you need to literally 'update the parameters'). Then, the natural question is: which is the better and more efficient way for fine-tuning ----- in-context fine-tuning or direct fine-tuning? \n\nIn the paper, the authors did not show **whether it is more computationally efficient for in-context fine-tuning than direct fine-tuning**. By in-context fine-tuning, you need to do a forward pass in a much larger model; and by direct fine-tuning, you need to compute the gradient and update the parameters. Which one need a smaller number of computation (in terms of FLOPS or other metrics)? \n\n4. Another question for the motivation: why do you use Transformers as the simulators? Are there any obvious reasons that make Transformer better than other architecture of Neural Networks here? Since what you want to do is to compute the forward/backward pass of the auxiliary Transformer in a single forward pass of the simulator model, which is a very complex task, why not considering other types of models as the outer simulator? I know that in some tasks that Transformers or attention models showed a better in-context learnability than CNN/RNN, but the tasks they considered are very much different from yours, so I am not sure whether this reason is sufficient enough.\n\n[1] Ekin Akyurek, Dale Schuurmans, Jacob Andreas, Tengyu Ma, and Denny Zhou. What learning algorithm is in-context learning? investigations with linear models. arXiv preprint arXiv:2211.15661, 2022.\n[2] Johannes von Oswald, Eyvind Niklasson, Ettore Randazzo, Jo\u02dcao Sacramento, Alexander Mordvintsev, Andrey Zhmoginov, and Max Vladymyrov. Transformers learn in-context by gradient descent, 2022."
+            },
+            "questions": {
+                "value": "/"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Reviewer_LDni"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4281/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698511308366,
+        "cdate": 1698511308366,
+        "tmdate": 1699636395920,
+        "mdate": 1699636395920,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "cghExXkARV",
+        "forum": "VmqTuFMk68",
+        "replyto": "VmqTuFMk68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_KkDE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_KkDE"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new construction, Transformers in Transformer (TinT), that allows a transformer to simulate and fine-tune transformer models during inference. The authors introduce innovative approximation techniques that allow TinT with less than 2 Billion parameters to simulate and fine-tune a 125 million-parameter transformer model. The authors conduct experiments to validate the internal fine-tuning procedure of TinT on various tasks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Using a transformer to perform in-context-learning to fine-tune a transformer sounds like a quite fancy idea. \n2. The authors performed experiments and demonstrated the effectiveness of TinT."
+            },
+            "weaknesses": {
+                "value": "The writing of this paper is not completely clear, which makes it hard to understand the exact architecture of TinT. More specifically: \n1. In Figure 1, it is not clear what are the dimensions of V_k, e_i, \\partial y_j. Are there multiple back-propagation and gradient update steps in the TinT forward pass? \n2. What is the meaning of notation $\\partial$? There are many of them in Sections 2.5 and 2.6, but I don't understand the equations that contain this symbol. \n3. What are the parameters of the auxiliary transformer, and what are the trainable parameters of the TinT? \n4. I cannot see from the description of Section 2.7 PARAMETER SHARING IN THE TINT how the parameters of TinT are shared. \n5. Since the architecture is unclear, I don't see where the $5 \\times$, $H_{sim} \\times$, $4 \\times$ savings in Section 2.2 come from."
+            },
+            "questions": {
+                "value": "1. Could the authors write down more concretely what is the architecture of the TinT? \n2. Could the authors explain their experimental setup more clearly?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4281/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698889983735,
+        "cdate": 1698889983735,
+        "tmdate": 1699636395811,
+        "mdate": 1699636395811,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "GTFlrjlCOe",
+        "forum": "VmqTuFMk68",
+        "replyto": "VmqTuFMk68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_k6Mj"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_k6Mj"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces an innovative and parameter-efficient transformer construction, TINT, capable of simulating complex models, such as pre-trained transformers, and applying fine-tuning in-context via a single forward pass."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper details a novel transformer construction that enables forward and backward operations, as well as parameter updates, within a single inference pass, and without the need for weight adjustments in the TINT model. This method surpasses previous approaches in terms of parameter efficiency and the complexity of models it can simulate.\n2. The TINT architecture's efficiency is corroborated through real-data evaluations."
+            },
+            "weaknesses": {
+                "value": "1. The TINT model requires access to auxiliary model weights, which it uses in prefix embeddings. This dependency differs from some previous works where the transformer independently and implicitly learns the auxiliary model's weights (and architecture) from the provided in-context dataset.\n2. Despite its parameter efficiency, the TINT model's reliance on prefix embeddings to access auxiliary weights may lead to longer input sequence, which could potentially reduce computational and memory efficiency during inference due to the transformer's sequence length dependency."
+            },
+            "questions": {
+                "value": "1. The capacity of the TINT structure in mimicking complex models like pre-trained transformers is well-documented, but is it equally adaptable to simpler auxiliary models, such as 2-layer MLPs?\n2. Is the TINT's structure inherently dependent on the configuration of the auxiliary models it simulates, for instance in terms of number of layers, activation functions, or attention mechanisms?\n3. The details of the Backward Module depicted in Figure 1 are unclear. Can you provide more insight into it, particularly regarding the connections between the Backward Module's inputs/outputs across layers and their relationship to the Forward Module's output?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Reviewer_k6Mj"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4281/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699308552259,
+        "cdate": 1699308552259,
+        "tmdate": 1699636395721,
+        "mdate": 1699636395721,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "g7WNmCg1Ca",
+        "forum": "VmqTuFMk68",
+        "replyto": "VmqTuFMk68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_zqc2"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4281/Reviewer_zqc2"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposes TinT, a parameter-efficient construction to allow transformers to simulate forward and backward passes. Theoretically, the paper shows that TinT uses fewer parameters than prior construction based on the vanilla transformer architectures.  Empirically, this paper conducts experiments on language tasks to verify that TinT archives similar in-context learning performance compared to dynamic evaluation (which performs one GD step model update during inference) and larger models of a comparable parameter size."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. New construction for simulating a backward pass within a model is provided, using fewer model parameters than prior constructions. \n2. Experiments on more realistic language tasks are provided. \n3. The idea of TinT might be useful in designing new language models for other applications."
+            },
+            "weaknesses": {
+                "value": "1. Writtings could be improved in some places. For two examples, \n* In definition 2.1, what are the \"relevant\" auxiliary model weights? The current definition is a bit difficult for me to interpret. \n* In definition 2.3, are $p_t$'s referring to positional embedding? Could you explain why there aren't positional embeddings in definition 2.10.\n\n2. Theorem 2.5 shows linear attention could be approximated by softmax attention. Can softmax attention also be approximated by linear attention? If not, I feel Theorem 2.5 alone does not suffice to justify the claim that \"Thus, we often use linear attention in TINT\". Let me know if I have misunderstood anything. In addition, is the claimed parameter saving based on linear attention or self-attention? \n\n3. Definition 2.8 uses finite difference to approximate gradient. I am wondering if we can do this from end to end. That is, can we simulate a backward pass by doing finite-difference and two forward-pass? What's the disadvantage of doing so? \n\n4. This work provides experiments on language tasks, while prior works provide experiments on simulated tasks (e.g., Akyurek et al 2022 did ICL for linear regression). So the empirical results are not directly comparable with prior works. \n\n5. I feel an important prior work [1] is missed. Specifically, [1] also did approximation theory for ICL using transformers. How would the required number of parameters in the construction in this work compare to theirs? \n\n\n[1] Bai, Yu, Fan Chen, Huan Wang, Caiming Xiong, and Song Mei. \"Transformers as Statisticians: Provable In-Context Learning with In-Context Algorithm Selection.\" NeurIPS 2023"
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4281/Reviewer_zqc2"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4281/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699641888524,
+        "cdate": 1699641888524,
+        "tmdate": 1699641888524,
+        "mdate": 1699641888524,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

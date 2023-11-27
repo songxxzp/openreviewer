@@ -1,0 +1,555 @@
+[
+    {
+        "title": "Does CLIP\u2019s generalization performance mainly stem from high train-test similarity?"
+    },
+    {
+        "review": {
+            "id": "PQVwf2mVBj",
+            "forum": "tnBaiidobu",
+            "replyto": "tnBaiidobu",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_X2Xy"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_X2Xy"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the hypothesis \u201cDoes CLIP\u2019s accuracy on test sets mainly stem from highly similar images in its train set?\u201d. Their approach is to take a CLIP training dataset, LAION, and remove samples similar to OOD benchmarks, then retrain and evaluate the performance drop. In Section 4.1, they show that for some OOD datasets e.g., ImageNet-Sketch and ImageNet-R, there are more similar images to the OOD dataset in LAION than there are in the ImageNet-train set. These images are both semantically and stylistically more similar. They also observe a positive correlation between accuracy and having similar neighbors in the training set for each OOD benchmark. In the remainder of the paper, they prune the dataset by removing similar samples to OOD datasets and evaluate the performance of models trained on pruned datasets."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Figure 1 clearly shows that the LAION-400M dataset contains semantically and stylistically similar images to OOD benchmarks while the ImageNet training set does not.\n- Figure 3 quantitatively shows the nearest neighbors of OOD datasets in LAION-400M are on average more similar than the nearest neighbors from ImageNet-train set except for the Imagenet-Val set itself. Fig 3.right also clearly shows that CLIP model performs better on samples that it has seen similar images of it in the training set.\n- Figure 4 shows that pruning LAION for similar samples to ImageNet-Sketch and ImageNet-Val results in substantial accuracy drop compared with pruning random samples. Hence showing that these similar samples are crucial for the effective robustness of CLIP models."
+                },
+                "weaknesses": {
+                    "value": "- Even though the results in Figure 4 show the near-pruned samples are crucial for OOD generalization of CLIP, they are not conclusive. In particular, the following two experiments would be useful:\ni) Does a model *only* lose OOD generalization on one benchmark or are these near-pruned samples crucial for all sorts of image-classification performance on any benchmark? This requires plotting the accuracy on two datasets, e.g., ImageNet-Val and ImageNet-Sketch, and showing that after pruning samples similar to ImageNet-Sketch, we only lose performance on ImageNet-Sketch.\nii) Do CLIP models lose OOD generalization more quickly than classification models trained on ImageNet? For this, one would prune ImageNet with a similar procedure for X% of samples and compare whether the accuracy drop in ImageNet models is slower than CLIP models. If not, then we would know that any OOD generalization we have been seeing could be due to seeing similar samples in the training set.\n\n- This paper is a good place to have a broader discussion on \u201cWhat is zero-shot?\u201d and \u201cWhat is out-of-distribution robustness?\u201d and I think the paper should expand on that. In particular, after showing that pruning loses OOD generalization, it is not clear what the community should do with these datasets and evaluation benchmarks. Should we say CLIP models have cheated and they are not zero-shot? Related to that, the objective of Sections 5 and 6 that \u201cCorrect for highly similar images\u201d is not clear. Why would we want to prune our training datasets to get worse on some test benchmarks if those exact test samples do not appear in the training set? Why would we want models in Table 1 trained on pruned datasets that perform worse?"
+                },
+                "questions": {
+                    "value": "- Figure 4: What if we perform a similar process for training on the ImageNet dataset? Do we observe a similar accuracy drop?\n- Figure 7 shows that removing samples similar to ImageNet-Sketch and ImageNet-Val result in lower performance in all other ImageNet OOD datasets as well. Could this mean that these samples are important for a general understanding of the ImageNet distribution?\n- Section 5: Would this method and any model trained on this dataset be considered as transductive learning? Because the test datasets would have been seen directly or indirectly by the model. Would this be against the license of datasets such as ObjectNet that say \u201cObjectNet may never be used to tune the parameters of any model.\u201d?\n\nTypos:\n- Page 7: Let us for consider -> Let us consider"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8369/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698692924720,
+            "cdate": 1698692924720,
+            "tmdate": 1699637040680,
+            "mdate": 1699637040680,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "uSBvrqFPeq",
+                "forum": "tnBaiidobu",
+                "replyto": "PQVwf2mVBj",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Part 1/2"
+                    },
+                    "comment": {
+                        "value": "We thank reviewer **X2Xy** for reviewing our paper and providing helpful suggestions. In light of your concerns, we would first like to clarify the scope of our work.\n\nIt has been shown that data distribution drives CLIP\u2019s performance on ImageNet OOD benchmarks [1]. The simplest hypothesis is that CLIP just performs well because LAION contains many **highly similar images** (i.e., images that are both semantically and stylistically similar) to the test datasets, possibly even direct duplicates. The main goal of our work is **to investigate if highly similar images drive CLIP to reach such a high performance on them**. Note that **to answer this hypothesis, we do not need to explicitly assume that the benchmarks are ID or OOD wrt. LAION.**\n\n### Weakness 1 and Question 1: near-pruned samples are crucial for OOD generalization and Weakness 2, part 2: Objective of Secs. 5 and 6\n\nWe firstly thank the reviewer for suggesting to do near/far pruning experiments on ImageNet. **We ran these experiments and now include them in App. B.2. (especially Figs. 8 and 9)**. Notably, based on Fig. 9, nearest neighbors seem to matter more for CLIP than for ImageNet as near/far pruning has a stronger absolute effect on CLIP. We hope these experiments address weakness 1.ii).\n\nConcerning weakness 1.i), we believe that Fig. 7 (in the appendix) already answers this: performance generally decreases across dataset. This is also true for the results of the main experiment summarized in Tab. 1.\n\nYet, we maintain that we see our main contribution not as showing that nearest neighbors are crucial for OOD generalization, but rather that **highly similar images** cannot sufficiently explain CLIP\u2019s performance on common benchmarks. In this context, the pruning in Sec. 4 merely demonstrates one important observation, and it is not our main contribution. We want to clarify the goals of Sec. 4:\n\n1. We show that **similar images**, specifically the nearest neighbors, generally matter for CLIP\u2019s performance (Figs. 3b and 4), whether the test set is ID or OOD. We don\u2019t take ImageNet-Train into account here, and we don\u2019t consider whether the pruned subsets are ID or OOD wrt. the test sets. This is emphasized by the new results in Figs. 8 and 9 where we can see that near-pruning ImageNet-Train with ImageNet-Val (which is ID wrt. ImageNet-Train) also hurts ResNet\u2019s performance.\n2. We want to highlight that LAION contains many **similar images**, but especially also contains **highly similar images**, i.e., images that resemble the test datapoints closer than any of the images in ImageNet-Train do (Figs. 1 and 3a).\n\nWe make a distinction between **similar images** and **highly similar images**. In Sec. 4.2 and Fig. 4, we are pruning *any* images in the order of decreasing similarity, i.e., the pruning is unconstrained. In contrast, in the main experiment in Sec. 6 we only prune **highly similar images**, i.e. the pruning is constrained by the similarity thresholds from ImageNet. We formalize this distinction based on the generalization gap (since renamed to similarity gap) in Sec. 5.\n\nWe hope that this clarifies the goal of our work and especially Secs. 5 and 6. We acknowledge that our introduction and some paragraphs throughout the paper were worded in a way that could give a wrong impression of our aim, and apologize for the confusion. **We have edited the manuscript in Secs. 1, 4, 5, and 6 to better reflect our intention**."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700159191718,
+                "cdate": 1700159191718,
+                "tmdate": 1700159191718,
+                "mdate": 1700159191718,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "j24TgFN5DA",
+                "forum": "tnBaiidobu",
+                "replyto": "eKvxpyZzzw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_X2Xy"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_X2Xy"
+                ],
+                "content": {
+                    "title": {
+                        "value": "I thank authors for their response and their improvements. The results and writing still need improvements."
+                    },
+                    "comment": {
+                        "value": "I acknowledge the improvements in the paper including the change of \u201cgeneralization gap\u201d to \u201csimilarity gap\u201d and the authors\u2019 clarification on the goal of Sections 5-6. However, the paper requires more improvements in i) writing to explain the goal, conclusions, and relations between results and ii) results to solidify the conclusions and understand the implications. As such, I retain my score.\n\n**W.1** The results in Figure 4 \u2026 are not conclusive. Two experiments would be useful:\n**W.1.i & Q.1** Does a model only lose OOD generalization on one benchmark\u2026?\nFigure 7 shows the result for this experiment which is contrary to my expectation that near-pruning would result in accuracy drop only for one dataset. This raises a concern that the \u201csimilar images\u201d that are removed are generally the most informative samples of the dataset as well. Maybe these samples are the highest quality samples and without them the CLIP model is not good according to any metric. To verify this, one can evaluate the performance of models in Figure 7 on tasks unrelated to ImageNet such as retrieval and other zero-shot classification tasks that are farther from ImageNet (e.g., other tasks in the open-clip/Datacomp eval suite with 38 tasks) . This is also related to the reviewer fHnd\u2019s W.1 and reviewer fbpP\u2019s Q.1 comment asking for additional experiments. I see that authors have provided new results on CelebA and Waterbirds, however, I\u2019m asking for some other type of evaluation that does not require any new training but only evaluation on additional tasks.\n\nThis point is also related to a concern about the validity of the metric used to define \u201csimilar images\u201d. I see a relation to reviewer fbpP\u2019s Q.2 and reviewer MLz9\u2019s noted weaknesses. Specifically, I highlight that the distinction between \u201csimilar\u201d and \u201chighly similar\u201d is not well-analyzed. For example, what are some examples that appear in both? What are some examples that appear in either one? Essentially, are \u201csimilar\u201d images important for training and \u201chighly similar\u201d images are not.\n\n**W.1.ii** Do CLIP models lose OOD generalization more quickly than classification models trained on ImageNet?\nFigure 8 shows CLIP is more sensitive to near-pruning than is ResNet18 trained on ImageNet. I suggest replacing Figure 4 with Figure 8.\n\n**W.2.1** \u201cWhat is zero-shot?\u201d\nGiven my new understanding of Section 5-6, I see that this question is not necessarily within the context of this work.\n\n**W.2.2 & Q.3** The objective of Sections 5 and 6 that \u201cCorrect for highly similar images\u201d is not clear.\nThe rebuttal response significantly resolved my confusion about these sections. I highly recommend including this response as part of the introduction. I read through the changes in the paper, but I still think someone reading the paper for the first time might be confused as to the objective of section 5 and 6 and what it is contributing after the observations of section 4. Importantly, the conclusions of Section 4 and 5-6 are somewhat in conflict with each other for which the authors make the distinction between \u201csimilar\u201d and \u201chighly similar\u201d images. My understanding is that \u201csimilar images\u201d are important to perform well on test sets but \u201chighly similar images\u201d are not. This also asks for more comparison between the \u201csimilar images\u201d and \u201chighly similar images\u201d. \n\n**Q.2** Could this mean that these samples are important for a general understanding of the ImageNet distribution?\n> This is not surprising: Since the considered datasets are all based on ImageNet, they can be expected to share some characteristics.\nIn fact I find this observation concerning given the conclusions of Section 5-6 and their contrast with Section 4 as discussed above. I suggest authors study questions I under in **W.1.i & Q.1** based on this observation."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700635521640,
+                "cdate": 1700635521640,
+                "tmdate": 1700635521640,
+                "mdate": 1700635521640,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "3ndp2xk1gY",
+            "forum": "tnBaiidobu",
+            "replyto": "tnBaiidobu",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_fHnd"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_fHnd"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the generalization behaviour of CLIP from the perspective of the training set. CLIP, as a pioneering foundation model, is well known for its exceptional generalization capability. However, it remains unclear whether such a good generalization capability stems from the web-scale training set, as it may well enclose samples similar to those on the test sets. This paper tackles this question by filtering out similar samples according to CLIP-embedding-based nearest neighbors. By creating a LAION subset that comes with as large a generalization gap as the ImageNet-1K training set, this work concludes that it is other factors, rather than the model has already seen samples with similar distribution, that leads to the outstanding ood generalization of CLIP models."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. This paper first studies the ood generalization behaviour of CLIP from the interesting perspective of train-test distribution similarity, and has drawn some intriguing conclusions, like a subset of 100M of LAION-400M is able to train a good-performing model on ood benchmarks.\n2. The experiments are well motivated and designed, resulting in compelling results that even without nearest neighbor samples, CLIP is still to maintain good performance on ood benchmarks."
+                },
+                "weaknesses": {
+                    "value": "1. This paper only works on common classification ood benchmarks, but neglecting a whole bunch of other CLIP application domains. In the very least, retrieval is the most foundamental test ground to probe how good a CLIP model is. The authors could use MSCOCO as the in-domain dataset for sample filtering, and use Flickr-30k as the out-of-domain dataset. Also, experiments on more diverse benchmarks, like VTAB (check datacomp paper for current best practices), are encouraged.\n2. Some crucial experimental details seem to be missing. For instance, how the nearest neighbor sets in section 4.1 are constructed are not mentioned at all (or mentioned in the appendix). How many samples are chosen in this set, and what is the threshold of CLIP score used here?\n3. The authors should compare the similarity of nearest neighbors to test sets between the whole LAION datset (after filtering in section 5/6) and ImageNet-Train. Otherwise, one could argue that, even though the closest sample in LAION and ImageNet training set is about the same far away to the test set, LAION has a lot more samples close to the closest sample than ImageNet (but not as close to the test set as the closest sample), and thus still has a unfair advantage on those ood benchmarks, compromising the validity of the conclusion."
+                },
+                "questions": {
+                    "value": "What is the potential application of the finding in this paper? I know this is a pure analytical work, and believe its merit is above the aceeptance threshold of ICLR. But I am still intrigued to learn what is the broader impact of this work, like how this would enlighten future research or engineer endeavours."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8369/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698740621962,
+            "cdate": 1698740621962,
+            "tmdate": 1699637040536,
+            "mdate": 1699637040536,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "MO05vJx9Ss",
+                "forum": "tnBaiidobu",
+                "replyto": "3ndp2xk1gY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Part 1/2"
+                    },
+                    "comment": {
+                        "value": "We are grateful to reviewer ****fHnd**** for reviewing our paper thoroughly and providing helpful suggestions. We address each of their concerns below.\n\n### Weakness 1: On retrieval tasks and additional experiments\n\nWe agree with the reviewer that one of the interesting use cases of CLIP is image retrieval. However, we do not believe that this undermines the relevance zero-shot classification. We focus on this task as there has been a huge body of work on this topic, and CLIP demonstrated unprecedented performance on ImageNet-based distribution shifts. Additionally, in contrast to classification, retrieval tasks are more complex and highly sensitive to captions, demanding an analysis that factors in both images and texts. Therefore, we did not perform experiments on Flickr30 and MSCOCO.\n\nWe would also like to underline that not all ImageNet-based distribution shifts are characteristically similar. While ImageNet-Sketch and ImageNet-R have style changes, ObjectNet has shifts in rotation, background, viewpoints, and ImageNet-A has adversarial or hard images. Therefore our analysis and results are valid for a broad range of characteristically different distribution shifts in classification.\n\nThat said, we agree with the reviewer that a stronger case can be made with experiments on other datasets and for distribution shifts that are not based on ImageNet. At the moment, **as an additional experiment in Appx. C, we have repeated the similarity analysis from Fig. 3 for CelebA [1] and Waterbirds [2]**. For CelebA, we split along the factors `Eyeglasses`, `Hats` as distribution shifts and zero-shot predict the factor `Male`. For Waterbirds, we can either split based on the background (`land` vs. `water`), or based on the combination of bird and land (`landbird-on-land/waterbird-on-water` vs. `landbird-on-water/waterbird-on-land`). We observe the same trends (similarity distributions to the train set/LAION differ, similarity is correlated with accuracy) as we did in Sec. 4.\n\n```python\n| Dataset | Attributes | Correlation between similarity and zero-shot accuracy $\\rho_S$ |\n|-|-|-|\n| CelebA | w/ eyeglasses | 1.0|\n| CelebA | w/ hat | 0.78|\n| | | |\n| Waterbirds | Coregroup | 0.82 |\n| Waterbirds| Land | 0.98 |\n```\n\nGiven the rebuttal\u2019s tight time frame and the computational cost of training CLIP, we cannot yet replicate the experiment from Sec. 6 on these datasets. But, if the reviewer feels strongly about additional experiments, we are happy to repeat the complete analysis from Sec. 6 on CelebA and Waterbirds (and possibly also iWILDCam) for the camera-ready version.\n\n### Weakness 2: Details for nearest neighbor visualization\n\n**We apologize for the confusion and have updated the manuscript to better explain what Sec. 4.1 is doing**. \n\nFor the nearest neighbor sets in Fig. 1, we simply visualize the top six nearest neighbors to a given query sample (i.e., a sample from one of the test sets) in ImageNet-Train and LAION (after deduplication). **We have added more details in App. F regarding generating the nearest neighbors visualizations**. \n\nFor the histograms in Fig 3., we simply take one of the six test sets and for each sample compute the similarity to its nearest neighbor in ImageNet or LAION (with duplicates removed). The histograms show the distribution over those similarities.\n\nNeither of these cases in Sec. 4.1. imposes a threshold on the perceptual similarity."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700251321711,
+                "cdate": 1700251321711,
+                "tmdate": 1700253458684,
+                "mdate": 1700253458684,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "P3yJSiYNBx",
+                "forum": "tnBaiidobu",
+                "replyto": "lhxbDYQAOo",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_fHnd"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_fHnd"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the prompt reply!\n\n(1) I recognize the high computational cost of CLIP may restrict the authors from repeating experiments on other datasets.  But I still feel the analysis on retrieval could greatly enhance the applicability of this work. For instance, a normal retrievel model trained on MSCOCO may fail to generalize to Flickr30K, but CLIP can. Even if caption results in another dimension of complexity, probing on what property of LAION of CLIP leads to that generalizability would be highly vauable. Plus, it is always possible to use a super strong text encoder that handles all captions in MSCOCO and Flickr30k very well. The authors are encouraged to add more experiments, or at leat include a related discussion in the camera-ready revision.\n\n(2) I agree with the authors that even after pruning, the LAION dataset may still contain more samples similar to the test set due to its enormous scale and diversity. This somewhat is aligned with the commment from Reviewer MLz9 that even though the samples with the exact attributes are removed, composite attributes might still be informative enough for the model to learn related concept. The authors are encouraged to include a related discussion in the camera-ready revision.\n\nMy original rating still applies."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700390935259,
+                "cdate": 1700390935259,
+                "tmdate": 1700390935259,
+                "mdate": 1700390935259,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "vb9UjzV7Iz",
+            "forum": "tnBaiidobu",
+            "replyto": "tnBaiidobu",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_MLz9"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_MLz9"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The goal of this work is to understand whether the superior OOD performance of foundation models like CLIP is a result of the training dataset containing images that are very similar to the OOD test set. Towards this, the authors systematically create several splits of the base LAION dataset that was used for training OpenCLIP. Firstly, they find that pruning samples that are very similar to the OOD test sets results in a considerable drop in the OOD performance. However, by matching the train-test similarity with that of ImageNet for a fair comparison, the authors find that CLIP still shows significant gains when compared to an ImageNet pretrained model. Thus, although LAION contains images that are very similar to ImageNet-OOD test sets, this is not the key reason for better OOD generalization of CLIP. Understanding the reasons for better generalization of CLIP still remains an open question."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The key finding that despite reducing the similarity between the training data and the test sets, there is an improvement in test set performance, is helpful. \n- Several insightful experimental results are presented, which is helpful for the community, especially given that these experiments are very computationally intensive. \n- The pruned datasets whose code is released, can help with further investigation on why CLIP models have better OOD performance."
+                },
+                "weaknesses": {
+                    "value": "- Although the results are interesting, my main concern is that the analysis is not sufficient to enable fair **OOD** testing. If the paper was about **ID** performance alone, removing train set samples that are similar to each test sample would have been sufficient, as reported in the paper. However, **OOD** implies that the **distribution** of images is unknown. So, to actually conclude that OOD evaluation is fair, all images from the test **domain** should have been removed, not only the images that are similar to every test set image. Therefore, as mentioned in the abstract, the term \"out-of-distribution generalization\" is still not meaningful even by training on the pruned datasets considered in the paper.\n- To elaborate, if there are 5 sketches of the class \"airplane\" in the dataset, all images that are close to these sketches are removed. But there may be other airplane sketches, which are farther away than the closest image in ImageNet-test set, which are not removed. Thus, it is not guaranteed that all images of the given classes and test **domain** are removed from the train set.\n- Further, there may be other objects, such as \"space shuttle\"  which are not included in ImageNet, thus sketches of space shuttles can be present in the training data, in addition to natural images of the same. Thus the domain \"sketch\" is not unseen by CLIP, and hence the evaluation is not truly OOD. \n\nMinor feedback: \n- Clarity of the abstract and contributions list needs improvement. It would be better to make a shorter summary of the key contributions.\n- It would be better to give a different name to \"generalization gap\" as this term is used in a different context.\n\nTypo:\n\n\"We provide anecdotal evidence in Fig. 1 where we choose samples from ImageNet-Sketch and ImageNet-R and examine their nearest perceptual neighbors in LAION-400M and **ImageNet**\""
+                },
+                "questions": {
+                    "value": "Several additional experiments are required to be done, in order to emulate a true **OOD** setting, as discussed in the weaknesses section.\nFor example, one should remove all \"sketch\" style images as well, from L-200M+IN-Train (sketch-pruned) in order to test on the ImageNet-sketch test set for a true OOD evaluation. Otherwise, other sketch images that are present in the dataset can help bridge the domain gap between sketches and natural images, leading to an unfair OOD evaluation."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Reviewer_MLz9"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8369/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698744644684,
+            "cdate": 1698744644684,
+            "tmdate": 1700150262864,
+            "mdate": 1700150262864,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "paV68Gm6Zv",
+                "forum": "tnBaiidobu",
+                "replyto": "vb9UjzV7Iz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank reviewer **MLz9** for reviewing our paper, calling our experiments insightful, and providing helpful suggestions. In light of your concerns, we would first like to clarify the scope of our work.\n\nPrior work has established that data distribution drives CLIP\u2019s performance on ImageNet Out-of Distribution (OOD) benchmarks [1]. While precisely assessing how similar image distributions are is difficult, and (to the best of our knowledge), there is no consensus how the OOD-ness of a dataset could be quantified, it seems evident that these ImageNet OOD benchmarks cannot be considered to be OOD wrt. LAION. But **independent of whether these benchmarks can be considered OOD or not, it is interesting to examine what properties of its training distribution allow CLIP to reach such a high performance on them**.\n\nThe simplest hypothesis (a first-order explanation, if you will) is that CLIP just performs well because LAION contains many **highly similar images**, i.e images that are both semantically and stylistically similar to the test datasets, possibly even direct duplicates. Note that **to answer this hypothesis, we do not need to explicitly assume that the benchmarks are ID or OOD wrt. LAION**, neither before nor after our pruning intervention.\n\nTo summarize: **We agree with the reviewer that measuring CLIP\u2019s \u201ctrue OOD performance\u201d is  interesting, but we do not claim to address this question in our work.** We realize that our introduction and some paragraphs throughout the paper were worded in a way that could give this impression, and apologize for the confusion. **We have edited the manuscript in Secs. 1, 4, 5, and 6 to better reflect our intention**. We would now like to also address the individual concerns here.\n\n\n### Weaknesses 1, 2, 3 & Question 1: On a fair OOD generalization setting by removing all images of a certain domain\n\nWe completely agree with the reviewer that fair OOD testing would require removing all images pertaining to a certain domain. Indeed, we initially considered doing exactly this, but had to realize that this is far from trivial.\n\nTo remove all images of a certain domain, we need to be able to label each image as \u2018ID\u2019 or \u2018OOD\u2019. This essentially means that we need access to a domain classifier (which would also need to have near-perfect accuracy so that no images are overlooked). However, it is very unclear how such a classifier could be obtained. Even for the \u2018sketch\u2019 domain, where a classifier could conceivably be trained, it is unclear exactly how the classifier should demarcate this domain: Should the domain contain all sketches, even sketches with characteristics not present in ImageNet-Sketch? What about pencil sketches with a very limited color-palette (ImageNet-Sketch is mostly black-and-white)? What about tattoos or small sketches on objects in natural images (like printing on t-shirts? For other benchmarks, such as ImageNet-A, it is even less clear how the test images constitute a well-separable domain of images. It is precisely this vagueness in defining a domain based on a given test set that prevents us from building a fair OOD setting, which is why we do not claim to analyze this.\n\nThe reviewers\u2019 example also touches on another interesting point: It could well be that after our pruning sketches of, say, space shuttles remain, while airplanes are only present in natural images. In this case, CLIP might have to compositionally generalize in order to reach high performance on the \u2018airplane\u2019 class in ImageNet-Sketch. It would indeed be very interesting to analyze how individual concepts in the data distribution can be combined by the model, but this is out of the scope of this work, and we are not even sure that such an analysis would be computationally feasible.\n\n\n### Weakness 4: Clarity of the abstract and contributions list needs improvement\n\nWe have improved the abstract and the contributions section. \n\n\n### Weakness 5:  It would be better to give a different name to \"generalization gap\" as this term is used in a different context\n\nWe have changed \u201cgeneralization gap\u201d to \u201csimilarity gap\u201d. \n\n\n### Summary\n\nGiven this clarification, and considering that the reviewer\n- evaluates our \u201ckey finding\u201d as \u201chelpful\u201d,\n- regards our \u201cexperimental results\u201d as \u201cinsightful\u201d and \u201chelpful for the community, especially given that these experiments are very computationally intensive\u201d,\n- and agrees that the released code can \u201chelp with further investigations\u201d,\n\nwe ask whether the reviewer might reconsider their evaluation to make our results accessible to the community.\n\n[1] https://arxiv.org/abs/2205.01397"
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700136549222,
+                "cdate": 1700136549222,
+                "tmdate": 1700145801431,
+                "mdate": 1700145801431,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ONl5UIFRKI",
+                "forum": "tnBaiidobu",
+                "replyto": "paV68Gm6Zv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_MLz9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_MLz9"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I thank the authors for their response and the changes in the draft. I agree that a true OOD evaluation of CLIP has several challenges as discussed in the response. I encourage the authors to include a detailed discussion on this in a limitations section. This would be helpful for future research towards developing methods to evaluate the true OOD robustness of CLIP, and also to build a set of rules on training and test datasets to evaluate OOD robustness of such models. I update the rating to 6 based on the response."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700150204853,
+                "cdate": 1700150204853,
+                "tmdate": 1700150204853,
+                "mdate": 1700150204853,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "2LiP2hlqgQ",
+            "forum": "tnBaiidobu",
+            "replyto": "tnBaiidobu",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_fbpP"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8369/Reviewer_fbpP"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper tries to uncover the reason for the good generalization of foundation models like CLIP. Specifically, we see that CLIP has a good zero-shot accuracy on OOD datasets, which is much higher compared to the models that are first trained on the labeled dataset (ID), such as ImageNet, and then tested on OOD datasets, such as ImageNet-Sketch.\n\nAs the pre-training data is large, it is highly likely to contain similar images to the OOD dataset. If that is the case, we might not call the test OOD dataset to be truly out-of-distribution, which might be the reason for the good performance of CLIP. \n\nAuthors try to find an answer to the above problem through various experiments. \n\nThey define the perceptual similarity of two images using the CLIP ViT-B/16 embedding of a pre-trained CLIP model. They find that the general OOD datasets like ImageNet Sketch have more common images with the LAION dataset than the ImageNet dataset.\n\nIn the first experiment, the authors removed images similar to the OOD dataset from the LAION dataset iteratively and measured the performance of models trained on a pruned dataset. As expected, they found a general trend of performance decrease, indicating that similar images in the training dataset had more importance.\n\nThe second experiment compared the models trained on small datasets such as ImageNet vs those trained on LAION. The authors define a metric called generalization gap, which is the set of minimum distance of each image in the test set with every image in the training set. They then remove the data points from the larger dataset (here, LAION) to have the same generalization gap as that of the ImageNet with the OOD dataset. They then trained a CLIP model on the pruned dataset. \nThey discovered some performance drops, but the performance was still high compared to the case where the model was just trained on the ImageNet training set. This led to them concluding that the high performance of the CLIP is mostly due to more training data rather than test train similarity."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper is very well written. The experiments are clearly defined, and the motivation for each experiment is mentioned."
+                },
+                "weaknesses": {
+                    "value": "Even though authors perform many experiments, the experiments are performed on a single type of dataset, which are the variations of the ImageNet.\nIt would have been to include experiments with other OOD datasets such as iWILDCam or FMoW. Without these experiments it is not sure if these analysis is limited to one type of dataset."
+                },
+                "questions": {
+                    "value": "1. Are there experiments on other datasets unrelated to ImageNet? Having these experiments would be better to make a strong case.\n2. Why do we use only CLIP ViT-B/16 embeddings to filter? Won't larger CLIP models have a better embedding to filter out the data points?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8369/Reviewer_fbpP"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8369/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698761613559,
+            "cdate": 1698761613559,
+            "tmdate": 1699637040278,
+            "mdate": 1699637040278,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "0sGEI87Tvm",
+                "forum": "tnBaiidobu",
+                "replyto": "2LiP2hlqgQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We express our gratitude to reviewer **fbpP** for thoroughly reviewing our paper, lauding our paper\u2019s clarity, and providing helpful suggestions. We would like to address each of your individual concerns here.\n\n### Weakness 1 & Question 1: Experiments on other datasets which are less ImageNet-like\n\nWe thank the reviewer for the suggestion to perform experiments on iWILDCam or FMoW. **We agree that experiments on distribution shifts not based on ImageNet are interesting to look at.** To provide additional context: We chose ImageNet-based distribution shifts because CLIP models perform extremely well on those, making them perfect candidates to test our primary hypothesis: whether **highly similar images drive performance**. We would also like to underline that not all ImageNet based distribution shifts are characteristically similar. While ImageNet-Sketch and ImageNet-R have style changes, ObjectNet has shifts in rotation/background/viewpoints, and ImageNet-A has adversarial or hard images. Therefore, our analysis and results are valid for a broad range of characteristically different distribution shifts.\n\nThat said, we agree with the reviewer that a stronger case can be made with experiments on other datasets. We find the proposed iWILDCam and FMoW datasets problematic since CLIP\u2019s  (ViT-B/32) zero-shot performance on them is rather low (7.45% and 12.96%) [2]. As an alternative, we propose to look at two datasets with higher CLIP zero-shot accuracy. On CelebA [3], [4] report a zero-shot accuracy between 53% to 97%, and on Waterbirds [5], [6] report a zero-shot accuracy for ViT-B/16 and ViT-B/32 models of around 87.34%. We can split these datasets along some axes and analyze CLIP\u2019s zero-shot prediction. \n\nAt the moment, **as an additional experiment in Appendix Section C, we have repeated the similarity analysis from Fig. 3 for CelebA and Waterbirds.** For CelebA, we split along the factors Eyeglasses, Hats as distribution shifts and zero-shot predict the factor Male. For Waterbirds, we can either split based on the background (land vs. water), or based on the combination of bird and land (landbird-on-land/waterbird-on-water vs. landbird-on-water/waterbird-on-land). We observe the same trends (similarity distributions to the train set/LAION differ, similarity is correlated with accuracy) as we did in Sec. 4.\n\n| Dataset | Attributes | Correlation between similarity and zero-shot accuracy $\\rho_S$ |\n|-|-|-|\n| CelebA | w/ eyeglasses | 1.0|\n| CelebA | w/ hat | 0.78|\n| | | |\n| Waterbirds | Coregroup | 0.82 |\n| Waterbirds| Land | 0.98 |\n\nGiven the rebuttal\u2019s tight time frame and the computational cost of training CLIP, we cannot yet replicate the experiment from Sec. 6 on these datasets. But, if the reviewer feels strongly about additional experiments, we are happy to repeat the complete analysis from Sec. 6 on CelebA and Waterbirds (and possibly also iWILDCam) for the camera-ready version.\n\n### Question 2: Choice of using the CLIP ViT-B/16 encoder for filtering\n\n**We agree with the reviewer that larger models would potentially capture image features and similarities better**. We originally went with the CLIP ViT-B/16-240+ model as\n1. it was previously employed by Abbas et al [1] for semantic de-duplication,\n2. it provides a good balance between performance and computational efficiency [2], \n3. our nearest neighbor visualizations using this model seemed to be human aligned,\nHaving said that, **based on the reviewer\u2019s suggestion, we computed the nearest neighbor similarities of ImageNet-Train to each of the six different datasets using the image embedding space of ViT-L/14 as well \u2014 see the newly added Fig. 12 in Appendix Section D**. We then compute the correlation of the ViT-L/14 similarities to ViT-B/16-240+ similarities and observe very high correlation (in the range $\\rho=0.8 \\dots 0.93$) across datasets (see the newly added Tab. 5 in Appendix Section D). This indicates that the embedding space of ViT-B/16-240+ already sufficiently captures image features and similarities, and that using a bigger model wouldn\u2019t change the trends or our conclusions.\n\n### Summary\nWe trust that our expanded explanation and the supplementary experiments have thoroughly addressed the questions and concerns raised. We sincerely hope this additional information offers a clearer understanding of our work, potentially leading to a reassessment of its evaluation.\n\n[1] https://arxiv.org/abs/2303.09540\n\n[2] https://github.com/mlfoundations/open_clip/blob/91923dfc376afb9d44577a0c9bd0930389349438/docs/openclip_results.csv#L61\n\n[3] https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html\n\n[4] https://openaccess.thecvf.com/content/CVPR2023W/SAIAD/papers/Gannamaneni_Investigating_CLIP_Performance_for_Meta-Data_Generation_in_AD_Datasets_CVPRW_2023_paper.pdf\n\n[5] https://github.com/kohpangwei/group_DRO\n\n[6] https://arxiv.org/pdf/2308.01313.pdf"
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700227466923,
+                "cdate": 1700227466923,
+                "tmdate": 1700230276652,
+                "mdate": 1700230276652,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "rucnY1WWHC",
+                "forum": "tnBaiidobu",
+                "replyto": "0sGEI87Tvm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_fbpP"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8369/Reviewer_fbpP"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the authors' response. My rating remains the same. I would encourage authors to test the other proposed datasets despite low zero-shot accuracy. An in-depth analysis of the similarity of images to the LAION dataset might conclude that these datasets are not similar to LAION. Hence, we might need a better training method or dataset so that we can improve zero-shot generalization on these types of datasets as well."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8369/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700556583444,
+                "cdate": 1700556583444,
+                "tmdate": 1700556583444,
+                "mdate": 1700556583444,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

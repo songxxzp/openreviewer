@@ -1,0 +1,280 @@
+[
+    {
+        "id": "66z2OJZcvX",
+        "forum": "dYjuJGTEbc",
+        "replyto": "dYjuJGTEbc",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_EjY1"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_EjY1"
+        ],
+        "content": {
+            "summary": {
+                "value": "Over a single input graph (D, h), authors study the problem of learning via the Gromov-Wasserstein loss (GW) a non-negative diagonal target structure D\u2019 and its masses h\u2019, in order to perform a partitioning of (D, h) via the underlying estimated (GW) transport plan. They propose to use a Block-Coordinate Descent algorithm that alternates between i) estimating a semi-relaxed GW transport plan using a mirror-descent scheme with an additional strictly concave regularization; ii) updating the diagonal structure D\u2019 in closed-form. Authors empirically study the concavity of the resulting problem, and provide proofs of convergence for their algorithm. Then, they connect this GW (diagonal barycenter) problem or simplified variants to well-known clustering methods such as Min-Cut based methods, NMF and Max-Dicut. Finally, they study the relevance of their approach for graph partitioning of synthetic and real-world datasets."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "-\tIntroduce a novel GW-based transport problem to perform graph partitioning.\n-\tProvide first results on the concavity of this problem. Then provide an algorithm to and introduce a strictly concave regularization of this problem that might help for such tasks.\n-\tProof of convergence of their BCD algorithm.\n-\tInteresting but simple connections with existing clustering methods such as Min-Cut based methods , NMF and Max-Dicut.\n-\tBenchmark on GW-based and SOTA approaches for graph partitioning."
+            },
+            "weaknesses": {
+                "value": "**Overall appreciation**: This paper tends to omit very similar recent works and the theoretical results seem either incomplete (analysis of concavity and relationships with existing graph partitioning/clustering methods) or incremental.\n\n- **1. Authors omit several recent contributions on GW**:\n     - **a)** [A] studies the complete (sr)GW barycenter problem where the target structure is not forced to be a non-negative diagonal matrix. This paper shows that it is a SOTA method for spectrum-preservation graph coarsening and provide strong theoretical contributions supporting its use.\n       **i)** These spectrum properties are also of particular interest for graph partitioning, hence the (sr)GW barycenter problem should be rigorously compared theoretically and empirically to the (sr)GW diagonal barycenter problem. **ii)** I believe that simple Stochastic Block Models (SBM) could provide a stress test over which the srGW diagonal barycenter problem fails contrary to the srGW barycenter problem : e.g using non-assortative SBM with a unique intra-cluster connectivity p smaller than inter-cluster connectivities $q_{cluster_i, cluster_j}$. Moreover I expect the diagonal structure to be more sensitive to contrasts within any SBM, i.e small variations between intra/inter-connectivities. Could authors perform such empirical sanity-checks ?\n\n     - **b)** relations to srGW [Vincent-Cuaz et al, 2022] : **i)** The (sr)GW barycenter problem over a single input graph is a particular case of their dictionary learning. **ii)** The srGW solver proposed by authors is exactly the mirror-descent algorithm introduced in this other paper over which a concave regularization is added. These two points should be clearly stated in the paper.\n\n     - **c)** On the proof of convergence for the algorithm: **i)**  [B, C] provide a scheme of proof to establish a non-asymptotic convergence of the regularized srGW solver. **ii)** An overview of the proof strategy for Theorem 3 should be clearly state. More importantly Lemma 2 should be clarified : as such it seems wrong/ incomplete to me, e.g differentiability issues at the border are avoided, limits are considered out of the domain, continuity arguments are used without defining any topology etc... **ii)** The overall learning algorithm seems to be a particular case of two-block BCD well-studied in [D].\n\n     - **d)** First parts of the supplementary materials: (minor) paragraph  \u2018Non-convexity of GW discrepancy\u2019 exposes known relations. (more important) paragraph \u2018Assumption of uniform distribution\u2019 seems to be a bad justification for the choice of input distributions that only translates the notion of weak-isomorphism discussed in [Chowdhury et al, 2019].\n\n\n- **2. The several concavity analysis done by authors are incomplete and not conclusive:**\n     - **a)** Could you detail the experiments illustrated in Figure 1 ? What is D\u2019 in this setting ? What Is the initial transport plan used for these experiments ? Are these findings consistent w.r.t these initial transport plans (should be validated using the MCMC sampler in SpecGWL) ? What are the solvers used for these experiments ? If entropically regularized ones, please compare results to exact solvers such as conditional gradient solvers.\n    - **b)** Are these findings specific to heat kernels or do they generalize to PSD matrices e.g Laplacians  ?\n    - **c)** None of the theoretical studies on the concavity of the overall learning problem are complete or convincing: **i)** proof/paragraph: \"One common condition for extremal points\" only shows that for an optimal target masses nu*, the resulting GW problem is concave hence solutions are extremities of admissible coupling with marginals mu and nu*. It does not show that extremities of the set of semi-relaxed couplings with first marginal mu, i.e hard-clustering matrices, are solutions. **ii)** I do not see when the other condition in equation 19 could be applied, authors should discuss this point. **iii)** Remark: Overall, a too recent contribution [E] to be taken into account at the submission date deals with these concavity problems for srGW barycenters and could guide authors to derive an analog result for the srGW diagonal barycenters.\n\n\n- **3. Zero masses**: Authors do no mention the flexibility of this learning problem to get optimal target masses which are equal to zero and might allow to detect true number of clusters in some settings, as discussed in [Vincent-Cuaz et al, 2022].\n\n\n- **4. Missing points in experiments**: \n    - **i)** Please benchmark methods in terms of running times too. Trade-off in terms of performances and speed should be explicit.\n    - **ii)** The strongly concave regularization with continuation scheme proposed by authors introduce several hyperparameters. Please conduct an ablation study over this regularization. Plus could you complete Figure 11  that shows that the method is quite sensitive to these hyperparameters, with other datasets ?\n    - **iii)** Authors rely on other GW-based methods to get initial transport plans for their method. Whereas [Vincent-Cuaz et al, 2022] proposed to leverage k-means algorithm, which is a quite common technique in the clustering or graph partitioning literature. I guess, in concave setting solvers can be stuck at extremities, hence it would be relevant to force initial within the polytope e.g with kmeans + mu.nu^T. Could you further compare these choices ?\n\n- **5. Some parts in Section 3.3 are not clear** and should be clarified: **i)** srGW to Identity: \u2018This results in each cluster containing an equal number of data points.\u2019 It clearly does not seem to be the case. **ii)** relation to NMF: does it really coincide with the srGW diagonal barycenter problem or rather with the complete barycenter problem ?\n\n\n\n\n[A] Chen, Yifan, et al. \"A Gromov--Wasserstein Geometric View of Spectrum-Preserving Graph Coarsening.\" International Conference on Machine Learning. 2023.\n\n[B] Scetbon, M., Cuturi, M., & Peyr\u00e9, G. (2021, July). Low-rank Sinkhorn factorization. In International Conference on Machine Learning (pp. 9344-9354). PMLR. \n\n[C] Scetbon, M., Peyr\u00e9, G., & Cuturi, M. (2022, June). Linear-time gromov wasserstein distances using low rank couplings and costs. In International Conference on Machine Learning (pp. 19347-19365). PMLR. \n\n[D] Grippo, L., & Sciandrone, M. (2000). On the convergence of the block nonlinear Gauss\u2013Seidel method under convex constraints. Operations research letters, 26(3), 127-136.\n\n[E] Van Assel, Hugues, et al. \"Interpolating between Clustering and Dimensionality Reduction with Gromov-Wasserstein.\" arXiv preprint arXiv:2310.03398 (2023)."
+            },
+            "questions": {
+                "value": "I invite the authors to discuss the above-mentioned weaknesses and to answer the questions (potentially implying additional experiments) I have associated with them in order to complete my development."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9414/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698094104988,
+        "cdate": 1698094104988,
+        "tmdate": 1699637186260,
+        "mdate": 1699637186260,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "hJUcbfxUWY",
+        "forum": "dYjuJGTEbc",
+        "replyto": "dYjuJGTEbc",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_Zq9r"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_Zq9r"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper propose a graph partitioning approach based on the Gromov-Wasserstein (GW) distance. This approach minimizes the GW distance between the target graph and an empty graph with fewer number of nodes. The optimization problem finds an optimal mapping, which determines the node clusters. It jointly optimizes node mass distribution and pairwise distance relations in the empty graph, the later constrained to be diagonal. The authors propose an algorithm which alternates the minimization of these variables and provide theoretical convergence guarantees.\n\nFurthermore, the authors establish connections between their approach and existing GW-based methods, as well as alternative techniques like Min-Cut. Finally, they empirically demonstrate the effectiveness of their proposed method."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The authors present an extension of previous GW-based clustering methods, while connecting them with other approaches such as the Min-Cut or Non-negative Matrix Factorization. In addition, they propose an algorithm with theoretical guarantees. In this regard, the paper seems to be theoretically well founded.\n\nAdditionally, their proposed algorithm showcases remarkable robustness against edge noise when compared to the competing methods outlined in the paper."
+            },
+            "weaknesses": {
+                "value": "- Challenges in Readability: In certain instances, the meaning of the notation, although not formally introduced, can be grasped from the context (e.g., $mathbb{I}_K$ denoting the identity matrix with $K$ rows). However, there are situations where the notation becomes confusing, posing a challenge to the paper's readability. For example, in the discussion of the \"Monge's type Gromov-Wasserstein barycenter\" in Section 3, the optimal mapping matrix is denoted as $MGW(G, G\u2032)$, but this notation is also used as the objective in the minimization equation (7). The concept of minimizing a matrix raises confusion. In addition, the symbols $\\pi$ and $\\Gamma$ are interchangeably used to refer to the same object. For instance, three lines before equation (7), it states $\\nu=\\pi^T 1_N$, but in this context, as far as I did not misunderstand it, we are assuming a hard clustering mapping and therefore $\\Gamma$ should be the appropriate symbol. Furthermore, though it is not crucial, adding the labels to the x-axis and y-axis of the plots would also ease the readability of the figures.\n\n- The proposed method initialization depends on the results of other methods such as GWL and SpecGWL."
+            },
+            "questions": {
+                "value": "- Initialization dependency: The paper mentions using a linear combination of GWL, SpecGWL, and joint distribution results as initial values for EGWB. However, it's unclear how the algorithm relies on this initialization. Could a less informed start, like the uniform distribution, yield comparable results or does one need to start from a relatively good initialization?\n- Computational cost: While the paper outlines the computational cost per iteration, the average number of iterations required for convergence remains undisclosed. Additionally, considering the initialization dependency, it's crucial to know the overall time needed to run EGWB, especially if solutions for GWL and SpecGWL must be computed beforehand.\n- Synthetic data: Figure 4 exhibits superior results for GWL and SpecGWL compared to Figure 2. Moreover, in Figure 4 GWL out performs SpecGWL given the true cluster size distribution. Is there any reason why is that the case? I am actually surprised that, for these apparently simple problems GWL and SpecGWL fail to retrieve the right clustering. Understanding the specific reasons for their failure is beneficial in order to comprehend why EGWB, in contrast, succeeds.\n- Number of clusters: A parameter that needs to be set is the expected number of clusters $K$. This is indicated by the number of nodes in the empty graph. How robust is the algorithm to the choice of $K$? Particularly intriguing is the scenario where $K$ exceeds the actual number of clusters. In theory, it is possible that the optimal mapping does not assign any mass to the extra nodes of the empty graph. In that case, the algorithm would still be able to retrieve the true partition. Does this happen in practice, and how does the algorithm adapt to such situations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Reviewer_Zq9r"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9414/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698490345899,
+        "cdate": 1698490345899,
+        "tmdate": 1699637186141,
+        "mdate": 1699637186141,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "S9Hah6oZoZ",
+        "forum": "dYjuJGTEbc",
+        "replyto": "dYjuJGTEbc",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_iAAc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_iAAc"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this submission, the authors propose a new graph partitioning framework EGWB, which relaxes the target structure and distribution constraints in Gromov-Wasserstein Learning (GWL) with a class of positive semi-definite matrices.\nIn particular, by learning the target structure matrix associated with the transport plan, the authors extend the GWL framework to a special GW barycenter problem (with only one graph), which enhances the flexibility of the GWL framework.\nThe proposed method is shown to be effective according to empirical results in various graph partitioning tasks."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Graph partitioning based on utilization of the Gromov-Wasserstein (GW) distance is an interesting and significant problem."
+            },
+            "weaknesses": {
+                "value": "1. How to initialize $D\u2019(0)$? How to set the value of $K$?\n\n2. It seems the authors confuse the task of graph partitioning and that of graph clustering. They muddle up partitioning and clustering throughout this paper. \nI think the experiments in section 4.2 are more likely to be a graph partitioning task, rather than graph clustering, as is claimed by the authors. Please use one of the two definitions consistently in the paper.\n\n3. In the subsection of Results and Discussion, the authors say they employ five metrics, however, I only find AMI. If they take the results reported in appendix into account, then should clarify this in the main context.\n\n4. Are the datasets in section 4.2 asymmetric or symmetric? Do the authors symmetrize the directed graphs? \n\n5. What do the two axes in Fig.3 represent? It should be labeled in the figure.\n\n6. There are typos and careless statements and the authors need to polish this paper carefully. For example, 1) page 1, it should be $G_1(D_1,P_1)$ in the third row from the bottom, 2) page 2, the second paragraph, the second point of the limitations has grammatical mistakes, 3) What is EGWB an abbreviation for? The author put forward EGWB without any explanations in page 6."
+            },
+            "questions": {
+                "value": "Please see above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9414/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698768933556,
+        "cdate": 1698768933556,
+        "tmdate": 1699637185990,
+        "mdate": 1699637185990,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3MMkDoB21Q",
+        "forum": "dYjuJGTEbc",
+        "replyto": "dYjuJGTEbc",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_2sWH"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9414/Reviewer_2sWH"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents a Gromov Wasserstein (GW) Clustering Method based on a single marginal GW Barycenter : EGWB. The method also allows to add marginal or ambient metric constraints on the barycenter. Thus effectively showing that their method is a generalization of existing GW Learning methods. Later on more precise links are made with existing methods.\nThey first introduce a Monge type barycenter problem and a Kantorovich relaxation of it. It is shown that under appropriate conditions the two problems are equivalent.\nAn optimization algorithm relying on entropic regularization is presented. The convergence of the algorithm is shown.\nFinally their method is benchmarked against existing GW Clustering methods, on synthetic and real data. On all accounts EGWB outperforms existing GW methods.\n\nThe contributions are the following:\n- Introduced a generalization of existing GW Learning Methods\n- Demonstrated theoretically and empirically their algorithm for solving the problem converges and has state of the art performances"
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper presents a unifying framework for GW methods. It does so clearly.\n\nThe core idea is to introduce the GW barycenter problem and note that adding constraints recover existing methods. This problem seems novel in that context and they address with clarity the first questions one can have  : equivalence between the Monge and Kantorovich type formulations, link with other methods in GW Learning as well as in Graph partitioning.\n\nTheir algorithm is an alternating minimization one. However they address the non convexity of the transport plan update by using an interesting combination of existing regularization methods : entropic regularization, link with the Wasserstein Barycenter problem which has better structure.\n\nThe synthetic data example is informative of how the barycentric nature of the problem allows for more efficient clustering. In the analysis of the performance on real data the explanation of the performance in relationship with the structure of the data is appreciated."
+            },
+            "weaknesses": {
+                "value": "In the paragraph about Kantorovich relaxation it is stated that the minimum is attained at an extremal point under some conditions which are detailed in appendix. This point is central to the use of the algorithm afterwards. Thus I believe the conditions should be put forward in the main text.\n\nIn theorem 3 it is unclear in which case the algorithm converges with entropic regularization, however this is central to showing that the implemented algorithm does converge."
+            },
+            "questions": {
+                "value": "How does the result of theorem 3 relates to the convergence of the algorithm implemented in practice?\n\nAre there a stability result of the limit of the algorithm/solution of the problem with respect to the epsilon parameter?\n\nIn practice what are the optimal value used for the epsilon parameter for each datasets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9414/Reviewer_2sWH"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9414/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698839386074,
+        "cdate": 1698839386074,
+        "tmdate": 1699637185885,
+        "mdate": 1699637185885,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

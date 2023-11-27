@@ -1,0 +1,419 @@
+[
+    {
+        "title": "Confidential-DPproof: Confidential Proof of Differentially Private Training"
+    },
+    {
+        "review": {
+            "id": "8LBLiVafDS",
+            "forum": "PQY2v6VtGe",
+            "replyto": "PQY2v6VtGe",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose a zero-knowledge proof (ZKP) protocol, dubbed Confidential-DPproof, for an auditor to verify that a company (prover) has trained a ML model using DP-SGG at a certain privacy level, on a fixed private dataset (which should not be revealed to the auditor). Their method has three desirable properties:\n\n1. An honest prover can convince an honest auditor that they have correctly implemented DP-SGD (and therefore that the resulting model is differentially private at a certain level, known to both parties);\n2. A dishonest prover cannot convince an honest auditor that the trained model satisfies DP when it in fact does not; and\n3. A dishonest auditor cannot bias the computations of an honest prover. In particular, a dishonest auditor cannot gain additional information about the training data, beyond what they would know from observing the output of a DP algorithm trained on the private data.\n\nExperiments with Confidential-DPproof show that the ZKP mechanisms still allow for practically feasible runtimes for model training. The authors obtain strong model utility on CIFAR-10 and MNIST, while still enforcing strong DP guarantees ($\\epsilon < 1$)."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "4 excellent"
+                },
+                "strengths": {
+                    "value": "Confidential-DPproof provides a strong alternative to current methods for privacy auditing, which require instantiating membership inference adversaries to exploit the output of allegedly DP algorithms, thereby providing a lower bound on the privacy leakage. Unless the adversary can be shown to be optimal, however, this approach cannot provide an _upper_ bound on the privacy leakage. In general, implementing such attacks is also computationally difficult, and optimal adversaries are often intractable.\n\nBy approaching the problem from a different angle, the authors completely sidestep the need for optimal adversaries for verifying privacy guarantees. This is especially impressive because many of the strongest membership inference attacks require access to the private data in order to be trained (or at least a very good proxy), but this is unrealistic in practical scenarios requiring privacy. In contrast, their method does not require the auditor to have access to any private training data. As such, I believe this to be an exciting, non-incremental contribution, one which has the potential to change the paradigm for privacy auditing moving forward."
+                },
+                "weaknesses": {
+                    "value": "As ICLR is not primarily a security conference, it is likely that many readers will be unfamiliar with the terms and methodology used. As such, more discussion of the cryptographic primitives used would be helpful in improving the clarity of the paper. (See the \"Questions\" section below.)\n\nDue to the additional computational overhead imposed by both DP-SGD itself, and the need to represent the steps of the algorithm in circuits which can be integrated with existing ZKP systems, the authors cannot train full neural networks. Instead, they rely on fixed feature extraction methods trained on public data or using other methods independent of the private training data, then train a logistic classifier on top of these representations. Even with these simplifications, gradient computation + clipping can still take over a second per sample in higher feature dimensions. However, as the authors point out in the related work, even the problem of computationally feasible non-private proof of learning is still unresolved. This would be an important avenue for future work in order for this auditing protocol to be applied to modern models with hundreds of billions of parameters trained on massive datasets."
+                },
+                "questions": {
+                    "value": "I do not have extensive background with ZKPs, so I would like to make sure my understanding of the paper is correct. Can the authors confirm if the following statements are true?\n\n**Unbiased random seed generation:** From the honest prover's perspective, since $k$ was chosen uniformly at random and the auditor only knows $[[k]]$ (but nothing about $k$ itself), the random seed $s=k\\oplus r$ is still uniformly random. From the honest auditor's perspective, since $r$ was chosen uniformly at random _after_ $k$ was fixed, $s$ must be uniformly random.\n\n**Dataset commitment:** For verifying that the computations were performed on the committed dataset, we can think of it as follows. The data commitment is another key $K$ which depends on the dataset $\\mathcal{D}$, but which gives the auditor no information about $\\mathcal{D}$ (since it was an XOR with a private random quantity $M$ known only to the prover; this is similar to the relationship between $k$ and $[[k]]$ above). However, for each circuit $\\mathcal{C}$ making up a step of the DP-SGD procedure, the prover can verify that the output of this step was computed on $\\mathcal{D}$ using the agreed upon random seed, and this verification _only requires knowledge of $K$_, not $\\mathcal{D}$ itself.\n\n**DP-SGD privacy accounting:** This leads to my final question. It seems that the ZKP building blocks allow you to generate a proof for each iteration in DP-SGD, then the proof for the whole procedure is just the AND of all of these steps. In particular, this means that the auditor actually will see all of the intermediate models during the DP-SGD training procedure. There has been some recent work on improving the privacy guarantees of DP-SGD under the assumption that the algorithm output is only the _final_ model parameters $W^T$, rather than the entire trajectory [1]. Confidential-DPproof would be incompatible with this analysis, since there isn't a ZKP protocol (yet) which encodes the entire model training procedure, rather than just the individual steps.\n\nReference:\n[1] Ye, Jiayuan, and Reza Shokri. \"Differentially private learning needs hidden state (or much faster convergence).\" Advances in Neural Information Processing Systems 35 (2022): 703-715."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "10: strong accept, should be highlighted at the conference"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8068/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8068/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8068/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697836463373,
+            "cdate": 1697836463373,
+            "tmdate": 1699636997944,
+            "mdate": 1699636997944,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "slrpJ1hWj1",
+                "forum": "PQY2v6VtGe",
+                "replyto": "8LBLiVafDS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Authors' response to reviewer yrMg (1)"
+                    },
+                    "comment": {
+                        "value": "We thank you for your careful reading, detailed and kind comments! \n\n\n> **Unbiased random seed generation: From the honest prover's perspective, since $k$ was chosen uniformly at random and the auditor only knows $[[k]]$ (but nothing about $k$ itself), the random seed $s=k\\oplus r$ is still uniformly random. From the honest auditor's perspective, since $r$ was chosen uniformly at random after $k$ was fixed, $s$ must be uniformly random.**\n\nWe confirm that this is correct, none of the prover and the auditor can bias the randomness seed. For example, the prover cannot bias the randomness seed $s$ by changing $k$ because the prover does not know the value of $r$ which is chosen by the auditor and is part of the computation of $s$. Therefore, even if the prover manipulates the value of $k$, the prover still sees $s$ as a uniformly random variable. The auditor, similarly, cannot bias the randomness seed $s$ because the auditor does not see $k$.\n\n\nWe revised the last part of Phase 2 near the top of page 5 which says:\n\n\u201cObserve that $s$ is random and cannot be biased by the prover or auditor, which guarantees an unbiased source of randomness when subsampling data or noising clipped gradients.\u201d\n\nto:\n\n\u201cNote that $s$ is random and cannot be biased by the prover or auditor,  which guarantees an unbiased source of randomness when subsampling data or noising clipped gradients. This is because the prover and the auditor cannot see values generated by other parties which contribute to the computation of $s$.\u201d\n\n> **Dataset commitment: For verifying that the computations were performed on the committed dataset, we can think of it as follows. The data commitment is another key $K$ which depends on the dataset $\\mathcal{D}$, but which gives the auditor no information about $\\mathcal{D}$ (since it was an XOR with a private random quantity $M$ known only to the prover; this is similar to the relationship between $k$ and $[[k]]$ above). However, for each circuit $\\mathcal{C}$ making up a step of the DP-SGD procedure, the prover can verify that the output of this step was computed on $\\mathcal{D}$ using the agreed upon random seed, and this verification only requires knowledge of $K$, not $\\mathcal{D}$ itself.**\n\nWe confirm that this is correct, the verification only requires the knowledge of the key (not the data).\nIn particular, to authenticate each input $x$ possessed by the prover, the prover and the auditor run a secure protocol with subfield Vector Oblivious Linear Evaluation functionality where:\nthe prover obtains a uniform Message Authentication Code (MAC) $M_x$, \nthe auditor obtains a global authentication key $\\Delta$ and a uniform key $K_x$, \nsuch that there is an algebraic relationship between them: $K_x = M_x \\oplus x \\Delta$.\n\nEach step of the computation that modifies $x$, the prover and auditor will modify $K_x$ and $M_x$ in an agreed-upon way that will preserve this algebraic relationship given the new updated value of $x$. The auditor can detect if the prover made any modification to $x$ or/and did not perform the computation correctly only with the knowledge of $K_x$, not $x$ itself.\n\nTo further clarify the process, below we provide a simple summation example for which we:\n1. Construct the corresponding circuit \n2. Describe the circuit evaluation in detail\n3. Describe the verification of the correct behavior in detail\n\nAssume that the computation that we want to verify is the summation of $x$ and $x\u2019$, $x\u2019\u2019=x+x\u2019$. \n\n**Circuit construction.** The prover and the auditor hold a circuit with 1 addition gate. \n\nA circuit is defined by a set of input wires along with a list of gates of the form $(\\alpha,\\beta,\\gamma,T)$ where $\\alpha,\\beta$ are the indices of the input wires of the gate and $\\gamma$ is the index of the output wire of the gate and $T$ is the type of the gate.\n\nThe prover has $(x_{\\alpha},M_{\\alpha})$,  $(x_{\\beta},M_{\\beta})$ and $(x_{\\gamma},M_{\\gamma})$, and the verifier holds $K_{\\alpha},K_{\\beta},K_{\\gamma}$ such that the above algebraic relationship holds between each pair of them. We denote the authenticated value by $[[x]]$ which means that the prover holds $(x_{\\alpha},m_{\\alpha})$ and the auditor holds $K_x$.\n\n**Circuit evaluation.** \nAuthenticated values are additively homomorphic, then they can locally compute $[x_{\\gamma}]=[x_{\\alpha}]+[x_{\\beta}]$ as follows:\nThe prover computing $x\u2019\u2019=x+x\u2019$ and $M_{x\u2019\u2019}=M_x + M_{x\u2019}$\nThe auditor computing $K_{x\u2019\u2019}=K_x+K_{x\u2019}$\n\n**Verification.** Once the parties have authenticated values for the output of multiplication, the prover sends $M_{x\u2019\u2019}$ to the auditor, and the auditor checks whether the algebraic relationship between $K_{x\u2019\u2019}$, $x\u2019\u2019$ and $M_{x\u2019\u2019}$ holds to detect whether the prover did not do the computation correctly or the prover modified $x$ without informing the auditor.  \n\nWe added this discussion in Appendix A and referred to it in Section 3."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700127339663,
+                "cdate": 1700127339663,
+                "tmdate": 1700127339663,
+                "mdate": 1700127339663,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "xLD7HOOLt0",
+                "forum": "PQY2v6VtGe",
+                "replyto": "9TPcSNU9uW",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks to the authors for their response. The additional explanations and details for cryptographic/ZKP primitives are very helpful and I believe they will make the paper accessible to a broader audience. I've read the other reviews and responses, and I believe that the authors have adequately addressed both my concerns and the concerns raised by the other reviewers.\n\nI do have one new concern regarding novelty. Specifically, the authors claim that their method is \"the first zero-knowledge protocol which enables auditors to directly verify the exact \u03b5 of a DP-SGD training run, and thus providing a certificate of privacy.\" However, I recently became aware of two papers which seem to be doing something quite similar:\n\nAri Biswas & Graham Cormode. Verifiable Differential Privacy. arXiv preprint (2023). https://arxiv.org/abs/2208.09011v2 [The authors cited an earlier version of this work in their paper.]\n\nArjun Narayan, Ariel Feldman, Antonis Papadimitriou, & Andreas Haeberlen. Verifiable differential privacy. Proceedings of the Tenth European Conference on Computer Systems (2015). https://dl.acm.org/doi/abs/10.1145/2741948.2741978?casa_token=1f0C9DZJI7IAAAAA:mhLCptViWeuvLomYyUqxOM4f-voEvPs2F6IqwK1fBP3cZNBzu2dTGeWovEuHz49od9ayLEDKGeYr9SI\n\nThe authors cite the Biswas paper when explaining why it would be unacceptable to allow the auditor to choose the algorithm's randomness. However, it seems to me that this paper is specifically *avoiding* such an approach. The Narayan paper (with the same title) is not cited.\n\nCan the authors comment on the novelty of their work in light of these papers?"
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700255347679,
+                "cdate": 1700255347679,
+                "tmdate": 1700255347679,
+                "mdate": 1700255347679,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "9Pjogm9w4f",
+                "forum": "PQY2v6VtGe",
+                "replyto": "V2mf8HgoRT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_yrMg"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the clarification. Part of the confusion was due to a misunderstanding on my part; I see now that the authors specified that theirs is the first work which provides a ZKP specifically for DP-SGD, rather than the first to propose a ZKP for verifying *any* DP algorithm. The discussion of the other related works is helpful and the novelty of this paper in light of them is clear, and I believe the added discussion will make this clearer to readers as well."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700494286107,
+                "cdate": 1700494286107,
+                "tmdate": 1700494286107,
+                "mdate": 1700494286107,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "NJXbKtL4tU",
+            "forum": "PQY2v6VtGe",
+            "replyto": "PQY2v6VtGe",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_PSjV"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_PSjV"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work proposes a protocol for auditing DP-SGD. The approach is based on zero-knowledge proof and does not require the auditor to access the model and raw data."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The problem of verifying privacy claims of algorithms is very important practically.\n2. The proposed protocol based on zero-knowledge proofs does not require the auditor to access model parameters, data, and intermediate updates. \n3. The authors take into account malicious auditors and dishonest provers in various aspects of the protocol such as random seed generation and"
+                },
+                "weaknesses": {
+                    "value": "1. The auditor needs to know many implementation details, e.g. clip threshold, and number of iterations. Also, the protocol is specifically designed for DP-SGD. It seems that we need to design different protocols for different algorithms, even if we only make minor adjustments to the algorithm. \n2. Many steps in the DP-SGD algorithm need to be proved in Phase 3. If one step is missing, for example, the auditor forgets to let the prover verify step vi, the total number of iterations, how would it affect validity of the privacy audit claims made by the auditor?\n3. The proposed cryptographic approach does not scale to large models trained with DP-SGD.\n4. It seems to me that the protocol only attempts to verify that every step of the DP-SGD algorithm is executed correctly as claimed, and the certified privacy parameters are simply derived based on the verified $\\sigma$ and subsampling level, which is an upper bound on the actual privacy guarantee (as stated in the conclusion). Thus, when the certified upper bound exceeds the claimed value, we do not know whether there is a privacy failure. Note that even with 100% correct execution of DP-SGD, privacy failure may still exist due to other issues like finite precision computation of floats [1]. Thus, verifying all steps are executed correctly is not sufficient to audit privacy claims, and a privacy lower bound should still be necessary.\n5. How does the approach compare to the recent work of [2]?\n6. I have questions regarding the experiment setup. See the question section.\n\n[1] Widespread Underestimation of Sensitivity in Differentially Private Libraries and How to Fix It, S Casacuberta, M Shoemate, S Vadhan, C Wagaman, CCS 2022\n\n[2] Privacy Auditing with One (1) Training Run, Thomas Steinke, Milad Nasr, Matthew Jagielski, https://arxiv.org/abs/2305.08846\n\n\nTypos:\n1. Page 5, line 10 (the description of phase 2): \"Next, the auditor generates... and sends.. to the auditor\". The second \"auditor\" should be \"prover\"?\n2. Page 6, line 2: we first generates -> generate"
+                },
+                "questions": {
+                    "value": "1. What are the hyper-parameters: $C, \\sigma, T$ in your experiments, and what are the corresponding theoretical upper bounds on $\\epsilon, \\delta$?\n2. Compared to the privacy upper bound provided for the chosen $\\sigma$, how accurate are the certified privacy guarantees?\n3. The results do not show certified level of $\\delta$.\n4. The running time may vary across different machines and may not be a consistent measure of computational cost."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8068/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698723961470,
+            "cdate": 1698723961470,
+            "tmdate": 1699636997829,
+            "mdate": 1699636997829,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "SzqrR1Zx6V",
+                "forum": "PQY2v6VtGe",
+                "replyto": "NJXbKtL4tU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Authors' response to reviewer PSjV (1)"
+                    },
+                    "comment": {
+                        "value": "We thank you for your review!\n\n> **The auditor needs to know many implementation details, e.g. clip threshold, and number of iterations.** \n\nYes, as written at the beginning of Section 3, the prover and auditor agree on the DP-SGD training algorithm and specific values for its hyperparameters. This is also the case in all privacy auditing approaches and does not impose any overhead. These hyperparameters would typically be set by the prover to achieve high utility and shared with the auditor to verify the claimed privacy guarantees $(\\varepsilon,\\delta)$.\n\n> **Also, the protocol is specifically designed for DP-SGD. It seems that we need to design different protocols for different algorithms, even if we only make minor adjustments to the algorithm.**\n\nOur protocol, coupled with the unbiased randomness sampling protocol we propose, can support any randomized polynomial-time computable function and thus any (tractable) DP mechanism. In particular, our protocol is designed to attest the correctness of the key and common building blocks of DP algorithms: 1) data subsampling; 2) gradient computation; 3) sensitivity analysis;  4) noise addition; and 5) model update. Therefore one does not need to design new protocols for a new DP algorithm; however, extra implementation in ZK is needed to support them. \nNote that our approach is also decoupled from the privacy accounting technique used. For example, our framework is compatible with recent advanced results for DP  in the hidden state model [Jiayuan & Shokri, NeurIPS 2022; Altschuler & Talwar, NeurIPS 2022] as our protocol keeps the entire trajectory (i.e., intermediate model updates) hidden from the auditor and can help to improve the privacy by adding hidden states into the privacy accounting technique.\n\nWe added this discussion in Section 6.\n\n[Ye & Shokri, NeurIPS 2022] Jiayuan Ye, and Reza Shokri. \"Differentially private learning needs hidden state (or much faster convergence).\" NeurIPS 2022\n\n[Altschuler & Talwar, NeurIPS 2022] Jason M. Altschuler, Kunal Talwar: \u201cPrivacy of Noisy Stochastic Gradient Descent: More Iterations without More Privacy Loss.\u201d NeurIPS 2022\n\n> **Many steps in the DP-SGD algorithm need to be proved in Phase 3. If one step is missing, for example, the auditor forgets to let the prover verify step vi, the total number of iterations, how would it affect validity of the privacy audit claims made by the auditor?**\n\nWe would like to stress that rather than verifying each step separately, our protocol allows the prover to generate a single proof to show that every step in the DP-SGD is computed correctly. This is reflected in step 3 and 4 of Algorithm 3 where the DP-SGD algorithm is encoded as a public circuit. So if the prover skips a step in the algorithm, it will not be able to produce a valid proof and the auditor will be able to tell. This follows from the soundness property of the underlying ZKP framework. \nWe clarified this at the beginning of Section 3 by saying:\n\n``Prover and auditor run our zero-knowledge protocol and provide a certificate for the claimed privacy guarantee $(\\varepsilon,\\delta)$. We represent the whole procedure as one single public circuit, allowing the prover to generate one single proof demonstrating to the auditor that it correctly executed all of the steps of the DP-SGD algorithm (see Algorithm 1).\u201d"
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700127853922,
+                "cdate": 1700127853922,
+                "tmdate": 1700127853922,
+                "mdate": 1700127853922,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7RsXQGyH3n",
+                "forum": "PQY2v6VtGe",
+                "replyto": "NJXbKtL4tU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_PSjV"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Reviewer_PSjV"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for your response"
+                    },
+                    "comment": {
+                        "value": "Thanks for your response. You have addressed some of my concerns such as the certified level of $\\delta$, runtime on different machines, and that the proof relies on a single circuit rather than verifying each step separately. However I still have questions, and some of my questions might have been misunderstood so I would also like to clarify them here. Pretty much all of my concerns fall into two categories: I. the flexibility and applicability of the framework. II. whether the certified privacy level is actually valid and independent.\n\n### Flexibility of the proposed approach\nAs you have mentioned proving a different algorithm would require a new implementation of ZKP, I wonder how much work is needed? Say we want to verify DP-FTRL (Algorithm 1 in the arxiv version of [1]), how difficult it is to implement a ZKP for this \"variant\" of DP-SGD? \n\nThe scalability of large models is also an issue. While I agree that recent advancement in self-supervised learning enables private training of much smaller models on top of pre-trained models, there are recent works, e.g. [2] that try to privately train large foundation models due to copyright and privacy concerns of \"public\" datasets on the internet. Therefore auditing large models is still very relevant in practice.\n\nYou also mentioned that knowing the specific algorithm and hyperparameters is needed \"in all privacy auditing approaches and does not impose any overhead\". This might be true for \"white-box\" auditing. However, existing works in privacy auditing also consider the \"black box\" scenario where the auditor only has access to the model weights. See Algorithm 3 in [3].\n\n### Questions on the privacy claims.\nThe proposed approach only verifies that the DP-SGD algorithm is executed correctly at every step. My main concern is that this is may not sufficient to provide an independently certified privacy claim, and that is the main reason I brought up [4], not to ask you to address this finite precision issue but to show as an example that even if every step of the algorithm is perfectly and correctly executed, privacy failures can still exist due to other potentially unknown implementation issues. If a similar failure indeed occurs, then I believe that the ZKP protocol would still provide a \"certified\" privacy upper bound, but the actual privacy loss may be much higher. \n\nIn principle, I believe the certified privacy level given by the auditor should ideally be independent of the privacy accounting method and/or the theoretical derivations of the privacy upper bound, but this work heavily relies on those things to provide a certified privacy guarantee. Apart from the subtle implementation issues mentioned above, another issue actually comes from incorrect proof of privacy guarantees. Let's say some of the most popular privacy accounting methods actually have some subtle mistakes in their proof resulting in a higher privacy loss than their theoretical claims, I don't think the algorithm in this work can actually detect it and provide a certified privacy guarantee close to the true privacy loss.\n\n### Conclusion\nAs such, while this work proposes an interesting application of zero-knowledge proof to verify differential privacy claims, I do not think it is a revolutionary work that completely reshapes the current landscape of privacy auditing. In my opinion, this work is slightly orthogonal to existing works on privacy auditing because it only verifies that the algorithm is implemented correctly as opposed to providing an independently certified privacy guarantee. There are technical merits of the proposed approach such as not requiring access to the model and data, and taking into account both malicious auditor and prover.\n\nI acknowledge that verifying the implementation can serve as an important primary step in verifying the privacy claims and has practical values. In that case, the applicability of the proposed framework to a wider class of DP algorithms would be paramount. I believe this submission would be much stronger if the authors could demonstrate or explain that extending the framework to other algorithms can be done with relatively small effort.\n\n[1] Peter Kairouz, Brendan McMahan, Shuang Song, Om Thakkar, Abhradeep Thakurta, Zheng Xu, Practical and Private (Deep) Learning Without Sampling or Shuffling https://arxiv.org/pdf/2103.00039.pdf\n\n[2] Yaodong Yu, Maziar Sanjabi, Yi Ma, Kamalika Chaudhuri, Chuan Guo, ViP: A Differentially Private Foundation Model for Computer Vision\n\n[3] Privacy Auditing with One (1) Training Run, Thomas Steinke, Milad Nasr, Matthew Jagielski, https://arxiv.org/abs/2305.08846\n\n[4] Widespread Underestimation of Sensitivity in Differentially Private Libraries and How to Fix It, S Casacuberta, M Shoemate, S Vadhan, C Wagaman, CCS 2022"
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700594692535,
+                "cdate": 1700594692535,
+                "tmdate": 1700594717123,
+                "mdate": 1700594717123,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "2IyJtXqTOM",
+            "forum": "PQY2v6VtGe",
+            "replyto": "PQY2v6VtGe",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_y3Ya"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8068/Reviewer_y3Ya"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work studies important problem in data privacy research, the privacy auditing problem. The main approach is a zero-knowledge proof protocol for differential private machine learning."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper seems well-written."
+                },
+                "weaknesses": {
+                    "value": "Due to my lack background of zero-knowledge proof, it's difficult to evaluate the contribution."
+                },
+                "questions": {
+                    "value": "1. How this framework to give guidance to correct DP-SGD implementation if the algorithm did not pass the privacy auditing?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8068/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698790058047,
+            "cdate": 1698790058047,
+            "tmdate": 1699636997704,
+            "mdate": 1699636997704,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "CkBNPbpdsU",
+                "forum": "PQY2v6VtGe",
+                "replyto": "2IyJtXqTOM",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8068/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Authors' response to reviewer y3Ya"
+                    },
+                    "comment": {
+                        "value": "> **Due to my lack background of zero-knowledge proof, it's difficult to evaluate the contribution.**\n\n\nOur contribution lies at the intersection of machine learning, differential privacy and cryptography, and thus leverages and combines concepts from these multiple fields. We understand that it is difficult for a single person to have good expertise in all three domains, but we have done our best to make the paper as accessible as possible, and for this purpose we have added more discussion of the cryptographic primitives and our protocol. For example, we \n\n1. Explained the data commitment, computation and verification in our framework with more details and provided an example of a summation, circuit construction, evaluation and verification [see Appendix A]\n2. Explained that our framework represents the whole DP-SGD training procedure (not just a single iteration) as one single public circuit, allowing the prover to generate a single proof [see Section 3]\n3. Explained with more details that our framework hides intermediate updates and the entire trajectory from the auditor, thus making it compatible with recent techniques of hidden states in DP which improve further the privacy of the prover\n\nWe can concisely summarize our contributions as follows:\n1. Introduced desiderata for privacy auditing;\n2. Proposed the first zero-knowledge protocol which enables auditors to directly verify the exact \u03b5 of a DP-SGD training run, and thus providing a certificate of privacy;\n3. Protected the confidentiality of private training data, model parameters, and intermediate updates;\n4. Designed and implemented a specialized ZK proof protocol to efficiently perform the DP training;\n5. Submitted our code as supplementary material to facilitate the future work in this direction that we initiated.\n\nFinally, please see the comments of reviewer yrMG who confirmed our contributions and said:\n\n  - ``I believe this to be an exciting, non-incremental contribution, one which has the potential to change the paradigm for privacy auditing moving forward\u201d; \n  - ``a strong alternative to current methods for privacy auditing\u201d;\n  - ``By approaching the problem from a different angle, the authors completely sidestep the need for optimal adversaries for verifying privacy guarantees. This is especially impressive\u2019\u2019. \n\n\n\n\n\n>  **How this framework to give guidance to correct DP-SGD implementation if the algorithm did not pass the privacy auditing?**\n\n\nThanks for the good suggestion. Our framework can be extended to support identifying the cause of failure (i.e., which part of DP-SGD was not computed correctly) by generating separate proofs for each step of the DP-SGD. This comes at additional costs such as proving the consistency of intermediate values between proofs of each step. Given these complexities, we believe that a careful and thorough exploration is needed and we leave this to future work."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8068/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700128665487,
+                "cdate": 1700128665487,
+                "tmdate": 1700128665487,
+                "mdate": 1700128665487,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

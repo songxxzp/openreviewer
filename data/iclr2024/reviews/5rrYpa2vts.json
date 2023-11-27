@@ -1,0 +1,283 @@
+[
+    {
+        "id": "tYzdRu02CR",
+        "forum": "5rrYpa2vts",
+        "replyto": "5rrYpa2vts",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_PY31"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_PY31"
+        ],
+        "content": {
+            "summary": {
+                "value": "This study introduces the $EA^2N$ model for binary fake news classification, leveraging external evidence. The model employs two parallel pipelines to represent news articles: text-based and graph-based.\n\nIn the graph-based pipeline, news text is transformed into an Abstract Meaning Representation (AMR) graph. Subsequently, an augmented AMR graph is constructed through entity linking, utilizing evidence paths from an external knowledge base, specifically the Wikidata5M graph. An $\\mathcal{A}^*$ search over the Wikidata5M graph is used to identify evidence paths between corresponding entities in the AMR graph. These paths are then merged with the original AMR graph to create the augmented graph. Finally, a graph transformer is employed to learn representations from this augmented graph.\n\nConcurrently, BERT (along with lexical features) is used to acquire textual representations. Ultimately, the learned representations from both pipelines are concatenated and input to a classification head. The $EA^2N$ model is evaluated on two datasets, outperforming the chosen baselines.\n\nIt's worth noting that this architectural approach combines various pre-existing elements, but the underlying rationale for several components is not explicitly detailed in the work, raising several concerns as highlighted in the \"Questions\" and \"Weakness\" sections."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "- The authors provide an effective amalgamation of the graph- and text-based pipeline for learning representation (although not entirely novel).\n- The figures and tables give a clear picture of the underlying model and experimentation.\n- The authors perform the much required ablation studies."
+            },
+            "weaknesses": {
+                "value": "The proposed architecture seems to be an attempt to combine several pre-existing architectures -- i.e. Language Encoder (BERT [6] + FakeFlow [7]), Path-aware Graph Learning Module (Graph Transformer [8]) and Graph Generation and Integration ($\\mathcal{A}^*$ search with a TagMe API [9] -based heuristic). While these architectures have been amalgamated to propose a new model, these aren't *novel* contributions. The paper isn't well written (in some places) in the sense that several key notations are missing, and the narrative of the work could have been improved. All the baselines have been directly adopted from the FinerFact [5] paper. Such practices should be avoided. I have highlighted several weaknesses and concerns under the \"Questions\" section.\n\n\n[1] Zixuan Zhang and Heng Ji. 2021. Abstract Meaning Representation Guided Graph Encoding and Decoding for Joint Information Extraction. (NAACL-HLT 2021)\n\n[2] Shu, Kai, et al. \"Fakenewsnet: A data repository with news content, social context, and spatiotemporal information for studying fake news on social media.\" Big data 8.3 (2020): 171-188.\n\n[3] Martinez-Rodriguez, Jose L., Ivan L\u00f3pez-Ar\u00e9valo, and Ana B. Rios-Alvarado. \"Openie-based approach for knowledge graph construction from text.\" Expert Systems with Applications 113 (2018): 339-355.\n\n[4] Yi-Ju Lu and Cheng-Te Li. GCAN: Graph-aware co-attention networks for explainable fake news detection on social media. In ACL, pp. 505\u2013514, Online, July 2020. ACL.\n\n[5] Yiqiao Jin, Xiting Wang, Ruichao Yang, Yizhou Sun, Wei Wang, Hao Liao, and Xing Xie. Towards fine-grained reasoning for fake news detection. AAAI, 36:5746\u20135754, 06 2022.\n\n[6] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT: Pre-training of deep bidirectional transformers for language understanding. In NAACL Volume 1 (Long and Short Papers), pp. 4171\u20134186, Minneapolis, Minnesota, June 2019. ACL.\n\n[7] Bilal Ghanem, Simone Paolo Ponzetto, Paolo Rosso, and Francisco Rangel. Fakeflow: Fake news detection by modeling the flow of affective information. In 16th EACL, 2021.\n\n[8] Deng Cai and Wai Lam. Graph transformer for graph-to-sequence learning. In AAAI, pp. 7464\u2013 7471. AAAI Press, 2020.\n\n[9] Paolo Ferragina and Ugo Scaiella. Tagme: On-the-fly annotation of short text fragments (by wikipedia entities). In ICIKM, CIKM \u201910, pp. 1625\u20131628, New York, NY, USA, 2010. ACM. ISBN 9781450300995."
+            },
+            "questions": {
+                "value": "**Evidence Integration with AMR**: There seem to be several incomplete parts, which need to be explained.\n\n---  In Entity-level Filtering $(\\mathcal{R}^{(S,D)}_{ELF} = Relatedness(v_s^{wiki}, v_d^{wiki}))$, the authors have not mentioned what the $Relatedness(.)$ function is? Without an ***explicit*** definition of the function, it is diffiucult to assess the working of the ELF and CLF algorithms since the $Relatedness(.)$ function seems to be the \"main\" heuristic being used here.\n\n- From a look at the Appendix, it seems (***implicitly***) that the authors use the TagMe API to compute the relatedness, but what \"explicitly\" is the function definition used? \n\n--- The Figure 2 (and following text) mentions that the authors use $\\mathcal{A}^*$ search on the Wiki-graph to find the (optimal) path between source $v_s^{amr}$ and destination $v_d^{amr}$. However the Algorithm 2 described as \"Context-level Filtering\" doesn't seem to represent $\\mathcal{A}^*$ search. \n\n- For $\\mathcal{A}^*$ search, $f$ (total cost) = $g$ (current cost) + $h$ (heuristic approximation of the future cost). Here, $f$ (total cost) must be the criterion for choosing the next node in path. If we assume that, $h = \\mathcal{R}^{(i,D)}_{CLF} = Relatedness(v_i^{wiki}, v_d^{wiki}) > \\delta$ is the heuristic cost to reach the destination $d$ from $i$, what is $g$? The authors don't provide information for that. Incase $g$ is being ignored (or taken 0), it becomes a *greedy-heuristic* search, and not $\\mathcal{A}^*$. \n- A possible $\\mathcal{A}^*$ variant could have been:\n\n$g + h = \\mathcal{R}^{(S,i)}\\_{CLF} + \\mathcal{R}^{(i,D)}\\_{CLF} = Relatedness(v_s^{wiki}, v_i^{wiki}) + Relatedness(v_i^{wiki}, v_d^{wiki}) > \\delta*$\n\n\n**Relation Encoder in Path-aware Graph Learning Module**: For every pair of entities $(v_s^{amr}, v_d^{amr})$ in $\\mathcal{G}^{amr}$, two distinct sources of relational data exist in $\\mathcal{G}^{WikiAMR}$: AMR-based relations and evidence-based relations from Wikidata:\n\n- Using the notation from paper: $\\mathcal{G}^{WikiAMR} = \\mathcal{G}^{amr} \\cup \\sum_{s, d} \\mathcal{P}^{wiki}(v_s^{amr}, v_d^{amr})$.\n- Consider the shortest path denoted as $sp_{s \\rightarrow d} = \\set { e(v_s^{amr}, n_1), e(n_1, n_2), \\dots, e(n_k, v_d^{amr})\\}$ within $\\mathcal{G}^{WikiAMR}$. Here, $e^{amr}$ represents an edge within $\\mathcal{G}^{amr}$, and $e^{wiki}$ represents an edge within $\\sum_{s, d} \\mathcal{P}^{wiki}(v_s^{amr}, v_d^{amr})$. Therefore, the collective edge set $e^{WikiAMR} = e^{wiki} \\cup e^{amr}$.\n- Let $sp^{amr}\\_{s \\rightarrow d} = \\set {e^{amr}(v_s^{amr}, n_1), e^{amr}(n_1, n_2), \\dots, e^{amr}(n_k, v_d^{amr})\\}$ be the shortest path that relies solely on AMR-based relations (i.e., exclusively within $\\mathcal{G}^{amr}$). Simultaneously, $sp^{wiki}\\_{s \\rightarrow d} = \\set {e^{wiki}(v_s^{amr}, n_1), \\dots, e^{wiki}(n_k, v_d^{amr})}$ represents the shortest path utilizing only evidence-based connections.\n- As indicated by Table 2 and Figure 5, a significant portion of entities are linked through evidence-based connections with just one hop, meaning they are connected directly. In other words, for most entity pairs, the shortest path is the \"direct\" evidence path with a single edge originating from the Wiki graph. This can be represented as $sp_{s \\rightarrow d} = sp^{wiki}\\_{s \\rightarrow d} = \\{ e^{wiki}(v_s^{amr}, v_d^{amr})\\}$ (Because, as per Table 2, in most cases, the number of edges in $sp^{wiki}\\_{s \\rightarrow d}$ (being 1 in majority cases), is less than or equal to that in $sp^{amr}_{s \\rightarrow d}$.\n\nIn essence, this implies that in most cases, when encoding a relationship $r_{s \\rightarrow d}$, the relation encoder would **overlook the AMR-based relation information**. While Wikidata relations are valuable, disregarding AMR-level relations may not be technically justified. Therefore, the authors should contemplate how to adapt the relation encoder in the graph transformer to effectively integrate both information sources.\n\n**Abstract Meaning Representation**: I have a few major concerns about using an AMR representation here:\n\n- The average length of news articles in the Gossipcop dataset is **~600 words** [2] (Some articles are as large as 1000 words). In the case of such large input length, the AMR graphs are going to be \"very\" noisy. How do the authors handle this case?\n- The authors don't elaborate on the intuition behind using the Abstract Meaning Representation (\"Why specificaly AMR?\")? There can be other (more sophisticated) variants of AMR like **AMR-IE** [1] (which uses an AMR guided graph decoder to extract knowledge elements based on the order decided by the hierarchical structures in AMR) which seem more relevant owing to the \"integration of external knowledge\" used in this work. What about knowledge graphs other than AMR (eg. OpenIE-based approaches [3])?\n- It seems that the authors have used an off-the-shelf pretrained AMR parser, however they have not provided any details about the same. Was the AMR parser finetuned? (I am guessing not!)\n\n**Insufficient Experimentation**: \n\n- The presented results are exclusively based on two datasets, Politifact and Gossipcop, both of which are part of the FakeNewsNet database. To ensure the generalizability of the proposed architecture, it is essential for the authors to include results from additional datasets spanning various domains or social media platforms. Moreover, it's worth noting that Politifact, one of the datasets, contains only 815 news articles.\n- Several of the selected baseline models do not provide a fair basis for comparison. For instance, GCAN [4] incorporates the propagation path of the tweet and user profiles in addition to the source tweet content, features not utilized by the proposed model.\n- A logistical concern arises from the fact that all the baseline models and their results, including SVM, DTC, RFC, GRU-2, FF, B- TransE, KCNN, GCAN, and KAN, appear to **have been directly borrowed from the FinerFact** [5] paper. Such practices should be avoided, and the authors should explicitly mention the sources of these baseline models in their paper.\n- In the ablation study examining different variants of the proposed model, such as LM, AMR, LE|AMR, and LE|WikiAMR, the authors should provide significance hypothesis test results (e.g., T-test) alongside the standard deviation of the metrics across multiple runs. Including these statistical measures would enhance the interpretability of the results."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2835/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2835/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2835/Reviewer_PY31"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2835/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697893007471,
+        "cdate": 1697893007471,
+        "tmdate": 1699636227117,
+        "mdate": 1699636227117,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Lp5Mp0an62",
+        "forum": "5rrYpa2vts",
+        "replyto": "5rrYpa2vts",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_b3Lz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_b3Lz"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an evidence-based AMR attention NN for fake news detection. The proposed framework encompasses a combination of language encoder and graph encoder to detect fake news using AMR and wiki external knowledge. The experimental results show the effectiveness of the proposed model."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The overall structure is well organized. The experimental results show the effectiveness of the wiki's external knowledge and AMR information. The ablation studies and case studies are reasonable."
+            },
+            "weaknesses": {
+                "value": "The overall novelty of the method is not enough for the ICLR conference. The model is an ensemble and common usage (like transformer graph). There are some similar methods in other references. Evidence-aware Fake News Detection with Graph Neural Networks.  MUSER: A MUlti-Step Evidence Retrieval Enhancement Framework for Fake News Detection.  Detecting Out-of-Context Multimodal Misinformation with interpretable neural-symbolic model.\n\nThe ablation studies should add the ELF and CLF-based experiments to show the effectiveness. \n\nIt's better to add more datasets about fake news detection, such as  Snop. \n\nThe format of reference should be revised (Devlin et al., 2019)"
+            },
+            "questions": {
+                "value": "See aboove."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2835/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698092777669,
+        "cdate": 1698092777669,
+        "tmdate": 1699636227029,
+        "mdate": 1699636227029,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "lP7p3feQlP",
+        "forum": "5rrYpa2vts",
+        "replyto": "5rrYpa2vts",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_hTw2"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_hTw2"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces EA2N, an Evidence-based AMR Attention Network for Fake News Detection. The proposed framework leverages Abstract Meaning Representation (AMR) and incorporates knowledge from Wikidata to detect fake news. It combines language encoder and graph encoder to effectively capture complex semantic relations and improve the reliability of incorporating external knowledge. Their experiments demonstrate the effectiveness of EA2N compared to state-of-the-art methodologies."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The paper is well-written and easy to follow. \n- The authors claim they will release the code once the discussion forum start.\n- Compared with the baselines used in this paper, EA2N achive effective resuls."
+            },
+            "weaknesses": {
+                "value": "- The idea of use external knowledge to enhane fake news detection is not new."
+            },
+            "questions": {
+                "value": "No"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2835/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2835/Reviewer_hTw2",
+                    "ICLR.cc/2024/Conference/Submission2835/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2835/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698727060211,
+        "cdate": 1698727060211,
+        "tmdate": 1700642336870,
+        "mdate": 1700642336870,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "lDd2lVYjNJ",
+        "forum": "5rrYpa2vts",
+        "replyto": "5rrYpa2vts",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_cpwY"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2835/Reviewer_cpwY"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper focuses on the detection of fake news on social media through the integration of external knowledge and evidence. The authors argue that existing related papers encounter three primary challenges: (1) the difficulty of capturing long-term and intricate semantic relationships, (2) unreliability and time-consuming knowledge acquisition processes, and (3) reliance on potentially unreliable information sourced from social media users. To address these challenges, the authors introduce a novel model, termed the Evidence-based AMR Attention Network (EA$^2$N). This model incorporates an Abstract Meaning Representation (AMR) graph and a refined knowledge graph derived from Wikidata to extract evidential features, while employing BERT to capture semantic features. Subsequently, these two sets of features are concatenated to predict the veracity labels. Experimental validation is conducted to demonstrate the model's effectiveness."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper focuses on a practical and challenging issue, fake news detection based on external evidence.\n2. The model is the first attempt to utilize an AMR graph to enhance the detection of fake news.\n3. The experiments are extensive, and significantly and consistently outperform the state-of-the-art model, which can prove the effectiveness of the proposed model."
+            },
+            "weaknesses": {
+                "value": "However, despite the superior performance of the proposed model, there still exist some weaknesses in the paper. \n1. In the Introduction section, the authors summarize several problems in existing fake news detection (FND) works. However, the author seems not to have successfully solved all the problems.\n2. AMR parser has been a well-studied technique used by a variety of NLP tasks. Therefore, the novelty of the idea of incorporating AMR into FND is limited.\n3. This paper proposes a FND model that uses AMR and Wikidata knowledge. However, this method is not only suitable for the FND task, but can also be applied to other knowledge-rich NLP tasks, e.g. sentiment analysis and intent detection. So why do the authors only focus on the fake news detection task? In other words, which characteristics of EA$^2$N determine that this method is only suitable for fake news detection?\n4. The sensitivity analysis of the thresholds $\\gamma$ and $\\delta$ should be provided.\n\n**Other details:**\n1. In order to ensure standardization, citations should be revised, e.g. Brewer et al. (2013) -> (Brewer et al. 2013).\n2. The algorithm in Sec.3.3.1 involves being converted into a figure or a standard algorithm table for ease of understanding."
+            },
+            "questions": {
+                "value": "1. AMR is a kind of graph to capture semantic correlations of documents. And dependency tree can play the same role with AMR. Therefore, what are the advantages of AMR compared to dependency trees?\n2. As discussed in the Weakness part, whether this paper solves the problem *\"the way of incorporating external knowledge into these models is not highly reliable and time-consuming.\"*"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2835/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698765260815,
+        "cdate": 1698765260815,
+        "tmdate": 1699636226844,
+        "mdate": 1699636226844,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,478 @@
+[
+    {
+        "title": "Concise and Organized Perception Facilitates Large Language Models for Deductive Reasoning"
+    },
+    {
+        "review": {
+            "id": "tPjQHS4W41",
+            "forum": "IlQxeKrWDt",
+            "replyto": "IlQxeKrWDt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_3B4m"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_3B4m"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a prompting method for LLMs in synthetic logical reasoning tasks. First, the model is prompted to output a \"mind-map\" representation of the problem, with rules and facts represented in symbolic first-order logic terms, and then connected to each other when they share a term (like the consequent or premise of different rules match). Then, a pruning stage reduces the mind-map, eliminating irrelevant rules. Finally, the mind-maps are used in chain-of-thought reasoning about the original question. Experiments on ProofWriter and PrOntoQA, two synthetic logical reasoning datasets, show improvements for GPT-3.5-Turbo and text-davinci-003."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "Experimental results are strong for the two datasets that the paper uses. The results show notable improvement on PrOntoQA-OOD with OrIntro, which is interesting.\n\nThe method is also complementary to backward chaining (e.g., LAMBADA). \n\nCoP also takes less LLM cals than LAMBADA on average."
+                },
+                "weaknesses": {
+                    "value": "The clarity of presentation can be significantly improved. I don't fully understand the method (some questions & suggestions below).\n\nThe scope of the paper, with the current evaluations, is very narrow. The authors only use synthetic logical reasoning datasets. The problem of having lots of irrelevant context might be too specific for this particular kind of logical reasoning problem. It's unclear to me what is the takeaway for most of the ICLR audience.\n\nAlso, the authors discuss that the approach differs from LogicLM or other approaches that use an external logical solver. While I understand the difference, since here the LLM itself performs the logical reasoning and can thus be a bit more flexible with minor syntactic inconsistencies, the proposed method has some level of external symbolic processing if I understand, hand-written by the authors (e.g., partitioning the mind map by parsing the graph). Thus, it's not a \"fully LLM-driven\" method either."
+                },
+                "questions": {
+                    "value": "- What \"misleading information\" (as opposed to irrelevant) are the authors referring to in Section 3, first paragraph? In these problems, as far as I understand, everything in the question is to be taken as true (so it can at most be irrelevant).\n- Method: after context reconstruction, is the input in the same format as the original input (only with rules pruned / reordered)? Or does some of the structure of the mind map still remain?\n- Method: how do you unify terms that can be connected in different rules? Is it just exact match?\n- How does the number of tokens used compare to LAMBADA? LLM calls are not the most important metric here, since tokens are what drive overall API costs.\n- Are the results in a zero-shot or few-shot setting?\n- Why did LAMBADA perform so poorly with And rules? This should be discussed.\n- What other tasks other than synthetic logical reasoning problems can CoP be applied to? Any \"real-world\" examples? This could be datasets like FOLIO, or more broad logical reasoning tasks (e.g., LogiQA, or ReClor).\n- What exactly are the \"Incorrect Goal\" and \"Incorrect Sign\" failure modes in Figure 4?\n- What are the main failure modes that remain? Are they in the construction of the mind map, in parsing the rules into symbolic forms, or in reasoning even after both previous steps are correct?\n- Why is LogicLM only evaluated in the 5-hop setting?\n\n- Minor: the pseudo-code can be simplified by simply removing the \"else - pass\" twice"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Reviewer_3B4m"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2641/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698628661233,
+            "cdate": 1698628661233,
+            "tmdate": 1699636204369,
+            "mdate": 1699636204369,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "JaxgfIyfod",
+                "forum": "IlQxeKrWDt",
+                "replyto": "tPjQHS4W41",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 3B4m [part 1/6]"
+                    },
+                    "comment": {
+                        "value": "Thank you for your careful review. We carefully discuss all your concerns and questions below.\n\n>**W1**: The clarity of presentation can be significantly improved. I don't fully understand the method.\n\n**Response for W1:**\n\nThanks for the suggestion. We have added a consistent example in the methodology part and make some revisions to improve the clarity. \n\n### A brief and more clear introduction of our method with a consistent running example\nIn this paper, we demonstrate that LLMs excel in deductive reasoning but struggle in proof planning. Therefore, we naturally come up with an idea to imitate of human cognition. The proposed COP first obtains a comprehensive understanding of the reasoning context by generating a concept map depicting the relevance between given rules and facts. Then, given a query that need to be proven or answered, COP identifies the most relevant information from the concept maps while eliminating redundancy, resulting in a mind map-like structure centered around the query node. After that, LLMs are prompted by the context sentences which are organized in a progressively ordered manner within one or more sequential sub-mind maps, in order to better adapt to the inference process of the model.\n\nGiven a context:\n```\nRule1: All blue things are green. \n\nRule2: All rough, nice things are young. \n\nRule3: Green things are nice. \n\nRule4: If Erin is blue and Erin is furry then Erin is rough. \n\nRule5: Green, smart things are furry. \n\nRule6: All furry things are blue.\n\nFact1: Bob is furry. \n\nFact2: Bob is rough. \n\nFact3: Erin is blue.\n\nFact4: Erin is furry. \n\nFact5: Erin is green. \n\nFact6: Erin is nice. \n\nFact7: Erin is young.\n\n```\nThe target is to prove whether it is True or False that *Bob is nice.*\n\nFirstly, to imitate the process of human beings organizing thoughts, a concept map is generated to present the relevance of given rules and facts. The generation process further consists of two steps.\n1. **Simplified Representations of Rules and Facts.** To enable connecting relevant rules and facts with each other, we utilize LLMs with few-shot prompt to create a unified and simplified representation for the facts and the rules. For example, Rule1 is changed into \u201cconditions: [X(is, blue)], consequents: [X(is, green)] \u201cwhere \u201cX\u201d can be substituted by any entities. Fact1 is changed into \u201c[Bob(is, furry)]\u201d.  \n2. **Connecting of Rules and Facts.** With the simplified representations of rules and facts, we connect each rule to facts as well as rules whose consequents satisfy one or more of the conditions specified in the current rule. For example, by unifying same entities, we can connect Rule1 to Fact3 since they share the same entity \u201cblue\u201d.\n\nSecondly, given a query (i.e., Bob is nice in the given example), we identify relevant clues from the concept maps to create a mind map with the question node at its center. The process also consists of two sub steps.\n  1. **Simplified Representation of the given question.** Similar to the simplifying process of facts and rules, we utilize LLMs with few-shot prompt to change \u201cBob is nice\u201d into \u201c[Bob(is, nice)]\u201d and its contrary statement \u201c[Bob(is not, nice)]\u201d.  \n  2. **Generation of the mind map.** With the simplified question,  we use the same way as we connect rules and facts when constructing the concept to identify the relevant rules and facts. For example, \u201cBob(is, nice)\u201d can be connected by Rule3 (i.e., Green things are nice. ). Therefore, we are able to obtain a mind map by perform a D-depth searching starting from Rule3 in the concept map where D is the max reasoning depth. In this way, a number of irrelevant rules and facts can be excluded from the mind map.\n\nThe mind map might consists of several sub mind maps, each of which is a potentially possible reasoning path to determine whether the given question is True or False. Before we utilize LLMs to perform the final reasoning, we reconstruct the reasoning context in two steps:\n  1. **Sub-Mind map Pruning.** Since we know what to prove, we can remove sub mind maps which are\nobviously useless. Sub mind maps without a valid fact can not be used to reach a conclusion. Therefore, sub mind maps like \u201cRule5 -> Rule6 -> Rule1 -> Rule3\u201d is removed.\n  2. **Context Reconstruction.** We reconstruct a reasoning context for each remaining sub-mind map.  Given the sub mind map \u201cFact1 -> Rule6 -> Rule1 -> Rule3\u201d, the context is reconstructed as \u201cBob is furry. All furry things are blue. All blue things are green. Green things are nice.\u201d by traversing the sub-mind map from its leaf nodes to the root node which naturally adapts to the LLMs.\n\nFinally, we use the reconstructed contexts to prompt the reasoning of LLMs until a true or false statement regarding the given question is made.\n\nWe hope that the statements above can improve the clarity."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2641/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700478025816,
+                "cdate": 1700478025816,
+                "tmdate": 1700729064803,
+                "mdate": 1700729064803,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "k5bLHzOBwO",
+            "forum": "IlQxeKrWDt",
+            "replyto": "IlQxeKrWDt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_Fc11"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_Fc11"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work studies complex deductive reasoning problems for large language models. They aim to reduce the difficulty of LLMs proof planning and propose a reasoning approach named Concise and Organized Perception (COP). The approach has three stages. It first creates concept maps to highlight the hierarchical relationships among the provided rules and facts, then identifies the relevant contexts and generates a mind map-like structure based on the provided question, and finally prunes the mind map and reconstructs the context for prompting the reasoning of LLMs until a true or false statement regarding the given question is made. They conduct experiments on three synthetic logical reasoning datasets and demonstrate that the approach is effective and efficient."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The proposed COP outperforms the compared SoTA methods in different deductive rules. It greatly relieves the problem of CoT predicting a correct label with incorrect reasoning chains according to the manual check. COP can also adapt to different LLMs and be more efficient in inference calls. \nThe paper is well-organized and clearly written. It includes comprehensive experiments, and the results support their claim. The proposed method and the experimental findings provide valuable thoughts to the LLMs deductive reasoning problem."
+                },
+                "weaknesses": {
+                    "value": "Please see the questions listed below."
+                },
+                "questions": {
+                    "value": "Q1: What are the proofs generated by CoT are like? How does CoT concretely improve the proof planning of LLMs? It would be better if the authors could show some of the cases. \n\nQ2: The experiments are conducted on three synthetical logical reasoning datasets. I wonder if this approach can be adapted to real-world data."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Reviewer_Fc11"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2641/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698681213372,
+            "cdate": 1698681213372,
+            "tmdate": 1699636204270,
+            "mdate": 1699636204270,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "CxCMii3wLE",
+                "forum": "IlQxeKrWDt",
+                "replyto": "k5bLHzOBwO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Fc11"
+                    },
+                    "comment": {
+                        "value": "Thanks for your insightful feedback. We are encouraged that you find our paper valuable and each of your questions are discussed below.\n\n>**Q1**: What are the proofs generated by CoT are like? How does CoT concretely improve the proof planning of LLMs? It would be better if the authors could show some of the cases.\n\n**Response for Q1:**\n\nThanks for the kind suggestion. We suppose that you are asking about how does COP rather than CoT improve the proof planning of LLMs. In some cases, LLMs with CoT based on the original context fail to find the optimal facts and rules to determine whether the given statement is True or False. In some other cases, LLMs with CoT can obtain the correct answer with incorrect reasoning chains. Due to the word limit, we show one case below. \n\nRules:\n\nIf someone eats the bear and the bear likes the cow then the bear likes the dog. If someone is kind then they chase the mouse. If someone eats the cow then the cow is young. If someone likes the mouse then they eat the dog. If the dog likes the mouse and the mouse does not like the dog then the mouse does not like the cow. If the cow is young and the bear does not chase the cow then the cow is kind. If someone eats the cow then the cow eats the mouse. If someone eats the dog then they eat the cow.\n\nFacts:\n\nThe bear does not chase the cow. The bear is big. The bear is cold. The bear is young. The bear likes the dog. The bear likes the mouse. The cow does not chase the dog. The cow likes the mouse. The dog does not chase the bear. The dog does not eat the cow. The dog is not cold. The dog does not like the bear. The dog likes the cow. The dog does not like the mouse. The mouse is kind. The mouse likes the bear.\n\nQuestion:\n\nThe cow is not young.\n\n**Context reconstructed by COP:**\nThe bear likes the mouse. The cow likes the mouse. If someone likes the mouse then they eat the dog. If someone eats the dog then they eat the cow. If someone eats the cow then the cow is young.\n\n**LLM\u2019s proof steps produced by CoT based on the context reconstructed by COP:**\nThe bear likes the mouse. The cow likes the mouse. If someone likes the mouse then they eat the dog. Therefore the bear eats the dog and the cow eats the dog. If someone eats the dog then they eat the cow. Therefore the bear eats the cow and the cow eats the cow. If someone eats the cow then the cow is young. Therefore the cow is young. Therefore the given statement 'The cow is not young' is False.\n\n**LLM\u2019s proof steps produced by CoT based on the original context:**\nIf the cow is not young, it means that someone has eaten the cow. According to Rule 6, if someone eats the cow, then the cow eats the mouse. However, based on the given facts, we know that the cow likes the mouse, which contradicts the statement. Therefore, the statement \"The cow is not young\" is False.\n\n\nLLMs with CoT based on the original context can easily produce wrong answers or unfaithful proof steps, like \u201cbased on the given facts, we know that the cow likes the mouse, which contradicts the statement. \u201d in the above example. However, with the concise and organized context reconstructed by COP, LLMs with CoT is able to produce correct answer with faithful proof steps.\n\n>**Q2**: The experiments are conducted on three synthetical logical reasoning datasets. I wonder if this approach can be adapted to real-world data.\n\n**Response for Q2:**\n\nYes, COP can be adapted to real-world data. \nTo address this issue, we further conduct experiments on FOLIO, a real-world logical reasoning benchmark with various type of rules. To adapt to FOLIO, which is more complex and contains various language patterns and rule types, COP adopts a combination of rouge scores and semantic similarity method to generate the concept maps and mind maps. With the slight adjustment, COP outperforms CoT and LogicLM while LAMBADA is not able to work on this dataset, demonstrating the general efficacy of COP. The concise and organized context that COP provides on FOLIO facilitates the reasoning of LLMs while CoT still suffers from redundant and out-of-order context.\n\n| Methods  | Accuracy  |\n|---|---|\n|  Standard | 54.60  |\n| CoT  | 57.84  |\n| Logic-LM  | 61.76  |\n| **COP**  | **65.27**  |"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2641/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700477738232,
+                "cdate": 1700477738232,
+                "tmdate": 1700477738232,
+                "mdate": 1700477738232,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "KLUfd3ZALq",
+            "forum": "IlQxeKrWDt",
+            "replyto": "IlQxeKrWDt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_pmsh"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_pmsh"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work proposes a novel technique on distilling and organizing relevant fact for reasoning. This technique can not only reduce the cost of querying the large language models but also lead to better reasoning performance comparing to the existing state of the art baselines."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "Originality: 3.5/5\n\nAlthough there are a few works on decomposing a question into smaller pieces where the language models are better at solving, this work focuses on distilling related knowledge to optimize the number of queries to large language models. \n\nQuality: 4/5\n\nThe work has been evaluated on a handful of datasets and greatly improved the existing baselines in both accuracy and query number to language models.\n\nClarity: 2.5/5 \n\nThe methodology part of the concept, mind graph generation, and mind graph pruning is a bit hard to read without a consistent running example and the prompt. \n\nSignificance: 3/5\n\nAs the LLM query is priced based on token numbers, reducing the cost and improving the performance is out of people's interest."
+                },
+                "weaknesses": {
+                    "value": "See Strength."
+                },
+                "questions": {
+                    "value": "1. What is the failure case analysis on the concept graph generation, mind graph generation, and mind graph pruning?\n\n2. Related work: Scallop[1] is a similar approach as logic-LM, but with probabilistic reasoning engine. \n\n[1] Hanlin Zhang, Jiani Huang, Ziyang Li, Mayur Naik, and Eric Xing. 2023. Improved Logical Reasoning of Language Models via Differentiable Symbolic Programming."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2641/Reviewer_pmsh",
+                        "ICLR.cc/2024/Conference/Submission2641/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2641/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698824435015,
+            "cdate": 1698824435015,
+            "tmdate": 1700554638366,
+            "mdate": 1700554638366,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "F0thHhsWJr",
+                "forum": "IlQxeKrWDt",
+                "replyto": "KLUfd3ZALq",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer pmsh [part 1/3]"
+                    },
+                    "comment": {
+                        "value": "Thanks for the thoughtful and constructive suggestions. We discuss each of them below and hope that the changes made can improve the clarity and significance of this work.\n\n>**W1**: The methodology part of the concept, mind graph generation, and mind graph pruning is a bit hard to read without a consistent running example and the prompt.\n\n**Response for W1:**\n\nThanks for the kind suggestion. We have added a consistent running example as suggested and hope it can improve the clarity.\n\n### A brief and more clear introdution of our method with a consistent running example\nIn this paper, we demonstrate that LLMs excel in deductive reasoning but struggle in proof planning. Therefore, we natually come up with an idea to imitate of human cognition. The proposed COP first obtains a comprehensive understanding of the reasoning context by generating a concept map depicting the relevance between given rules and facts. Then, given a query that need to be proven or answered, COP identifies the most relevant information from the concept maps while eliminating redundancy, resulting in a mind map-like structure centered around the query node. After that, LLMs are prompted by the context sentences which are organized in a progressively ordered manner within one or more sequential sub-mind maps, in order to better adapt to the inference process of the model.\n\nGiven a context:\n```\nRule1: All blue things are green. \n\nRule2: All rough, nice things are young. \n\nRule3: Green things are nice. \n\nRule4: If Erin is blue and Erin is furry then Erin is rough. \n\nRule5: Green, smart things are furry. \n\nRule6: All furry things are blue.\n\nFact1: Bob is furry. \n\nFact2: Bob is rough. \n\nFact3: Erin is blue.\n\nFact4: Erin is furry. \n\nFact5: Erin is green. \n\nFact6: Erin is nice. \n\nFact7: Erin is young.\n\n```\nThe target is to prove whether it is True or False that *Bob is nice.*\n\nFirstly, to imitate the process of human beings organizing thoughts, a concept map is generated to present the relevance of given rules and facts. The generation process further consists of two steps.\n1. **Simplified Representations of Rules and Facts.** To enable connecting relevant rules and facts with each other, we utilize LLMs with few-shot prompt to create a unified and simplified representation for the facts and the rules. For example, Rule1 is changed into \u201cconditions: [X(is, blue)], consequents: [X(is, green)] \u201cwhere \u201cX\u201d can be substituted by any entities. Fact1 is changed into \u201c[Bob(is, furry)]\u201d.  \n2. **Connecting of Rules and Facts.** With the simplified representations of rules and facts, we connect each rule to facts as well as rules whose consequents satisfy one or more of the conditions specified in the current rule. For example, by unifying same entities, we can connect Rule1 to Fact3 since they share the same entity \u201cblue\u201d.\n\nSecondly, given a query (i.e., Bob is nice in the given example), we identify relevant clues from the concept maps to create a mind map with the question node at its center. The process also consists of two sub steps.\n  1. **Simplified Representation of the given question.** Similar to the simplifying process of facts and rules, we utilize LLMs with few-shot prompt to change \u201cBob is nice\u201d into \u201c[Bob(is, nice)]\u201d and its contrary statement \u201c[Bob(is not, nice)]\u201d.  \n  2. **Generation of the mind map.** With the simplified question,  we use the same way as we connect rules and facts when constructing the concept to identify the relevant rules and facts. For example, \u201cBob(is, nice)\u201d can be connected by Rule3 (i.e., Green things are nice. ). Therefore, we are able to obtain a mind map by perform a D-depth searching starting from Rule3 in the concept map where D is the max reasoning depth. In this way, a number of irrelevant rules and facts can be excluded from the mind map.\n\nThe mind map might consists of several sub mind maps, each of which is a potentially possible reasoning path to determine whether the given question is True or False. Before we utlize LLMs to perform the final reasoning, we reconstruct the reasoning context in two steps:\n  1. **Sub-Mind map Pruning.** Since we know what to prove, we can remove sub mind maps which are\nobviously useless. Sub mind maps without a valid fact can not be used to reach a conclusion. Therefore, sub mind maps like \u201cRule5 -> Rule6 -> Rule1 -> Rule3\u201d is removed.\n  2. **Context Reconstruction.** We reconstruct a reasoning context for each remaining sub-mind map.  Given the sub mind map \u201cFact1 -> Rule6 -> Rule1 -> Rule3\u201d, the context is reconstructed as \u201cBob is furry. All furry things are blue. All blue things are green. Green things are nice.\u201d by traversing the sub-mind map from its leaf nodes to the root node which naturally adapts to the LLMs.\n\nFinally, we use the reconstructed contexts to prompt the reasoning of LLMs until a true or false statement regarding the given question is made.\n\nWe hope that the above statements can improve the clarity."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2641/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700474818499,
+                "cdate": 1700474818499,
+                "tmdate": 1700474818499,
+                "mdate": 1700474818499,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ZeRfHXJBSX",
+                "forum": "IlQxeKrWDt",
+                "replyto": "KLUfd3ZALq",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2641/Reviewer_pmsh"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2641/Reviewer_pmsh"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Updates on my review"
+                    },
+                    "comment": {
+                        "value": "After reading the author rebuttal, I am convinced by the new data and new story. I have raised my review score from 5 to 6."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2641/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700554721481,
+                "cdate": 1700554721481,
+                "tmdate": 1700554721481,
+                "mdate": 1700554721481,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "B8KhgJx7kw",
+            "forum": "IlQxeKrWDt",
+            "replyto": "IlQxeKrWDt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_fpHM"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2641/Reviewer_fpHM"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents a novel approach titled Concise and Organized Perception (COP) that aims to enhance the deductive reasoning capabilities of Large Language Models (LLMs). They show that while LLMs like GPT-3 have shown promise in complex reasoning tasks, they often struggle with systematic reasoning and tend to produce errors due to misaligned information flow and lack of hierarchical understanding. They observe that the structured approach of COP can reduce the difficulty of multi-hop reasoning tasks for LLMs, potentially leading to more accurate and efficient processing of complex deductive reasoning questions."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The COP approach takes advantage of both \"Concise\" and \"Organized\" strategies to improve LLMs' deductive reasoning capabilities, a technique that hasn't been explored extensively in previous works. This approach also involves generating mind maps and reconstructing context, which is a unique integration of visualized reasoning into LLMs.\n2. The COP's extension to pre-existing models like ProofWriter and ProtoQA demonstrates a level of creativity in enhancing the capabilities of LLMs beyond simple iterative refinements, potentially indicating a new direction for future LLM-based deductive reasoning research.\n3. The results show a significant improvement over established baselines, with the COP method outperforming traditional methods and even newer approaches like LAMBADA+COP, especially in multi-hop reasoning problems."
+                },
+                "weaknesses": {
+                    "value": "1. The paper seems to heavily build upon pre-existing methods such as \"graph-based reasoning systems\" and \"structured knowledge integration,\" which have been extensively explored in the literature (e.g.,logical NNs and other neuro-symbolic approaches)\n2. The justification for why the combination of concise and organized strategies is more effective remains unclear under a rigorous theoretical framework. The examples provided (Sec 3 and Fig 3) do not offer evidence that this combination offers a qualitatively different approach to reasoning in LLMs as compared to existing methods.\n3. The experimental results reported in Section 4.2 might not be robust enough. The benchmarks ProofWriter and ProtoQA, is not sufficiently demonstrating the general efficacy of COP across various datasets and reasoning tasks. Besides, the lack of a detailed error analysis or ablation study also keep the improvement of the whole system a mystery."
+                },
+                "questions": {
+                    "value": "Illustrated in the weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2641/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699165358725,
+            "cdate": 1699165358725,
+            "tmdate": 1699636204102,
+            "mdate": 1699636204102,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "6ws15tdo0I",
+                "forum": "IlQxeKrWDt",
+                "replyto": "B8KhgJx7kw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2641/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer fpHM [part 1/2]"
+                    },
+                    "comment": {
+                        "value": "Thanks for your valuable and insightful comments. We address the questions and concerns below.\n\n>**W1**: The paper seems to heavily build upon pre-existing methods such as \"graph-based reasoning systems\" and \"structured knowledge integration,\" which have been extensively explored in the literature (e.g.,logical NNs and other neuro-symbolic approaches)\n\n**Response for W1:**\n\nWe thank the reviewer for their valuable feedback and for raising their concerns regarding the potential reliance on pre-existing methods in our proposed approach. We appreciate the opportunity to address this issue.\n\nWe would like to emphasize the difference between our method and graph-based reasoning systems as well as neuro-symbolic approaches.\n\n### Features of Graph-based reasoning systems and Neuro-symbolic approaches\nGraph-based reasoning systems typically represent knowledge and logical constraints explicitly as nodes and edges in a graph structure while neuro-symbolic approaches, Logic NNs for instance, generally translate logical operations such as AND, OR, and NOT into differentiable components that can be trained alongside neural network parameters. These methods perform reasoning relying on either the logical constraints contained in the graph structure or the trained logical  components.\n\n### Difference with Graph-based reasoning systems and Neuro-symbolic approaches\nWhile the generation of concept maps and mind maps in our method may appear similar to graph-based reasoning systems, we demonstrate notable differences between them in three key aspects.\n\nFirstly, there are no logical operations involved during the generation of concept maps and mind maps. It is only a process to identify and organize relevant information. We leave all the reasoning part to LLMs.\n\nSecondly, the concept maps and mind maps are not kept once a more organized and concise form of context is obtained. We leave all the reasoning part to LLMs and the processed context is the only input to LLMs. The reasoning process is not constrained by any graph structure or logical  components.\n\nThirdly, our method can be seen as a new prompt engineering technique without altering the underlying model architecture or training paradigms like Logic NNs do.\n\nOverall, by carefully adapting the given context to the inference process of LLMs in a concise and organized manner, we aim to lower the difficulty of proof planning for LLMs and unlock the deductive reasoning abilities that were previously untapped, while the generation of concept maps and mind maps in our method is just an approach to obtain a concise and organized context.\n\n>**W2**: The justification for why the combination of concise and organized strategies is more effective remains unclear under a rigorous theoretical framework. The examples provided (Sec 3 and Fig 3) do not offer evidence that this combination offers a qualitatively different approach to reasoning in LLMs as compared to existing methods.\n\n**Response for W2:**\n\nWe would like to thank the reviewer for their valuable feedback and the opportunity to address their concern.\n\n### Why the combination of concise and organized strategies is more effective\n\nFirstly, previous Literature [1] offers experimental evidence and states that the order of proofs affects reasoning. \n\nSecondly,  in this paper, we have conducted experiments in Figure 1 (d) to support our motivation. We randomly select 196 samples from the ProofWriter dataset and reconstruct the context based on the provided ground-truth proofs into either concise or organized forms while regarding the ground-truth proofs as concise and organized. The results in Figure 1(d) demonstrate that both organized and concise input context can greatly improve the reasoning accuracy of LLMs. The results also indicate the complementarity between concise and organized perception with the combination of them yields a relative performance improvement of over 100% (35.9% vs 71.9%) in a 5-hop setting. The reason why this combination can work might be that it greatly decreases the difficulty of proof planning which LLMs still struggle with.\n\n[1] Abulhair Saparov and He He. Language models are greedy reasoners: A systematic formal analysis of chain-of-thought. In The Eleventh International Conference on Learning Representations, 2023"
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2641/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700473836418,
+                "cdate": 1700473836418,
+                "tmdate": 1700473877673,
+                "mdate": 1700473877673,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

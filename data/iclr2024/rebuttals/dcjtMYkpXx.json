@@ -1,0 +1,575 @@
+[
+    {
+        "title": "Reward Model Ensembles Help Mitigate Overoptimization"
+    },
+    {
+        "review": {
+            "id": "lIw7EDN3HP",
+            "forum": "dcjtMYkpXx",
+            "replyto": "dcjtMYkpXx",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_PF7E"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_PF7E"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors tackles the over-optimization issue in RLHF with reward model ensembles. This is achieved by training multiple reward models, each with identical data but different random seeds. These reward models are then used for ensemble-based optimization objectives, including worst-case optimization (WCO) and uncertainty-weighted optimization (UWO) for best-of-n sampling (BoN) and PPO (proximal policy optimization). Combined with a 25% label noise to mirror real-world settings, the authors show UWO and WCO can effectively mitigate overoptimization."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "* **Simple yet elegant approach**: the authors only used different random seeds to train the reward function, yet it can significantly improve gold score performance, especially with BON.\n* **Reproduced overoptimization with OSS (open-source software) models**: the authors are the first to study and reproduce RM overoptimization with open-source models.\n* **Experiments across multiple model sizes / data sizes**: the authors conducted a comprehensive analysis, which offers insights."
+                },
+                "weaknesses": {
+                    "value": "**Lack of account for random seeds**: the results do not look smooth for Figure 4 / Figure 8. The results could be improved by running with at least 3 random seeds and recording the error bars."
+                },
+                "questions": {
+                    "value": "> we use the complete dataset of 46, 000 prompts for reward model training and train all the reward models for 5 epochs. \n\n>We use all the available training data for the training of every reward model as\ntraining on lesser data results in higher validation loss and poorer performance (Lakshminarayanan\net al., 2017). Unless stated otherwise, we train an ensemble consisting of five reward models.\n\nWhy train for 5 epochs? What is the training and the validation accuracy of the reward model? In Figure 15, can you show me the epoch as the x-axis? Steps can be confusing as it is related to the batch size / gradient accumulation / how you log.\n\n> we only evaluate BoN for a maximum of nmax = 12, 500 samples , which roughly equals 8.4 nats of KL\n\nWhy nmax? Does this mean for some of them he use less than 12500 samples?\n\n> we train for 3000 PPO steps.\n\nHow many episodes?\n\n\n> Figure 3\n\nWhy do you have two y-axis? Do the proxy RM and the gold RM have different RM scales? How are these scales defined?\n\n\n> Figure 6 and 7 \n\nFigure 6 and 7 seem contradictory? KL penalty = 0 gets 0.15 gold score, but in figure 7 KL penalty = 0 gets 0.03 gold score?\n\n> Figure 8\n\nWhy does PPO underperform BoN in 1.3B setting according to Gold Score? Gao et al (2023) show 1.2B PPO outperforms 1.2B BoN\n\n> Appendix C\n\nHow does these two KL distance calculation Gold RM performance?\n\n\n> We train a fixed number of proxy reward models using\nidentical data and hyperparameters but with different random seeds\n\nBut I assume data shuffling is different? There are really multiple random seeds:\n\n* query dataset seed\n* reward model seed\n* policy model seed\n\n\n> Figure 4\nWhy is single RM experimented with KL=150 but not the other types?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7374/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7374/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7374/Reviewer_PF7E"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7374/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698501141094,
+            "cdate": 1698501141094,
+            "tmdate": 1699636881999,
+            "mdate": 1699636881999,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "LxalGifKZT",
+                "forum": "dcjtMYkpXx",
+                "replyto": "lIw7EDN3HP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your review. We\u2019re glad you found the approach simple and elegant, and the experiments comprehensive. We will now address your questions in detail.\n\nWe agree that having multiple PPO seeds will improve the results in our paper, thank you for the suggestion. We have started running this and will add the results soon. We didn\u2019t run these experiments previously because we had observed very low variance with different PPO seeds in initial experiments, and the computational cost of running multiple seeds is high.\n\n> Why train for 5 epochs? What is the training and the validation accuracy of the reward model? In Figure 15, can you show me the epoch as the x-axis? Steps can be confusing as it is related to the batch size / gradient accumulation / how you log.\n\nWe use 5 epochs because this is the point at which validation loss plateaus, without overfitting. This can be seen in Figure 15. While Figure 15 shows steps and not epochs, the run is for 5 epochs, such that an epoch occurs about every 359 steps. We have updated the caption of the figure to reflect this. Thank you for the suggestion to improve the clarity of the paper.\n\nWith regards to RM accuracy, for example in Figure 15 the validation accuracy is around 67%. RM accuracy generally tends to be between 60-75%. We have added this information in Section 4.3, under \u201cProxy Reward Model Training\u201d.\n\n> Why nmax? Does this mean for some of them he use less than 12500 samples?\n\nFor BoN we always evaluate for 12500 samples for the largest values of n. The nmax comes from the unbiased estimator used (see Appendix I in [1] for greater detail), and refers to the greatest value of n we evaluate BoN for. For lower values of n, we of course use fewer samples.\n\n> we train for 3000 PPO steps.How many episodes?\n\nEach PPO step is 32 episodes, so 3000 steps is 96,000 episodes, which is just about 5 epochs over the unlabeled RL data.\n\n> Figure 3. Why do you have two y-axis? Do the proxy RM and the gold RM have different RM scales? How are these scales defined?\n\nIn e.g. Figure 3 we have two y-axis because although the proxy and gold scores have roughly the same scale (i.e. the RMs are normalized to 0 mean and unit variance), the proxy scores grow much higher. We therefore add a second y-axis to avoid dwarfing the gold scores and making them harder to read.\n\n> Figure 6 and 7 seem contradictory? KL penalty = 0 gets 0.15 gold score, but in figure 7 KL penalty = 0 gets 0.03 gold score?\n\nWhile most PPO runs terminate before or around when they reach a KL divergence of 150, some significantly exceed this, particularly for single RMs and when using low KL penalties. In order to keep the plots as legible as possible, we truncate runs that exceed this KL divergence when plotting the optimization curves. Past this point, the overoptimization trend has already been observed and the x-axis risks growing long and making all other runs less clear. Moreover, this enables us to have consistent plots with equivalent x-axes. We have updated the manuscript to include this information in the introduction to Section 5. This explains why runs with very low KL values have final gold scores which are lower in the bar plots (Figure 7) than on the optimization curves (Figure 6). While the visualization curves are truncated at a KL divergence of 150 (by which point the presence of overoptimization has been confirmed and performance has already declined), the bar plots record the final values at the very end of the run. We also add an equivalent of Figure 7 without the truncation in Appendix F.8 to illustrate this.\n\nWe continue answering in the following comment, due to character count limitations."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700250559849,
+                "cdate": 1700250559849,
+                "tmdate": 1700250675339,
+                "mdate": 1700250675339,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "NmT5ri7p78",
+                "forum": "dcjtMYkpXx",
+                "replyto": "uyRJSSW4xQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_PF7E"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_PF7E"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply"
+                    },
+                    "comment": {
+                        "value": "I think the authors for their detailed replies which have addressed most of my concerns.\n\n> In Gao et al. [2], page 3, Figure 1, the PPO 1.2B model reaches a peak performance of about 1.0, while the BoN 1.2B reaches over 1.15. Which part of Gao et al do you think shows 1.2B PPO outperforming 1.2B BoN?\n\nI apologize \u2014 I must have seen the wrong figures.\n\n> Appendix C. How does these two KL distance calculation Gold RM performance?\n\nI meant have you tried using tried running training with these two KL estimators, respectively, and observing how they affect performance. http://joschu.net/blog/kl-approx.html also proposes a third KL estimator."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700616624394,
+                "cdate": 1700616624394,
+                "tmdate": 1700616624394,
+                "mdate": 1700616624394,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "dB1x1MX6FX",
+            "forum": "dcjtMYkpXx",
+            "replyto": "dcjtMYkpXx",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_249u"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_249u"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper addresses the problem of reward model optimization in training of LLM chatbots: when optimizing a learned reward model initially improves the chatbot's performance under \"true\" human preferences but eventually the performance decreases as the learned reward ceases to be a good proxy. The authors propose training an ensemble of reward models instead of a single one to mitigate this. The ensemble is trained from different random seeds and then the optimization target is either the mean of the reward models' outputs, the minimum (WCO), or the mean minus a variance penalty (UWO). A number of experiments are performed on best-of-n (BoN) and PPO optimization of reward models using these optimization targets and they are compared to using the output of a single reward model. The results suggest that using an ensemble of reward models"
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper addresses a very important problem\u2014one of the main bottlenecks to improving RLHF training and safety of LLM-based chatbots is making reward models more robust. The solution technique is not particularly novel, as pessimistic optimization using an ensemble has been widely used in model-based RL, offline RL, preference learning, etc. However, I don't know of prior work that has specifically evaluated this technique for RLHF on LLM-based chatbots. Thus, I view the primary contribution of this paper as a systematic empirical study of applying this existing technique to a new problem. I think this is an important contribution but it does mean the experiments should be carefully executed.\n\nIn general, the experiments do seem to be well-done, exploring the effects of using the different ensemble-based optimization objectives in a variety of settings. Using WCO and UWO seem to pretty consistently help; while they don't allow for completely removing KL regularization in PPO, they do allow PPO to reach a higher final gold reward.\n\nThe writing is in general quite clear and the paper is easy to follow."
+                },
+                "weaknesses": {
+                    "value": "In terms of the experiments, one weakness is that the PPO experiments seem to be mostly done with a single random seed, while due to the high noise in RL training it is best to use a few random seeds (see https://arxiv.org/abs/2108.13264, https://arxiv.org/abs/2304.01315).\n\nAnother weakness of the results is that it's hard to know how to interpret the gold reward. How much better is an LLM with an average gold reward increase of 0.5 vs. 0.4? AlpacaFarm and others use a win-rate which is more interpretable\u2014it might be helpful to report that for your results as well so that it's easier to understand exactly how much better using an ensemble is.\n\nThe way the PPO results are presented analogously to Gao et al. also feels a bit strange. According to Figures 4 and 5, the ensemble-based optimization objectives only outperform a single reward model at the very end of PPO training. I'm not sure why it's important to see all the intermediate KL and reward values when early-stopping is not generally used with RLHF PPO training. I found Figure 7 to be the best comparison of the different optimization objectives. It would be particularly interesting to see a variation of Figure 7 where each the sqrt(KL) and gold reward is plotted for each combination of (optimization objective, KL coefficient) since the KL coefficient is the actual \"knob\" used to adjust how much optimization is occurring in practice (not the amount of training time).\n\nHere is one paper that should probably be included in the related work as they also evaluate using ensembles of LLM-based reward models: https://arxiv.org/pdf/2203.07472.pdf. Their paper is focused on active learning, not reward optimization, so it's not directly comparable, but it does relate to your conjecture that \"uncertainty estimates from the ensemble may also help improve sample efficiency of human feedback in this setup\" on page 9.\n\nSmall issues/typos:\n * Bottom of page 5: in two places you say \"for PPO, WCO, and UWO\" but the second comma should be removed"
+                },
+                "questions": {
+                    "value": "Related to the weaknesses above:\n * What are the results of running PPO across 3-5 random seeds for the various optimization objectives? How much variance is there across seeds?\n * How much does the gold reward increase from using an ensemble correspond to in terms of win rate or other measures of quality?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7374/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698792939801,
+            "cdate": 1698792939801,
+            "tmdate": 1699636881866,
+            "mdate": 1699636881866,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "YVlhvNqKpU",
+                "forum": "dcjtMYkpXx",
+                "replyto": "dB1x1MX6FX",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your review. We\u2019re glad you find the problem of overoptimization an important one, and that you think the experiments are well done. We now respond to your comments in detail.\n\n> one weakness is that the PPO experiments seem to be mostly done with a single random seed, while due to the high noise in RL training it is best to use a few random seeds\n\nWe have started to run multiple PPO seeds and will add these results soon for e.g. Figure 4. The reason for not having included these from the start is because we had observed very low variance when using different PPO seeds in initial experiments and the computational cost is very high. \n\n> Another weakness of the results is that it's hard to know how to interpret the gold reward. How much better is an LLM with an average gold reward increase of 0.5 vs. 0.4?\n\nThank you for the suggestion of providing a more interpretable measure of quality. We will perform a win-rate comparison between single RMs and the conservative optimization objectives to offer an additional measure of quality, and add that to the paper once it is complete. The samples in Appendix F5 can also serve as a qualitative assessment of the difference in quality.\n\n> I'm not sure why it's important to see all the intermediate KL and reward values when early-stopping is not generally used with RLHF PPO training. \n\nThough it seems that conservative optimization objectives only outperform single RMs towards the end, it is helpful to provide the full intermediate rewards to better show how overoptimization occurs, and that the reward does indeed rise, plateau, and then fall for single RMs. While providing only the final reward gives a good indication of final performance, it doesn\u2019t illustrate the presence of overoptimization, or the mitigation of this behaviour, as well.\n\n> I found Figure 7 to be the best comparison of the different optimization objectives. It would be particularly interesting to see a variation of Figure 7 where each the sqrt(KL) and gold reward is plotted for each combination of (optimization objective, KL coefficient) since the KL coefficient is the actual \"knob\" used to adjust how much optimization is occurring in practice (not the amount of training time).\n\nWe are not entirely clear on your suggestion for a variation of Figure 7, would you be able to clarify your suggestion and the motivation behind it? Figure 6 shows results for using different KL coefficients. In particular this demonstrates that both the KL penalty term and our conservative optimization are important, because KL penalty alone is either insufficient to prevent overoptimization, or performs significantly worse for large penalties.\n\n> Here is one paper that should probably be included in the related work as they also evaluate using ensembles of LLM-based reward models: https://arxiv.org/pdf/2203.07472.pdf. \n\nThanks for pointing out this paper. We have included a mention and reference to it in Related Works within the main text. \n\n\nWe hope we have addressed all of your concerns, and that you will consider raising your rating of the paper, but please let us know if you have any remaining questions."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700250514962,
+                "cdate": 1700250514962,
+                "tmdate": 1700250514962,
+                "mdate": 1700250514962,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "GaaBDtjlmj",
+                "forum": "dcjtMYkpXx",
+                "replyto": "YVlhvNqKpU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_249u"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_249u"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to authors"
+                    },
+                    "comment": {
+                        "value": "Thank you for addressing the points in my review. I think including results for multiple seeds and the win-rate metrics will strengthen the empirical results of the paper. Regarding Figures 6 and 7, I believe I understand these figures better now and I don't think it's necessary to change them.\n\nI understand that there is a short timeline for additional experiments, but ideally it would be great to see either the win-rate or multiple seeds results during the discussion period. I'm happy to raise my score if either of these can be added to the paper."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700527340557,
+                "cdate": 1700527340557,
+                "tmdate": 1700527340557,
+                "mdate": 1700527340557,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "EZDC53A5kO",
+                "forum": "dcjtMYkpXx",
+                "replyto": "dB1x1MX6FX",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your response. We agree that these additional experiments are valuable additions to the paper. As such we have:\n- Added runs with multiple PPO seeds in Figures 4a and 4b. Both the mean and standard deviation across runs are shown.\n- Included win-rate results to compare the performance of ensemble methods to those of single reward models in Appendix F9. We show these for both BoN and PPO for reward models of size 44M and plan on adding other model sizes for the camera-ready version.\n\nWe hope to have addressed your concerns and requests, and greatly appreciate you considering raising your score in response to our additions provided they meet your expectations."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700612367411,
+                "cdate": 1700612367411,
+                "tmdate": 1700612386125,
+                "mdate": 1700612386125,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "Htdn0ZBtI2",
+            "forum": "dcjtMYkpXx",
+            "replyto": "dcjtMYkpXx",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_mVSG"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_mVSG"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper investigates the issue of reward model overoptimization in Reinforcement Learning from Human Feedback (RLHF), a technique used to fine-tune large language models. Overoptimization occurs when learned reward models, imperfect representations of true human preferences, lead to undesirable behavior. This paper builds on previous work by Gao et al. (2023) who demonstrated the persistence of overoptimization even with large \u201cgold\u201d reward models and extensive training data. The paper explores the effectiveness of ensemble-based conservative optimization (WCO and UWO) in mitigating overoptimization when using BoN sampling and PPO optimization methods. Additionally, the research extends the previous setup by introducing 25% label noise to better simulate real-world conditions. The findings reveal that conservative optimization significantly reduces overoptimization, improving performance by up to 70% for BoN sampling. For PPO, ensemble-based conservative optimization outperforms single reward model optimization and minimizes overoptimization when combined with a KL penalty, without sacrificing performance. In summary, the authors show that ensemble-based conservative optimization presents a promising approach for addressing the challenge of overoptimization in RLHF, leading to more robust and reliable fine-tuning of large language models."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. This paper provides extensive empirical evidence that suggests that ensemble-based methods can improve robustness of RMs and reduces overoptimization, which makes the claims of the paper well-supported.\n\n2. The paper studies the important problem in RLHF, i.e. reward overoptimization, and presents various methods that clearly mitigate such a challenge. I think the paper is of value to the RLHF community."
+                },
+                "weaknesses": {
+                    "value": "1. While the empirical results are quite comprehensive in the paper, the model size seems a bit small with the biggest RM being 1.3B. Given Figure 8, it seems that the gain of the ensemble-based methods diminishes as the model size increases. It would important to investigate if ensemble-based methods have little gain with even bigger models, which are more commonly used by users.\n\n2. From Figure 9, it seems that with bigger dataset size (46K), ensemble-based methods are not that much better than the single RM. Is it expected that with even more data, which in practice is usually true, the difference between ensemble-based methods and single RM will further shrink? It would be helpful to further study this perspective."
+                },
+                "questions": {
+                    "value": "Please clarify and investigate the two questions presented in the weakness section."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7374/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699596653236,
+            "cdate": 1699596653236,
+            "tmdate": 1699636881747,
+            "mdate": 1699636881747,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ylKRsKmFJq",
+                "forum": "dcjtMYkpXx",
+                "replyto": "Htdn0ZBtI2",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your review. We agree that overoptimization is an important problem and we\u2019re glad you found the results encouraging and the conclusions well-supported.\n\nWith respect to reward model size and data size, we use the largest RM possible in our setup and with our computing resources. While we agree it would be interesting to conduct experiments using larger models, we believe the current experiments are sufficient evidence that the ensemble and conservative optimisation techniques are useful for mitigating overoptimization, and will continue to be at larger model sizes, for several reasons:\n1. While the gain in performance seems to decline a little in proportion when increasing the reward model size, the performance gain is still very much present and does not show signs of completely disappearing. For BoN sampling, in Figures 8a and 9a, the gap between single RM performance and ensemble-based methods performance remains approximately similar in size across different scales - this suggests that ensembles likely follow a similar scaling law for overoptimization as a single RM, but shifted upwards.\n2. While RM sizes can be increased and larger RMs tend to see less overoptimization, this performance increase eventually hits diminishing returns, as seen in Figure 1 of Gao et al. [1].\n3. Further, we note that if you look at Figure 19, which shows the full training curve for 1.3B RM - it seems that for both BoN and PPO - while the training appears to have converged for single RM, it does not appear to have converged for WCO and UWO. Moreover, the single RM has not had a chance to properly overoptimize and see a decrease in performance. These claims are backed up by the new results in Appendix F.7, which show that our PPO ensembles can be further trained - resulting in higher performance for ensemble methods, and lower final performance for the single RMs, which overoptimize. This will be especially true for larger RMs, which are optimized at a slower rate. \nWithin our setup, it is not possible to further optimize BoN due to computational constraints. However, for PPO, we plan on adding results of optimizing 1.3B RM with an increased training budget of 6000 steps. This is however going to be a very expensive experiment (we expect this to take ~72 hours to finish using the computing resources available to us), hence, we can only give weak commitment that we will be able to show this result to the reviewer within the rebuttal period. However, we do commit to including this result in the camera ready version if the paper gets accepted. \n4. The new results in Appendix F.7 also illustrate another advantage of the ensemble methods over larger RM sizes: stability and robustness to training time. These models can be trained for a long time without fear of seeing a decrease in performance due to overoptimization. This is not true even of very large RMs, which are known to suffer from overoptimization.\n\n\nWe hope we have addressed all your concerns and questions about the paper, and that you will consider raising your score, but please let us know if you have any remaining questions.\n\n[1] Gao et al. Scaling Laws for reward model overoptimization"
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700250508832,
+                "cdate": 1700250508832,
+                "tmdate": 1700250508832,
+                "mdate": 1700250508832,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "hXS0FzPvnv",
+            "forum": "dcjtMYkpXx",
+            "replyto": "dcjtMYkpXx",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the overoptimization in the reward model for the RLHF problem and applies several methods to reduce the overoptimization in RLHF. Overall the reviewer believes this submission is above the acceptance bar, but it has some writing issues that can be further improved."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The experimental results look promising.\n2. The overoptimization problem is a novel and important problem to the LLM community."
+                },
+                "weaknesses": {
+                    "value": "1. [Major] There are some writing and presentation issues in the manuscripts. While this manuscript extensively refers to [1] in the writing, the reviewer would recommend the authors update the paper so that the current submission does not require the readers to read [1] to understand the submission thoroughly. See detailed comments in [Questions].\n2. [Minor] For paragraph Supervied Fine-tuning in Section 4.3, the hyperlink `(see Section 4.1 for details)` seems to be broken. In addition, the reviewer cannot find any more details in section 4.1 for splitting the AlpacaFarm dataset, perhaps the authors can clarify this?"
+                },
+                "questions": {
+                    "value": "1. What does the KL divergence in the x-axis in Figure 2 mean? The reviewer understands [1] also contains similar figures that study the gold score against the KL divergence, and the reviewer believes the authors are using a similar setting. However, the reviewer is unclear which KL divergence is Figure 2 referring to. The authors could either update the caption of Figure 2 or provide a better description of the x-axis to improve the readability.\n2. Figure 3 and Figure 4 also have the same issue discussed \u2013 perhaps the authors can clarify what is the KL divergence in both figures and why they scale differently. E.g., in Figure 3 the x-axis is from 0-8, while in Figure 4, the x-axis is from 0-150. The reviewer understands that [1] has similar figures, but it will be better if the authors clarify this, so that other readers do not need to refer back to [1] for understanding this submission. Similarly in Figure 5 - 7.\n\n[1] Gao, Leo, John Schulman, and Jacob Hilton. \"Scaling laws for rew"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7374/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699597877569,
+            "cdate": 1699597877569,
+            "tmdate": 1699636881632,
+            "mdate": 1699636881632,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Z4ve2HCZGl",
+                "forum": "dcjtMYkpXx",
+                "replyto": "hXS0FzPvnv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your review, and for your positive comments about the experimental results and problem setting.\n\nWe thank the reviewer for their suggestions to improve the completeness and clarity of the paper with respect to Gao et al. [1]. Upon your suggestion, we have added further information on KL divergence calculation, including additional explanation of the KL in the captions of the first few plots. We explain this in detail below. We hope this has addressed your concern, but if you feel there are additional details that we should mention in our paper to increase completeness, please do point them out and we would be happy to oblige.\n\nTo answer your questions:\n1. The KL divergence in the x-axes of most figures is the KL distance between the initial policy and the policy being optimized. For BoN, this distance is calculated as per equation (1), and for PPO as per the method in Appendix C. These are in line with Gao et al. [1]. Figure 2 was intended as a generic and pedagogical example of overoptimization, hence the initial lack of detail in describing the KL divergence. We have updated the caption for this Figure to be clearer, as well as added some information regarding the meaning and calculation of the KL divergence for PPO in Section 2.2.\n2. For Figures 3 and 4, the difference in x-axis is due to the different methods (BoN and PPO) calculating and consuming KL divergence differently. Gao et al. [1] show that PPO seems to consume KL much more than BoN when calculating KL divergence in the way described in the above sections. In addition to the clarification added in the previous point, we further clarify the significance of the KL divergence as well as the difference in scale between BoN and PPO in the captions of Figure 3 and 4.\n3. For the hyperlink to section 4.1, it seems to work for us? The section linked provides more information about the dataset we use as a whole. We have also added additional details such as the dataset splits in Appendix D.2, and reference this in Sections 4.1 and 4.3 of the main paper for clarity. Even further details can be found in the AlpacaFarm paper [2]. \n\n\nWe hope this has addressed all your comments and concerns. If so, would you consider increasing your rating of the paper?\n\n[1] Gao et al. Scaling Laws for reward model overoptimization.\n\n[2] Dubois et al. Alpacafarm: A simulation framework for methods that learn from human feedback."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700250493746,
+                "cdate": 1700250493746,
+                "tmdate": 1700250493746,
+                "mdate": 1700250493746,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "yKbNMziESy",
+                "forum": "dcjtMYkpXx",
+                "replyto": "Z4ve2HCZGl",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "The reviewer would like to thank the authors for updating the paper promptly. All of my concerns are addressed, thank you!"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700277332067,
+                "cdate": 1700277332067,
+                "tmdate": 1700277332067,
+                "mdate": 1700277332067,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "dVaf2NAyLm",
+                "forum": "dcjtMYkpXx",
+                "replyto": "iuDzQduVln",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7374/Reviewer_83ty"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Dear authors, thanks for the follow-up. While the reviewer's questions/concerns are indeed addressed, the reviewer does not believe this will significantly improve the quality of the paper. Hence the reviewer would like to maintain the recommendation."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7374/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526051728,
+                "cdate": 1700526051728,
+                "tmdate": 1700526051728,
+                "mdate": 1700526051728,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

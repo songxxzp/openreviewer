@@ -1,0 +1,262 @@
+[
+    {
+        "id": "7GpvdTJZxo",
+        "forum": "vLqkCvjHRD",
+        "replyto": "vLqkCvjHRD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_HG9j"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_HG9j"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes tuning language models (pre-trained on code) for a specific programming language by leveraging static analysis tools (like those used in compilers). The static analysis tools are combined with a separate language model (CodeBERT) to craft a reward function. This reward is used with PPO to train the language model. Experiments with three different language models (up to 1.5B parameters) on code examples in Java demonstrate that the proposed method is able to improve the performance over the pre-trained model."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Using the compiler (and related tools) to improve the ability of language models to generate code is a promising direction. This approach reflects how human programmers also require feedback from the programming environment to hone their skills, whereas solely reading code is not sufficient.\n\nMany commonly used programming languages are supported with static analysis tools, so the proposed method appears to be quite general.\n\nThe presentation of the method and the results is clear."
+            },
+            "weaknesses": {
+                "value": "The experiments do not seem to control for the amount of compute. Comparing RLCF to a baseline that uses 0 compute (after pre-training) does not provide a useful comparison. A more informative baseline would be one that uses the same amount of compute as RLCF but uses the standard LM loss function instead. The \"+Mono\" baseline in Table 7 goes in this direction, but it does not apply the same amount of compute as RLCF.\n\nThe proposed method requires a so-called discriminator D that is part of the grounding function. This discriminator is a separate LM (not the same as the one that is being tuned to generate better code). The specific model used here is a pre-trained CodeBERT. It is unclear why this specific choice was made and how this choice impacts the results. While it appears that the pre-training here isn't strictly necessary for RLCF to yield improvements (based on Table 4 in the appendix), it does look like pre-training has a very significant effect. But using a pre-trained model puts into question whether performance improvement primarily arises due to distillation effects? Also, how well does CodeBERT perform on the tasks? When using a different model as the discriminator, do the numbers still look the same?\n\nThe results seem to suggest that RLCF is effective in improving the rate at which the LM samples compilable and executable programs. However, this improvement does not appear to correlate as much as expected with the improvement in the proportion of samples that pass the test cases. Currently it is unclear to me how this improvement in passed test cases arises and I'm more inclined to believe that the majority of it is due to distilling \"Java code knowledge\" from CodeBERT. I'd suggest running a RLHF baseline with the HF replaced by CodeBert."
+            },
+            "questions": {
+                "value": "Are the model descriptions for pre-trained and not pre-trained in Table 4 in the appendix mixed up?\n\nSee weaknesses for more questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3968/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698764005023,
+        "cdate": 1698764005023,
+        "tmdate": 1699636357993,
+        "mdate": 1699636357993,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eCoSkGPolF",
+        "forum": "vLqkCvjHRD",
+        "replyto": "vLqkCvjHRD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_1rNz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_1rNz"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work propose a method to fine-tune an LLM for code generation using RL. The feedback consists of two components: localized compiler errors to encourage the LLM to generate code which compiles, and a CodeBERT-based discriminator which tries to distinguish between the code generated by the LLM vs. the ground-truth solution (conditioned on the prompt). Results show improvements on several baseline code generation models (up to 1.5B parameters) for Java code generation."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The idea to fine-tune an LLM for code generation using only feedback from static analysis only is, as far as I can tell, novel. The writing is also clear and well motivated. As code generation is a major application of LLMs, the work has potential for significant impact as well. The experimental results are also relatively comprehensive, including a slate of baselines for comparison."
+            },
+            "weaknesses": {
+                "value": "Prior works (see below) have used a combination of static and dynamic analysis as an RL reward for fine-tuning LLMs for code generation, which limits the novelty.\n\nThe decision to focus on Java, motivated by the authors for its static typing and availability of static analyzers, makes comparisons with existing works difficult, which have almost universally adopted Python as the language of choice. The benchmark datasets (MathQA and MBJP) were originally written in Python, and then transpiled automatically into Java. Even the dataset used in this work for finetuning, CodeNetJava, has a Python equivalent. Additionally, this work leverages feedback from the static analyzer consisting solely of the location of the compiler error, which should be available for Python as well.\n\nFor instance, RLTF [1], which is another RL for code generation technique, achieves 30.4 pass@1 on MBPP (the original python dataset) using the 770M CodeT5 as the base model. This compares with 6.6% for RLCF (this work) on MBJP (using the same base model, which starts around the same pass@1 of ~4% for MBPP).\n\nIdeally, I would have preferred the experiments to have been done in Python, but at the very least, the related work should include a discussion of works which apply RL for code generation. For instance CodeRL [2] is mentioned as a baseline, but there is no comparison in the related work. As far as I can tell, the specific design (using a discriminator as well as returning the location of a compile error) is novel, but there are certainly parallels to prior work (for instance, CodeRL uses a critic to return localized information). Another highly relevant work is [3], which combines RL with an AST-based syntactic match metric as well as a dataflow graph based semantic match metric (both of which are static rather than dynamic analyses).\n\nFinally, I'm not sure the ablation study for CodeRL is a fair comparison, as CodeRL includes a number of other components beyond simply an RL reward for compile errors (such as the aforementioned critic network). This can be addressed by renaming the ablation to something other than CodeRL.\n\n[1] Liu, Jiate, et al. \"RLTF: Reinforcement Learning from Unit Test Feedback.\" arXiv preprint arXiv:2307.04349 (2023).\n[2] Le, Hung, et al. \"Coderl: Mastering code generation through pretrained models and deep reinforcement learning.\" Advances in Neural Information Processing Systems 35 (2022): 21314-21328.\n[3] Shojaee, Parshin, et al. \"Execution-based code generation using deep reinforcement learning.\" arXiv preprint arXiv:2301.13816 (2023)."
+            },
+            "questions": {
+                "value": "Can you provide a comparison of your methods with the 3 works cited above?\n\nCan you ablate the localization aspect of the compiler feedback? i.e., just return -1 for compile errors (while maintaining the discriminator).\n\nIt would also be good to swap out the learned discriminator with the DFG-based metric from [3] above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3968/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698805985834,
+        "cdate": 1698805985834,
+        "tmdate": 1699636357920,
+        "mdate": 1699636357920,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "NDlekoE8Ue",
+        "forum": "vLqkCvjHRD",
+        "replyto": "vLqkCvjHRD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_t6g5"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_t6g5"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposes a new approach to to program synthesis using reinforcement learning and feedback from a grounding function. The experiments show promising results in improving the performance of LLM-generated programs."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "+ The RLCF proposed in this work uses feedback from both compiler-derived feedback and LLM feedback.\n\n+ The proposed approach is model- and language-agnostic, making it possibly applicable to various programming languages and models.\n\n+ This work presents empirical evaluations on the MBJP and MathQA tasks for Java, showing promising results."
+            },
+            "weaknesses": {
+                "value": "- The proposed approach is limited to larger dataset due to the fact that CODENETJAVA does not consider dependencies on user-defined packages or libraries.\n\n- The paper only evaluates the proposed approach on two specific tasks for Java, which may not be representative of other programming languages or models.\n\n- This work does not provide a comparison of the proposed approach with existing state-of-the-art LLMs like GPT3 or GPT4.\n\n- How this approach can work with existing pre-trained code-specific LLMs is missing."
+            },
+            "questions": {
+                "value": "Please check the Weaknesses for detailed questions to be answered.\n- Is the proposed evaluation and experiments representative enough for other programming languages or models? \n- How can this approach work with existing pre-trained code-specific LLMs is missing?\n- Is it possible fro authors to compare the proposed method with existing state-of-the-art LLMs like GPT3 or GPT4?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3968/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698809859069,
+        "cdate": 1698809859069,
+        "tmdate": 1699636357838,
+        "mdate": 1699636357838,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "FDOwe5GgTx",
+        "forum": "vLqkCvjHRD",
+        "replyto": "vLqkCvjHRD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_8pcA"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3968/Reviewer_8pcA"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces Reinforcement Learning with Coordinated Feedback (RLCF), a new approach to enhancing the capabilities of LLMs in program synthesis. Traditional next-token prediction training objective overlooks the syntax and semantic constraints in code. RLCF aims to address this by retraining LLMs using RL, incorporating feedback from a compiler, and a separate LM that compares generated code against a reference. This \"coarse-tuning\" process occurs after initial pre-training but before task-specific fine-tuning. RLCF's effectiveness is demonstrated in Java datasets (MBJP and MathQA), showing that it significantly improves the probability of generating correct, compilable, and executable code."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "A novel attempt to integrating compiler feedback in RL based code generation.\n\nPaper demonstrates an innovative approach in using a hybrid grounding function that incorporates both a compiler and a discriminator LLM. This enhances the reliability and relevance of the generated code, making the system robust against producing syntactically correct but contextually irrelevant responses."
+            },
+            "weaknesses": {
+                "value": "Compiler limitations: The use of a compiler in the grounding function inherently relies on the limitations and capabilities of the chosen compiler. Different compilers might have varying levels of strictness or support for language features, potentially leading to inconsistencies in how code is evaluated. This could result in a situation where the model generates code that is deemed correct by one compiler but not by others.\n\nFrom the perspective of practical implementation in developer tools, the requirement to utilize both a compiler and an additional discriminator model could present significant challenges.\n\nThere is a need for more robust RL baselines, such as the RLHF (for instance, with binary reward)"
+            },
+            "questions": {
+                "value": "The study compares the base pre-trained CodeGen model with the version enhanced by RLCF. Would it be feasible to include a comparison with a supervised fine-tuned variant of the CodeGen? For instance, we could create a collection of \"gold standard\" examples that both compile successfully and are preferred by the discriminator for SFT. This could separate the improvement from the coarse tuning technique itself vs better quality data.\n\nThe process of generalizing this approach across various programming languages, and different compilers might represent a challenge. If possible, add more tests or discuss it.\n\nAdditionally, a comparison with state-of-the-art reinforcement learning techniques that use feedback would be valuable. Utilizing a compiler to generate binary rewards could help assemble a training dataset suitable for a conventional RLHF or RLAIF frameworks, providing a stronger baseline to evaluate the effectiveness of RLCF."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3968/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698903097269,
+        "cdate": 1698903097269,
+        "tmdate": 1699636357767,
+        "mdate": 1699636357767,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

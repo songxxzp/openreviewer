@@ -1,0 +1,531 @@
+[
+    {
+        "title": "AlignCLIP: Enhancing Stable Representations in Vision-Language Pretraining Models through Attention and Prediction Alignment"
+    },
+    {
+        "review": {
+            "id": "K1trWgGa2m",
+            "forum": "qm46g9Ri15",
+            "replyto": "qm46g9Ri15",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_TgXT"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_TgXT"
+            ],
+            "content": {
+                "summary": {
+                    "value": "To address the attention misalignment in CLIP, this paper introduces AlignCLIP, that want to finetune CLIP by designing two regularization loss: 1)Attention alignment loss that aims to regularize the attention distributions at all L encoder layers with the similarity matrix of the label and image patch embeddings. And 2) Semantic label smoothing that wants to explore relationships between different classes. Both numerical results on domain-shift and unseen tasks and visualization analysis show the superior performance of the proposed model. A series of ablation results are further provided to show the impact of the introduced two modules."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1) One of the main contributions of this paper is to address the attention misalignment in CLIP, which is a challenge issue in the community. The proposed method that aligns the attention distribution with the semantic similarity of label and patch embeddings sounds interesting.\n\n2) The organization of this article is logical, it's well-written, and the figures are clear, making it easy for readers to understand the author's idea.\n\n3) Extensive comparisons on two tasks show the improvements of the proposed. The visualization well demonstrates the motivation, and the ablation studies analyze the introduced two modules."
+                },
+                "weaknesses": {
+                    "value": "1) One of the main concerns comes from Eq.(6) in the manuscript. The proposed AAL views the $G_{D-V}$ as the groundtruth attention distribution and aligns $A_c$ and $G$ with $G_{D-V}$. Given the fact the value vectors is problematic and $G_{D-V}$  is obtained based on the V vector at the D-V branch, I do not know why $G_{D-V}$ can be viewed as the groundtruth guidance.\n\n2) The introduced AAL and SLS seem to be independent, and Table (1-4) show that the improvements is slight.  I am not sure that applying AAL or SLS separately still provides a stable improvement."
+                },
+                "questions": {
+                    "value": "1) $G_{D-V}$ in Eq.(6) is not defined or described.\n\n2) Does $\\theta$ in Algorithm 1 denote the all CLIP parameters or only the image encoder's parameters?\n\n3) I found that there are newly introduced parameters in the new block (Figure 2) and whether they are fixed or need to be learned."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "None"
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1850/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698678634589,
+            "cdate": 1698678634589,
+            "tmdate": 1699636115305,
+            "mdate": 1699636115305,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "2uuwfV97dy",
+                "forum": "qm46g9Ri15",
+                "replyto": "K1trWgGa2m",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to W1 of Reviewer TgXT"
+                    },
+                    "comment": {
+                        "value": "**W1: One of the main concerns comes from Eq.(6) in the manuscript. The proposed AAL views the $G_{D-V}$ as the groundtruth attention distribution and aligns $A_c$ and with $G_{D-V}$. Given the fact the value vectors is problematic and $G_{D-V}$ is obtained based on the V vector at the D-V branch, I do not know why $G_{D-V}$ can be viewed as the groundtruth guidance.**\n\n**Reply:** Thank you for your valuable comments regarding the use of the D-V structure's attention map as a target distribution for attention learning. We would like to offer a multi-faceted response that supports the validity of our approach.\n\n1. **Empirical foundation from related work:** The issue of attention misalignment in CLIP models has been empirically demonstrated in the work of CLIP Surgery [1]. It has been shown that the attention mechanism during training, particularly the interactions between Query (Q) and Key (K), does not always capture the semantic essence of the tokens, which is more accurately represented by the Values (V). Based on this finding, the CLIP Surgery paper [1] proposed a modification of the Q-K-V attention structure that replaces the Query and Key vectors with the V vector. Empirical studies in this paper demonstrate that the V-V-V structure can obtain ideal and reasonable predictive attention maps (please refer to the CLIP Surgery paper). \n\n    In this paper, the purpose of proposing the D-V structure is to explain that not only the V-V-V structure proposed in the CLIP surgery paper can work, but also works as long as Q-K is replaced by an equivalent structure (such as K-K, Q-Q, or diagonal matrix), as shown in Figure 8 at the Appendix. Based on this finding, we propose the D-V attention structure that replaces the product of Key and Query in self-attention with a diagonal matrix. The advantage is that has a small computation complexity. we found that the GFLOPS for the V-V-V structure amounts to 0.46478, whereas for the D-V structure, it is significantly lower at just 0.0003. Our D-V structure prioritizes this semantic essence of V vectors, therefore providing a more aligned target for attention learning.\n    \n    [1] Yi Li, Hualiang Wang, Yiqun Duan, and Xiaomeng Li. CLIP Surgery for Better Explainability with Enhancement in Open-Vocabulary Tasks. arXiv, 2023.\n\n2. **Self-attention mechanism in transformers:** In the Transformer model, Self-Attention is achieved through three vectors: Query (Q), Key (K), and Value (V). For each input element (image patch in ViT), Q, K, and V are computed. Standard Self-Attention weights the sum of Values (V) by the matching scores of Queries (Q) and Keys (K). In our work, the product of Key and Query in Self-Attention is replaced with a diagonal matrix, meaning that the new representation of each input element relies solely on its own information, rather than the interrelation with other elements. This change encourages the model to focus more on the salient targets rather than the background when generating attention maps. By shifting the focus from inter-token relationships to the intrinsic semantic information of each token, our approach ensures that the attention mechanism is more closely aligned with the inherent content of the input, thus serving as an ideal target for attention learning. We believe that this modification is a significant step towards more accurately modeling visual attention in line with human cognitive patterns. We thank the other reviewers for appreciating our contribution to attention alignment. Reviewer TgXT points out that \"The proposed method that aligns the attention distribution with the semantic similarity of label and patch embeddings sounds interesting.\"\n\n`Revision: We have further elaborated on this argument on Page 23, Section of C.3 in the manuscript, providing additional empirical evidence and mechanism analysis to strengthen our claim.`"
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700485491850,
+                "cdate": 1700485491850,
+                "tmdate": 1700485491850,
+                "mdate": 1700485491850,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "EKlElhXoyw",
+                "forum": "qm46g9Ri15",
+                "replyto": "JAmeBDaXSe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Reviewer_TgXT"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Reviewer_TgXT"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the response"
+                    },
+                    "comment": {
+                        "value": "Based on the responses of authors, and comments of other reviewers, I decided to keep my original rating."
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700645045469,
+                "cdate": 1700645045469,
+                "tmdate": 1700645045469,
+                "mdate": 1700645045469,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "jgnOohlEh4",
+            "forum": "qm46g9Ri15",
+            "replyto": "qm46g9Ri15",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_v1vj"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_v1vj"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a method to enhance image and text alignment for a pretrained CLIP model by aligning the attention and smooth label prediction. The motivation for the attention alignment is from the bad attention map produced by the original CLIP model. Labeling smooth is motivated by the fact that not all incorrect classes should contribute equally. The experiments are conducted on two scenarios: domain shift and unseen class."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "This paper is well motivated, despite some unclear explanation points. (see below). Particularly, the plotted figures in the method part make high-level understanding easier.  \n\nThe experiments are extensively conducted, covering a number of different datasets in two scenarios. The ablation study is generally satisfactory, despite missing one key parameter analysis. (see below)"
+                },
+                "weaknesses": {
+                    "value": "For the two technical contributions on attention alignment and label smoothing, I feel they are disjointed. The motivations are not well aligned as well. \n\n \n\nIn abstract, it is stated that label smoothing aims to persevere prediction hierarchy, and use the \u201cdog\u201d and \u201cwolf\u201d example. This is interesting. However, I don\u2019t see any justification on this point, except few picked examples. Moreover, whether the pretrained text encoder can capture such a \u201chierarchy\u201d also needs justification. \n\n \n\nParameter $\\epsilon$ is important, where its analysis is missing. \n\n \n\nAnother is that although the proposed method outperforms the baseline for the most cases, its improvement over CLIPood is marginal."
+                },
+                "questions": {
+                    "value": "I was not clear about how the inference works. If Eq 4 is involved in inference stage, then one major concern is that the proposed method might not be easy to scale up in practice. Due to the requirement of precomputing text embedding  $T_y$ in Eq. 4 for each visual token similarity computation, this \u201ccross-attention\u201d based image embedding will have the same number of versions as the number of classes. This will limit the application when the number of classes is large. On the contrary, for CLIP, image embedding is not conditioned on text. \n\n \n\nI am not sure how the CLIP zero-shot and finetune attention maps (e.g. figure 1 (b)) plotted. Please explain. Considering CLIP training takes the last token as the image representation trained with a casual mask, its individual tokens are intentionally designed for such attention alignment. For a more convincing comparison, in CLIP finetune, the authors might want to use other pooling techniques after the last layers (e.g. average pooling) instead of using the last tokens. In this case, each visual token will be enforced to have better representation. \n\n \n\nIt is unclear to me what does \u201c$D-V$\u201d structure mean. How $G_{D-V}(X_i)$ is defined."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1850/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698789729333,
+            "cdate": 1698789729333,
+            "tmdate": 1699636115213,
+            "mdate": 1699636115213,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "8sGUya5nh5",
+                "forum": "qm46g9Ri15",
+                "replyto": "jgnOohlEh4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to W1 of Reviewer v1vj"
+                    },
+                    "comment": {
+                        "value": "**W1: For the two technical contributions on attention alignment and label smoothing, I feel they are disjointed. The motivations are not well aligned as well.**\n\n**Reply:** Thank you for your feedback on the motivations behind our attention alignment and label smoothing techniques. Firstly, we appreciate the opportunity to clarify how these are indeed cohesively aligned:\n\n1. **Unified Motivation:** Both techniques aim to address the misalignment in CLIP models by leveraging textual information, ensuring consistency between visual and textual modalities. The unifying motivation behind both Attention Alignment Loss (AAL) and Semantic Label Smoothing (SLS) is to enhance the adaptability and generalization of CLIP models in open-world settings, where both domain shifts and unseen classes are present. While AAL focuses on optimizing the attention mechanism to better focus on relevant features, SLS aims to refine the prediction mechanism to be more semantically accurate and less prone to misclassification. Together, they address different aspects of the model\u2019s performance but work towards the same goal of improving stability and reliability in complex, real-world scenarios.\n\n2. **Common Goal of Stable Representations:** Both attention alignment and semantic label smoothing contribute to the overarching goal of achieving stable representations in Vision-Language Pretraining (VLP) models. This stability is crucial for handling challenges like domain shifts and recognizing unseen classes in open-world environments. Therefore, their shared objective is to improve the representational stability and generalization of CLIP models, crucial for performance in open-world settings with domain and class variations.\n\n3. **Textual Information Utilization:** Textual information is integral to both methods\u2014fine-tuning attention layers and refining output distribution\u2014demonstrating their conceptual harmony.\n\n4. **Stable Improvement from Both Modules:** We have revised the bar charts in Figure 3 on Page 9 in the revised manuscript to demonstrate the stable improvement. The updated chart better highlights the incremental improvements provided by AAL and SLS. Despite appearing modest, these gains are statistically significant and essential for the robustness of our model. AAL improves accuracy by approximately 1.0\\% in the VLCS dataset and 2.8\\% in the Office-Home dataset. SLS alone enhances accuracy by 0.7\\% in VLCS. Importantly, their combined use results in a consistent and notable improvement (1.4\\%) in the Domain+Class scenario, underscoring our model's effectiveness in handling real-world domain shifts. The revised figure distinctly contrasts SLS with standard label smoothing. SLS shows improvements of 3.21\\%, 2.29\\%, and 0.89\\% in LabelMe, SUN, and VOC2007 datasets, respectively. These enhancements affirm the capability of SLS to utilize semantic class relationships effectively, proving particularly beneficial in complex scenarios marked by distribution shifts and the presence of open classes.\n\n`Revision: 1. We have enhanced the detailed analysis of how these modules interlink on Page 8, Section 4.4 in the revised manuscript, providing additional evidence of their synergistic relationship. We hope this addresses your concerns and better illustrates the aligned motivations of our contributions. 2. We have revised the bar charts in Figure 3 on Page 9 in the revised manuscript to include annotations that distinctly showcase the substantial contributions of AAL and SLS in scenarios involving domain shift and open classes.`"
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700485015038,
+                "cdate": 1700485015038,
+                "tmdate": 1700485052975,
+                "mdate": 1700485052975,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "LJQusWMICo",
+                "forum": "qm46g9Ri15",
+                "replyto": "sk2dgBL9sx",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Reviewer_v1vj"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Reviewer_v1vj"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the response"
+                    },
+                    "comment": {
+                        "value": "Thanks for the effort in providing the rebuttal. On the main point regarding hierarchy, I'm still not entirely convinced. The authors point to three papers to back up the hierarchy-preserving ability of the CLIP text encoder. However, none of these papers seem to explicitly delve into label hierarchy (like 'dog' vs 'wolf'), but rather they demonstrate a basic understanding of phrases or texts by CLIP. There's also a specific paper, 'Hyperbolic Image-Text Representations, ICML 2023', that discusses how CLIP lacks in understanding the hierarchy of concepts. In my understanding, the authors don't really need to claim that their proposed SLS retains such a robust 'label hierarchy' capability. It might be more straightforward to prove that the text encoder can maintain the 'semantic relatedness' of labels, which should suffice to support their narrative.\n\nAlso, the paper would benefit from more qualitative case studies for a stronger justification.\n\nGiven this, I will keep my rating."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700678083535,
+                "cdate": 1700678083535,
+                "tmdate": 1700678083535,
+                "mdate": 1700678083535,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "Xe3GXD0g51",
+            "forum": "qm46g9Ri15",
+            "replyto": "qm46g9Ri15",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_J1XN"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_J1XN"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper focuses on the improvements of CLIP models in the context of domain shift and unseen classes. By fine-tuning the image encoder, AlignCLIP aims to learn more stable representation via rectifying the intrinsic attention and output similarity. To this end, AlignCLIP proposes two learning objectives: Attention Alignment Loss (AAL) and Semantic Label Smoothing (SLS). Experiments demonstrate that AlignCLIP surpasses state-of-the-art methods under various generalization conditions. And the ablation shows the effectiveness of the two proposed objectives."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The pursuit of stable representation and intrinsic consistency should be recognized and encouraged. This paper aims to refine the representation of CLIP models, which is a critical issue in nowadays development of pre-trained models.\n2. The ideas are quite reasonable. The alignment of attention is a fundamental solution to pursuing the stable intrinsic representation. The semantic relationships of class labels are also well utilized to regularize the representation. I like the ideas, despite some flaws in the presentation.\n3. The experiments are well-organized, and the results demonstrate the superiority of AlignCLIP."
+                },
+                "weaknesses": {
+                    "value": "1. The technical details are not presented clearly, especially how the two branches synergize. Figure 2 is critical to illustrate the method but is quite confusing. After carefully reading the paper, I know that the branch of new blocks is only used for deriving the target distribution for the attention alignment. However, this is supposed to be delivered clearly in the illustration.\n2. The argument that attention is biased towards background lacks solid evidence. The background tokens always occupy a large proportion so this argument is kind of weak. Despite the qualitative examples, this argument is still not well clarified.\n3. I think the proposal of AAL lacks solid arguments. I am not convinced that the attention map derived from the D-V structure can serve as an ideal target distribution for the learning of intrinsic attention. This is an important factor in AAL yet only motivated empirically."
+                },
+                "questions": {
+                    "value": "1. Figure 3(c). Why do the performances decrease after freezing more layers than 4? This is not explained.\n2. Figure 4 lower row. I cannot extract useful information from the attention distribution."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1850/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1850/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1850/Reviewer_J1XN"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1850/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698899618427,
+            "cdate": 1698899618427,
+            "tmdate": 1699636115127,
+            "mdate": 1699636115127,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "zb9ddMozAD",
+                "forum": "qm46g9Ri15",
+                "replyto": "Xe3GXD0g51",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to W1-W2 of Reviewer J1XN"
+                    },
+                    "comment": {
+                        "value": "**W1: The technical details are not presented clearly, especially how the two branches synergize. Figure 2 is critical to illustrate the method but is quite confusing. After carefully reading the paper, I know that the branch of new blocks is only used for deriving the target distribution for the attention alignment. However, this is supposed to be delivered clearly in the illustration.**\n\n**Reply:** Thank you for your valuable feedback regarding the clarity of the presentation in Figure 2. We acknowledge the critical importance of conveying our methodology with precision and clarity.\n\n`Revision: In response to your comments, we have revised Figure 2 to more clearly depict the distinct but complementary functions of the two branches. We will also enhance the accompanying textual description to articulate how these branches synergize within our methodology. Specific revisions include: 1. Improved Annotations: Clearer labels and annotations in Figure 2 to directly indicate the role of each branch; 2. Descriptive Legends: A legend that explains the symbols and process flow, ensuring that the function of new blocks in deriving the target distribution is unmistakable; 3. Focused Narrative: A revised narrative in the figure caption and the corresponding text section to explicitly describe the interaction between the branches and their collective contribution to attention alignment. We hope these adjustments will fully address your concerns and greatly appreciate your guidance in improving our manuscript.`\n\n\n**W2: The argument that attention is biased towards background lacks solid evidence. The background tokens always occupy a large proportion so this argument is kind of weak. Despite the qualitative examples, this argument is still not well clarified.**\n\n**Reply:** We thank you for your insightful critique regarding our assertion of attention bias towards the background in CLIP models. Our argument is substantiated by the following evidence:\n\n1. **Support from Related Work:** Two seminal studies [1,2] have demonstrated that CLIP models exhibit a preference for background regions over foreground elements, a tendency that deviates from human perception. These papers provide substantial evidence that CLIP's attention mechanisms often prioritize background information, contradicting what is typically expected in human-centered image understanding.\n\n2. **Empirical Evidence from Our Studies:** In our work, we present clear evidence through empirical analysis (see Figure 1, Supplementary Figures 7 and 8). These figures illustrate the tendency of CLIP models to disproportionately focus on background elements. Our analysis goes beyond mere observation by offering a methodological approach to recalibrate the attention mechanism, thereby refocusing it on salient objects rather than the background.\n\n3. **Insights from Causal Analysis:** The training dataset of CLIP, consisting of billions of image-text pairs, often reflects images as effects of certain concepts (Y), akin to the mental visualization preceding its depiction. The accompanying text, however, encompasses a broader semantic range, capturing not just the effect (content) but also the cause (background context). Post-training, CLIP models are proficient in identifying these causal relationships that push the CLIP model pay attention on the background.\n\n    [1] Yi Li, Hualiang Wang, Yiqun Duan, Hang Xu, and Xiaomeng Li. Exploring visual interpretability\n    for contrastive language-image pre-training. arXiv, 2022b.\n\n    [2] Yi Li, Hualiang Wang, Yiqun Duan, and Xiaomeng Li. Clip surgery for better explainability with\n    enhancement in open-vocabulary tasks. arXiv, 2023.\n\n`Revision: in the revised manuscript, we have provided additional analyses on Page 22, Section C.2, detailing how our approach effectively shifts attention from the background to the relevant foreground objects, thereby improving the model's interpretability and performance. We believe these additions will address your concerns by providing a clearer, evidence-based rationale for our claims about attention bias and its rectification.`"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700484691542,
+                "cdate": 1700484691542,
+                "tmdate": 1700484691542,
+                "mdate": 1700484691542,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "FPEZqT8nDH",
+            "forum": "qm46g9Ri15",
+            "replyto": "qm46g9Ri15",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_WRUU"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1850/Reviewer_WRUU"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents a technique for fine-tuning of CLIP model for downsteram vision tasks where the focus is on addressing two alignment problems: 1) Attention alignment: aligning semantic similarity distribution (image-text matching) to the attention distribution across each multi-headed attention layers. 2) Semantic label smoothing : aligns the predicted category distribution with that of the \ninherent semantic relationships among categories learned during vision-language pre-training. The proposed technique is evaluated on a wide range of datasets to demonstrate better generalization performance compared to the SOTA"
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1) Topic relevance and motivation: The paper addresses an interesting topic showing the weaknesses of the CLIP model (attention misalignment, category misalignment) and suggests techniques to improve it.\n2) SOTA Results: The proposed technique is evaluated on many datasets where it (in most of the cases) consistently outperforms current SOTA techniques."
+                },
+                "weaknesses": {
+                    "value": "1) Limited novelty: Although it achieves SOTA results, I have some concerns regarding the technical contribution of the work. Specifically, I find it as a combination of existing techniques. \na)The attention alignment problem was already discussed in CLIP surgery (Li et.al 2023). The proposed technique follows very similar architecture and training protocol proposed in (Li et.al 2023) but replaces V-V-V structure with D-V structure. Although D-V structure is interesting, I don't see any advantages of using D-V structure compared to V-V-V structure (in terms of qualitative results in Fig 8). Authors claim that it can reduce computations but I would like to know the comparison in computation (GFLOPS/time) between V-V-V structure and D-V structure and also the quantitative results for V-V-V and D-V structure (if possible). I would also like authors to discuss the contributions compared to Li et.al 2023.\nb) Similarly using guidance form the text classifier of CLIP (i.e using pairwise class similarity to regularize training) was also proposed in B. I would like to know how is the proposed technique is different from the one proposed in B\n\n2) Computational complexity: Authors employ Siamese type of architecture for fine-tuning. This can increase the complexity compared to other simple methods like CLIPOOD or prompt tuning techniques like A, COOP, CoCoOP, MaPLe. I want authors to compare the number of parameters and also training/inference time with other techniques mentioned above.\n\n3) Ablation Study: It is not clear from the fig 3.a, the contribution of AAL and SLS (looks marginal). Similarly, the contribution of SLS compared to Label smoothing is not apparent in Fig 3d. It would be good to indicate the gain w.r.to the smallest bar.\n\n4) Presentation: The writing could be improved, specifically section 3.2. It is hard to understand the method from the current description\n\n\nA: MaPLe: Multi-modal Prompt Learning, CVPR 2023\n\nB: Improved Visual Fine-tuning with Natural Language Supervision, ICCV 2023"
+                },
+                "questions": {
+                    "value": "1) Contributions compared to Li et.al 2023\n2) Comparison in GFLOPS between V-V-V structure and D-V structure and comparison of quantitative results between the two\n3) Comparison of number of parameters and also training/inference time with other techniques like CLIPOOD, COOP, CoCoOP, A [MaPLe]\n4) Clarify Ablation study experiment results mentioned above"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1850/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699226504522,
+            "cdate": 1699226504522,
+            "tmdate": 1699636115043,
+            "mdate": 1699636115043,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "vNV06DNZVr",
+                "forum": "qm46g9Ri15",
+                "replyto": "FPEZqT8nDH",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to W1 of Reviewer WRUU"
+                    },
+                    "comment": {
+                        "value": "**W1: Limited novelty: Although it achieves SOTA results, I have some concerns regarding the technical contribution of the work. Specifically, I find it as a combination of existing techniques. a) ... b) ....**\n\n**Reply:** Thank you for the essential comments. These comments can significantly improve the quality of this paper and make it more logical and self-contained. First of all, we thank you for appreciating our work.\n\n1. **Thank you for pointing out that our work achieves SOTA results.** On almost all 21 open-world datasets, our work achieves the best performance. This justifies that the two misalignment problems are objective and our target solutions are practical. \n\n2. **Thank you for pointing out that the D-V structure is interesting.** The purpose of proposing the D-V structure is to explain that not only the V-V-V structure proposed in the CLIP surgery paper can work, but also works as long as Q-K is replaced by an equivalent structure (such as K-K, Q-Q, or diagonal matrix), as shown in Figure 8 at the Appendix.\n\nThe comprehensive responses to all your concerns are as follows. \n1. **About the combination of existing techniques:** This is a potential confusion that our work did not combine existing techniques and has new contributions that never existed before.\n   - **Our work is the first to address the attention misalignment problem at the fine-tuning phase.** In fact, CLIP Surgery (Li et al., 2023) is a new type of model interpretability method that cannot be used to adopt the CLIP model to downstream tasks. Please check the CLIP Surgery paper for detailed descriptions. Although our work is inspired by the idea of CLIP surgery to modify the Q-K-V attention structure, this modification is not the core of our contribution, and the core contribution in this part is the newly designed Attention Alignment Loss that utilizes the better similarity distribution derived from the D-V structure to realign the attention distribution across each multi-head attention layer.\n   - **Our work proposes a new regularization technique, semantic label smoothing, that advances the popular label smoothing technique.** Semantic label smoothing can preserve prediction hierarchy based on class similarity derived from textual information. Aligning the model's predicted category distribution, semantic label smoothing can significantly improve the representation stability and enhance the open-class detection in open-world scenarios.\n\n\n2. **Differences between CLIP Surgery (Li et al., 2023) and our work:** We appreciate the opportunity to clarify the aspects you have raised concerning the comparison between our proposed D-V structure and the V-V-V structure as mentioned in Li et al., 2023.\n    - **The research topics are different.** The research topic of CLIP Surgery is model interpretability while our research topic is out-of-distribution generalization and out-of-distribution detection. Specifically, CLIP Surgery concerns neural network interpretability while our work addresses the challenge of creating stable representations in VLP models for adaptability in open-world environments, particularly dealing with domain shifts and unseen classes. \n        \n    - **Our work has the V-V-V attention structure advance.** As for the modified structure of attention, our work provides a new insight for the community. Specifically, the CLIP surgery paper only points out only the V-V-V structure is working, but our work points out that not only the V-V-V structure can work, but also works as long as Q-K is replaced by an equivalent structure (such as K-K, Q-Q, or diagonal matrix), as shown in Figure 8 at the Appendix. This insight opens opportunities for future studies to design better model interpretability methods and even to guide the design of vision-language-pertaining strategies to avoid the attention misalignment problem. \n    \n    - **Our work has more methodology contributions.** It is important to highlight that our contributions extend beyond the adoption of the D-V structure. While we acknowledge the foundational work done by Li et al., our approach diverges in addressing the misalignment problem rather than pointing out it only. These include the AlignCLIP which includes a new optimization objective (Attention Alignment Loss) and a regularization technique (Semantic Label Smoothing). Our work thus provides a novel perspective and contributes to the field by enhancing the stability and adaptability of representations in VLP models, ensuring better performance across varied datasets and out-of-distribution contexts."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700480832154,
+                "cdate": 1700480832154,
+                "tmdate": 1700480832154,
+                "mdate": 1700480832154,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "IZMScZdabd",
+                "forum": "qm46g9Ri15",
+                "replyto": "FPEZqT8nDH",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1850/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to W1 of Reviewer WRUU"
+                    },
+                    "comment": {
+                        "value": "- **D-V structure has computation advance.**  Our decision was primarily driven by the goal of achieving greater computational efficiency. To elaborate, we have performed a detailed GFLOPS computation for both structures in the context of a multi-head attention mechanism. For the V-V-V structure, the FLOPs per head are calculated as $2 \\times N \\times (d_v \\times d_{model} + d_v \\times d_{model})$, where $N$ represents the sequence length, $d_v$ is the dimension of the value, and $d_{model}$ is the model dimension. In contrast, for the D-V structure, the FLOPs per head simplifies to $N \\times d_v$.  Applying these calculations to a vision transformer model with a 12-head attention mechanism, we found that the GFLOPS for the V-V-V structure amounts to 0.46478, whereas for the D-V structure, it is significantly lower at just 0.0003. This stark contrast indicates that the D-V structure reduces the computational demand by approximately 1549 times compared to the V-V-V structure. Such a substantial reduction in GFLOPS directly translates into markedly faster processing times and reduced resource consumption. This efficiency makes our approach particularly advantageous for real-world applications, especially in contexts where computational resources are constrained or limited. We believe that these calculations demonstrate the superiority of the D-V structure.\n\n    - **Quantitative results for V-V-V and D-V structure.** Regarding the quantitative performance comparison, we have conducted additional experiments to provide a direct comparison between the D-V and V-V-V structures. As shown in Table 1, we observed that the D-V structure marginally outperforms the V-V-V structure in specific tasks. We have included these results in Table xx in the revised manuscript.\n\n        **Table 1: The quantitative results for V-V-V and D-V structure on the VLCS dataset.**\n\n        | Method | Caltech101        | LabelMe         | SUN09         | VOC2007 | Avg  |\n        | ------ | ----------------- | --------------- | ------------- | ------- | ---- |\n        | V-V-V  | 99.6\u00b10.2 | 68.7\u00b10.2  | 81.1\u00b10.1  | 90.1\u00b10.2 | 84.9 |\n        | D-V    | 100\u00b10.0  | 68.9\u00b10.3  | 80.9\u00b10.1  | 90.1\u00b10.2 | 85.1 |\n\n\n3. **Differences between TeS (Wang et al., 2023) in B and Semantic Label Smoothing (SLS):** TeS is a complex instance-level label smoothing technique using a projection head for diverse reference distributions, whereas SLS is a simpler class-level method focusing on representation stability by aligning predicted distributions with semantic class relationships in open-world environments. While both TeS and SLS are approaches to label smoothing, they exhibit distinct methodologies and applications. TeS represents a more intricate instance-level label smoothing method, using a projection head to align vision representations with textual space. This allows TeS to generate diverse reference distributions for different samples, even within the same class. Conversely, SLS, a more straightforward class-level label smoothing technique, focuses on stabilizing representation in open-world scenarios. It does so by aligning the model's predicted category distribution with the semantic relationships among classes. The key differences between TeS and SLS are threefold:\n    - **Implementation and Complexity:** SLS is more user-friendly in terms of implementation and comprehension. It utilizes a class similarity matrix derived from text embeddings of each class. The cosine similarity between these class text embeddings guides the regularization process during fine-tuning. TeS, on the other hand, involves projecting vision representations into text space using a projection head, followed by processing the text embedding through a text encoder (like CLIP or BERT), and then comparing this information with anchor points.\n    - **Computational Demand:** SLS is less computationally demanding. It requires computing the class similarity matrix only once at the beginning of fine-tuning. In contrast, TeS demands recalculating the similarity matrix for each sample at every iteration, significantly increasing computational overhead.\n    - **Applicability and Effectiveness:** SLS is generally more effective and straightforward for broad classification tasks, particularly in situations involving distribution shifts or new class introductions. TeS, alternatively, is designed to enhance the generalization capabilities of pre-trained models for specific tasks. It addresses issues like catastrophic forgetting post-fine-tuning and biases inherent in the pre-trained models.\n\n`Revision: We have added the discussions about the difference between our work and CLIP Surgery on Page 24, Section C.2 in the Appendix of the revised manuscript. We have discussed the central difference between our work and TeS (Wang et al., 2023) on Lines 9-12, Page 6, Section 3.3 in the revised manuscript. The main differences between our work and existing works are much clearer now.`"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1850/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700480988951,
+                "cdate": 1700480988951,
+                "tmdate": 1700481495733,
+                "mdate": 1700481495733,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

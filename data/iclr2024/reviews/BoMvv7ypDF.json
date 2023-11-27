@@ -1,0 +1,363 @@
+[
+    {
+        "id": "4RGhyKwYG8",
+        "forum": "BoMvv7ypDF",
+        "replyto": "BoMvv7ypDF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_rqBy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_rqBy"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors present a framework for sampling from a general distribution, known up to a normalizing constant, using a denoising process (which is the reversal of the Ornstein-Uhlenbeck or \"Gaussian noising\" process). \n\nThe authors exhibit:\n-  a specific discretization of the denoising process (which requires the unknown scores of intermediate distributions)\n- a specific estimation procedure (to approximate the unknown scores of the intermediate distributions)\n\nwhich together provide a discrete algorithm for sampling. \n\nThe authors prove the convergence of their algorithm for a general target distribution (no assumption on log-concavity) at a rate that is quasi-polynomial (compared to exponential using classical Langevin sampling)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "These theoretical results seem very relevant at present. There is a recent trend in the literature of score-based diffusion models [1] to sample from a general  (e.g. multimodal) target distribution following a denoising process as opposed to a classical Langevin process. While it is known that the Langevin process is sub-optimal, in that it can require an exponential number of steps to converge to the target distribution with a given precision, it is not so clear why the denoising process may be preferable. The authors' theory is a welcome step forward. \n\nThe authors' results seem comprehensive, namely in terms of:\n- proof of convergence of the under general assumptions (the target distribution is known up to a normalizing constant; importantly, it need not be log-concave)\n- a provably better convergence rate (or mixing time), that is quasi-polynomial as opposed to exponential, in the number of steps required to achieve a given precision\n- a comprehensive analysis of sources of error arising from inter-connected sampling and estimation problems\n\nThe authors also make a visible effort to make their theory intelligible and to give intuition on how to set different hyperparameters such as the window length S.\n\n\nDisclaimer: I have not checked the math carefully nor is sampling using diffusions my primary research area.\n\n\n[1] Song et al. Score-based Generative Modeling Through Stochastic Differential Equations. ICLR, 2021."
+            },
+            "weaknesses": {
+                "value": "**Context**. The authors' algorithm consists in approximating the score of the intermediate distributions, in order to run a discrete version of the denoising process. Approximating the score of an intermediate distribution $\\nabla \\log p_{k, t}$ (window $k$, step $t$ within the window) is achieved by a sequence of estimation and sampling problems (section 3.2.). For context, we recap the authors' method. With the authors' notations, $p$ is used for the intermediate distributions from the sampling process, and $q$ are auxiliary distributions (defined in section 3.1.) that are used to estimate are the scores of the intermediate distributions. \n\nInitialization: start with the known score of the target we start with the known score of the target distribution $\\nabla \\log p_{0, 0}$.\n\nLoop: for window $i$ in the range of $0$ to $k-1$,\n1. Estimate the score at the start of the window,  $\\nabla \\log p_{i, 0}$ \n2. Sample from the auxiliary distribution at the start of the next window, $q_{i+1, 0}$\n\nTermination: once we arrive at the desired window $k$, we move to the correct place inside that window,\n- Estimate the score at the start of the window $\\nabla \\log p_{k, 0}$ \n- Sample from the auxiliary distribution in the correct place inside that window $q_{k, t}$\n- Estimate the score at the correct place inside that window $\\nabla \\log p_{k, t}$ \n\nThe authors' method depends on making these two steps - estimation and sampling - efficient. \n\n**Q1**. The argument for efficient sampling is clear: the authors choose a \"small enough\" window length $S$, so that its uniform discretization into steps of length $\\eta$, produces sampling distributions $q_{k, t}$ that are log-concave and can therefore be sampled using a classical ULA (Unadjusted Langevin Algorithm) with a polynomial number of steps. Is that right?\n\n**Q2**. However, the argument for efficient estimation is not explicit to me. Is it that we are, in the first equation of section 3.1., essentially just computing the empirical mean of $q$, rescaled by a certain factor. So the error of that estimate is the standard error of the mean (SEM), which is proportional to the variance of $q$. Do we have a handle on the variance of $q$?"
+            },
+            "questions": {
+                "value": "**Q1**. Could the authors reunite their recommendations on setting hyperparameters in a list? For example:\n\n-  the diffusion length T should be \"big enough\". Practically, T should be at least on the order of $\\log d / \\epsilon$\n-  the window length  S should be \"small enough\" for the sampled distributions to be log-concave but \"big enough\" to avoid extra discretization steps. Practically, S should be on the order of $\\frac{1}{2} \\log \\frac{2L + 1}{2L}$.\n- the length of a step inside a window $\\eta$ should be ...? is there any recommendation for that?\n\n**Q2**. Can the authors discuss which hyperparameters would be easier or harder to set?\n\nFor example, T seems to be easier to set for two reasons. First, we can actually compute $\\log d / \\epsilon$. Second, if T is \"too big\", the authors' convergence rate would still apply. \n\nHowever, setting S seems to be trickier. We cannot actually compute $\\frac{1}{2} \\log \\frac{2L + 1}{2L}$ given that we do not known the smoothness constant $L$. So we would set S somewhat heuristically, and S could be potentially \"too big\" or \"too small\". If I correctly understand the authors' argument, the more dangerous situation is if S is \"too big\" as the sampling distributions might not be log-concave and this would introduce an exponential number of steps in sampling. \n\n**Q3**. The efficiency of the authors' method seems to rely on the assumption that the \"error propagation is benign, i.e. $l_{k, r}(\\epsilon) = \\epsilon$\". Could the authors discuss the plausibility of this assumption? Is this a common assumption in the literature? Or are there works where benign error propagation appears in another context, supporting the claim that error propagation can indeed be benign in certain cases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8663/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698057521280,
+        "cdate": 1698057521280,
+        "tmdate": 1699637085632,
+        "mdate": 1699637085632,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "QBy9tbNggH",
+        "forum": "BoMvv7ypDF",
+        "replyto": "BoMvv7ypDF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_FZMK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_FZMK"
+        ],
+        "content": {
+            "summary": {
+                "value": "Sampling from non-log concave distribution is generally difficult. This paper proposes an efficient sampling method for resolving this difficulty based on the reverse process of diffusion models. The key idea is to decompose the diffusion process into a number of sufficiently short segments, in which the intermediate distributions become log-concave under certain moderate assumptions. A recursive algorithm to estimate score function utilizing this property is proposed. It is shown that the gradient complexity of the algorithm is quasi-polynomial with respect to the gradient error."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "A new algorithm to estimate the score in diffusion models is developed with a mathematical guarantee."
+            },
+            "weaknesses": {
+                "value": "Practical usefulness is not clear. \"S\" could be very small yielding very large \"K\", which implies the method would be practically difficult to perform even if it is of quasi-polynomial gradient complexity. Some experimental evidence for the practical usefulness is desired."
+            },
+            "questions": {
+                "value": "Can you show the usefulness of the proposed method by numerical experiments on some concrete examples?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Reviewer_FZMK",
+                    "ICLR.cc/2024/Conference/Submission8663/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8663/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698474339002,
+        "cdate": 1698474339002,
+        "tmdate": 1700545370936,
+        "mdate": 1700545370936,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wxXC1EwSgn",
+        "forum": "BoMvv7ypDF",
+        "replyto": "BoMvv7ypDF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_UkCa"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_UkCa"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the problem of sampling from a distribution $p_* \\propto e^{-f_*}$ given access to $f_*$. It proposes a novel recursive score estimation scheme to solve this problem using a quasi-polynomial number of gradient computations in $\\epsilon$, the desired error tolerance. This improves significantly on the exponential dependence in prior work. The key observation seems to be that if you have a distribution with lipschitz score function, and you run the OU process for a small time depending on this lipschitzness, then the posterior distribution is log-concave and can be sampled from using ULA given access to the prior score. This observation can be used to estimate the score functions for different smoothing levels, and finally, once these have been estimated, diffusion monte carlo can be used to sample from $p_*$"
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Great paper! I am a fan of the recursive score estimation scheme. I think this is a solid piece of work that will inspire future work in the area.  I'm excited to see whether it inspires new practical algorithms for sampling from diffusion models.\n\nMore detailed comments:\n\n- The problem is an interesting one, and the solution proposed is interesting and novel.\n- The key observations are crisply stated, and could possibly find other uses.\n- The improvement over prior work is substantial."
+            },
+            "weaknesses": {
+                "value": "- The presentation can use a lot of improvement. The figures are currently difficult to understand. The algorithm blocks are also difficult to interpret. \n- Quasi-polynomial is interesting, but I would be curious to know if you think polynomial is possible/what the barriers are. Would really appreciate it if you put something about this at the end of the paper.\n- More intuition about why the complexity is quasi-polynomial would be useful."
+            },
+            "questions": {
+                "value": "- What are the barriers to obtaining polynomial complexity?\n- Can you give more intuition for where the quasi-polynomial complexity comes from? Currently, there is a small block that is a bit difficult to interpret."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Reviewer_UkCa"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8663/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698908890904,
+        "cdate": 1698908890904,
+        "tmdate": 1699637085408,
+        "mdate": 1699637085408,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "LcGxFwGktK",
+        "forum": "BoMvv7ypDF",
+        "replyto": "BoMvv7ypDF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_Rkvn"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_Rkvn"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper the authors propose a novel algorithm for learning a denoising diffusion model for sampling from a target distribution $p_*$ of which we only have access to its unnormalized density. The proposed methdology relies on a recursive approximation of the score functions. The main idea behind this score estimation is that: 1. the score at some time step $t_k$ and point $x$ can be expressed as an expectation over the law of $X_{t_k-1} |\u00a0X_{t_k} = x$ 2. this conditional distribution is log concave if $t_{k-1}$ is close enough to $t_k$ and calls for the use of ULA to sample from it. Then, in order to sample from it, one uses make use of the score associated to $X_{t_{k-1}}$, hence the recursive nature of the algorithm. The authors then go on to show the convergence of the resulting algorithm and its gradient complexity without requiring the standard log Sobolev inequality."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "The algorithm proposed in the paper is pretty smart and solves all the issues of RDS. Furthermore, it is furnished with nice theoretical results that sidestep the use of inequalities such as Poincar\u00e9 or log Sobolev inequality. This is a very interesting development since in comparison, existing analyses of Langevin Monte Carlo all require such assumptions. Interestingly, the authors do not require assumptions on the score estimation in contrast with previous methods. \n\nOverall, this is a very interesting work."
+            },
+            "weaknesses": {
+                "value": "- Of course, the main weakness of this paper is the lack of experiment. The main contribution here is methodological and so one would expect to have numerical experiments backing up the methodological and theoretical results. I find it very strange that the authors did not include numerical experiments, comparing for example their method to ULA or such, on non-log concave target distributions and with runtime comparisons. I am willing to raise my score to 8 if the authors provide such comparisons.\n\n- I found the paper to be quite difficult to read due to some of the notations that seem to be unncessarily confusing. The figures do not help either. I think that it would have been easier to just explain the algorithm by fixing some timesteps $t_1, \\dotsc, t_K$ such that $X_{t_k} | X_{t_{k+1}}$ is log concave (using the inequality (4)) and then running the backward diffusion using the same discretization, without further diving the segments $[t_k, t_{k+1}]$, leaving it for the appendix."
+            },
+            "questions": {
+                "value": "I do not have further questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Reviewer_Rkvn",
+                    "ICLR.cc/2024/Conference/Submission8663/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8663/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699201658032,
+        "cdate": 1699201658032,
+        "tmdate": 1700693269493,
+        "mdate": 1700693269493,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "OUhvQChHFf",
+        "forum": "BoMvv7ypDF",
+        "replyto": "BoMvv7ypDF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_nqUk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8663/Reviewer_nqUk"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose an algorithm to sample from an unnormalized density. Their algorithm is inspired in Reverse Diffusion Sampling, where the score is approximated by sampling from *hard* subproblems. The proposed method breaks down the task into *simpler* problems, which can be sampled efficiently, resulting in easier, faster score approximations. Which eventually result in good generation. \n\nThe main contributions of the paper are:\n- Developing a novel algorithm **Recursive Score Diffusion Monte Carlo** that  approximates the score by recursively sampling from easier subproblems\n- Establishing a convergence guarantee for the method under mild assumptions \n- The proposed algorithm has quasi-polynomial gradient complexity under mild assumptions on the data distribution"
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper has a clear explanation of the ideas leading up to their method\n2. The algorithm provides with novel insights on how to approximate the score\n3. The proposed method has a quasi polynomial gradient complexity bound, something that is strongly desirable"
+            },
+            "weaknesses": {
+                "value": "1. The main theorem in the paper results in a high probability bound of the form $KL(P_*||P_{0,S}^\\leftarrow) = \\tilde O(\\epsilon)$ with probability $1-\\epsilon$. This means that that the accuracy of the method scales linearly with the probability, so that we are forced to take $\\epsilon$ very close to $0$. This would result that in practice many samples are needed to obtain high accuracy\n2. The paper lacks numerical examples to demonstrate their techniques. This is important at it would demonstrate if the method is actually an improvement from the DMC paper. One reason for the lack of experiments could be that the total number of samples needed to run this algorithm grows with $n_k * m_k = O(1/\\epsilon^5)$ which can be computationally expensive. If this was the case then the algorithm is not implementable in practice despite its remarkable properties"
+            },
+            "questions": {
+                "value": "Despite being a theoretical paper, I think the key of the proposed method is that it tries to find a way to implement the problem for nonconvex problems, something that DMC would struggle with. Because of that I wonder if this method be implementable in practice, considering the computational challenges that come with it? It seems that the recursion although significantly simplifying the sampling tasks, results in very strong computational requirements, so addressing this would be very important for me"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8663/Reviewer_nqUk",
+                    "ICLR.cc/2024/Conference/Submission8663/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8663/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699572513465,
+        "cdate": 1699572513465,
+        "tmdate": 1700764408543,
+        "mdate": 1700764408543,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

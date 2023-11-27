@@ -1,0 +1,205 @@
+[
+    {
+        "id": "87wgrmi0xN",
+        "forum": "yrgQdA5NkI",
+        "replyto": "yrgQdA5NkI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_Qi1r"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_Qi1r"
+        ],
+        "content": {
+            "summary": {
+                "value": "GNNs need to balance the contributions from local (nearby nodes) data and more non-local data. The authors here present an approach based on spectral graph convolutional methods which can capture local and non-local features through a parameterization via resolvent expansions. The authors propose various means of implementing their method to both improve performance and speed up the technique. Their results are backed by experiments on a few datasets which show relatively good performance of the method."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The most important strength is that the paper presents a method which performs well on numerical experiments. Though I have some concerns about the experiments, if the results are confirmed and these concerns are appropriately addressed, I think this method should be documented and tested further.\n\nSeparate from the experiments, the proposed method is an extension of spectral convolutional approaches which have enjoyed great success. The particular strategy that the authors propose, via resolvent expansions, seems like a decent approach to take when including long range interactions. It is tied together relatively nicely with geometric data as well. Implementation can be tricky in certain parts (e.g. implementing complex numbers) but the architecture and overall idea is relatively sound."
+            },
+            "weaknesses": {
+                "value": "The method is laid out in section 4 and to be honest, I had quite a bit of trouble following along. A number of notational concerns are pointed out below. But let me just start at the beginning and make sure I have the right picture. As I understand, the authors are choosing $b$ basis operators which are functions taking inputs consisting of a set of $\\mathcal{X} \\times V$ pairs where $V$ is some space for the hidden state. Then, they apply linear maps on top of these outputs from the bases which respect the graph permutation equivariance, hence a $bn \\times bn$ matrix. I still am not sure this is the right interpretation, but the authors need to state this more formally and cleanly. They should specify what the functions $\\phi_m$ do. I.e. specify input and output space. Indexing of eq. (7) is confusing. I believe $ij$ refers to the node indexing, but the matrix is $bn \\times bn$ so $H_{cij, m_1, m_2}$ is not consistent with how the entries of the matrix work. Also, eq. (7) seems to indicate the entries are outputs of fixed basis functions, but these can be learnable functions as well? The authors should also give examples of $\\phi_m$ as promised (is (21) an example of such?). I also believe that eq. (7) should be indexed over $k$ in the intersection of the neighbors, not the union. This is just a sampling of the confusions that arise and eventually required me to make decisions as to what is actually happening.\n\n\n\n\nMoving on, I have concerns about the experiments. First, there is no code shared so I cannot verify numbers. What is shared in the zip file appears to be a dataset and some details on how to train a model for that dataset. Sharing code is obviously not a requirement, but it means I have to judge the result solely on what is written. Here, the methods of comparison to other results are potentially in question. For example, it appears complex numbers are being counted as a single parameter per number whereas it should be two per number (real and complex parts are both variables); see question below asking to clarify this. Runtime comparisons are also not provided, and this can be a concern here, since the method requires spectral decompositions (or approximations thereof). Finally, see questions below, but I am not sure how certain features are being extracted. E.g., the authors say that they take descriptors from the PDF model in the appendix for the ZINC data, but this would be unfair if they take features from a trained model on the same dataset. Nonetheless, if these issues are resolved, results look good as stated and if confirmed, this would add support to the method.\n\nI simply could not follow section 4.3. What is the Combe-Thomas theorem? There is no citation for this. Also, doesn\u2019t going from the bound stated in the paragraph before Eq (16) to the bound in Eq. (16) require some dependence on the norm of the weights? Later on, the geometric expressiveness statements are stated without proof and missing too many details for me to follow. I have many questions. First, what exactly are the authors saying is equivalent to the infinite layer MPNN (does the matrix channel need an infinitely sized pole expansion)? Where are the formal proofs of these statements? Does expressiveness here imply approximating a given function and if so, in what norm? What are two-body entries?\n\nNotation comments:\n- Eq (3): $\\mathcal{G}$ in the notation was defined as a specific graph; however, here it is used to denote the space of graphs.\n- Eq (4): $\\Phi \\odot g$ is confusing. Why is there a representation for the output space but not the input space? \n- Below Eq (8): $\\rho$ is bold in the equation but not bold there. Also, $\\rho$ is unitary in general, not orthogonal as far as I understand. If it is orthogonal, then why is there a complex conjugate transpose instead of just a transpose?\n- ... and many more. I would ask the authors to go through the paper and significantly revise and clean things up. \n\n\nAltogether, I cannot recommend acceptance for this paper given the writing quality and concerns laid out above. Nonetheless, I welcome the authors' responses to these points."
+            },
+            "questions": {
+                "value": "Other questions/concerns:\n- When reporting parameter counts, the authors have some parameters which are complex numbers. Are these complex numbers counted as two parameters per number or one? A fair comparison should count each complex number as two parameters since there is a trainable real and complex part.\n- It seems this parameterization is a nonlocal form of message passing and the resulting layers manipulate the eigenvalues of the Laplacian or adjacency matrix. We know from expressiveness results (WL or otherwise) that this is limited because the eigenvalues are insufficient to encode all the information in a graph. Is my understanding here correct? If so, what are the practical limitations that arise from this implementation?\n- What are the $\\phi_m$ basis functions for pure graph inputs? \n- If the $\\phi_m$ are being learned, did you include this in the parameter count?\n- When you say \"The initial edge features ... are obtained by concatenating PDF [Yang et al. (2023)] descriptors used for ZINC\u201d, are these descriptors the outputs of the trained model? That would be unfair for comparison if so."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2444/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2444/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2444/Reviewer_Qi1r"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2444/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697736701490,
+        "cdate": 1697736701490,
+        "tmdate": 1700533929123,
+        "mdate": 1700533929123,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "y9ziJLJwjM",
+        "forum": "yrgQdA5NkI",
+        "replyto": "yrgQdA5NkI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_2GgR"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_2GgR"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a novel architecture for processing graph data. The goal of the proposed method is to model non-local interactions between nodes in graphs without the shortcomings of alternate approaches. Namely, over-smoothing and excessive compute requirements for message-passing GNNs and the need for hand-designed features with spectral GNNs.\n\nMatrix function neural networks learn equivariant representations over graphs. The approach consists of three stages: 1) building a matrix that corresponds to a group-equivariant matrix operator 2) applying a learned matrix function to this matrix 3) updating the matrix. To my understanding, the major contributions appear in the second part. The authors make use of resolvent calculus to determine an efficient parameterization of the matrix function. Given that the underlying matrix is sparse, this parameterization admits an efficient (potentially linear) algorithm for computing the function.\n\nThe method is evaluated on three different graph learning datasets, where it generally outperforms the baseline methods (or performs at least as well)."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "To my knowledge, this is an original and novel approach to designing GNNs. The authors describe theoretical and practical differences between their approach and existing methods. The proposed approach pulls on learnings from several other areas of study (resolvent calculus, electronic structure methods, and more) to design an expressive and efficient class of graph neural networks. The resulting method is elegant and performs well in the empirical evaluation.\n\nOverall, I found the paper to be clear and well-written. I am not familiar with resolvent calculus or some of the other technical background introduced in section 4, but I was able to understand and follow the details. Furthermore, full details of the experiments are provided in the supplementary.\n\nI feel that the contributions in this work are significant. GNNs are a busy area of research and it is no small feat to propose a novel and practical architecture. Empirically, the proposed method performs well. While the margin of improvement is often narrow, MFNs consistently achieve performance at least on par with leading methods in comparison."
+            },
+            "weaknesses": {
+                "value": "It is unclear whether MFNs can be used as a drop-in replacement for GNNs. In two of the experiments, the models used are not end-to-end matrix function networks, due to model size considerations. Instead, a small number of MFN layers are used with more standard layers following. In all experiments, initial edge features are also extracted from other architectures --- I haven't quite understood the implication of this in terms of comparison to baselines.\n\nThe method is fairly complex with several design decisions. For example, the choice of basis, choice of update method, number of learnable weights and poles, etc. Moreover, making the method computationally tractable requires some techniques that are unfamiliar to the learning community at large. Therefore, I expect that the method may be adopted quite slowly by the community. This could be alleviated with an open-source implementation."
+            },
+            "questions": {
+                "value": "One area of the paper that I feel I couldn't completely understand was on the introduction of a choice of basis (Section 4.1). It is stated that this choice should be made with consideration of the application domain. On the surface, this seems to align with spectral GNNs that lean on hand-designed features for effective learning. However, the authors point out that this can be approximated well in some cases. I'm curious to know what the limitations here are. When are we unable to automatically learn these functions? And are there any practical considerations for learning these?\n\n\nDo we need to ensure that the learnable weights and poles satisfy any constraints for the resolvent calculus definition (Section 4.2)? From reading the explanation in the paper, I was under the impression that the choice of weights and poles determine the curve implicitly via the quadrature rule. Is it possible that we could learn weights and poles that lead to invalid curves, or otherwise undesirable behaviour?\n\nAs I mentioned above, the MFN models used in experiments always contain only a small number of layers. Was this a computational consideration?\n\nMinor comments:\n\n- There are a couple of symbols that are not defined in the main text. These can be mostly be inferred from context, but should ideally be defined.\n    - Above equation (1), the domain and codomain of $s$ should be defined.\n    - I could not find a definition of $\\mathfrak{Z} z$ and related symbols used in Section 4.3.\n- You cite transformers as having a problematic quadratic scaling. While this is true in the original formulation, it is quite common nowadays to use methods with far more efficient scaling. For example, PerceiverIO can reduce the computational cost to linear.\n- Shaw et al. 2018 are cited for positional encodings, but these are also used in the original Vaswani et al. transformer paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2444/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698787475476,
+        "cdate": 1698787475476,
+        "tmdate": 1699636180206,
+        "mdate": 1699636180206,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "8vurddXaP7",
+        "forum": "yrgQdA5NkI",
+        "replyto": "yrgQdA5NkI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_qFqk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2444/Reviewer_qFqk"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes MFN, a graph neural network where the intermediate representation takes a matrix form. The matrix form makes the neural network equivariant for a group action where the representation is unitary. An efficient computation based on the power expansion of the matrix is also proposed. The experiments on the molecule datasets show the competitive performance of MFN."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Strong empirical results.\n\nMatrix variate formulation and its efficient approximation by the resolvent expansion are novel."
+            },
+            "weaknesses": {
+                "value": "There is room for improvement in the presentation. I found several incomplete descriptions. For example,\n- Given a matrix $A$, $A^*$ is not defined (I guess it's adjoint of A)\n- $f_\\theta(H)$ is defined as \"scalar to scalar,\" but it seems \"matrix to matrix\". \n- In Eq. (10), since $H$ is a matrix, it's not obvious how $g$ acts on $H$. I guess H is the function of $\\sigma$ and $g$ acts on it, but it's not clearly described. \n- I couldn't find the proof of Eq. (10).\nAlso, see the \"Questions\" area below. \n\nIt is not easy to grasp the computational cost of MFN since it depends on the graph dimension d, the choice of the update equations (11)--(13), etc. A clear comparison is needed. For example, you can evaluate the actual wall clock time and memory usage, which would be clear evidence that MFN is better than other methods, including Transformer."
+            },
+            "questions": {
+                "value": "In experiments:\n- What is L in the caption of Fig 2?\n- It seems H is constructed with Kronecker products as in Eq. (21). What is the actual size of H?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2444/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698837636211,
+        "cdate": 1698837636211,
+        "tmdate": 1699636180115,
+        "mdate": 1699636180115,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

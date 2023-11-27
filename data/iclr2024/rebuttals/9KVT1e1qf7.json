@@ -1,0 +1,863 @@
+[
+    {
+        "title": "LoRAPrune: Pruning Meets Low-Rank Parameter-Efficient Fine-Tuning"
+    },
+    {
+        "review": {
+            "id": "yWk5b0hkOn",
+            "forum": "9KVT1e1qf7",
+            "replyto": "9KVT1e1qf7",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_RcVc"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_RcVc"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper presents a LoRA-guided structured pruning method for large-scale pre-trained language models. Unlike the previous method that requires gradients w.r.t the entire model parameters, the proposed LoRA-guided criterion only needs to compute the gradients w.r.t up and down low-rank matrices, which can be very lightweight. Based on the method, the authors propose LoRAPrune, which progressively prunes unimportant weights. The experimental results demonstrate that it outperforms the previous LLM-pruning algorithms, given the similar compression rate, while also reducing memory usage."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. LoRA-guided weight importance criterion seems original and interesting\n2. Experimental results look very promising, especially when combined with fine-tuning\n3. Reduced the resource requirement to do pruning and fine-tuning would constitute a good practical contribution"
+                },
+                "weaknesses": {
+                    "value": "1. This paper can benefit from better writing and presentation. A few examples are the following.\n1-a.  More details might have been helpful. e.g., what does numbers in Figure 2 mean?\n1-b. Abuse of notation, In eq. (6), I_ij, \u2018ij\u2019 subscript indicates the index of the matrix I, but in eq 11, I_g, here \u2018g\u2019 means the index of the group.\n1-c. top-s% has not been formally defined. is it a set?\n1-d. In eq 11, I_g \\in top-s% -> this notation seems mathematically wrong. I_g probably denotes the importance score.\n1-e. In algorithm 1, you calculated I |_t, but it was never used. I think you missed \u2018|_t\u2019 in 13th line (inside the double for loop)\n1-f. In eq 4, superscripts were used to represent Query, Key, and Value weights. However in algorithm 1, the superscript was used to denote the layer.\n\n2. The authors claim that the proposed method approximates the importance of the weights. Could you present any supporting experimental results on how accurate LoRA-guided importance approximations are? And, following up on this, does better approximation yield better performance eventually?\n\n3. It seems \u2018\\hat{I}\u2019 has the same dimension as the model weights W? Then, in terms of memory usage (at least if we strictly follow the algorithm 1), is the same as computing the gradients w.r.t. W?\n\n4. It would be helpful for authors to provide \u2018theoretical FLOPs\u2019 compared to dL/dW-based importance criterion."
+                },
+                "questions": {
+                    "value": "Questions are embedded in the weakness section."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed.",
+                        "Yes, Potentially harmful insights, methodologies and applications"
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1574/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698069596949,
+            "cdate": 1698069596949,
+            "tmdate": 1699636086055,
+            "mdate": 1699636086055,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "879HIE1wTh",
+                "forum": "9KVT1e1qf7",
+                "replyto": "yWk5b0hkOn",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer RcVc"
+                    },
+                    "comment": {
+                        "value": "__Q1. This paper can benefit from better writing and presentation.__\n\nThanks for your suggestion. We have carefully checked and modified the equations and presentation, and reflected these changes in the revised paper.\n\n__Q2. Could you present any supporting experimental results on how accurate LoRA-guided importance approximations are?__\n\nA2. We have already provided the results and discussions in \"how accurate LoRA-guided importance approximations are\" in the alation study. We set the vanilla gradient-guided criterion in Eq. (3) as our baseline, since our criterion is an efficient approximation of vanilla criterion. As shown in Figure 4, the similarity between these two criteria is very high with Ratio = 10%, which indicates that our LoRA-guided criterion can accurately estimate the importance in an iterative way.\n\n__Q3. Does a better approximation yield better performance eventually?__\n\nA3. It's noteworthy that, compared to the vanilla criterion in Eq. (3), the LoRA-guided criterion is designed for more efficient evaluation of weight importance, not necessarily for enhanced performance. Evidence of this has been presented in Table 10 (Table 5 in the initial submission) and Table 4, which illustrates that while the LoRA-guided criterion maintains performance parity with the vanilla criterion, it significantly reduces the fine-tuning time by 63.6% and GPU memory usage during pruning by 52.6%. This underscores the effectiveness of our method in achieving high-performance levels more efficiently.\n\n__Q4. It seems $\\hat{I}$ has the same dimension as the model weights W?__\n\nA4. Yes, $\\hat{I}$ has the same dimension as the model weights $W \\in R^{d\\times k}$. However, we do not need to save $\\hat{I}$ for all layers in each iteration. We can calculate $\\hat{I}$ group by group. For example, we simultaneously calculate importance of Query, Key and Value in $g$-th Attention layer. Subsequently, we accumulate group importance $\\mathcal{\\hat{G}}_g \\in R^{1\\times heads}$  according to Eq. (4) and only  $\\mathcal{\\hat{G}}_g$  needs to be saved, where $heads << d\\times k$.\n\n__Q5. It would be helpful for authors to provide \u2018theoretical FLOPs\u2019 compared to dL/dW-based importance criterion.__\n\nA5. We provide the theoretical FLOPs between LoRA-guided criterion and vanilla gradient-guided (dL/dW-based) criterion in the following table. The FLOPs computation rule can be referred to [1]. The table shows LoRA-guided criterion has lower theoretical FLOPs than Vanilla, as it does not compute pretrained weight gradients. We add this comparison in Table 8 in the revised paper.\n\n| Method      | FLOPs (G) | \n|-------------|-----------|\n| LoRA-guided | 12881     |\n| Vanilla     | 20298     |\n\n[1] Scaling laws for neural language models. Arxiv 2020"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700266335250,
+                "cdate": 1700266335250,
+                "tmdate": 1700266335250,
+                "mdate": 1700266335250,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "AcNsox5R9K",
+                "forum": "9KVT1e1qf7",
+                "replyto": "yWk5b0hkOn",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Happy to provide additional clarification"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank you again for your great efforts in reviewing this paper. We have addressed your major concerns about the presentation and provided theoretical FLOPs compared to the dL/dW-based importance criterion. Please don\u2019t hesitate to let us know if there are still concerns/questions."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700483302018,
+                "cdate": 1700483302018,
+                "tmdate": 1700485179094,
+                "mdate": 1700485179094,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "cdIewRnm2j",
+                "forum": "9KVT1e1qf7",
+                "replyto": "AcNsox5R9K",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_RcVc"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_RcVc"
+                ],
+                "content": {
+                    "title": {
+                        "value": "response and final opinion"
+                    },
+                    "comment": {
+                        "value": "Thanks for your thorough response and additional information. I have read your response and other reviews. I think this paper has technical contributions, but I also agree with other reviewers' opinions at the same time. I will keep my score as it was."
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700647362263,
+                "cdate": 1700647362263,
+                "tmdate": 1700647362263,
+                "mdate": 1700647362263,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "cXi0bHYoWQ",
+            "forum": "9KVT1e1qf7",
+            "replyto": "9KVT1e1qf7",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_C5GK"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_C5GK"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper introduces LoRAPrune, a novel framework designed to efficiently compress large pre-trained models (LPMs) for cost-effective inference. LoRAPrune achieves this by introducing a LoRA-guided pruning criterion that utilizes weights and gradients from LoRA, avoiding the memory overhead associated with gradients from pre-trained weights, and a structured iterative pruning procedure."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "+ The proposed LoRAPrune can achieve practical speedup by introducing the structured sparsity onto the pre-trained large model and the LoRA update.\n+ The proposed approach can efficiently guide the pruning process using the LoRA-guided gradient.\n+ This paper unifies the parameter-efficient fine-tuning and structured pruning, efficiently saving memory usage.\n+ Experiments show that this method works well in practice, and the figures are easy to understand."
+                },
+                "weaknesses": {
+                    "value": "- This paper lacks the motivation why the LoRA can considered as the guidance. Instead, the authors just directly show it can estimate the importance of each parameter. It is encouraged to illustrate why this criterion is created. More explanations and analysis are needed.\n- The equations in this paper are unclear and not easy to understand, as there are a lot of abnormal superscripts and subscripts."
+                },
+                "questions": {
+                    "value": "What is the reason why the LoRA-guided creation is better than other pruning criteria? What is the motivation?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1574/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698297339714,
+            "cdate": 1698297339714,
+            "tmdate": 1699636085983,
+            "mdate": 1699636085983,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "itYf3Wxlg3",
+                "forum": "9KVT1e1qf7",
+                "replyto": "cXi0bHYoWQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer C5GK"
+                    },
+                    "comment": {
+                        "value": "__Q1. This paper lacks the motivation why the LoRA can considered as the guidance. It is encouraged to illustrate why this criterion is created.__\n\nA1. As explained in the introduction, our primary motivation for employing the LoRA-guided criterion is to reduce computational and memory demands during iterative pruning. As depicted in Figure 1(b), the conventional gradient-guided criterion depends on the gradients of tpre-trained weights, necessitating the computation and storage of gradients with a shape of $d\\times k$. In stark contrast, the LoRA-guided criterion requires only the gradients of matrices $A$ and $B$  with shapes of $r\\times k$ and $d\\times r$, respectively, where $r$ is significantly smaller than $d$ and $k$ (often by a factor of a thousand, as in the case of LLaMA-7B with $d=4096$ and $r=8$). This substantial reduction in size translates to a corresponding reduction in computational load and memory usage. The efficacy of the LoRA-guided criterion, as demonstrated by our experimental results in Figure 4, is its capability to accurately gauge the importance of each weight group, mirroring the accuracy of the traditional gradient-guided approach but with much greater efficiency.\n\nWe have incorporated the analysis into the METHOD section in the revised paper.\n\n__Q2. The equations in this paper are unclear and not easy to understand, as there are a lot of abnormal superscripts and subscripts.__\n\nA2. We have explained the superscripts and subscripts in General Response Q3. We have reflected these changes in the revised paper."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700265773769,
+                "cdate": 1700265773769,
+                "tmdate": 1700265773769,
+                "mdate": 1700265773769,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "xyXYLf7GNy",
+                "forum": "9KVT1e1qf7",
+                "replyto": "cXi0bHYoWQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Happy to provide additional clarification"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank you again for your great efforts in reviewing this paper. We have addressed your major concerns about motivation and presentation. Please don\u2019t hesitate to let us know if there are still concerns/questions."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700483285181,
+                "cdate": 1700483285181,
+                "tmdate": 1700485037524,
+                "mdate": 1700485037524,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "pp5VEtasRY",
+            "forum": "9KVT1e1qf7",
+            "replyto": "9KVT1e1qf7",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper introduces a new framework called LoRAPrune, which aims to efficiently compress LLMs. Existing pruning methods designed for LPMs are not compatible with low-rank adaptation (LoRA), which aims to reduce computational costs. LoRAPrune addresses this by using a LoRA-guided pruning criterion that relies on LoRA weights and gradients rather than the gradients of pre-trained weights, reducing memory overhead. It also introduces a structured iterative pruning procedure to remove redundant channels and heads. Experimental results demonstrate that LoRAPrune outperforms existing approaches, achieving a 50% compression rate while reducing perplexity on datasets like WikiText2 and PTB and significantly reducing memory usage."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The presentation is commendably clear, and all the figures in the paper are of high quality.\n\n- The derivations presented in Section 3.2 are particularly intriguing. The authors employ a LoRA-guided criterion to effectively circumvent the need to store the entire $\\frac{\\partial \\mathcal{L}}{\\partial\\mathbf{W}}$, resulting in significant memory cost savings compared to existing pruning methods, such as LLM-Pruner.\n\n- The evaluation conducted in this paper is impressively thorough."
+                },
+                "weaknesses": {
+                    "value": "My primary concern regarding the paper pertains to the results presented in Table 2, which clearly indicate a significant degradation in Perplexity (PPL). Such a pronounced reduction in PPL threatens the practical utility of the model. When evaluated with a context window of 2048, a PPL degradation of just 1 already surpasses the performance differential between LLaMA-13B and LLaMA-30B. A mere PPL degradation of approximately 0.2 can account for the disparities between LLaMA and Llama-2. Although the PPL values in the paper might not align with the precise window size I used, but a PPL degradation of 4 unquestionably renders the resulting model inconsequential.\n\nMoreover, I find that the overall methodology is very similar to LLM-Pruner. The only distinction lies in the methodology for computing importance metrics. However, I have reservations about the pivotal significance of the 'starting point' for fine-tuning. Concurrent research, such as Wanda and Sheared-Llama, has demonstrated that fine-tuning a pruned model on a relatively extensive corpus (e.g., RedPajama) diminishes the disparities between LLM-Pruner and more sophisticated, optimization-based pruning criteria (refer to the Sheared-Llama's appendix for more insights). Hence, I am skeptical about the true value of the proposed method, especially when the pruned model is meticulously fine-tuned. Notably, the memory constraints of LLM-Pruner can be effectively mitigated through off-loading, such as utilizing CPU memory to store certain gradients.\n\nDisclaimer: I am not requesting the authors to directly compare their work with Wanda and Sheared-Llama, as these papers have been simultaneously submitted to the same venue. Nonetheless, the insights and findings presented in these two papers may offer valuable context for my assessment of this paper."
+                },
+                "questions": {
+                    "value": "Kindly address my comments under the 'Weaknesses' section. My primary concern regarding this paper is the usability of the resulting models. The PPL degradation from pruning 25% weights is even larger than the performance difference between 13B and 30B models in my opinion. In this context, all speedup and memory-saving metrics appear to lack significance."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1574/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1574/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1574/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698698536408,
+            "cdate": 1698698536408,
+            "tmdate": 1700492034153,
+            "mdate": 1700492034153,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "u0V4535WGQ",
+                "forum": "9KVT1e1qf7",
+                "replyto": "pp5VEtasRY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer nG8N"
+                    },
+                    "comment": {
+                        "value": "__Q1. Table 2 shows a significant degradation in Perplexity (PPL).__\n\nA1. We thoroughly address this concern in our General Response Q1. It is critical to highlight that our method significantly outperforms both LLM-Pruner and WANDA at token segments of 128 and 2048.\n\nNotably, our LoRAPrune is complementary to large-scale fine-tuning to mitigate the performance drop, by simply replacing the small post-training calibration data with the large-scale dataset for fine-tuning. Following Sheared-LLaMA [4], we use RedPajama corpus (400k data) to iteratively prune LLaMA-7B. The experimental results can be found in our General Response Q1. \n\n__Q2. Difference with LLM-Pruner.__\n\nA2. We have discussed the difference between LoRAPrune and LLM-Pruner in General Response Q2.\n\n__Q3. I have reservations about the pivotal significance of the 'starting point' for fine-tuning, especially when the pruned model is meticulously fine-tuned.__\n\nA3. We first re-emphasize the practical significance of post-training pruning with limited calibration data:\n\n1) Acquiring large volumes of fine-tuning data for Large Language Models (LLMs) is often infeasible.\n\n2) The computational burden of fine-tuning LLMs on extensive datasets is substantial, which can limit their practical deployment.\n\nGiven these constraints, our research pivots towards post-training pruning using minimal calibration data. In this setting, the iterative pruning is vital for achieving high-compression rates in models\u2014a strategy that has garnered considerable attention in previous pruning literature [1,2,3]. For instance, as presented in Table 6, the 'Vanilla' model\u2014which can be viewed as an iterative variant of LLM-Pruner\u2014demonstrates a significant reduction in PPL when fine-tuned iteratively, down to 29.96 from 38.12, highlighting the efficacy of iterative pruning.\n\nFurthermore, in response to the reviewer\u2019s query, we further include meticulous fine-tuning scenarios. We evaluate the effectiveness of iterative pruning on large-scale dataset (RedPajama corpus [5]) and compare it with one-shot pruning. The experimental results are shown in the following table. It is noteworthy that even with such data volume (400k), iterative pruning still outperforms one-shot pruning markedly. We include these results in Table 4 in the revised paper.\n\n| Method               | Perplexity | Ratio | \n|----------------------|-------------------------|-------|\n| LLaMA-7B           |         5.69         | 0%    | \n| One-shot Pruning           |        6.67         | 20%    | \n| __Iterative Pruning__          |        6.34          | 20%   |\n| One-shot Pruning           |        9.74          | 50%    | \n| __Iterative Pruning__          |        8.31        | 50%   |\n\n\n[1] Unified and progressive pruning for compressing vision-language transformers. Arxiv 2023\n\n[2] Width & depth pruning for vision transformers. AAAI 2022\n\n[3] Deep Compression of Pre-trained Transformer Models. NeurIPS 2022\n\n[4] Sheared LLaMA: Accelerating Language Model Pre-training via Structured Pruning. Arxiv 2023\n\n[5] Redpajama: An open source recipe to reproduce llama training dataset. 2023\n\n__Q4. The memory constraints of LLM-Pruner can be effectively mitigated through off-loading.__\n\nA4. Gradients off-loading results in reduced throughput which can be found in General Response Q2."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700265323203,
+                "cdate": 1700265323203,
+                "tmdate": 1700265693097,
+                "mdate": 1700265693097,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "F0WEtUh7Tq",
+                "forum": "9KVT1e1qf7",
+                "replyto": "pp5VEtasRY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Happy to provide additional clarification"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank you again for your great efforts in reviewing this paper. We have addressed your major concerns about significant PPL degradation and the necessity of iterative pruning. Please don\u2019t hesitate to let us know if there are still concerns/questions."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700483244069,
+                "cdate": 1700483244069,
+                "tmdate": 1700484934939,
+                "mdate": 1700484934939,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "qUAEuOysG0",
+                "forum": "9KVT1e1qf7",
+                "replyto": "F0WEtUh7Tq",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your prompt and detailed response. After carefully considering your explanation, I have decided to revise my score to 5. However, raising it further to 6 is challenging due to the following reasons:\n\n1. While I acknowledge the perplexity improvements achieved through iterative pruning, it's important to note that this technique is not novel and was introduced in 2015 [source](https://arxiv.org/abs/1506.02626). I still believe that the only distinction between your work and LLM-Pruner is the method of selecting salient weights. A fair comparison between LoRAPrune and LLM-Pruner should be made when iterative pruning is applied to both.\n\n2. Regarding this distinction, the new results presented by the authors highlight the necessity of fine-tuning the complete network after pruning. This raises concerns about the motivation behind LoRA-guided salient weight selection. If LoRA is not employed during fine-tuning, the rationale for using its gradients to guide weight selection becomes unclear.\n\n3. I question the practical significance of 'post-training calibration with limited data.' Given the availability of ample open datasets for large-scale fine-tuning (e.g., RedPajama, RefinedWeb), I believe it is more crucial to produce a usable model than to focus on limited data calibration. Comparing the perplexity achieved by LoRAPrune with existing 3-bit weight quantization methods (often deemed unusable) reveals that the current results of LoRAPrune are still unsatisfactory.\n\n4. The reduction in memory and runtime during the pruning stage seems inconsequential when considering the significantly longer duration of the fine-tuning stage."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700492017140,
+                "cdate": 1700492017140,
+                "tmdate": 1700492017140,
+                "mdate": 1700492017140,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "bhX5Rky1sa",
+                "forum": "9KVT1e1qf7",
+                "replyto": "pp5VEtasRY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer nG8N (Part 2)"
+                    },
+                    "comment": {
+                        "value": "__Q4. I question the practical significance of 'post-training calibration with limited data.__\n\nA. Fine-tuning the pruned models on a large-scale dataset needs prohibitive computing resources, which can be infeasible for research communities with limited resources. For example, Sheared LLaMA [1] uses RedPajama corpus with 50B tokens and costs about 120 GPU days for fine-tuning. Consequently, much work in the compression community concentrates on post-training scenarios [2-4], utilizing only minimal calibration data for pruning and performance restoration.\n\nBesides, large-scale fine-tuning is not viable in privacy-sensitive or data-limited settings, which are frequently encountered in many real-world scenarios such as in medical, finance, and autopilot domains, where obtaining the data is often challenging due to privacy or confidentiality issues. Therefore, there is a huge demand in industry and academia for pruning LLMs with limited data.\n\nFurthermore, our experiments with datasets of 30k and 400k demonstrate that LoRAPrune's performance can be enhanced by scaling up the fine-tuning dataset. Hence, our approach is not constrained by the size of the dataset. In the future, we plan to extend LoRAPrune to a larger RedPajama corpus to further boost its performance.\n\n[1] Sheared LLaMA: Accelerating Language Model Pre-training via Structured Pruning. Arxiv, 2023\n\n[2] Brecq: Pushing the limit of post-training quantization by block reconstruction. ICLR 2021\n\n[3] A fast post-training pruning framework for transformers. NeurIPS 2022\n\n[4] Bayesian bits: Unifying quantization and pruning. NeurIPS 2020\n\n\n__Q5. The reduction in memory and runtime during the pruning stage seems inconsequential when considering the significantly longer duration of the fine-tuning stage.__\n\nA. Since we use iterative pruning and the moving average technique, the importance of weights must be calculated for each batch during fine-tuning. To clearly delineate the time spent on pruning versus fine-tuning, we provide the GPU hours on the c4 corpus (30k) for LLM-Pruner with iterative pruning and LoRAPrune in the following table, based on LLaMA-7B. Pruning time consists of the time spent on computing the importance, mask adjustment and, if needed, gradients of pre-trained weights. In addition, fine-tuning time covers the forward pass, gradients computation and updates of LoRA weights. \n\n| Method      | Total time (hour) | Pruning time (hour) | Fine-tuning time (hour)|\n|-------------|-----------|-------------|-----------|\n| LoRAPrune |         2   |0.2          | 1.8       |\n| LLM-Pruner + iterative pruning | 5.3 |    3.5|  1.8    |\n| LLM-Pruner + iterative pruning  + off-loading   | 25.8 |24|1.8|\n\nThe table indicates that LoRAPrune spends only 10% of the total time on pruning, while LLM-Pruner with iterative pruning spends 66% of the time on pruning."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700570350746,
+                "cdate": 1700570350746,
+                "tmdate": 1700574634199,
+                "mdate": 1700574634199,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ob7h2i0Z2I",
+                "forum": "9KVT1e1qf7",
+                "replyto": "bhX5Rky1sa",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nG8N"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for providing additional insights. While I acknowledge that the paper has made significant progress towards meeting the acceptance criteria, I believe that a substantial revision is still necessary. Specifically, the results and comparisons in Table 2 appear to be largely inconsequential, and I suggest making Table 4 the focal point for presenting the main results. I would appreciate clarification on whether the time measurements provided in the author's response are consistently based on the dataset of 400k sentences from RedPajama. If not, these numbers should also be deemed inconsequential. Furthermore, all comparisons with existing methods should be conducted under RedPajama finetuning.\n\nMoreover, the comparisons for iterative pruning are not complete. Traditional iterative pruning methods typically initiate the process from lower sparsity, prune the model, and then finetune the pruned model while gradually increasing sparsity. In this instance, I don't anticipate significant throughput or memory overhead (as mentioned in Table 6), as the pruning process is executed only once at the beginning for each target sparsity level and the finetuning stage is much longer.\n\nBesides, the authors have yet to address my inquiry regarding the importance of finetuning versus selecting an optimal starting point for finetuning in LLM pruning. This aspect is crucial and should be a focal point of the revision.\n\nBased on the aforementioned observations, I recommend a significant revision of the paper followed by resubmission to the next venue. If the finetuning process requires only 400k x 512 = 0.2 billion tokens with LoRA weights update, I encourage the authors to conduct a head-to-head comparison with ShearedLlama in their future submission (their finetuning cost is around 50 billion tokens). I believe that your method could potentially offer a substantial advantage in finetuning cost, **if there is no degradation in PPL**. Additionally, including more comparisons at the 3B-level models would be valuable, particularly given the success of the recently released StableLM-3B."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700677232490,
+                "cdate": 1700677232490,
+                "tmdate": 1700677232490,
+                "mdate": 1700677232490,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "1rmcfNgZUJ",
+            "forum": "9KVT1e1qf7",
+            "replyto": "9KVT1e1qf7",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_nuRr"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_nuRr"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Large pre-trained models (LPMs) like LLaMA and GLM excel in diverse tasks when fine-tuned. While low-rank adaption (LoRA) can cost-effectively fine-tune LPMs, the vast model scale and computational demands remain challenges. Current pruning techniques for LPMs aren't compatible with LoRA due to issues like their use of unstructured pruning and reliance on the gradients of pre-trained weights. Addressing this, the paper introduces \"LoRAPrune,\" a framework that prunes efficiently using a LoRA-guided criterion and an iterative procedure. This approach avoids computing gradients of the pre-trained weights, ensuring more memory-efficient and accurate models. Tests reveal that LoRAPrune outperforms other methods, reducing memory usage and improving performance."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The authors study the compelling research area of integrating LoRA with pruning methods, meticulously examining the challenges inherent in this combination.\n\n- The proposed framework allows for the concurrent application of structured pruning and LoRA.\n\n- The pruning criteria can be guided by LoRA principles which are novel and useful.\n\n- Comprehensive experimental outcomes using LLaMA models are presented."
+                },
+                "weaknesses": {
+                    "value": "- Upon examining Table 2, several concerns arise regarding the experimental results. Notably, when juxtaposed with the PPL of LLaMA-7B, there's a marked degradation in PPL. Even at a relatively modest 20% pruning rate, the PPL increase is evident. One has to question if there are scenarios where such a pronounced PPL drop would be deemed acceptable.\n\n- Furthermore, the results from WANDA also indicate a significant PPL degradation, which seems to contradict the assertions made in the WANDA paper.\n\n- The 50% pruning rate appears to present substantial challenges. What is the overarching conclusion here? Is the implication that a 50% pruning rate might be overly ambitious? Alternatively, do the authors consider the observed performance drop at this rate to be inconsequential?\n\n- For a more comprehensive understanding, it would be beneficial to have the PPL and other metrics as reported by contemporaneous studies."
+                },
+                "questions": {
+                    "value": "Please see the weaknesses above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1574/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698774948383,
+            "cdate": 1698774948383,
+            "tmdate": 1699636085807,
+            "mdate": 1699636085807,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "J7kQ9QBiP7",
+                "forum": "9KVT1e1qf7",
+                "replyto": "1rmcfNgZUJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer nuRr"
+                    },
+                    "comment": {
+                        "value": "__Q1. PPL degradation in Table 2. Such a pronounced PPL drop would be deemed acceptable.__\n\nA1. We thoroughly address this concern in General Response Q1. It is critical to highlight that our method significantly outperforms both LLM-Pruner and WANDA at token lengths of 2048 and 128, as shown in Table 2 and Table 7, respectively. In scenarios where a pronounced PPL drop is observed, it is often possible to mitigate this through the use of additional data to refine the pruning results.\n\n__Q2. The results from WANDA also indicate a significant PPL degradation.__\n\nA2. The WANDA study primarily reported on unstructured and semi-structured pruning results. Our focus, as discussed in our paper's introduction, is on structured pruning due to the hardware efficiency limitations associated with unstructured sparse models. To ensure a fair comparison, we replicated the structured pruning results using WANDA's official codebase with necessary modifications. We make our adapted code available in the supplementary materials to strengthen the reproducibility of our results. Consistent with the aim of fairness, we employed WANDA's metrics to calculate the weight importance, subsequently aggregating the group importance as delineated in Equation (4). The specific modifications are documented in 'wanda/lib/prune.py' lines 171-193 for further examination and reproducibility.\n\n__Q3. The 50% pruning rate appears to present substantial challenges.__\n\nA3.In the post-training structured pruning context, especially when limited calibration data is available, a 50% pruning rate indeed presents substantial challenges. However, we significantly outperform other structured pruning methods. To mitigate the PPL degradation in 50% ratio, we also iteratively prune LLMs on large-scale dataset. The details can be found in General Response Q1. \n\n__Q4. It would be beneficial to have the PPL and other metrics as reported by contemporaneous studies.__\n\nA4. We have duly noted the request for comprehensive metrics. In response, Table 2 has reported PPL and accuracy metrics for zero-shot task classification on the common sense reasoning dataset. To further validate the efficacy of LoRAPrune, we have supplemented these with results from the MMLU (5-shot) evaluations, offering a broader performance perspective consistent with contemporaneous studies. We include these results in Table 5 in the revised paper.\n\n| Method               | MMLU(5-shot) | Ratio | \n|----------------------|--------------|-------|\n| LLaMA-7b             | 36.81        | 0%    | \n| LLM-Pruner           | 28.34        | 20%   |\n| __LoRAPrune (Ours)__ | 29.56        | 20%   |\n| LLM-Pruner           | 26.12        | 50%   |\n| __LoRAPrune (Ours)__ | 28.03        | 50%   |"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700265256234,
+                "cdate": 1700265256234,
+                "tmdate": 1700671394731,
+                "mdate": 1700671394731,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "QUpm8je8UN",
+                "forum": "9KVT1e1qf7",
+                "replyto": "1rmcfNgZUJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Happy to provide additional clarification"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank you again for your great efforts in reviewing this paper. We have addressed your major concerns about significant PPL degradation. Please don\u2019t hesitate to let us know if there are still concerns/questions."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700483189756,
+                "cdate": 1700483189756,
+                "tmdate": 1700484955239,
+                "mdate": 1700484955239,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "0ksKTQjLPr",
+                "forum": "9KVT1e1qf7",
+                "replyto": "J7kQ9QBiP7",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nuRr"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Reviewer_nuRr"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "Thank you for your detailed responses and the additional experiments you've conducted.\n\nHowever, I still have critical concerns:\n\n1. Degradation in MMLU and PPL: When structured pruning methods result in a notable decline in MMLU or PPL, they should ideally be compared with a smaller model having similar scores. A 50% pruning that leads to a significant drop in these scores raises questions about its efficacy compared to selecting a smaller model or employing other compression techniques like quantization.\n2. Comparative Analysis with LLM-pruner: It would be more insightful to compare with the LLM-pruner to determine the threshold at which a given pruning method starts to significantly impact performance. In the case of LLaMA 7b, both LLM-pruner and LoRAPrune lead to a substantial drop in MMLU. What is the compression ratio where performance degradation is negligible?\n3. Methods to Recover Scores or PPL: Are there any additional strategies to recover the MMLU score or PPL after pruning? It's imperative for the authors to propose some basic approaches for enhancing the overall score post-pruning.\n\nGiven these points, I find it challenging to identify practical applications for the proposed method. Therefore, I  retain my initial evaluation score."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700653053632,
+                "cdate": 1700653053632,
+                "tmdate": 1700653053632,
+                "mdate": 1700653053632,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "JGjY4ucdAP",
+            "forum": "9KVT1e1qf7",
+            "replyto": "9KVT1e1qf7",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_pQXa"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission1574/Reviewer_pQXa"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new pruning technique, called LoRAPrune, to perform structural pruning on the target LLM and its LoRA adapters at the same time. Specifically, this paper first proposes a LoRA-guided criterion to indicate the weight importance of LLMs, which works better with LoRA. The proposed LoRAPrune pruning technique is built based on this criterion, which unifies PEFT with pruning. Experiment results show that the proposed method achieves better accuracy compared with existing pruning techniques on LLMs."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The target domain of improving the efficiency of LLMs during inference, especially their compatibility with the SOTA tuning methods (e.g., LoRA adapter).\n- The proposed method has the potential to alleviate the memory overhead during pruning, which can potentially enable the proposed pruning technique on a wider range of devices and applications. \n- The achieved performance improvement over the baseline methods is promising."
+                },
+                "weaknesses": {
+                    "value": "After reading the paper, I have the following concerns and would like to hear from the authors on their justification. I would like to consider revising my rating based on the authors' feedback. \n- To the best of my understanding, the novelty of this paper is limited. Specifically, there are some existing explorations on identifying the dependency during structural pruning to maximally preserve the performance after pruning, such as LLM-Pruner. In this paper, the key difference is that the authors propose to shift the computation of dependency from backbone weight in LLMs to LoRA adapters in LLMs. The author may want to further address the novelty here. \n- In Table 1, the authors claim that LLM-Pruner does not support tuning. However, as LLM-Pruner also uses a structural pruning technique, it is also compatible with LoRA adapters, which is indicated in the abstract and experiment sections in LLM-Pruner. The authors may want to further justify their claim. \n- In Figure 3, the author missed an important baseline, LLM-Pruner. It would help the authors to better understand the performance of the proposed LoRAPruner by adding the LLM-Pruner baseline in the figure."
+                },
+                "questions": {
+                    "value": "Please refer to the weakness part."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 5,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission1574/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699312970268,
+            "cdate": 1699312970268,
+            "tmdate": 1699636085718,
+            "mdate": 1699636085718,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "J6hBCytyHd",
+                "forum": "9KVT1e1qf7",
+                "replyto": "JGjY4ucdAP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response for Reviewer pQXa"
+                    },
+                    "comment": {
+                        "value": "__Q1. The novelty of this paper is limited.__\n\nA1. We propose the innovative LoRA-guided pruning criteria, which is informed by low-rank adaptation (LoRA) rather than relying on the gradients of pre-trained weights. This efficient criteria enables us to structurally prune 65B LLMs in a single GPU, improving the applicability of pruning on LLMs. We discuss the differences between LoRAPrune and LLM-Pruner in General Response Q2. Reviewers nuRr and RcVc agree with our novelty.\n\n__Q2. Does LLM-Pruner not support tuning by LoRA?__\n\nA2. We apologize for any confusion caused. To clarify, LLM-Pruner supports tuning with LoRA but does not support iterative pruning efficiently. Specifically, LLM-Pruner uses one-shot pruning and then fine-tunes the pruned models by LoRA. The reasons for LLM-Pruner's inefficiency with iterative pruning are discussed in our General Response Q2. The term \"Fine-tune\" as referenced in Table 1 pertains to the process of iterative pruning which involves simultaneous pruning and fine-tuning to regain performance. To clarify this process and avoid further misunderstanding, we have updated the terminology in Table 1 from \"Fine-tune\" to \"Iterative Pruning\" in our revised submission.\n\n__Q3. The author missed an important baseline, LLM-Pruner, in more large scale models.__\n\nA3. We acknowledge the significance of including LLM-Pruner as a baseline for larger models. Due to the limited timeframe of the rebuttal period, we provide results for the 50% pruning ratio. These results are detailed in the table below.\n\n| Model     |Method | PPL   | Ratio | \n|-----------|-------|-------|----------------------|\n| LLaMA-13B |  LLM-Pruner           |11.88 | 50%   |\n|           |  __LoRAPrune (Ours)__ |9.84  | 50%   |\n| LLaMA-30B | LLM-Pruner           |8.69  | 50%   | \n|           | __LoRAPrune (Ours)__ |7.27  | 50%   | \n\nThe preliminary results, as shown in above table, indicate that LoRAPrune outperforms LLM-Pruner in both the LLaMA-13B and LLaMA-30B models at a 50% pruning ratio. This reinforces the scalability and effectiveness of our proposed LoRAPrune. We include these results in Figure 3 in the revised paper."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700265143073,
+                "cdate": 1700265143073,
+                "tmdate": 1700265594075,
+                "mdate": 1700265594075,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "zpBcL3Cydz",
+                "forum": "9KVT1e1qf7",
+                "replyto": "JGjY4ucdAP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission1574/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Happy to provide additional clarification"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank you again for your great efforts in reviewing this paper. We have addressed your major concerns about novelty and additional comparison with LLM-Pruner. Please don\u2019t hesitate to let us know if there are still concerns/questions."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission1574/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700483134702,
+                "cdate": 1700483134702,
+                "tmdate": 1700484425415,
+                "mdate": 1700484425415,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

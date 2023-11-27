@@ -1,0 +1,839 @@
+[
+    {
+        "title": "RGLA: Reverse Gradient Leakage Attack using Inverted Cross-Entropy Loss Function"
+    },
+    {
+        "review": {
+            "id": "rlu2aqlEDN",
+            "forum": "cKGpe1792U",
+            "replyto": "cKGpe1792U",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper introduces a novel optimization-based data reconstruction attack on gradients of CNNs trained on classification tasks with cross-entropy losses based on two ingredients: 1. reconstructing the model outputs $\\hat{y}$, which allows to recover the feature maps $\\textbf{provided that one knows all labels}$ 2. inverting the feature map to retrieve the input using a known method. The authors also propose a simple defense mechanism against this attack based on increasing the batch-size."
+                },
+                "soundness": {
+                    "value": "1 poor"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- the paper introduces a novel loss and approach based on recovering $\\hat{y}$\n- the authors provide open-source code\n- the authors' attack can target CNNs and not only fully connected neural networks although no pooling layer ca, be used\n- the authors test the performance of their attack against different defense mechanisms based on clipping / compression / noise addition of the gradients and show robustness"
+                },
+                "weaknesses": {
+                    "value": "Major. \n\n- Few of the authors' claims are supported by evidence.\nAs an example let's take the sentence from the abstract\"this is the $\\textbf{first}$ successful disaggregation of the feature map in $\\textbf{generic FL setting}$\"\n\n$\\textbf{\"first\"}$. \n\nIt is not the first article to disaggregate feature maps, see for instance [1], important reference, $\\textbf{which is missing in the paper}$. \nAlso much less important but very relevant work of [4] is missing as well. If the authors claim they target large batches of large resolutions, [4] would have been the reviewer's first choice as a baseline although [4] uses batch-norm statistics.\n\n$\\textbf{\"generic FL setting\"}$. \n\nThe attack setting described in the threat model by the authors is everything but generic because 1. contrary to most of its competition $\\textbf{the attack requires access to the ground truth labels}$ (also the wording is weird \"$\\mathcal{A}$ can retrieve ground-truth labels from the gradient\", how could $\\mathcal{A}$ do that especially is there a state of the art methods that work with duplicate labels ?) 2. $\\textbf{authors do not tackle the multiple updates case}$, which is characteristic of FL 3. the attack requires access to an external dataset 4. the attack can only work on classification tasks with numerous classes (more than the batch-size). Although 3 and 4 are standard assumptions in this literature, 1 and 2 are extremely contrived. This simplified setting is still of some interest but the claims do not match the reality. In addition, in the code repository, in the attack's code the signature of the function does not include the labels variable so executing the function would throw \"labels is undefined\" errors. This is a misrepresentation of the function in line with what is written in the article. In the same spirit when writing as defense increasing the batch-size it is more a limitation of the attack than a true defense deserving its own section. Furthermore there is no experiment in the main paper on the resolution of the images on the attack's performances whereas it is claimed the attack work on high-resolution images as well.\n\nThroughout the paper, the authors write about the advantages of their method without properly highlighting its limitations. An example is \"without imposing unrealistic assumptions about batch-size, number of classes, and label distribution\": in fact the authors explain that their method can only work if the batch-size is lower than the number of classes (this is even the \"defense\" the authors propose) AND the attack can only work with full knowledge of the labels, which is completely unrealistic. So all such sentences should be replaced by more grounded and precise ones such as \"Although our attack requires the full knowledge of labels, it can tackle any batch-sizes providing that the number of classes is higher than the batch-size. Our attack is also the first to be able to handle label duplication. \" Another example is \"Our approach reveals the vulnerability in cross-entropy loss function and fully-connected layer,\" whereas the author's approach is one of many many research work having explored this setting and the latest to date. The one article, which could have written this sentence is DLG (2019).\n\n- The paper's writing is subpar. Most sentences are either too strong (see above section) or colloquial (use of the adjective \"very\" repeatedly (8 times), \"$\\textbf{we}$ establish the second equation\" followed by a citation, overall sentences' constructions)  or not understandable at all (some of the typos / grammar mistakes are listed in Minor). Can the authors also define notations and acronyms when they are first introduced ?  For instance acronyms, DLG, FGLA, HCGLA, GGL, IG, etc. are not introduced. Neither are notations $y(i)$, $\\nabla \\theta^{W}\\_{L, y(i)} $ $\\mathcal{L}\\_{1}$ and similar math notations. As $\\mathcal{L}\\_{1}$ is not defined \"having lower $\\mathcal{L}\\_{1}$ values\" does not mean anything and therefore he reviewer doesn't know how to read Figure 3. Most of the undefined notations are roughly understandable for readers familiar with the literature but it makes it very painful to read.\n\n- The reviewer would like to see the performance of the attack (and authors' ideas about it) when handling realistic scenarii aka without at least knowing the ground truth labels. Is there a heuristic similar to GradInv [4] that can work ? Can some combinatorial approach be tried ? Also a plot in the main article showing the effect of increasing the number of updates on the performance of the attack is needed. Otherwise the authors should write that they attack FedSGD and not FL.\n\n\nMinor\n- Related works should be rewritten to have an entire paragraph (with a title) with attacks based on data priors (such as R-GAP that is mentioned)\n- Use MacMahan's paper [2] for the FL reference instead of AhishekV et al. 2022 (authors can add Shokri's [3])\n- Rewrite propositions 1 as $\\hat{y}=...$\n- Replace all \"last\" layer of FC by \"first\" layer of FC, usual convention is to count layers starting from the input. The feature map is thus the input of the first layer of the FC not the last. If the authors want to use a different convention the authors have to define it.\n- typos: an analysis method page 3 ? / almost non-loss page 5 ? / will resolve page 4 / \"When B < C, we cannot recover unique y with the established system of equations is overdetermined, thus there may be multiple solutions, of which only one is a right solution, and\nthe remaining solutions are referred to in prior work R-GAP (Zhu & Blaschko, 2020) as the twin solutions.\" this sentence is not correct page 6 \n\n[1] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023.  \n\n[2] McMahan, Brendan, et al. \"Communication-efficient learning of deep networks from decentralized data.\" Artificial intelligence and statistics. PMLR, 2017.  \n\n[3] Shokri, Reza, and Vitaly Shmatikov. \"Privacy-preserving deep learning.\" Proceedings of the 22nd ACM SIGSAC conference on computer and communications security. 2015.\n\n[4] Yin, Hongxu, et al. \"See through gradients: Image batch recovery via gradinversion.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021."
+                },
+                "questions": {
+                    "value": "The reviewer encourages the authors to\n- rewrite the claims of the manuscript (specifically highlight the use of ground truth labels and remove the claims related to being the \"first\")\n- improve overall grammar and notations. Especially explain what $\\mathcal{L}\\_{1}$ means so that the reviewer can read Figure 3.\n- perform experiments 1. without ground truth labels 2. with high number of updates 3. varying resolutions to strenghten the contribution and close the gap between what is claimed and what is done\n- explain more clearly if the other methods RGLA is compared to use ground truth labels as well ? If it is not the case the comparison is unfair if it is the case it should read DLG + ground truth labels etc. for most of those methods ,which do not require ground truth labels\n- add a comparison to GradInv [4] removing the loss on BN statistics\n- discuss the frequency of apparition of duplicate labels when randomly sampling batches from say IMAGENET"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz",
+                        "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698328487499,
+            "cdate": 1698328487499,
+            "tmdate": 1699645725088,
+            "mdate": 1699645725088,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "iB2iMNyEM8",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks you for your suggestion"
+                    },
+                    "comment": {
+                        "value": "Thanks you for your suggestion, we combine the label inference technique of [3] with our method  to relax the label assumption and the experiment results can be seen in our rebuttal version."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700316092097,
+                "cdate": 1700316092097,
+                "tmdate": 1700316401548,
+                "mdate": 1700316401548,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "dgAW8IXYW0",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer iafz (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your thorough review and valuable suggestions and questions on our manuscript. We sincerely accept your opinions and will make revisions and improvements. Note that the order of some figures/results has changed with the rebuttal revision. The implementation of the additional experiment can be found in our updated github repository and updated supplementary material. Below, we address specific points you raised.\n\n>**Q1 The lack of sufficient evidence supporting some claims, such as \"the first to successfully disaggregate the feature map in a generic federated learning setting,\" and the omission of key reference [1] and one comparison with [4] removing the loss on BN statistics.**\n\nThank you for bringing the works [1, 4] to our attention. We would like to emphasize that there are differences between them and our paper in terms of methods and results, and we have removed this statement in the revision. For [1], the Cocktail Party Attack (CPA) treats the problem of gradient inversion as a Blind Source Separation (BSS) issue, based on the premise that the gradients of a Fully Connected (FC) layer can be seen as a linear combination of its inputs. CPA then uses Independent Component Analysis (ICA) to address the BSS problem. In contrast, our method initially leaks the model's output and then further leaks the feature map. This strategy allows all methods that invert model inputs based on model outputs to be applicable in the context of gradient leakage attacks, thereby significantly increasing the vulnerability of gradients. We discuss this paper in the related works section of our rebuttal version.\n\nSince there is no official source code for the previous work [4] (STG), we perform the STG using the STG source code published by FGLA [8], which we also included in our open-source code. We compared our method with STG (with or without BN statistics) using the ImageNet dataset (224$\\times$224) and batch size of 8, and the results are shown in Table 1. It is clear from Table 1 that our method outperforms prior work [4] in terms of time efficiency and reconstruction results.\n\n| Method                    | PSNR$\\uparrow$ | SSIM$\\uparrow$ | LPIPS$\\downarrow$ | Time$\\downarrow$(s) |\n| ------------------------- | -------------- | -------------- | ----------------- | ------------------- |\n| Our RGLA                  | 19.24153       | 0.50947        | 0.55870           | 14.35               |\n| STG with BN statistics    | 11.47697       | 0.35237        | 0.66932           | 9484.70             |\n| STG without BN statistics | 9.90506        | 0.32183        | 0.89051           | 7497.48             |\n\nTable 1\n\n>**Q2 1. Assumption of ground-truth labels: the attack needs access to ground truth labels, which differs from many competing methods, and queries how $\\mathcal{A}$ could feasibly retrieve these labels from gradients. 2. Omission of multiple updates scenario in FL: the proposed method doesn't address the characteristic feature of multiple updates in FL. 3. Attack's dependence on an external dataset. 4. Limitation to classification tasks of B<=C. In the same spirit when writing as defense increasing the batch-size it is more a limitation of the attack than a true defense deserving its own section. 5. Code repository has a bug. 6. Lack of experiments on varying resolution images.**\n\n1. We would like to clarify that the assumption of ground-truth labels is reasonable for the reason. This label assumption shared in recent studies [7-10], which either assume that the adversary knows the labels [7, 8], or first extract the labels [9, 10, 11] using existing label inference techniques.\n\n   To improve rigor, we combine our method with a stat-of-the-art label inference technique, iLRG [6]. Table 2 shows the average results of data reconstruction on 100 batches. Notably, iLRG achieved a 100% accuracy rate in our experiments, though the order of the reconstructed labels differs from that of the actual ground-truth labels. As shown in Table 2, the reconstructed results obtained using ground-truth labels and those reconstructed results using the iLRG [6] are similar. Fig. 11 in our rebuttal version provides visual reconstruction results, illustrating that both ground-truth labels and inferred labels can successfully reconstruct visual outcomes, except that using inferred labels causes the reconstructed data to be in a different order from the original data. We also add this experiment and corresponding discussion in the Appendix of our rebuttal version.\n\n   |                                 | PSNR$\\uparrow$ | SSIM$\\uparrow$ | LPIPS$\\downarrow$ |\n   | ------------------------------- | -------------- | -------------- | ----------------- |\n   | Ground-truth label + RGLA(Ours) | 19.24153       | 0.50947        | 0.55870           |\n   | iLRG[6]+ RGLA(Ours)             | 19.22677       | 0.49973        | 0.56795           |\n\n   Table 2"
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700321444909,
+                "cdate": 1700321444909,
+                "tmdate": 1700321444909,
+                "mdate": 1700321444909,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "duzWx0Expv",
+                "forum": "cKGpe1792U",
+                "replyto": "5YzDuQQZ6C",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Regarding 5. to illustrate more explicitly the problem, the current code in the README reads:\ndef Model_output_leakage(grad, model):\nThis gives the false impression that it does not need labels, that are accessed here wo being defined in the function:\npred_modelloss = pred_loss(grad, label, batchsize, defence_method)\nLabel is declared globally which is a bad code practice in addition the correct signature should read:\ndef Model_output_leakage(grad, model, labels):\nThis example is representative of the rest of the paper."
+                    }
+                },
+                "number": 30,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700508859285,
+                "cdate": 1700508859285,
+                "tmdate": 1700508859285,
+                "mdate": 1700508859285,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "fN3e8uSzYm",
+                "forum": "cKGpe1792U",
+                "replyto": "Oi8v1G6aMn",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Computing the probability from which the authors find the formula for B=256 or the target batch-size would lead to a either low or high frequency of duplicate labels. This was the reasoning behind the comment of the reviewer. Knowing whether or not one is expected to encounter many duplicate labels is important."
+                    }
+                },
+                "number": 31,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700509103200,
+                "cdate": 1700509103200,
+                "tmdate": 1700509103200,
+                "mdate": 1700509103200,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Qv6fZfzHD6",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Final comment"
+                    },
+                    "comment": {
+                        "value": "While the reviewer appreciate the dedication of the authors during the rebuttal process and the thorough answers. The reviewer stand with their initial scoring.\n\nThe authors are misrepresenting their findings (I take the current answer to question 5 as one of the many examples of misrepresenting results: \"We have tested our code on different machines, but do not encounter your mentioned error. Could you provide detailed error information? We will do our best to help you solve it.\" while the fact that the function's code on the README is blatantly misleading is difficult to refute) and thus it makes it hard to form an accurate picture of the contribution as the findings of the rebuttal would need to be reviewed with more care. Notably the addition of experiments on GradInv brings more questions than it answers.\nThe authors also disregarded in the paper the two most related works GradInv and BSS in the literature, which, considering the rest of the paper, is interpreted by the reviewer as not completely genuine.\n\nA minima, the reviewer would like to see the authors' paper rewritten more clearly by either 1. potentially redoing all experiments with iLRG and dropping the known labels assumption 2. stating the assumption in a less confusing manner in the text and in the code not to misrepresent the contribution. Cleaning the text from the abundance of overstatements and misleading statements.\n\nThe reviewer also disagrees with the assessment from reviewer p8x8."
+                    }
+                },
+                "number": 32,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700514829964,
+                "cdate": 1700514829964,
+                "tmdate": 1700514873034,
+                "mdate": 1700514873034,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "l64v8FdIv0",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Improvement on the function declarations in the README file in our code"
+                    },
+                    "comment": {
+                        "value": ">**Q8 Regarding 5. to illustrate more explicitly the problem, the current code in the README reads: def Model_output_leakage(grad, model): This gives the false impression that it does not need labels, that are accessed here wo being defined in the function: pred_modelloss = pred_loss(grad, label, batchsize, defence_method) Label is declared globally which is a bad code practice in addition the correct signature should read: def Model_output_leakage(grad, model, labels): This example is representative of the rest of the paper.**\n\nThank you for pointing this out, we have improved the function declarations in the README file in our code. The introduction, threat model, method, and experiment section of our manuscript explicitly state that our approach requires the ground-truth label, an assumption also shared with many well-known works [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] in this research field.\n\n\n[1] Zhu J, Blaschko M. R-gap: Recursive gradient attack on privacy[J]. arXiv preprint arXiv:2010.07733, 2020.\n\n[2] Jonas Geiping, Hartmut Bauermeister, Hannah Droge, and Michael Moeller. Inverting gradients - \u00a8how easy is it to break privacy in federated learning? ArXiv, abs/2003.14053, 2020.\n\n[3] Hongxu Yin, Pavlo Molchanov, Jose M. Alvarez, Zhizhong Li, Arun Mallya, Derek Hoiem, Niraj K Jha, and Jan Kautz. Dreaming to distill: Data-free knowledge transfer via DeepInversion. In CVPR, 2020. 2, 5, 6.\n\n[4] Yin, Hongxu, et al. \"See through gradients: Image batch recovery via gradinversion.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021.\n\n[5] Jinwoo Jeon, Jaechang Kim, Kangwook Lee, Sewoong Oh, and Jungseul Ok. Gradient inversion with generative image prior. In Neural Information Processing Systems, pp. 29898\u201329908, 2021.\n\n[6] Yang H, Ge M, Xiang K, et al. Using Highly Compressed Gradients in Federated Learning for Data Reconstruction Attacks[J]. IEEE Transactions on Information Forensics and Security, 2022, 18: 818-830.\n\n[7] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023.\n\n[8] Dongyun Xue, Haomiao Yang, Mengyu Ge, Jingwei Li, Guowen Xu, and Hongwei Li. Fast generation-based gradient leakage attacks against highly compressed gradients. IEEE INFOCOM 2023 - IEEE Conference on Computer Communications, 2023.\n\n[9] Yue K, Jin R, Wong C W, et al. Gradient obfuscation gives a false sense of security in federated learning[C]//32nd USENIX Security Symposium (USENIX Security 23). 2023: 6381-6398.\n\n[10] Zhu J, Yao R, Blaschko M B. Surrogate model extension (SME): A fast and accurate weight update attack on federated learning[J]. arXiv preprint arXiv:2306.00127, 2023."
+                    }
+                },
+                "number": 34,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700574077149,
+                "cdate": 1700574077149,
+                "tmdate": 1700735018108,
+                "mdate": 1700735018108,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "qRgOY1H7WN",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Regarding the probability of occurrence of duplicate labels"
+                    },
+                    "comment": {
+                        "value": "> **Q9 Computing the probability from which the authors find the formula for B=256 or the target batch size would lead to a either low or high frequency of duplicate labels. This was the reasoning behind the comment of the reviewer. Knowing whether or not one is expected to encounter many duplicate labels is important.**\n\nThe ImageNet dataset has a total of 1000 classes, and assuming a batch size of $B$, the probability of the existence of a duplicate label is:\n\n$p=1-(\\frac{1000}{1000}\\times\\frac{999}{1000}\\times\\frac{998}{1000}...\\times\\frac{1000-B+1}{1000})$. \n\nTherefore, when the batch size is set to 256, the probability of encountering duplicate labels is 0.99999. We have also created a graph illustrating how the probability \\( $p$ \\) varies with the batch size \\( $B$ \\). You can find this graph in the supplementary materials under the filename \"DuplicateLabelProbability.png\". \n\nAlso, if you are interested in seeing the performance of our proposed method under different proportions of duplicate labels within a batch, please refer to Section 5.1 of our manuscript."
+                    }
+                },
+                "number": 35,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700574280423,
+                "cdate": 1700574280423,
+                "tmdate": 1700574854137,
+                "mdate": 1700574854137,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "LLE1j2Air5",
+                "forum": "cKGpe1792U",
+                "replyto": "rlu2aqlEDN",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to your final comment (Part 1)"
+                    },
+                    "comment": {
+                        "value": ">**Q10 The authors are misrepresenting their findings (I take the current answer to question 5 as one of the many examples of misrepresenting results: \"We have tested our code on different machines, but do not encounter your mentioned error. Could you provide detailed error information? We will do our best to help you solve it.\" while the fact that the function's code on the README is blatantly misleading is difficult to refute) and thus it makes it hard to form an accurate picture of the contribution as the findings of the rebuttal would need to be reviewed with more care.** \n\nSorry, we thought your concern was about a bug in our code. Thank you for pointing this out, and in order to make our contribution clearer, we've improved the README file in our code, which hopefully addresses your concern!\n\n>**Q11 Notably the addition of experiments on GradInv brings more questions than it answers.**\n\nWe are seeking clarification regarding your statement, \"Notably the addition of experiments on GradInv [4] brings more questions than it answers.\" Are you suggesting that there is an issue with our implementation of GradInv [4]? Considering that GradInv [4] does not have an official open-source code, we adopted the implementation of GradInv [4] as used in FGLA, who compared it in their work. We believe their implementation can be considered reliable. Alternatively, you may run the code we have provided in the supplementary materials for further verification.\n\n>**Q12 The authors also disregarded in the paper the two most related works GradInv and BSS in the literature, which, considering the rest of the paper, is interpreted by the reviewer as not completely genuine.**\n\nWe have discussed both GradInv [4] and BSS [7] in the related work section of our manuscript and have accordingly adjusted the rest of the paper.\n\n>**Q13 A minima, the reviewer would like to see the authors' paper rewritten more clearly by either 1. potentially redoing all experiments with iLRG and dropping the known labels assumption 2. stating the assumption in a less confusing manner in the text and in the code not to misrepresent the contribution. Cleaning the text from the abundance of overstatements and misleading statements.**\n\nThank you for your time and effort in providing such detailed and important feedback. We believe our assumption about labels is reasonable, and below, we explain why this assumption is reasonable.\n\n1. Firstly, existing techniques for inferring labels are quite mature and can reconstruct true labels with high accuracy, up to 100%. Therefore, we assume adversaries can obtain true labels, allowing us to focus our limited paper space on the theft of private data, which is likely the primary concern for adversaries.\n\n2. Second, we have had in-depth discussions on this issue with researchers in the field. Indeed, most of the notable work [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] in our research area is based on a common assumption - that labels are accessible. This general consensus supports our approach and allows us to focus our main efforts on the core problem of data theft.\n\n3. Lastly, our experiments on the ImageNet dataset and the ResNet50 model show that when the batch size is less than 256, iLRG[11] achieves 100% accuracy in label reconstruction (also as evident from Figure 3 in [11]). This indicates that adversaries can easily obtain true labels. Furthermore, all the state-of-the-art methods compared in our paper also used ground-truth labels, making our experimental comparisons fair.\n\nConsidering these points, the assumption that adversaries can access ground-truth labels is reasonable.\n\nWe have adjusted our manuscript to state assumptions and contributions more clearly. Please refer to the latest rebuttal version for these changes."
+                    }
+                },
+                "number": 36,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700575528423,
+                "cdate": 1700575528423,
+                "tmdate": 1700575688903,
+                "mdate": 1700575688903,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "vXstxrbYPt",
+            "forum": "cKGpe1792U",
+            "replyto": "cKGpe1792U",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies gradient leakage attacks in federated learning. Motivated by the inefficacy of existing attacks against large batches of high-resolution images, the authors propose a new attack named reverse gradient leakage attack (RGLA). RGLA involves three stages: first inverts the cross-entropy loss function to obtain the model outputs, which are then disaggregated and inverted to feature maps. Finally, these feature maps are inverted to model inputs, leveraging a pre-trained generator model. Experiments on four datasets (ImageNet, Cifar-10, Cifar-100, and CelebA) verified the effectiveness of the proposed attack."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The proposed attack can be applied to recover large batches of high-resolution images (e.g., 224x224px) with potentially duplicated labels.\n\n- The proposed attack has a much smaller search space compared to optimization-based methods.\n\n- The proposed attack remains effective against highly compressed gradients with added noise.\n\n- Evaluations and comparisons with other attacks validate the value of the proposed attack. The reviewer was particularly impressed by the visualized reconstruction results for a batch of 256 images."
+                },
+                "weaknesses": {
+                    "value": "- The proposed method is built on several existing techniques that made disparate adversarial assumptions. As a result, the proposed RGLA combining these techniques requires a quite restrictive threat model, e.g., access to auxiliary datasets and ground-truth labels. In particular, RGLA requires the target network to have no pooling layer, which is hard to justify in practice. On the other hand, RGLA does not need batch statistics for reconstructing batched input but does seem to require B to not exceed C+1.\n\n- The technical contributions of this work are not particularly clear. The core techniques adopted by RGLA for enabling large batch recovery (e.g., disaggregating gradients and training a generator model) were discovered in prior work by Xue et al. and the inversion on the model output was discussed by Zhu & Blaschko et al. The only distinction seems to be the relaxation on duplicate labels. Besides, some closely related works were not compared/discussed. For instance, [1] also trains a model to learn inverse mapping, and the idea of disaggregating and inverting feature vectors is very similar to the cocktail party attack [2].\n\n- The proof of Proposition 2 made assumptions about the expressivity of the model, which should be made explicit in the text.\n\n- The image similarity-based privacy metrics have some inherent limitations. For instance, the reconstructed images on CelebA have high measured PSNR but barely reveal any practically identifiable information. It would be better to add corresponding discussions.\n\n[1] Wu, Ruihan, et al. \"Learning to invert: Simple adaptive attacks for gradient inversion in federated learning.\" Uncertainty in Artificial Intelligence. PMLR, 2023.\n\n[2] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023."
+                },
+                "questions": {
+                    "value": "1. From what the reviewer understands, the performance degradation of exiting attacks in the duplicated label scenario is an artifact of the label ambiguity. If that\u2019s the case, existing optimization-based attacks should perform as well as if there were no duplicated labels in the extreme case where all images come from the same class, but that\u2019s not what\u2019s observed in Table 8 - existing attacks still perform poorly even if there is no label ambiguity. What causes the performance of existing attacks to drop? How would these methods perform if the true labels are assumed to be known?\n\n2. What learning task is considered for experiments on the CelebA dataset? How many classes are there? What is the auxiliary dataset used?\n\n3. The elimination of the twin solution seems to rely on its smaller loss value (as empirically verified in Fig. 3). How are these twin data eliminated on a well-trained model where all training data have relatively small loss values?\n\n4. As RGLA relies on inverting the model output to feature maps, how would defense methods that perturb/modify the FCL part of the model (e.g., [1][2]) affect the attack performance?\n\n5. It is interesting to see that gradient clipping and additive noise have little effect on FGLA as combining these two essentially provides some notion of differential privacy. What is the largest epsilon value that is able to defend FGLA and the proposed RGLA attack?\n\n[1] Sun, Jingwei, et al. \"Soteria: Provable defense against privacy leakage in federated learning from representation perspective.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021.\n\n[2]Scheliga, Daniel, Patrick M\u00e4der, and Marco Seeland. \"Precode-a generic model extension to prevent deep gradient leakage.\" Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2022."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92",
+                        "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698636783285,
+            "cdate": 1698636783285,
+            "tmdate": 1700508888609,
+            "mdate": 1700508888609,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "I07CFAJqtR",
+                "forum": "cKGpe1792U",
+                "replyto": "vXstxrbYPt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer nX92 (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your thorough review and valuable suggestion and question on our manuscript. We sincerely accept your opinions and will make revisions and improvements. Note that the order of some figures/results has changed with the rebuttal revision. The implement of the additional experiment can be find in our updated github repository and updated supplementary material. Below, we address specific points you raised.\n\n>**Q1 1. Assumption of auxiliary datasets 2. Assumption of ground-truth labels. 3. Requirement on the target network to have no pooling layer. 4. Requirement on B to not exceed C+1.**\n\n1. Accessing an auxiliary dataset: many of the more recent works [1, 2, 3, 4, 5, 6] in our research field require access to an external dataset. Moreover, we believe that in a real federated learning scenario, an adversary can use some open-source datasets as auxiliary data to facilitate the attack, which is not a difficult thing.\n\n2. Access to ground-truth labels. We would like to clarify that the assumption of ground-truth labels is reasonable for this reason. This label assumption shared in recent studies [1, 2, 4, 9, 10], which either assume that the adversary knows the labels [1, 2], or first extract the labels [4, 9, 10] using existing label inference techniques.\n\n   To improve rigor, we combine our method with a state-of-the-art label inference technique, iLRG [8]. Table 1 shows the average results of data reconstruction on 100 batches. Notably, iLRG achieved a 100% accuracy rate in our experiments, though the order of the reconstructed labels differs from that of the actual ground-truth labels. As shown in Table 1, the reconstructed results obtained using ground-truth labels and those reconstructed results using the iLRG [8] are similar. Fig. 11 in our rebuttal version provides visual reconstruction results, illustrating that both ground-truth labels and inferred labels can successfully reconstruct visual outcomes, except that using inferred labels causes the reconstructed data to be in a different order from the original data. We also add this experiment and corresponding discussion in the Appendix of our rebuttal version.\n\n   |                                 | PSNR$\\uparrow$ | SSIM$\\uparrow$ | LPIPS$\\downarrow$ |\n   | ------------------------------- | -------------- | -------------- | ----------------- |\n   | Ground-truth label + RGLA(Ours) | 19.24153       | 0.50947        | 0.55870           |\n   | iLRG [8] + RGLA(Ours)           | 19.22677       | 0.49973        | 0.56795           |\n\n   Table 1\n\n3. The target network to have no pooling layer: Indeed, we removed the average pooling layer over the fully-connected layer (FC layer) in our experiments in order to make the feature map larger so that it contains more information about the original data, which is consistent with what was done in [2]. In order to explore how much information is lost by the average pooling layer, we conducted experiments in two scenarios: one in which the pooling layer is removed and the other in which the pooling layer is retained. And keep the rest of the experimental settings the same, including a batch size of 8, a dataset of ImageNet, and attacking the same 100 data batches. According to the experimental results in Table 2, whether the pooling layer is removed or not, our proposed method is able to reconstruct model outputs that are very close to the actual model outputs, which further reconstructs feature maps that are similar to the original feature maps. However, in the setting with the pool layer, the generator can not generate the original data even with the precise feature map. This phenomenon can be attributed to the fact that the addition of the pooling layer reduces the information about the original data contained in the feature maps, making it difficult for the generator to reconstruct the original image from feature maps that contain less information about the original data. The contribution of our manuscript does not lie in the training of the generator, which is the main contribution of [1]. In the future, we also expect more powerful generator models to be able to reconstruct the original images from corresponding feature maps even with limited information contained."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700320003289,
+                "cdate": 1700320003289,
+                "tmdate": 1700320003289,
+                "mdate": 1700320003289,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "DiPZgTEPQu",
+                "forum": "cKGpe1792U",
+                "replyto": "vXstxrbYPt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer nX92 (Part 5)"
+                    },
+                    "comment": {
+                        "value": "Reference:\n\n[1] Jinwoo Jeon, Jaechang Kim, Kangwook Lee, Sewoong Oh, and Jungseul Ok. Gradient inversion with generative image prior. In Neural Information Processing Systems, pp. 29898\u201329908, 2021.\n\n[2] Dongyun Xue, Haomiao Yang, Mengyu Ge, Jingwei Li, Guowen Xu, and Hongwei Li. Fast generation-based gradient leakage attacks against highly compressed gradients. IEEE INFOCOM 2023 - IEEE Conference on Computer Communications, 2023.\n\n[3] Zhuohang Li, Jiaxin Zhang, Luyang Liu, and Jian Liu. Auditing privacy defenses in federated learning via generative gradient leakage. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 10132\u201310142, 2022.\n\n[4] Yang H, Ge M, Xiang K, et al. Using Highly Compressed Gradients in Federated Learning for Data Reconstruction Attacks[J]. IEEE Transactions on Information Forensics and Security, 2022, 18: 818-830.\n\n[5] Hanchi Ren, Jingjing Deng, and Xianghua Xie. Grnn: generative regression neural network\u2014a data leakage attack for federated learning. ACM Transactions on Intelligent Systems and Technology (TIST), 13(4):1\u201324, 2022.\n\n[6] Yue K, Jin R, Wong C W, et al. Gradient obfuscation gives a false sense of security in federated learning[C]//32nd USENIX Security Symposium (USENIX Security 23). 2023: 6381-6398.\n\n[7] Wainakh A, Ventola F, M\u00fc\u00dfig T, et al. User-level label leakage from gradients in federated learning[J]. arXiv preprint arXiv:2105.09369, 2021.\n\n[8] Ma K, Sun Y, Cui J, et al. Instance-wise Batch Label Restoration via Gradients in Federated Learning[C]//The Eleventh International Conference on Learning Representations. 2022.\n\n[9] Zhu J, Blaschko M. R-gap: Recursive gradient attack on privacy[J]. arXiv preprint arXiv:2010.07733, 2020.\n\n[10] Jonas Geiping, Hartmut Bauermeister, Hannah Droge, and Michael Moeller. Inverting gradients - \u00a8how easy is it to break privacy in federated learning? ArXiv, abs/2003.14053, 2020.\n\n[11] Wu, Ruihan, et al. \"Learning to invert: Simple adaptive attacks for gradient inversion in federated learning.\" Uncertainty in Artificial Intelligence. PMLR, 2023.\n\n[12] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023.\n\n[13] Sun, Jingwei, et al. \"Soteria: Provable defense against privacy leakage in federated learning from representation perspective.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021.\n\n[14] Scheliga, Daniel, Patrick M\u00e4der, and Marco Seeland. \"Precode-a generic model extension to prevent deep gradient leakage.\" Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2022."
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700320883989,
+                "cdate": 1700320883989,
+                "tmdate": 1700322251313,
+                "mdate": 1700322251313,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "PxeTILow7B",
+                "forum": "cKGpe1792U",
+                "replyto": "I07CFAJqtR",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the detailed response. Could you comment on why the LPIPS score is lower with the average pooling layer than without it? Could you provide some visual comparisons? Also a minor comment, I believe the \"epsilon\" in your response to Q9 refers to the variance of the noise rather than the privacy parameter?"
+                    }
+                },
+                "number": 24,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700431975807,
+                "cdate": 1700431975807,
+                "tmdate": 1700431975807,
+                "mdate": 1700431975807,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "NCDQUXFxA1",
+                "forum": "cKGpe1792U",
+                "replyto": "zVqzwZEbxF",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank the authors for your extensive clarification and additional experiments that have addressed most of my concerns. Despite having made some adversarial assumptions, I recognize the merits of this work in effectively tackling challenges related to large batch size and duplicated labels, demonstrating compelling empirical performance. I've adjusted my evaluation to support accepting this paper. I encourage the authors to expand the limitation sections in the final version to deepen the discussion on relevant aspects."
+                    }
+                },
+                "number": 29,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700508856671,
+                "cdate": 1700508856671,
+                "tmdate": 1700508856671,
+                "mdate": 1700508856671,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BddlfzGTN1",
+                "forum": "cKGpe1792U",
+                "replyto": "vXstxrbYPt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Provide more information about the experiment in Table 1 and discussion on how the similarity between the auxiliary dataset and the attacked one affect the reconstruction results"
+                    },
+                    "comment": {
+                        "value": ">**Q1 Can the authors provide more information about the experiment in Table 1? In particular, what was the batch size and number of repeated class labels?**\n\nThe experiments setup for Table 1 consists of the attacked dataset: cifar100, the attacked network: resnet50, the batch size: 8, and the labels distribution of is assigned randomly. We think you want to see how the combination of iLRG and RGLA performs with repeated labels, so we added the experiment in the case of 4 repeated labels and a batch size of 8, and merged the results with Table 1, as shown in Table 5. From Table 5 we can see that repeated labels have no effect on the combination of iLRG with RGLA, which further validates the reasonableness of label assumptions.\n\n|                                                            | PSNR$\\uparrow$ | SSIM$\\uparrow$ | LPIPS$\\downarrow$ |\n| ---------------------------------------------------------- | -------------- | -------------- | ----------------- |\n| Ground-truth label + RGLA                                  | 19.24153       | 0.50947        | 0.55870           |\n| iLRG [1] + RGLA (Randomly assigned label distribution)      | 19.22677       | 0.49973        | 0.56795           |\n| iLRG [1] + RGLA (Duplicate 4 labels within batch size of 8) | 19.16298       | 0.48339       | 0.57021          |\n\nTable 5\n\n[1] Ma K, Sun Y, Cui J, et al. Instance-wise Batch Label Restoration via Gradients in Federated Learning[C]//The Eleventh International Conference on Learning Representations. 2022.\n\n\n>**Q2 Can the authors explore the connection between their auxiliary dataset and the one that they attack more thoroughly? That is, can they show how different level of data shifts will affect their results?**\n\nOur auxiliary dataset is ImageNet and experiments have been performed on ImageNet, CelebA, Cifar10, and Cifar100, our intuition is that the similarity of the auxiliary dataset to the attacked dataset as well as the complexity of the auxiliary dataset to the attacked dataset affect the results.\n\n- Similarity between the auxiliary dataset and the attacked dataset affect the result. The similarity between ImageNet and the Cifar100 dataset is greater than that between ImageNet and the CelebA dataset, and from the experiment results on the right of Fig. 2 in the manuscript we can see that the reconstruction results on the cifar100 dataset are better than those on CelebA. Therefore we draw this conclusion the more similar the auxiliary dataset and the attacked dataset are the more favourable to the attack. However, there is no good way to quantify this similarity between the two datasets, so for the time being, we do not have a good way to quantitatively state how much the difference between the auxiliary dataset and the attacked dataset affects the results. However, we feel that the attacker can adjust the auxiliary dataset when performing reconstruction attacks. For example, if the attacker originally used ImageNet to attack CelebA, and when the reconstructed result can be visually seen as a human face, but may not be clearly identifiable, we can connect some face images to feed into the generator before performing the attack, and the result may become better. In other words, we can adjust the auxiliary dataset of our generator according to the reconstructed result.\n- The complexity of the auxiliary dataset being greater than that of the attacked dataset is advantageous for attacks. For instance, using ImageNet as an auxiliary dataset to attack Cifar100 allows the generator to learn more complex details, which is beneficial for the attack."
+                    }
+                },
+                "number": 39,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700645865208,
+                "cdate": 1700645865208,
+                "tmdate": 1700646431836,
+                "mdate": 1700646431836,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "qSRocBkLc9",
+            "forum": "cKGpe1792U",
+            "replyto": "cKGpe1792U",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a novel gradient leakage attack RGLA, which first invert loss and FC layer gradients to get the final feature map before FC layer, then use a generator to map the final feature maps back to input space to get the reconstructed inputs. The method is shown effective to reconstruct high-resolution (224 x 224) pixels with large batch size (256) with duplicated labels."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The approach is thoughtfully designed, beginning with a solid theoretical analysis that logically leads to its expected effectiveness.\n\n2. The experiments conducted in the paper are extensive and thorough. The authors have performed extensive ablation studies to show the performance. The results are impressive, showcasing good reconstruction fidelity and computational efficiency, thus highlighting the method's effectiveness.\n\n3. The paper is well-written, presenting its concepts and findings with clarity and precision, leaving no ambiguity."
+                },
+                "weaknesses": {
+                    "value": "1. The paper lacks sufficient details regarding the training of the generator responsible for mapping final feature maps back into the original input samples. As readers, we are left with questions about the level of effort required to train such a generator and the upper bounds of its capabilities. Additionally, it would be valuable to understand how the performance of the feature inverter generator is affected by the increasing accuracy of the victim model. Could you provide more information into these aspects to enhance our understanding of your work?\n\n2. A small weakness: I notice in the code provided in supplementary materials, the authors made some change to the architecture of Resnet - They remove the average pooling layer (over a 7x7 feature map), thus by stretching the final feature map, the FC layer is indeed 49 times wider than before. This inevitably simplifies the difficulty of reconstructions a lot.  To me this is not a severe concern, since the major part of paper does not assume how feature maps are reshaped to enter the FC layers, and this technical modification is not the focus of the research problem.  But for the researchers studying this problem, they could be concerned about this.  I wonder could authors show how the results will be like, if not removing average pooling, and use the original Resnet architecture in Torchvision implementation? It is expected to see performance drop in that case, but revealing this could give readers more insights about the difficulty of the problem, and understand how much information will be lost by average pooling before FC layer."
+                },
+                "questions": {
+                    "value": "1. My primary question is about the information available to the attacker through gradients, which is essentially an aggregated representation from a batch of inputs. I'm curious about how your method manages to distinguish features of different images within the same class. I couldn't identify explicit constraints in the optimization objective that encourage disentanglement between samples from the same class. Intuitively, I would expect that reconstructed samples from the same class might exhibit entangled features, resulting in averaged reconstruction or mixed semantics. Could you provide additional insights, either theoretical or empirical, to clarify how your approach achieves this distinction? This would be my biggest concern for understanding how your approach works.\n\n2. It appears that the reconstructed samples exhibit a degree of over-smoothing, lacking sharp edges and finer details. This effect seems reminiscent of applying a large Total Variation loss or L2 loss. Could you please explain the reasons behind this observation? Is it related to the characteristics of the feature inversion generator? Are there potential room for improvement? If the level of smoothness can be adjusted, what will the results look like if they do not appear so smooth?\n\n3. See weakness 2, I am curious about the performance of proposed approach when using average pooling layer before the final FC layer."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8",
+                        "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699247197711,
+            "cdate": 1699247197711,
+            "tmdate": 1700420592710,
+            "mdate": 1700420592710,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "33n8gWwMwk",
+                "forum": "cKGpe1792U",
+                "replyto": "qSRocBkLc9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer p8x8 (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thank you very much for your praise on our manuscripts, such as \"innovative attacks\", \"insightful design\", \"solid theoretical analyses\", \"extensive and thorough experiments\", \"well-written\", and so on. We are honored to receive such praise and we do our best to address your concerns and questions.\n\n>**Q1  1. There is a lack of detailed information on the training of the generator used for mapping final feature maps to original input samples and clarity on the effort required to train this generator. 2. How the generator's performance is influenced by the increasing accuracy of the victim model.**\n\nThank you very much for your question.\n\n1. The structure of the generator and its training details have been thoroughly described in the prior work [1]. Here, I would like to add some details that were not mentioned in [1]: the generator has a total of 100,590,979 parameters, and consumes about 23GB of video memory when the batch size is 32 during training. When experimenting on ImageNet, it takes about 2 hours to complete an epoch, and typically after about 4 epochs of training, the generator is able to effectively invert the feature map back to the original model input. This generator training does not affect the efficiency of our attacks. This is because it is becoming increasingly common to use a pre-trained convolutional layer plus an untrained fully-connected layer and to fix the convolutional layer to train only the fully-connected layer during the training process. In this case, we only need to train one generator to attack the private data of multiple clients in multiple rounds of federated learning.\n\n2. As the accuracy of the attacked model increases, the feature map will contain more information about the original data, potentially reducing the time required to train an efficient generator."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700316854785,
+                "cdate": 1700316854785,
+                "tmdate": 1700316854785,
+                "mdate": 1700316854785,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "yO3gNmpnBZ",
+                "forum": "cKGpe1792U",
+                "replyto": "qSRocBkLc9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer p8x8 (Part 2)"
+                    },
+                    "comment": {
+                        "value": ">**Q2 A small weakness: I notice in the code provided in supplementary materials, the authors made some change to the architecture of Resnet - They remove the average pooling layer (over a 7x7 feature map), thus by stretching the final feature map, the FC layer is indeed 49 times wider than before. This inevitably simplifies the difficulty of reconstructions a lot. To me this is not a severe concern, since the major part of paper does not assume how feature maps are reshaped to enter the FC layers, and this technical modification is not the focus of the research problem. But for the researchers studying this problem, they could be concerned about this. I wonder could authors show how the results will be like, if not removing average pooling, and use the original Resnet architecture in Torchvision implementation? It is expected to see performance drop in that case, but revealing this could give readers more insights about the difficulty of the problem, and understand how much information will be lost by average pooling before FC layer.**\n\nThank you for meticulously reviewing our code and providing valuable comments. Indeed, we removed the average pooling layer over the fully-connected layer (FC layer) in our experiments in order to make the feature map larger so that it contains more information about the original data, which is consistent with what was done in [1]. In order to explore how much information is lost by the average pooling layer, we conducted experiments in two scenarios: one in which the pooling layer is removed and the other in which the pooling layer is retained. And keep the rest of the experimental settings the same, including a batch size of 8, a dataset of ImageNet, and attacking the same 100 data batches. According to the experimental results in Table 1, whether the pooling layer is removed or not, our proposed method is able to reconstruct model outputs that are very close to the actual model outputs, which further reconstructs feature maps that are similar to the original feature maps. However, in the setting with the pool layer, the generator can not generate the original data even with the precise feature map. This phenomenon can be attributed to the fact that the addition of the pooling layer reduces the information about the original data contained in the feature maps, making it difficult for the generator to reconstruct the original image from feature maps that contain less information about the original data. The contribution of our manuscript does not lie in the training of the generator, which is the main contribution of [1]. In the future, we also expect more powerful generator models to be able to reconstruct the original images from corresponding feature maps even with limited information contained.\n\n|                               | $\\left\\|\\hat{y}^{\\prime} - \\hat{y} \\right\\|^2$ $\\downarrow$ | $\\left\\|f^{\\prime} - f \\right\\|^2$ $\\downarrow$ | PSNR $\\uparrow$ | SSIM $\\uparrow$ | LPIPS $\\downarrow$ |\n| ----------------------------- | ----------------------------------------------------------- | ----------------------------------------------- | --------------- | --------------- | ------------------ |\n| Without average pooling layer | 2.00E-04                                                    | 1.01E-04                                        | 18.72215        | 0.48819         | 0.57847            |\n| With average pooling layer    | 9.57E-05                                                    | 1.76E-07                                        | 10.97777        | 0.29773         | 0.511608           |\n\nTable 1: The $\\hat{y}$ is the actual model output, the $\\hat{y}^{\\prime}$ is the optimized model output, the $f$ is the actual feature map, and the $f^{\\prime}$ is the obtained feature map."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700317030447,
+                "cdate": 1700317030447,
+                "tmdate": 1700320056430,
+                "mdate": 1700320056430,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "WfKRsRMgJV",
+                "forum": "cKGpe1792U",
+                "replyto": "qSRocBkLc9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer p8x8 (Part 4)"
+                    },
+                    "comment": {
+                        "value": ">**Q4 It appears that the reconstructed samples exhibit a degree of over-smoothing, lacking sharp edges and finer details. This effect seems reminiscent of applying a large Total Variation loss or L2 loss. Could you please explain the reasons behind this observation? Is it related to the characteristics of the feature inversion generator? Are there potential room for improvement? If the level of smoothness can be adjusted, what will the results look like if they do not appear so smooth?**\n\nThank you for your question! Regarding the excessive smoothing that occurs in the reconstructed samples, as well as the lack of sharp edges and fine details, this may indeed be related to the Total Variation loss or L2 loss that we used. In addition to this, we believe it is also related to the architectural characteristics of our generator. Our generator employs a multi-layer convolutional and deconvolutional network, complemented by LeakyReLU activation functions and batch normalization (BatchNorm). This design helps produce smoother images and mitigating overfitting to some extent. However, it might also lead to the loss of high-frequency details in images. During the training of the generator, we used Mean Squared Error Loss (MSELoss) along with image quality metrics such as PSNR, SSIM, and LPIPS. The combination of these loss functions might further enhance the smoothing effect, particularly as PSNR and SSIM tend to assess overall structural similarity rather than precise detail reproduction. Regarding improvements to reduce image over-smoothing, we believe that adjustments to the loss function, optimization of the generator\u2019s network structure, or the incorporation of techniques specifically aimed at high-frequency detail restoration could yield enhancements. For instance, exploring more complex loss functions like Perceptual Loss or losses used in Generative Adversarial Networks (GANs) might encourage the generation of more detailed and textured images. However, due to time constraints during the rebuttal phase, we were unable to explore more optimization functions and more robust generator models. We hope the reviewers can understand us.\n\n>**Q5 See weakness 2, I am curious about the performance of the proposed approach when using the average pooling layer before the final FC layer.**\n\nSee our answer to Q2.\n\nReference:\n\n[1] Dongyun Xue, Haomiao Yang, Mengyu Ge, Jingwei Li, Guowen Xu, and Hongwei Li. Fast generation-based gradient leakage attacks against highly compressed gradients. IEEE INFOCOM 2023 - IEEE Conference on Computer Communications, 2023."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700318657443,
+                "cdate": 1700318657443,
+                "tmdate": 1700369478823,
+                "mdate": 1700369478823,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "g0Q1ziGcPn",
+                "forum": "cKGpe1792U",
+                "replyto": "33n8gWwMwk",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Regarding \"pre-trained convolutional layer and untrained FC layer\""
+                    },
+                    "comment": {
+                        "value": "\"it is becoming increasingly common to use a pre-trained convolutional layer plus an untrained fully-connected layer and to fix the convolutional layer to train only the fully-connected layer during the training process.\"\n\nDo you mean that a such a pre-trained feature inversion generator is trained, each time the attacked model changes its parameters, attacker only needs retraining on FC layers to adapt to the new weight?  Is it always the case? In your experiment setting, do you assume the victim model is trained to a certain state, if it is, then how many epochs have been trained on the victim model?"
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700413626281,
+                "cdate": 1700413626281,
+                "tmdate": 1700413626281,
+                "mdate": 1700413626281,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "E9csPg1x0i",
+                "forum": "cKGpe1792U",
+                "replyto": "YZ95mXV3fB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for the response"
+                    },
+                    "comment": {
+                        "value": "Many thanks for your comprehensive and insightful response! Your provided information and insights have effectively addressed most of my concerns. I also took the time to go through other reviews and the author's rebuttal, from which I learned some interesting points. In my assessment, the paper demonstrates novelty and is supported by well-executed experiments that show satisfying improvements in results. Furthermore, the authors' transparency regarding technical details are valuable. As a result, I would like to raise my score from 6 to 8."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5079/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700420617611,
+                "cdate": 1700420617611,
+                "tmdate": 1700420617611,
+                "mdate": 1700420617611,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

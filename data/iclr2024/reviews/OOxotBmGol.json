@@ -1,0 +1,286 @@
+[
+    {
+        "id": "iOtyWsSxeJ",
+        "forum": "OOxotBmGol",
+        "replyto": "OOxotBmGol",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_8Jea"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_8Jea"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors present the new approach LLAMBO, which integrates large language models into Bayesian optimization for the case of hyperparameter optimization. The integration is done by translating knowledge about the problem, algorithm, and optimization history into natural language prompts. The modular approach comprises a warmstarting component, a candidate sampler, and a surrogate model. Two alternatives for the surrogate model are contrasted: a generative and a discriminative variant. The authors claim strong empirical performance to be shown in experimental evaluations. Each component is evaluated separately, and an evaluation of using all components together for an end-to-end approach in comparison to existing methods is carried out additionally."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Novelty & Significance: To the best of my knowledge, the approach is the first of its kind to integrate LLMs into the process of HPO/BO in this all-encompassing manner and could be interesting for the community to build upon.\n\nQuality: In fact, the authors discuss many very interesting approaches for how to combine LLMs and BO. Eventually, they show that by combining all these approaches, they get a very strong system overall. Although I have some concerns regarding some details, the wealth of ideas in this paper and the corresponding experiments are impressive.\n\nIn the limited evaluation, the approach shows very promising results.\n\nClarity: The paper is written up nicely and illustrated with many figures and plots, making it relatively accessible."
+            },
+            "weaknesses": {
+                "value": "### Approach\nMy main criticism is that the authors used an LLM that models data as a sequence of tokens. However, when passing HPO data to an LLM, they face the problem that this data has no sequential structure (see Section 4.1). They get around by permutating the data and thus even derive some kind of uncertainty. However, this seems flawed to me. The authors mention the SMAC method which is built on a random forest. Although random forests are not great for deriving uncertainties, the bootstrapping of random forests is at least statistically motivated. I missed any good argument as to why non-sequential data should be fed into a sequential model and then applying a hack trying to fix it again.\n\nFurthermore, it is well known that the strength of LLMs is based on good prompts. Therefore, I would actually expect some kind of insights and ablation studies on how to do the prompts for this problem. Reading the exemplary prompt templates, I strongly wonder whether the authors came up with these prompts in their very first trial. \n\n### Clarity\n\nThe paper is very dense and includes many nice results. However, the main paper (without appendix) should still be self-contained. However, the authors decided to move the discussion of related work into the appendix. I oppose that decision and deem it very important to have a discussion of related work in the main body of the paper s.t. readers can very well understand how to situate the paper. As a concrete proposal, I recommend moving the generative surrogate model into the appendix since it does not perform better than the discriminative model anyway.\n\n### Experiments\n\nFirst of all, all papers using closed-sourced GPT models have an inherent flaw: We know nothing about how these models are trained exactly, e.g., training data. Therefore, we lack any scientific understanding of how to use them. The authors tried to get around this by using some private and artificial datasets, but how does this relate to the training distribution used for the GPT model? We cannot make any real claim regarding meta-data leakage. \n\nFurthermore, since GPT-3.5 is not publically available and might even be updated from time to time, the chance of reproducibility of these results is more or less not given at all. I strongly recommend using (at least) publicly available LLMs such as Llama 2.\nThere are many further doubts I will raise as questions below. These might translate to direct weaknesses if not properly answered in the rebuttal. \n\nSome answers could relate to the use of Bayesmark. This benchmark library includes many rather simple HPO benchmarks, i.e., low-dimensional, continuous spaces and traditional ML models. Given state of the art in HPO, I would not consider these reasonable benchmarks anymore. In fact, quite some of the results in this paper conflict with insights into comparing HPO tools (see questions). Therefore, I suspect that results might look very different, if the authors would have used more challenging benchmarks (e.g, from HPOBench).\n\nThere are several further points that diminish the strength of the presented experimental results and undermine soundness:\n\n* All plots use iterations instead of wall-time on the x-axis, which does not allow the reader to draw any conclusions on the overhead incurred through querying the LLM, which might negate any benefits incurred by its inclusion depending on the benchmark.\n* No uncertainty is shown in any plot, even though results are averaged over several runs/ seeds.\n* Especially in the end-to-end demonstration, the number of iterations chosen is very small, and it would be interesting to see how the curves continue.\n* No fully random baselines were provided (warmstarting and end-to-end).\n* There are some results that seem contradictory to previously observed behaviors of approaches (see questions)\n* Accessibility: Often, only colors indicate which curves belong to which approach, and colors like red and green are mixed.\n\n### Minor Points\n* P. 15 (Appendix): 2. Candidate Point Sampler H, is \"]\" intentional?\n* In Appendix E, Figure 16 the description hints to two graphs but only one is shown.\n* In Figure 8, all curves start at the same point in iteration 0. This is a bit strange in comparison to the warmstarting, where there are clearly different starts depending on the methods. While this is probably due to all methods using the same warmstarting point, it seems puzzling to not include this at the start of the graph or make it clear from the description.\n* In the plots, when regret or performance over time (iterations) is shown, the functions should be step functions since there are no interpolations in-between possible."
+            },
+            "questions": {
+                "value": "1. How were the Hyperparameters of LLAMBO selected?\n1. How were the hyperparameters of the other optimizers selected?\n1. Which versions of the libraries for the other optimizers were used?\n1. Which exact version of GPT-3.5 was used?\n1. In Figure 7, for three of the four plots, the random approach does not seem to do anything, which seems questionable. Could you elaborate on why this might be the case?\n1. Why was the end-to-end variant of LLAMBO not evaluated with its own warmstarting component?\n1. In Figure 3, SMAC's random forest surrogate seems to beat the GP-based surrogate model, which based on previously published results seems unlikely given that we talk about a small-dimensional, continuous space. Could you elaborate on why this might be the case?\n1. In Figure 8, SMAC seems to do nothing for the first few iterations, which, especially in comparison to the previous evaluation of the surrogates (e.g. vs GP) seems strange, could you elaborate on why this might be the case?\n1. The performance of HEBO looks surprisingly bad compared to SMAC based on previously published results, could you elaborate on why this might be the case?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Reviewer_8Jea"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8133/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698474145643,
+        "cdate": 1698474145643,
+        "tmdate": 1700140483224,
+        "mdate": 1700140483224,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "c6WViH5zij",
+        "forum": "OOxotBmGol",
+        "replyto": "OOxotBmGol",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_LVtK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_LVtK"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper devises a method to enhance Bayesian optimization using a large language model.  By employing GPT-3.5, the authors investigate GPT-3.5's abilities to warm-start Bayesian optimization, model a surrogate function, and sample query points, and eventually conduct the entire process of Bayesian optimization.  In this paper various scenarios are conducted using in-context learning and prompt engineering, and some important messages discovered by the authors are delivered."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* It solves an interesting topic in Bayesian optimization or active search.  Many optimization researchers were curious about the topic handled in this work.\n* Many questions on how it works and which factor makes it work are answered and discussed.\n* Extensive analyses are provided.\n* Paper is generally well-written."
+            },
+            "weaknesses": {
+                "value": "* I think this is timely work, but I am not sure that it can be presented at ICLR, which is a conference that focuses on representation *learning*.  This work did not do learning explicitly.  I am leaning towards a positive side, but it should be carefully discussed with authors, reviewers, and area chairs.  I think that this paper is more suitable for a natural language processing conference such as ACL, EMNLP, or others.\n* Standard deviation (or confidence interval) is not reported for every experiment.  I think this is an important component for this kind of studies.  If some results are statistically meaningless, the analyses are not much meaningful.\n* I am curious about how the authors design prompt templates.  Since I tried similar experiments, I could understand why some sentences are included.  However, the analysis on prompts and prompt designs, and potentially failure cases, should be included in the paper.  For example, if you do not include \"Do not recommend values at the minimum or maximum of allowable range, do not recommend rounded values\" in the prompt, what happens?"
+            },
+            "questions": {
+                "value": "* In prompt examples, do colors have some consistent indication?  For example, texts in orange have some meaning?  I think you can make consistency across examples and it can help understand the prompt examples.\n* Why is no context for warm-starting Bayesian optimization better than random, sobol, or hcube?  The results of no context should be similar to the random initialization methods.\n* In discriminative surrogate modeling, a method of LLAMBO utilizes both Monte Carlo sampling and shuffling of examples, or it only uses the shuffling?\n* Could you elaborate how $\\alpha$ is used in candidate point sampling?\n* Could you explain the details of end-to-end demonstration of LLAMBO?  I think it is missing in the paper including the appendices.\n* As I mentioned earlier, I would like to see the design process of prompts."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Reviewer_LVtK"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8133/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698713770417,
+        "cdate": 1698713770417,
+        "tmdate": 1700224959146,
+        "mdate": 1700224959146,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "psyQbS7QM4",
+        "forum": "OOxotBmGol",
+        "replyto": "OOxotBmGol",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_x2Jx"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_x2Jx"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces LLAMBO, an interesting approach that integrates large language models (LLMs) into Bayesian optimization (BO). The authors highlight the challenges of efficiently balancing exploration and exploitation in BO and propose LLAMBO as a solution to enhance various components of model-based BO. LLAMBO leverages the contextual understanding, few-shot learning proficiency, and domain knowledge of LLMs to improve surrogate modeling, candidate sampling, and zero-shot warm-starting. The authors empirically validate LLAMBO's effectiveness in hyperparameter tuning, demonstrating strong performance across diverse benchmarks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Generally, this paper is well written and easy to follow.\n2. This paper has well shown the feasibility of introducing LLM into BO for further performance improvement through extensive empirical experiments.\n3. This paper has conducted extensive experiments to show how and why the performance is improved."
+            },
+            "weaknesses": {
+                "value": "1. The proposed method may failed to deal with high dimensional optimization problems due to the limited token of LLM.\n2. This paper mainly compares with the LLAMBO with standard BO algorithms whereas many neural network-based BO algorithms have been developed recently to improve the modeling of standard BO algorithms, e.g., [R1]. This paper may also compare with it to further support the advantages of using LLM for BO.\n\n[R1] Dai, Z., Shu, Y., Low, B. K. H., & Jaillet, P. (2022). Sample-then-optimize batch neural thompson sampling. Advances in Neural Information Processing Systems, 35, 23331-23344."
+            },
+            "questions": {
+                "value": "1. In page 8, could the author explain why a negative alpha will help improve the average regret? Intuitively, a negative alpha indicates that the sampling candidates usually perform no better than the best one when compared with the existing candidates, which therefore indicates that no improvement should be made through a negative alpha.\n2. What's the dimension of the empirical experiments that have been conducted in this paper? Any high-dimensional ones?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8133/Reviewer_x2Jx"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8133/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698822359503,
+        "cdate": 1698822359503,
+        "tmdate": 1700651891610,
+        "mdate": 1700651891610,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ouKv1q2zGu",
+        "forum": "OOxotBmGol",
+        "replyto": "OOxotBmGol",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_ywEG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8133/Reviewer_ywEG"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a novel approach for enhancing Bayesian optimization using LLMs. The approach targets several sub problems in BO such as\n\n1) Selecting initial points for warm starting. LLMs being effective at transferring knowledge are can produce a more promising initial set when provided with the problem setup.\n2) Surrogate modeling, where the LLM is used to provide prediction and uncertainty estimates for a new design provided past observations.\n3) For sampling new candidates to observe.\n4) Finally all the steps are augmented for an end-to-end BO approach.\n\nExperimental results on benchmark datasets are promising. Traditional BO work have mainly focussed on black box optimization from scratch, and works on transfer learning are relatively recent. As such the work in this paper is interesting and strongly relevant to the BO community."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "To summarize, this paper successfully demonstrates the utility of LLMs in Bayesian optimization. The paper makes several strong contributions\n- The paper demonstrates the utility of the LLM in all stages of BO from warm starting to candidate selection, and effectively utilizes the power of LLMs in knowledge transfer to novel problems.\n- Experimental results show improved performance on several benchmark problems. Experimental evaluation is reasonably extensive including several public and private datasets."
+            },
+            "weaknesses": {
+                "value": "An obvious weakness of this method is that it has only been evaluated on relatively simple benchmark datasets. The great utilization of this approach would be to select sophisticated neural architectures for novel datasets. However, it is understandable that this may be out of scope for the current work."
+            },
+            "questions": {
+                "value": "It is not clear why an LLM should have any domain knowledge about hyper-parameter tuning to start with. When provided with past observations as part of the input prompt, it is true that the model may be able to generalize (#). However does the model have any additional knowledge about hyper-parameter tuning as a part of its training data?\n\nIs it obvious that comment (#) is true? What is the mechanism behind the LLM being able to parse numbers and compare them to get a decent understanding of the loss domain?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8133/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699317794443,
+        "cdate": 1699317794443,
+        "tmdate": 1699637007244,
+        "mdate": 1699637007244,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,279 @@
+[
+    {
+        "id": "2KfT7SbITZ",
+        "forum": "kIPEyMSdFV",
+        "replyto": "kIPEyMSdFV",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_NhM6"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_NhM6"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work takes a very well-known reformulation of the score in VP-SDEs (see [1,2,3]) that is admissible to the sampling setting where one only has access to the density of the target distribution up to a constant unlike in standard diffusion models where one has access to samples. The authors propose estimating the score via MC, 100% akin to the heat-semigroup (Schroedinger Foellmer Sampler) approach in [4], which rather than time reversing a VP-SDE it can be seen as time reversing the h-transform of a pinned Brownian motion [9].\n\nThere is quite a bit of missing literature that has been already explored empirically over the last 2 years in the works of [1,2,3,4]  and also [5, 6, 7, 8].\n\nThe ULA-based estimators proposed in this work are the main novelty focus, furthermore, complexity guarantees are provided for these estimators and are shown to outperform vanilla ULA approaches, which is quite promising combined with the experiments added during the rebuttal. \n\nNotice that in contrast to parametric VI approaches the inner loop scheme proposed has theoretical guarantees for estimating the score that is practically feasible unlike [4,8] which is hindered nonpractical due to the. nonconvex objective required to train the NN estimators of the score.\n\n[1] Vargas, F., Grathwohl, W.S. and Doucet, A., 2022, September. Denoising Diffusion Samplers. In The Eleventh International Conference on Learning Representations. https://openreview.net/forum?id=8pvnfTAbu1f\n\n[2] Berner, J., Richter, L. and Ullrich, K., 2022. An optimal control perspective on diffusion-based generative modeling. In NeurIPS 2022 Workshop on Score-Based Methods.\n\n[3] Zhang, D., Chen, R.T.Q., Liu, C.H., Courville, A. and Bengio, Y., 2023. Diffusion Generative Flow Samplers: Improving learning signals through partial trajectory optimization. arXiv preprint arXiv:2310.02679.\n\n[4] Vargas, F., Reu, T. and Kerekes, A., 2023, July. Expressiveness Remarks for Denoising Diffusion Based Sampling. In Fifth Symposium on Advances in Approximate Bayesian Inference.\n\n[5] Huang, J., Jiao, Y., Kang, L., Liao, X., Liu, J. and Liu, Y., 2021. Schr\u00f6dinger-F\u00f6llmer sampler: sampling without ergodicity. arXiv preprint arXiv:2106.10880.\n\n[6] Vargas, F., Ovsianas, A., Fernandes, D., Girolami, M., Lawrence, N.D. and N\u00fcsken, N., 2023. Bayesian learning via neural Schr\u00f6dinger\u2013F\u00f6llmer flows. Statistics and Computing, 33(1), p.3.\n\n[8]  Tzen, B. and Raginsky, M., 2019, June. Theoretical guarantees for sampling and inference in generative models with latent diffusions. In Conference on Learning Theory (pp. 3084-3114). PMLR."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper is well-written and formatted, and has the potential to become a theory-oriented paper with some extra work if the contributions are restructured,  and proper acknowledgments are made, this would require significant re-writing and further development and discussion of lemma 3 and proposition 2, and also theoretical comparison to other methods beyond ULA, simply the statement of these 2 results alone is not a strong enough contribution for ICLR. \n\nNote that the ULA-based estimators proposed in this work can be seen as a novel (e.g. Algorithm 2), however, without proper experimentation/numerics, this is still not a complete contribution either, currently, the paper is a lot of floating ideas without a concrete exploration of any particular, in part, this is due to the authors not being aware of the current state of the field. However, having to run a couple of inner ULA iterations every time one has to evaluate the drift is highly nonpractical, and claims made in the paper such as :\n\n\"\nVia this combination, we are\nable to efficiently obtain accurate score estimation by virtue of the ULA algorithm when t is close\nto T. When t is close to 0, we are able to quickly obtain rough score estimates via the importance\nsampling approach.\n\"\n\nAre highly unvalidated as 2 dimensional toy examples without proper comparison to other diffusion sampling-based approaches."
+            },
+            "weaknesses": {
+                "value": "I will break this down into 2 subgroups\n\n1. Lack of Novelty (+ failure to acknowledge prior work)\n\n    *  Lemma 1 is very straight-forward and non-practical as you cannot sample from q, instead in practice the authors do IS and sample from the OU-process' transition kernel which is available analytically, which in turn results in expressing the score as done in [1] ( see equation 84 in [1] and the line that follows it connecting it to the score, or the equation above Equation 24 of the same paper ... or equations 10-13 in [4] ). \n\n2. The paper falls short as a sampling paper empirically\n\n    * Evaluations in 2d simply do not meet the bar for a conference paper. Methodologies such as SMC among many other modern ML variants are able to do quite well in multimodal 2d examples. \n    * This MC-IS method for estimating the score will NEVER work well in high dimensions due to variance and thus why works such as [1,2,3,4] which are clearly aware of this formulation (as they either state it in their appendices or use it for subsequent calculation) pursue an optimization alternative to estimating the drift.  See [5] Figure 2 for how poor the performance of these estimators is compared to LMC and alternative NN approaches for learning the score as dimension scales.  The authors briefly allude to this issue and propose combining with an inner ULA loop, however as before the authors missed that previous and more practical approaches (based on score matching) have already been developed to address this same issue, thus without any empirical validation and careful comparison it is very unclear why one would select the proposed approach.\n\nNote prior results establishing the exact same expressions for the OU-drift and similar expressions for score-matching SDEs applied to sampling have been public since late 2021."
+            },
+            "questions": {
+                "value": "Here are some suggestions:  \n\n1. For the MC estimator of the score of the forward SDE please cite [5] as the original work to propose this class of estimators for sampling with SDEs. This is not the score of an OU process it is instead the score of a \"pinned Brownian motion\" (A Brownian bridge like SDE which starts at the target distribution and maps it to a point mass). The authors might be tempted to argue that this is not the score however note that this quantity  (-logarithmic derivative of the value function) is related to the score by an additive term of $\\nabla \\ln p_t^{\\mathrm{ref}}$ where $p_t^{\\mathrm{ref}}$ is the marginal density of the associated reference process (in the case of an OU forward process this is just a linear term), see Remark 4 and its proof in [4].\n2. The authors should cite and acknowledge that their Lemma 1 (or exactly equivalent versions thereof)  have already been discussed and derived in the works [1,4] in the context of sampling, and mathematical optimization objectives which aim to learn an estimator for this exact same score the context of sampling have been explored empirically and theoretically in [1,2,3] (also 4 but this is concurrent work).\n3. Something that could strengthen the theory contribution is comparing to the Log Sobolev constant of the score in Schrodinger follmer samplers [5] (The score of a pinned brownian motion) and using this to quantify algorithmic design insights for the forward process.  \n4. Overall these theoretical contributions can have a stronger impact if written with the state of the current field on diffusion-based samplers in mind, and contextualizing how these results apply to practically successful methodologies. \n7. Note that since the estimator for the score is a ratio of expectations computed via MC the resulting estimator is itself biased, there is no discussion of this in the paper.\n\n**Update:** in the revised versions authors do a careful literature review of both prior and parametric methods which have already explored score-based time reversals for sampling, furthermore with the updated numerics found in the appendix the proposed schemes offer for a much more compelling story.\n\nTo justify the notable increase in score I will list a couple of points:\n\n* The log Sobolev constants derived for the OU process and the overall context of the analysis could be of further use and impact to works that focus on time reversal and gen modeling or time reversal and sampling. So there is a potential for impact beyond the proposed algorithm.\n* The assumptions in the work have been refined and the sketches are clearer to read in the revised versions.\n* The authors have been responsive and very helpful in clarifying points throughout the discussion (albeit a bit combative ... which is not ideal but to a tolerable level)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8638/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8638/Reviewer_NhM6",
+                    "ICLR.cc/2024/Conference/Submission8638/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8638/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698427587201,
+        "cdate": 1698427587201,
+        "tmdate": 1700292470398,
+        "mdate": 1700292470398,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Ta6M9DwGlL",
+        "forum": "kIPEyMSdFV",
+        "replyto": "kIPEyMSdFV",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_qHDx"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_qHDx"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper explores reverse diffusion in Monte Carlo sampling, transforming score estimation into mean estimation. The algorithm claims to approximate the target distribution accurately, especially for Gaussian mixture models, outperforming Langevin-style MCMC methods. They claim that this algorithm offers a fresh solution for complex distributions."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- It is an extremely interesting problem to investigate. \n- It is easy to follow.\n- Theoretical results seem to support most of their claims."
+            },
+            "weaknesses": {
+                "value": "- Lack of practical and experimental results for complex distributions e.g. high-dimensional multimodal distributions. The method's performance is based on empirical observations and may not generalize well across diverse datasets or problem domains. Its effectiveness might be limited to specific scenarios and may not be universally applicable.\n- Lack of complexity analysis. The combination of different sampling techniques (importance sampling, ULA) adds algorithmic complexity. Managing the interactions between these techniques and ensuring their proper integration can be challenging.  Also, The method might demand significant computational resources, especially when dealing with large sample sizes and high-dimensional spaces. This could limit its practicality for resource-constrained applications.  The sample size required for accurate estimation scales exponentially with the dimension due to the KL divergence between distributions. This exponential growth can make the method computationally infeasible for high-dimensional spaces. Could the authors please elaborate on these issues?\n- The accuracy of the estimation relies heavily on the dimensionality of the problem. High-dimensional spaces exacerbate the sample size requirement, making it challenging to apply the method effectively in real-world applications.\n- Creating n Monte Carlo samples at each iteration can be computationally expensive, especially if n is large. This might limit the method's scalability and efficiency for high-dimensional or complex distributions.\n- The method uses random samples $\\xi$ at each iteration. The quality of these random samples is crucial; if they are not truly random or are biased in some way, it can introduce errors in the sampled results. Furthermore, the way the samples are generated and combined in the update equation (step 6) could introduce bias if not done correctly. Biased estimators can lead to incorrect conclusions about the target distribution.\n-  The method's performance might degrade in high-dimensional spaces. Monte Carlo methods often face challenges in high-dimensional settings due to the curse of dimensionality, where the sampling space becomes sparse, making it harder to obtain representative samples.\n- How sensitive is this framework to initial distribution $p_0$?"
+            },
+            "questions": {
+                "value": "Please refer to the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8638/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698711744579,
+        "cdate": 1698711744579,
+        "tmdate": 1699637081372,
+        "mdate": 1699637081372,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0VTwKzEPFT",
+        "forum": "kIPEyMSdFV",
+        "replyto": "kIPEyMSdFV",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_dWe5"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_dWe5"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper considers the problem of reverse diffusion Monte Carlo and shows that the score estimation can be viewed as a mean estimation problem by exploiting a decomposition of the transition kernel. The theoretical properties of the proposed method are extensively analysed. The performance of the proposed method is assessed on the Gaussian mixture models; it is illustrated that the proposed approach performed better than existing Langevin-type MCMC methods."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "-\tExtensive theoretical analysis of the proposed method.\n\n-\tGood performance on (a single) toy example."
+            },
+            "weaknesses": {
+                "value": "-\tIt is quite hard work to verify the theory. I would expect nothing less from such a paper, so by itself, it is, of course, not a problem. However, I believe there is room for improving the clarity and flow of the proofs. \n\n-\tWith the current presentation of the results, it is hard to verify the reproducibility of the results; in the experiments, the robustness of the algorithms to the input hyperparameters (for example, the choice of step size \\eta in Algorithms 1/2)."
+            },
+            "questions": {
+                "value": "It\u2019s ok that for a non-expert in the specific topic, it may be hard to go over the proofs. However, I believe that a good and precise presentation of the theoretical results can lead to even a non-expert with enough theoretical background to follow and verify the results. Some representative things which could be improved:\n-\t In D2 (proof of lemma 2 and 3): the paper refers to Proposition 2 in Ma et al. (2019). However, I cannot find the Proposition 2 in Ma et al. (2019). \n-\tLemma 9: not an obvious mismatch between the statement of the lemma and the final line in the proof (RHS of inequality is d/mu for the former, 1/mu for the latter);\n-\tThe proof of lemma 9 starts with \u201cIt is known that LSI implies Poincare inequality with the same constant,\u2026\u201d. Perhaps a reference would help."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8638/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8638/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8638/Reviewer_dWe5"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8638/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698791978727,
+        "cdate": 1698791978727,
+        "tmdate": 1700499499881,
+        "mdate": 1700499499881,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ZFcngKoZCH",
+        "forum": "kIPEyMSdFV",
+        "replyto": "kIPEyMSdFV",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_UPK6"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8638/Reviewer_UPK6"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper considers a diffusion modelling approach to the classical problem of sampling from an unnormalised density."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Sampling with reverse diffusions seem to have multiple advantages (compared to usual Langevin dynamics) in terms of how the algorithms behave. This paper builds on this observation and tries to bring the diffusion modelling methodology into regular Monte Carlo sampling."
+            },
+            "weaknesses": {
+                "value": "Unclear writing and claims not supported rigorously. See more below in the questions part."
+            },
+            "questions": {
+                "value": "My questions are as follows.\n\n1) at multiple points, the paper claims that the SDE resulting from the diffusion approach has better behaviour, e.g., the last sentence of Section 2.1 claims that the isoperimetric constant of this SDE is better. Right after Lemma 1, another claim is made \"It is important to point out that the property of $q_{T-t}(\\cdot | x)$ is better than $p_*$\". Here as well, the sentence is badly written (what property?) But in any case, these claims, as far as I am able to see are not rigorously proven.\n\n2) Theorem 1 *assumes* that $q_{T-{k\\eta}}$ is log-Sobolev, instead of proving something about it. As such I think the whole motivation is unclear as authors didn't show how ill-posedness is tackled by reverse diffusion approach.  Can authors show, if $p_*$ has a log-Sobolev constant, then $q$ does actually have a better behaviour in terms of this constant?\n\nSmall comments:\n\n- In Lemma 1, point out where the proof is in Appendix"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8638/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699264315058,
+        "cdate": 1699264315058,
+        "tmdate": 1699637081156,
+        "mdate": 1699637081156,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

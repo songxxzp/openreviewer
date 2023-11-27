@@ -1,0 +1,361 @@
+[
+    {
+        "id": "ELQk3i0jtL",
+        "forum": "KQ2i6jazVK",
+        "replyto": "KQ2i6jazVK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_Wx9e"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_Wx9e"
+        ],
+        "content": {
+            "summary": {
+                "value": "Input:  One or more monocular video containing moving object that exhibits articulations; \nOutput: 3D shape of moving object in the input video\n\nThe paper presents an iterative synchronization framework that predicts the 3D shape of moving objects, specifically, living beings such as animals and humans, from input monocular videos. The 3D shape is decomposed into two parts \u2013 explicit (the surface and its color), and implicit (the skeleton, the object\u2019s semi-rigid parts, their motions, and the articulated part motion parameters given by rigidity coefficients).\nIt presents a Synergistic Iterative Optimization scheme for Shapes and Skeletons, henceforth referred to as SIOS^2, that learns both explicit and implicit representations (as defined above), iteratively. This is analogous to the Expectation Maximization (EM) algorithm in Machine Learning. \n\nDuring the E phase, the implicit skeleton is improved based on the current explicit rep. In this step, the 2D motion direction of each semi-rigid part, i.e., the bone, is calculated and distances between connected joints at the end of the bone are measured. The skeleton is then updated using the consistency of direction of the optical flow within each semi-rigid part, and the constancy (not consistency) of distances between connected joints, i.e., bone length, across the video frames.\n\nWith this E step, the 3D shape is updated in the M step using the updated skeleton (obtained from the E step).\n\n\n\nDataset used:\n\nThe paper uses the following different kinds of datasets that contain videos of articulated living beings.\nDAVIS \u2013 Animals\nPlanetZoo \u2013 Animals\nAMA \u2013 Humans\nBANMO - Humans\n\n\n\nUnderlying Neural Network:\n\nFor the so-called \u201cimplicit representation learning\u201d, i.e., skeleton-associated representation learning, I do not see any neural network being used. Pls confirm if this is this is the case. What I understand from the paper is that this stage builds upon existing techniques and uses non-neural network-based optimization to obtain Bones, Vertices and Joints.\n\nThe neural part is during the learning of explicit representation, which learns the surface of the articulated living being. This is where two different kinds of neural networks are used.\nThe first one is a NeRF model with MLPs on Signed Distance Fields (SDFs). The second model is a Neural Mesh Rasterizer (NMR) model that is used to enforce consistency in the 2D domain.\n\n\nLoss functions: \n\nSimilar to Volumetric-based rendering methods for 3D surface reconstruction (Yariv et al. 2021), the NeRF model uses the following loss terms:\nL_NeRF = L_recon + L_feature + L_3DConsistency, where\nL_recon = L_silhouetter + L_rgb + L_opticalflow\nL_feature is the 3D feature embedding loss that minimizes the distance between the canonical embeddings of the 3D shape from prediction and backward warping, and\nL_3Dconsistency  is used to ensure forward-deformed 3D points match their original location upon backward-deformation.\n\nL_NMR = L_recon&perceptual + (alpha x L_shape) + (lamda x L_DR), where\nL_recon&perceptual = is the same as L_NeRF but with additional perceptual loss,\nL_DR is the dynamic rigid loss and L_shape is the shape regularizer\n\n\n\nQuantitative Metric:\n\nTable 1- 2D Keypoint Transfer Accuracy, \nTable 3- Chamfer Distance on shape reconstruction task from multiple videos"
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1) The paper addresses a challenging task of estimating deformations on 3D shapes of humans and animals, in terms of both surface/skin and skeleton articulations, from one or more monocular videos. In doing so, no ground truth 3D supervision is used.\n\n2) The clarity of writing is reasonable, something that does not appear to be difficult to follow for folks working in this area. And most of the related works in the context of this paper are discussed to the degree that is possible within the page limit.\n\n3) The limitations are aptly discussed, which educate the readers about the gaps to be filled despite the attempts/contributions in the paper.\n\n4) The SIOS2 algorithm, which is an interleaving-iterative algorithm, is intuitive and showing that this works on this task (i.e., the task of estimating 3D shapes of living beings that undergo articulations, from video inputs) adds value to such co-analysis based techniques in Visual Computing research."
+            },
+            "weaknesses": {
+                "value": "1) The presented pipeline is overly complicated, with the iterative SIOS2 algorithm coupled with optical flow estimation to constrain the prediction of shape skeleton based on consistency across different frames of the video. And so, the method may not be easily extendable to potential new projects in this direction. Plus, I have concerns about the reproducibility of the method. \n\n2) Another major concern I have is the lack of diversity of shape samples used to demonstrate the superiority of the reconstruction/rendering results from LIMR (the paper\u2019s approach). Specifically, Fig 3 shows limited diversity of shape samples (a Camel and a Horse). And I have not seen much diversity in the Appendix either (Fox, Zebra and Elephant; I would consider a Zebra equivalent to a Horse). Is this because PlanetZoo and DAVIS datasets only have these classes of animals? \n\n3) The rendering results are poor in quality, see Fig 3 and 7. It is difficult to evaluate the goodness of the results from these visualizations. It will help the paper if the renderings are improved.\n\n4) The discussion in Section 4.3 are good. A similar discussion will be good for \u201cQuantitative Comparison\u201d paragraph that compares LIMR with LASR and ViSER. This is missing and the \u201cQuantitative Comparison\u201d paragraph is simply a plain run of Table1. Some intuition on the performance comparison is missing, perhaps due to the page limit?\n\n5) Having just CD as the eval metric for reconstruction task does not provide a full picture. Additional evaluation metrics such as EMD, F-Score, Normal Consistency and even IoU will provide a good picture of the quality of reconstructions."
+            },
+            "questions": {
+                "value": "1) I am not sure if the skeleton representation should be termed an implicit representation. It is intrinsic/internal to the shape. In today\u2019s context of neural fields, using \u201cimplicit rep\u201d to refer to skeletonization is misleading.\n\n2) The minimum number of videos that can be input to the method is 1. What is the max? \n\n3) And is there a limit on the video length? What is the minimum number of frames in the input video that should contain the articulating living being for LIMR to work? Can it work if there are just two frames that contain the living being? Just one frame is not possible I believe?\n\n4) What is the resolution of the video input?\n\n5) What is the resolution of video frames processed by the LIMR framework? Same as video input or do you downsize?\n\n6) Can LIMR work with grayscale videos?\n\n7) What is the range of number of bones and bone joints (max and min) that this method can work on?\n\n8) Can videos containing multiple objects be used as input? If so, can all the objects be recovered in terms of their shapes? If not, which object will be selected in such a case? I guess the method will need an additional pre-processing step to detect object classes and/or add a saliency module. Can you comment on these? These are all important considerations that need to be discussed in the limitations section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Reviewer_Wx9e"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1412/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698519334477,
+        "cdate": 1698519334477,
+        "tmdate": 1699646035641,
+        "mdate": 1699646035641,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "LR2wDmNWxF",
+        "forum": "KQ2i6jazVK",
+        "replyto": "KQ2i6jazVK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_2K9U"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_2K9U"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper tackles the problem of articulate 3D shape reconstruction from a single video, similar to the setup of LASR. The main contribution is a method for automatic skeleton structure discovery. They also introduced a variant of local rigidity loss that accounts for the flexibility of surface points. \n\nThe method is evaluated on DAVIS and Planet Zoo datasets, out-performing LASR/ViSER. It also shows qualitative results on AMA and  BANMo's videos, with better performance than BANMo."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "**Originality**\n\nThe paper introduces a few new techniques I found interesting. \n- The Dynamic Rigid (DR) loss aims to encourage local rigidity (similar to ARAP) in a more flexible way. Instead of applying ARAP uniformly on the surface, it is weighed by the \"Rigidity coefficient\", which is a function of skinning weights. In this way, edges with peaky skinning weight will receive more penalty as they should move more rigidly. The effect is validated in Tab 1. \n- They leverage 2D motion (flow) constraints for skeleton discovery. To achieve this, an inverse blend skinning method is used to aggregate a 2D flow map to bones. Bone with similar 2D flow will be merged."
+            },
+            "weaknesses": {
+                "value": "**Presentation**\n- In general, I feel the presentation could be significantly improved and the paper could be made much stronger.\n- The usage of certains terms made it difficult to follow. For example: \n  - \"semi-rigid part assignment\" can be replaced by \"skinning weights\", which is a term that already exists in graphics and vision literature\n  - \"implicit motion representation\": I would think it is explicit representation, given they are actually a set of rigid transformations that are explicitly defined. I think \"Internal / latent\" representation better describes skeleton movements.\n  - \"inverse blend skinning\" (IBS) is an unconventional term and needs more explanation and highlighting. Indeed, one may find naming it inverse of blending skinning not accurate. Blend skinning maps a set of points X, rigid transformations G, and skinning weights W to another set of points X'=WGX. The inverse could be finding G and W from X'. My understanding is that the paper uses IBS to map vertex properties (e.g. 2D flow) to bones with an existing W. Is this correct?\n- The method section could be better structured with some \"pointer\" sentences. For example, bone motion direction is introduced in Eq (4) but it was not mentioned why we need to compute them. It only appears in Sec 3.3. With this, I would suggest either move IBS to Sec 3.3, or pointing the reader to Sec 3.3 when motivating Eq (4).\n- It is not immediately clear what purpose Sec 3.2 aims to serve. The rest of the paper describes the shape representation as meshes, but this section talks about the pros and cons of mesh vs neural fields. If the goal is to how that method can be applied to neural fields as well, I feel this can be moved to implementation details.\n\n**Related works**\n- Some related works are not discussed. \n  - [A]-[B] find skeleton from video\n  - [C]-[D] find skeleton from 3D point/mesh sequences\n  - [E] finds skeleton from image features\n- Since [A]-[D] also deal with motion data, some method-level discussion or even comparison is needed. I think [A] is particularly related as they also search for the skeleton structure and optimize shape in an alternating fashion.\n\n\nExperiments\n- To strengthen the experiments, the bone discovery results could be separately evaluated and compared against some existing work, such as Rignet or Morig[D].\n- For bone merging, one alternative is to use the similarity of SE(3) of bones. The effect of \"2D flow\" vs \"3D rigid transform\" could be ablated through an experiment.\n\n\n[A] Noguchi, Atsuhiro, et al. \"Watch it move: Unsupervised discovery of 3D joints for re-posing of articulated objects.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.\n\n[B] Kuai, Tianshu, et al. \"CAMM: Building Category-Agnostic and Animatable 3D Models from Monocular Videos.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2023.\n\n[C] Le, Binh Huy, and Zhigang Deng. \"Robust and accurate skeletal rigging from mesh sequences.\" ACM Transactions on Graphics (TOG) 33.4 (2014): 1-10.\n\n[D] Xu, Zhan, et al. \"Morig: Motion-aware rigging of character meshes from point clouds.\" SIGGRAPH Asia 2022 Conference Papers. 2022.\n\n[E] Yao, Chun-Han, et al. \"Lassie: Learning articulated shapes from sparse image ensemble via 3d part discovery.\" Advances in Neural Information Processing Systems 35 (2022): 15296-15308."
+            },
+            "questions": {
+                "value": "1. Fig 1 caption: Is the rigidity coefficient a parameter? I thought R could be directly computed from D.\n2. It would be more convincing to include video results and comparisons.\n3. BANMo's result in Fig 3 appears particularly bad. Is there any explanation? The results on Swing also appear coarse. What is the resolution of the marching cubes? Also, I overlaying the skeleton with the mesh similar to Fig 4. would make the results more compelling.\n\nOther comments\n1. Fig 6 is nice as it shows the initial configuration of the skeleton. It would be nicer to show the progression of the skeleton over iterations."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Reviewer_2K9U"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1412/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698542271033,
+        "cdate": 1698542271033,
+        "tmdate": 1700673634940,
+        "mdate": 1700673634940,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4r5R4a7VIy",
+        "forum": "KQ2i6jazVK",
+        "replyto": "KQ2i6jazVK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_gF7P"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_gF7P"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper focuses on learning non-rigid articulated objects from monocular videos. The proposed method employs a template surface mesh (explicit representation) and a skeleton (implicit representation) simultaneously without category-specific pretraining, followed by the proposed alternating optimization approach of surface mesh and skeleton. Additionally, a refinement method for the skeleton during optimization is introduced, allowing for adjusting the number of joints during the optimization. The method also introduces a part refinement technique, enhancing limb reconstruction. The proposed method is primarily compared with BANMo, and LASR, and evaluated across multiple benchmark datasets, demonstrating qualitative/quantitative improvements."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The proposed method does not require category-specific pre-training, unlike MagicPony and BANMo.\n- The proposed method demonstrates significant qualitative improvements over prior works.\n- The proposed method incorporates a novel mechanism for adaptively learning the optimal number of skeleton joints.\n- Extensive ablation studies are conducted."
+            },
+            "weaknesses": {
+                "value": "**Major**\n- Missing ablation of considering optical flow visibility (Eq. 4) and Laplacian contraction.\n- The effectiveness of the rigidity coefficient/dynamic rigid does not seem substantial from Fig. 9 and Table 7.\n- The most recent method, MagicPony, also employs implicit and explicit representation and strongly relates to the proposed work, yet a direct comparison in the experiment is missing.\n\n**Minor**\n- Although as a post-processing step, WIM [1] also infers the skeleton with a variable number of joints for articulated targets and the relation could be discussed.\n\n[1] Noguchi et al. Watch It Move: Unsupervised Discovery of 3D Joints for Re-Posing of Articulated Objects. CVPR 2022."
+            },
+            "questions": {
+                "value": "- How would the result change without considering optical flow visibility and Laplacian contraction?\n- How should we interpret the improvement by rigid dynamics from Fig.9?\n- Is there any reason more recent methods like CASA/MagicPony are not compared with the proposed work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Reviewer_gF7P"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1412/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698714649511,
+        "cdate": 1698714649511,
+        "tmdate": 1699636069400,
+        "mdate": 1699636069400,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Dd8PSIuCNY",
+        "forum": "KQ2i6jazVK",
+        "replyto": "KQ2i6jazVK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_dR3E"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_dR3E"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an algorithm to reconstruct a semi-nonrigid articulated object from RGB video. The geometry is modeled by an explicit mesh and the motion is modeled by a learnable skeleton and skinning. The geometry and motion models are jointly optimized on the video by flow supervision and several prior regularization losses. Experiments show that the proposed method can reconstruct animals and humans from the DAVIS dataset."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The proposed method somehow worked on DAVIS to reconstruct Quadrupeds and the Human body.\n- The idea of learning skinning and differentiable skeletons is interesting, this may inspire other deformation representations and general dynamic scene modeling. But not in this task (see weakness)"
+            },
+            "weaknesses": {
+                "value": "- The main concern lies in the necessity and value of the task in the current literature. There are two aspects to argue this:  1.) The reviewer guesses that given the current SoTA and technology in the community, the best way to model semi-nonrigid objects presented in this paper is to use template-based models. This paper presents animals and humans, which already have good template models. Only when the object motion structure differs a lot, and lacks a good template model, do we need some \u201cunsupervised\u201d algorithm to find the structure from videos. However, the paper never presents an example of such a case. 2.) The other way to recover the articulated object from the RGB (no depth) video is to first totally forget articulation and treat the scene as general dynamic 4D functions. In this way, given the current advanced dynamic rendering and reconstruction from monocular video, one can easily get the geometry as well as long-term correspondence first and then segment and easily extract the articulated object. Given these facts, I currently don\u2019t believe this paper\u2019s direction makes a real contribution. But as I write in the strengths, the idea of differentially learning the motion structure is interesting but needs to be carefully put into the right context and motivated nicely.\n- The method is somehow complicated and lacks principles when presenting, making it not very easy to follow. Given a complex algorithm like this, I can hardly tell which component is really important, although some ablations are provided, given the complexity of the model, these may not be enough.\n- The quality of the reconstruction shown in the figure is not appealing."
+            },
+            "questions": {
+                "value": "See the weakness. The main question is the motivation for studying such a task in the way this paper presented."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1412/Reviewer_dR3E",
+                    "ICLR.cc/2024/Conference/Submission1412/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1412/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698719212227,
+        "cdate": 1698719212227,
+        "tmdate": 1700597341620,
+        "mdate": 1700597341620,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "5PdygJWM03",
+        "forum": "KQ2i6jazVK",
+        "replyto": "KQ2i6jazVK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_Z1Zw"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1412/Reviewer_Z1Zw"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper aims to reconstruct the 3D shape of the moving articulated object from one or multiple monocular videos. The paper proposes LIMR (Learning Implicit Representation) that models both explicit information (3D shapes, colors, camera parameters) and implicit skeletal information. To iteratively estimate both implicit and explicit representations, the paper proposes Synergistic Iterative Optimization of Shape and Skeleton (SIOS2) algorithm that uses physical constraints as regularization terms. Experiments on standard datasets show that LIMR outperforms state-of-the-art category-agnostic methods."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper proposes a novel method for the important task of reconstructing moving articulated object from monocular videos. The proposed joint explicit and implicit representations seem effective in modeling both canonical structure and pose-dependent deformation.\n\n2. Experiments have been conducted for a fair comparison with state-of-the-arts (i.e., LASR and BANMo) that do not take ground truth skeletons. The experiments include both qualitative (geometry and appearance) and quantitative (2D keypoint transfer and 3D shape reconstruction).\n\n3. Extensive ablation studies have been conducted to show the importance of each component in Sec. 4.3. \n\n4. Limitations and implementations have been discussed in detail. For example, one limitation is that the proposed method requires 10-20 hours to learn, which are comparable with baselines (LASR and BANMo on the order of a few hours)."
+            },
+            "weaknesses": {
+                "value": "1. More visualizations such as video comparisons like those shown in LASR and BANMo would be more intuitive and straightforward to show the object in the move/motion.\n\n2. The proposed system includes multiple hyper-parameters and multiple separate but interdependent steps. Given the complications of the current system, it is unclear how robust this method is, eg, with regard to initialization, hyper-parameter settings, input video contents, etc."
+            },
+            "questions": {
+                "value": "Some suggestions on the clarity of presentation:\n1. Currently, the figures are not placed in an ascending order (Figure 7 before Figure 5) and the references to the figures in the text jump back and forth.\n\n2. Some notifications are not well explained, eg, N_i in Eq. (3).\n\n3. Typo: \"(3)\" in the first paragraph of appendix A: \"quantitative\"-->\"qualitative\"."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1412/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698817755137,
+        "cdate": 1698817755137,
+        "tmdate": 1699636069234,
+        "mdate": 1699636069234,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

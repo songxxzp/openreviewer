@@ -1,0 +1,227 @@
+[
+    {
+        "id": "69IaDwqz1S",
+        "forum": "BOm1RYdHHu",
+        "replyto": "BOm1RYdHHu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_wYb4"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_wYb4"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper looks at simple defenses against poisoning in FL that rely on filtering out gradient updates with large norms. The authors propose to extend these defenses to the setting of secure aggregation with FHE by proposing a continuous polynomial approximation of the filtering-out operation called SAFHE, allowing a combined defense against both gradient leakage and poisoning. The authors show that their FHE approximation to filtering is accurate when degree 10 Chebyshev polynomials are used and that the aggregation scheme can work in theory in typical FL setups."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "- The paper proposes a method that makes sense and describes it descently."
+            },
+            "weaknesses": {
+                "value": "- **There are little to no contributions**   \nThe method of applying well-known polynomial approximations such as the Taylor series in order to evaluate non-polynomial continuous functions with FHE is standard and even proposed in the original CKKS paper [1]. The authors use Chebyshev polynomials instead, but I would not call this contribution, as it is a straightforward change, which the authors do not properly evaluate (no experimental results from other schemes are available). The approximation of the clip function with the sum of sigmoids is also fairly standard (after all, sigmoid was proposed as a continuous version of the step function, and the clip function is just a composition of 2 step functions). Further, using FHE for aggregating updates in federated learning is standard, and the $\\ell_2$-defense is very simplistic and very well known.\n- **The evaluation is too simple**   \nThe authors do not even implement the proposed defense end-to-end and instead implement their FHE filtering outside of federated learning. As such, their paper misses important details of how one would instantiate SAFHE in practice, such as the fact that $H$ needs to be applied on the norm of $w_i$ (at least if the defense is based on $l_2$ gradient norm and not the size of individual entries of the gradient which is how the authors present it) and not $w_i$ itself. The difference between the norm and $w_i$ itself is significant, as the norm computation requires additional multiplication operations per gradient, which can seriously affect the modulus degree required for good gradient estimation and, thus, the overall runtime. Further, the authors only evaluate the FHE computation on random numbers in $[-5,5]$, which is not anywhere close to how gradient entries or norms during training look like, and claim $10^{-6}$ FHE precision, which might not be enough in real deployment in the context of gradients of real networks.   \nA further way in which the evaluation is too simplistic is that it doesn't compare to exact norm filtering and doesn't report the exact values of $c$ used. Further, the only ablation provided is with respect to the polynomial degree with only two values (6 and 10) despite the fact that FHE experiments on the approximation of $H$ are super fast. Different polynomial approximations like the MinMax suggested throughout the text, and the effect of different values for $a,b$, and $c$ are not experimented with.  \nFinally, the federated learning experiments are too simple too. The authors use a single dataset without heterogeneity, which they attack with very simple attacks for only a single round. Further, the authors call the evaluated attacks backdoors, but they really represent simple data/model poisoning. The authors should switch to the poisoning language as backdoors assume that the overall accuracy of the model is unchanged and only the behavior on a handful of samples containing a trigger is. \n- **Shortcomings of the method**  \nThe proposed method assumes a known range of the norms of benign gradients, which they suggest estimating from unencrypted gradients of benign clients. Having unencrypted gradients and knowing which gradients are benign and which are not are strong assumptions that really defeat the purpose of applying the proposed defense in the first place."
+            },
+            "questions": {
+                "value": "- What values of $c$ are you using in your experiments? Can you provide ablation with different values of c?\n- Can you provide precision and time for evaluating the FHE **full computation** of $H$ - that is compute the $l_2$-norm and its weight of a real gradient from your network?\n- Can you provide experiments with all polynomial degrees between 2 and 10? The experiments are embarrassingly fast so there is no reason not to.\n- Can you do the above experiment for multiple values of the polynomial degree?\n- Can you update the algorithm such that it estimates $a,b,c,d$ on encrypted gradients and without knowledge of which are benign and which are not?\n- Run your experiments on more datasets and more models.\n- If you don't want to evaluate the end-to-end FHE setup, can you at least account for the noise from FHE computations due to truncation by adding a uniform noise of that size to your gradients in the experiments of Figure 4 and 5?\n\nAll in all, this paper doesn't meet the criteria for acceptance in ICLR. The proposed method is, in my opinion, obvious and presents little real scientific contributions. The experiments are simple and do not even fully cover the complexity of applying the proposed defense to a realistic setup, like computing the norms of the gradients before applying $H$. I would have given the paper an even lower grade, but 2 is not allowed this year, and 1 would have been harsh, as the paper's proposed method at least makes sense. Note that answering the questions above is unlikely to change my grade. However, those questions need to be answered for this paper to be accepted in any venue like a workshop, a journal, or a lower-tier conference.\n\n[1] Cheon, Jung Hee, et al. \"Homomorphic encryption for arithmetic of approximate numbers.\" Advances in Cryptology\u2013ASIACRYPT 2017: 23rd International Conference on the Theory and Applications of Cryptology and Information Security, Hong Kong, China, December 3-7, 2017, Proceedings, Part I 23. Springer International Publishing, 2017."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": "1: strong reject"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Reviewer_wYb4",
+                    "ICLR.cc/2024/Conference/Submission8210/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8210/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698418652447,
+        "cdate": 1698418652447,
+        "tmdate": 1700733671006,
+        "mdate": 1700733671006,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "tj8H5OkF3G",
+        "forum": "BOm1RYdHHu",
+        "replyto": "BOm1RYdHHu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_cV7D"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_cV7D"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper present SAFHE (secure aggregation with fully homomorphic encryption), which can defend against gradient inversion attacks since plain-text updates or decryption keys cannot be seen; and it can defend against backdoor attacks by rejecting large weight updates in FHE domain without conditional branches. The work proposes an approach to find an appropriate weighting function, by approximations of Chebyshev and Minimax, and prove it to be both effective and efficient."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper introduces a clear and novel concept by proposing a weighting function that determines whether to accept (1) or reject (0) client updates, with the ability to compute it in the FHE setting. The authors have made significant progress in finding effective approximations for this weighting function. However, I must note that my familiarity with FHE is limited, which may affect my ability to fully grasp the context and accurately assess the paper's contribution.\n\n2. Writing is good and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. Mistakes in the paper: Figure 2 has \"mistakes to fix\" that H function does not appear similar in left and right subfigures. \n\n2. \"Gradient inversion attacks\" appear in the title, but the whole body of the paper mainly deals with backdoor attacks (how to reject too large gradients), and does not elaborate on how it can defend against gradient inversion attacks."
+            },
+            "questions": {
+                "value": "1. I have limited knowledge on FHE, so I am not sure about \"gradient inversion attacks can not happen if not providing plain-text gradients\".  I believe up to now most gradient inversion attacks happen in plain-text gradients, but does that say gradient inversion will be impossible if using FHE? Is it theoretically guaranteed? Can the authors refer some more materials for me to understand why it is the case?\n\n2.  The success of SAFHE relies on the assumption that gradients updates of a backdoor attack are large; what if the adversary optimize their decoy gradients to be small? And how about benign but out-of-distribution samples / hard samples, which could introduce large but benign gradient updates?\n\nI think the paper is interesting. I am willing to raise my scores if my concerns and questions are solved by authors."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Reviewer_cV7D",
+                    "ICLR.cc/2024/Conference/Submission8210/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8210/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699204159540,
+        "cdate": 1699204159540,
+        "tmdate": 1700729092052,
+        "mdate": 1700729092052,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "X9eRr2xQrX",
+        "forum": "BOm1RYdHHu",
+        "replyto": "BOm1RYdHHu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_uyJ6"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8210/Reviewer_uyJ6"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposed SAFHE, Secure Aggregation with Fully Homomorphic Encryption, a novel scheme to defend against both backdoor attacks and gradient inversion attacks. Their secure aggregation method combines the use of fully homomorphic encryption (FHE) and the gradient norm clipping defense to defend against large malicious client updates."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The area and overall idea are interesting.\n- The paper is well written, and the ideas are easy to follow for readers.\n- The proposed scheme is interesting.\n- Provide a detailed simulation study and provide a detailed benchmarking."
+            },
+            "weaknesses": {
+                "value": "Lack of theoretical support for the security guarantees of the proposed scheme. There are no security proofs (or any proof sketch) and privacy guarantees discussion of their proposed framework."
+            },
+            "questions": {
+                "value": "Does the proposed scheme support malicious threat model?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8210/Reviewer_uyJ6"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8210/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699353673073,
+        "cdate": 1699353673073,
+        "tmdate": 1699637018860,
+        "mdate": 1699637018860,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

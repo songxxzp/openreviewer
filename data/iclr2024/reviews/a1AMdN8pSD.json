@@ -1,0 +1,271 @@
+[
+    {
+        "id": "7SOMeUnMLq",
+        "forum": "a1AMdN8pSD",
+        "replyto": "a1AMdN8pSD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_TKVb"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_TKVb"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes to use a neural implicit shape representation with multi-level of details, which allows fast sphere tracing: coarse, fast levels are traced first, followed by finer levels. Attributes, such as colors or normals can be transferred from one detailed level to a coarse level, for improved renderings in a constrained computational budget."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The idea of using multiple levels of details for efficiency is underexplored in the literature. Transferring details such as normals to a coarse surface is nice, and emulates the use of normal maps in the classical graphics methods.\nEfficiency: The multiscale sphere tracing algorithm focuses on minimizing iteration time by using coarse approximations in earlier iterations. This can lead to faster rendering times and more efficient computations.\nAnalytic Normal Calculation: The paper proposes a fast algorithm for analytic normal calculation for MLPs, which can improve shading performance and accuracy during rendering."
+            },
+            "weaknesses": {
+                "value": "The \u201cneural attribute mapping\u201d simply consists in evaluating a neural field on a given surface, for textures or normals. To be more formal, given a surface point s on surface S, and a neural field f:\n- Case 1: if f encodes an RGB color, then s is colored with f(s).\n- Case 2: if f encodes a surface, then s is given the normal \u2207f(s). This case is interesting when S has a low level of details: by transferring the normals of the 0-levelset of f to S, one can render S with more details. But this is simply a nearest-neighbor assignment, no need for elaborate mathematics.\n\nBoth cases are very simple, and do not require the unnecessarily complex (pretentious?) formalism of \u201cdelta-nested neighborhood\u201d, \u201cintegrating along the gradients\u201d, \u201crestriction of \u2207f to S and mapping the normal along a path\u201d presented in the paper. \n\nFurthermore:\n- Case 1 was already exploited in past papers, for example Texture Fields (Oechsle et al, ICCV 2019), GET3D ( Gao et al., NeurIPS 2022). It is very straightforward, and \u201cachieving SOTA by uncoupling appearance from geometry in a compositional manner\u201d is an overstatement. Additionally, the comparison to Instant NGP is irrelevant, as the problem setting is vastly different: Instant NGP learns a scene representation from images only. Here, the proposed method already has access to a supervision signal for the 3D geometry and for the RGB texture.\n- Case 2 should be compared to a straightforward rendering of the more precise representation f, instead of transferring it. The speed benefits of a transfer of a high resolution field to a coarse surface should be exemplified. The only table reporting a speedup is Tab. 5, and it does not display a quality metric - only speedups.\n\n\nThe multi-scale sphere tracing algorithm is similar to the extension of marching cubes to multi-LOD presented in BACON. Its speed should be compared to extracting the surface (once) with marching cubes, and then rendering it with a rasterizer.\n\nThe GEMM implementation of normals computations should be compared to standard backpropagation in pytorch or tensorflow.\nThis is a component-wise computation of the normal vectors. The acronym GEMM is used several times without being defined, nor the concept. NeuS2 (Wang et al, ICCV 2023) also has a fast normal computation algorithm, it might be worth adding the reference.\n\nSection 3.3 is supposed to \u201cdescribe approaches to create sequences of neural SDFs with nested neighborhoods\u201d. In fact, given any sequence of SDF networks, by choosing the epsilons large enough, we can nest them. The bounds derived in this section are very loose and can apply to any sequence, even for unrelated objects or surfaces. It would also work for levels of details in any order. In other words, saying that a sequence of neural surfaces is \u201cnested\u201d without characterizing the threshold for which it is nested has very little value: given any sequence, I can consider it as nested.\n\nIn the experiment section, when reporting training time vs NGLOD and IDF: which neural network architecture is used? Why call it \u201cours\u201d? The whole method and contributions are about rendering neural fields with multiple levels of details, never about a new architecture or a faster training procedure. Why compare training times then?\nMoreover, it is unclear if SIRENs or BACONs are used. A whole paragraph of the method section is dedicated to nesting BACONs, is it used here? The datasets should also be clarified in the main text.\n\nMinor: when reporting MSE, scaling the values to improve readability and avoid all metrics starting with \u201c0.00\u201d would be better.\n\nClarity: the introduction is a bit of a circular definition: \u201cthe nested neighborhood model [\u2026] is a novel framework [\u2026] based on nested neighborhoods\u201d is not explaining what \u201cnested neighborhoods\u201d are. Moreover, in many places the term \"S is nested on the delta-neighborhood of S_theta\" could simply be replaced by \"S is in the delta-neighborhood of S_theta\".\n\n\n\nIn conclusion, the idea of exploring multiple levels of details is Interesting, but its presentation uses overelaborate mathematics for very simple ideas that have already been exploited (learning a color field for texture for example).\nMoreover, experimental results are not convincing. Comparisons with a traditional pipeline are lacking: since rendering speed is the main motivation, the approach should also thoroughly compared to a mesh rasterizer - and a one time execution of a CUDA implementation of marching cubes (like https://github.com/tatsy/torchmcubes).\nWhile the method presents a formalism for \u201cnesting\u201d an arbitrary number of levels of details, most results are provided with a single network or 2 networks. Finally, clarity should be improved too (see questions and weaknesses)."
+            },
+            "questions": {
+                "value": "In which practical application should one consider using this multiscale SDF over a mesh rasterizer?\n\nCould the definition of \u201cnested surfaces\u201d be simplified? For example, using a single threshold delta. I believe the following definition is equivalent to the one proposed:\n\u201csay that f_theta_2 is nested in f_theta_1 for threshold delta > 0 if S_theta_2 is contained in the delta-neighborhood of S_theta_1\u201d\n\nAt the end of the first paragraph of Sec 5.1 : \u201cthe attribute g is constant along the path since ||\u2207f|| = 1\u201d: why does a gradient with constant norm implies a constant gradient?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4272/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697629868155,
+        "cdate": 1697629868155,
+        "tmdate": 1699636394838,
+        "mdate": 1699636394838,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0HOwfzYqqQ",
+        "forum": "a1AMdN8pSD",
+        "replyto": "a1AMdN8pSD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_Y2D7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_Y2D7"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses the problem of real-time rendering for neural SDFs. It has 3 major contributions.\nFirst, since neural SDFs are expensive to evaluate, the sphere tracing algorithm becomes too time-consuming. This work introduces multiscale sphere tracing where simpler MLPs are used to represent coarser SDFs which can be used for earlier iterations of sphere tracing.\nNext, the paper introduces neural attribute mapping to allow normals and textures encoded in space to be mapped onto SDF or mesh surfaces. This techniques enable higher quality rendering.\nNext, the paper improves normal computation for MLP-based neural SDFs with a GEMM-based algorithm."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper introduces a novel acceleration method for sphere tracing of neural SDFs and a fast implementation for MLP gradients.\n- The concepts and theories of multiscale sphere tracing and nested SDFs are explained clearly.\n- The method does not rely on spatial data structures, thus is more suitable for representing dynamic neural surfaces."
+            },
+            "weaknesses": {
+                "value": "- The paper does not make the setups of experiments sufficiently clear.\n  - The method and experiments section of this paper explains the architecture of the proposed nested SDF representation, however, it is hard to see what are the inputs to the experiments and what are the losses without reading appendix (A.3). \n- The comparison with Instant-NGP (Table 2) seems misleading.\n  - If I understand the setting of the experiment correctly, the proposed method is trained with ground-truth SDF and color supervision, while the Instant-NGP is trained with multi-view image supervision. These are drastically different settings.\n  - The images for Instant-NGP are generated with a renderer, thus COLMAP should not be required since it is used for camera pose estimation. Thus the speed comparison seems to be misleading.\n- Missing comparisons with other representations.\n  - Instead of comparing with Instant-NGP, the proposed nested SDF representation should be compared to a SDF representation with spatial data structure. For example, NanoVDB from the OpenVDB package.\n- No performance comparison with the original mesh representation.\n  - Ideally, the paper should show the advantages of the proposed representation over triangle meshes in rendering captured objects. However, the training data seem to come from mesh data.\n  - Even though multiscale sphere tracing is 2x faster than sphere tracing with the original high resolution SDF, ~40 FPS still seems unusable in real applications compared with mesh-based representations."
+            },
+            "questions": {
+                "value": "Most of my questions are described in the Weaknesses section. In addition, I have a few technical questions.\n- Where does the speedup of the proposed GEMM normal computation come from compared to a autodiff framework? Is there improvements in algorithmic complexity, or it is mainly a reduction in overhead (e.g., better use of GPU resources)\n- Is the GEMM normal computation differentiable to be used in an optimization framework?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4272/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698552948778,
+        "cdate": 1698552948778,
+        "tmdate": 1699636394754,
+        "mdate": 1699636394754,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eBRptzmVQ0",
+        "forum": "a1AMdN8pSD",
+        "replyto": "a1AMdN8pSD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_4bTK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_4bTK"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a nested neighborhood model for real-time neural SDF rendering, emphasizing the efficiency of their normal computation method, based on General Matrix Multiply (GEMM) operations, which eliminates the need for auto-differentiation and computational graphs. The evaluation focuses primarily on Instant NGP and offers intuitive visualizations of the rendering results."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The concept of normal computation using GEMM operations without relying on auto-differentiation or computational graphs holds promise for real-time rendering applications.\n2. The paper is well-written and includes mathematical analysis, although as a reviewer without a strong background in computer graphics, I cannot thoroughly evaluate the rigor of the mathematical aspects.\n3. The evaluation against Instant NGP provides compelling evidence of efficiency, and the visualizations are visually impressive."
+            },
+            "weaknesses": {
+                "value": "The major concern is the lack of reproducibility due to insufficient implementation details."
+            },
+            "questions": {
+                "value": "1. The details provided may make it challenging to reproduce the results. Providing an implementation or a demo for readers to run would enhance the paper's credibility and make the results more accessible.\n2. Table 4 suggests that a larger MLP leads to a more accurate zero-level set. It would be beneficial to discuss the theoretical limits or boundaries for achieving perfect results with different MLP sizes."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4272/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4272/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4272/Reviewer_4bTK"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4272/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698625351151,
+        "cdate": 1698625351151,
+        "tmdate": 1699636394653,
+        "mdate": 1699636394653,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "AFRZdR20uN",
+        "forum": "a1AMdN8pSD",
+        "replyto": "a1AMdN8pSD",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_Kd2D"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4272/Reviewer_Kd2D"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper tries to achieve real-time rendering of neural signed distance fields (SDF) with attribute mapping, like normal map and texture map. The core of its algorithm is multi-scale sphere tracking through nested fields with level-of-details. It claims to accelerate the computation of surface normal using an efficient GEMM-based implementation. The paper also extends the same set of tools for dynamic neural SDF."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- This paper considers lots of useful aspects of neural rendering, level-of-details, texture mapping, normal mapping, and multi-scale sphere tracing without spatial data structure. And this paper uses the concept of nested neighbors to combine these concepts together, making it interesting to read.\n- The proposed algorithm is fast and capable of rendering high-resolution details, as demonstrated through several overfitting experiments."
+            },
+            "weaknesses": {
+                "value": "- Some extra experiments can be added to provide more insight into the proposed method: \n    - The author does not provide an evaluation of the speedup or the proposed GEMM-based implementation of surface normal computational.\n    - In general, this algorithm uses more memory (coarse surfaces and finer surfaces) to trade speed. So, how does the speed compare with using extra spatial data structures, like bounding volume hierarchy for faster Ray surface intersection?\n    - It is better to replace the MSE metric with PSNR when evaluating the image reconstruction quality, for example, in Table 8.\n- The author needs further evidence to justify the concept of \"nested SDF sequence\" in this paper. There are two crucial question related to this concept\n    - The author does not explicitly bound the sequence of SDF, neither through training regularization nor some explicit normalization. The concept of nested SDF sequence is only mentioned in deriving the algorithm, but in the experiments, it is not guaranteed to be nested. Does it mean that for most of the popular neural SDF with level-of-detail design, without any explicit control of the bound of nested SDF, the proposed algorithm will always converge effectively?\n    - The tightness of the bound and how the tightness affects the algorithm is not analyzed and demonstrated."
+            },
+            "questions": {
+                "value": "- I don't understand why the GEMM-based implementation will accelerate the normal computational. I thought auto-diff will also use GEMM to compute derivatives. Can you explain it more? Also, measuring the speed of normal computations will make this point more solid. \n- In most of your experiments, you only use two nested SDF. What if you use more? Like, 3 to 5, even to 10 neural SDF?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4272/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698804488937,
+        "cdate": 1698804488937,
+        "tmdate": 1699636394523,
+        "mdate": 1699636394523,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

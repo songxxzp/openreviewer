@@ -1,0 +1,271 @@
+[
+    {
+        "id": "fsf58HKMxK",
+        "forum": "G5Fo7H6dqE",
+        "replyto": "G5Fo7H6dqE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_u8zz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_u8zz"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a modification to the DQN algorithm that is called iDQN. The idea is to have different heads that are updated in a rolling fashion and where each head is updated by considering the previous head as the \"target Q-values\" in the Bellman iterations. The paper provides some analysis of the idea and empirical results on mountain car and Atari games."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The idea is sound and relatively straightforward\n- The paper is overall well-written\n- The empirical results reported are strong and seem to be reported fairly while following good practice in the reported scores"
+            },
+            "weaknesses": {
+                "value": "- The technical analysis lacks strong theoretical justifications besides rephrasing a theorem from another paper and some not fully clear interpretations of this\n- The approach adds some hyper-parameters that are partly discussed and justified but not fully, see questions."
+            },
+            "questions": {
+                "value": "- Concerning the computation requirement, one gradient descent step seems to become at least slightly more computational expensive as compared to DQN. In the paper it is mentioned at the very end of the discussion section that \"with K=5 (it) only requires 1 to 2 times more time to run\". Can this quantification be more accurate or why would it \"sometimes\" same compute time and \"sometimes\" double the compute time?\n- The ablation study and discussion section provide an interesting discussion on the hyperparameters and answer many of the questions one could have. However, I still have questions about the interpretations done for these hyperparameters. Why do you claim that you provide a \"thorough understanding of their effects\" given that I don't see very clear backup for the claims such as \"Problems in which the environment is highly stochastic will require more gradient steps to learn a Bellman iteration hence the need to decrease the rolling step frequency\" and \"highly stochastic problems will benefit from having a small target update frequency since the positions of the online networks are more likely to be noisy\". I would suggest explaining in more details how these claims are made and if there is no fully clear data for these interpretations, I would suggest being a little more cautious.\n- Is an open-source implementation of the code made available? I do not see any GitHub link."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1352/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698488694914,
+        "cdate": 1698488694914,
+        "tmdate": 1699636062629,
+        "mdate": 1699636062629,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "iDDURO82oR",
+        "forum": "G5Fo7H6dqE",
+        "replyto": "G5Fo7H6dqE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_i5KK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_i5KK"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce iDQN, a variant of Deep Q-Network (DQN) that splits the value network into multiple heads. Each head bootstraps from the previous one, enabling parallel learning of the iterated (projected) Bellman operator. The rationale is that each head can begin training before the previous head has fully converged, thereby speeding up learning. The authors compare iDQN against DQN and C51 baselines across a large suite of Atari games using the interquartile mean (IQM) of human-normalized scores as the performance metric."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The main goal of the paper, trying to learn iterations of the Bellman operator faster, makes a lot of sense and is a promising avenue for improving the sample efficiency of DQN.\n- Adding multiple heads to the network is a smart way to do this efficiently. Whereas normally multiple networks would be needed to naively implement this idea\u2014which would be prohibitively expensive\u2014the different heads can share extracted features and reduce computational cost.\n- iDQN obtains strong results on the Atari benchmark, appearing to improve performance over the baselines in terms of IQM human-normalized scores.\n- The paper is well written and includes lots of helpful diagrams for the reader."
+            },
+            "weaknesses": {
+                "value": "- Although intuitively sound, the main idea lacks sufficient theoretical support. The only theorem in the paper is quoted from [1] for approximate value iteration, which provides a bound on the error $\\||Q^* - Q^{\\pi_K}\\||$ in terms of a weighted sum of previous error components $\\||\\Gamma^* Q_{k-1} - Q_k\\||$. The authors claim that since one gradient step of iDQN affects multiple of these components at a time, then \"iDQN can lower the approximation error bound more than DQN.\u201d However, I do not think this argument is true. This bound is based on the accuracy of previous Q-functions relative to their respective Bellman updates after learning. Just because a gradient step for iDQN affects more than one Q-function at a time does not mean the error bound will automatically be lower. For example, if one of iDQN\u2019s heads suddenly changes, the errors for the downstream heads could suddenly increase because the Bellman operator\u2019s projected location would also change, requiring the other heads to adjust accordingly.\n- There is weak empirical evidence that learning many Bellman iterations in parallel is feasible and significantly improves value estimation. Because each head must bootstrap from the previous one, I would think that maybe only two heads at most could be reliably trained simultaneously; any heads afterwards would begin bootstrapping from extremely biased estimates and quality would degrade significantly. This appears to be the case in Figure 5, where even using 10 heads does not greatly reduce the value error compared to 1 head in a low-dimensional problem.\n- The separate network heads for iDQN are split immediately after the convolutional layers, and not immediately before the final linear layer as I would have expected. Because the vast majority of weights in the DQN conv net are contained in the dense layers, this adds an enormous number of extra parameters to iDQN, which might be improving its performance. It also makes the proposed method very expensive.\n- The target-network update frequency is faster for iDQN than the baseline DQN, which I think makes the empirical comparison unfair. This could be contributing to the apparent performance increase in addition to the extra parameters.\n- The paper would benefit from a stronger discussion of $n$-step returns, as the proposed method is more related to $n$-step methods than is currently appreciated. An $n$-step return can be seen as a stochastic approximation to $n$ iterations of the (on-policy) Bellman operator. Thus, $n$-step returns are an alternative way to achieve a similar effect as the proposed algorithm. The paper currently cites TD($\\lambda$) [2] for $n$-step returns, but it should cite [3] instead\u2014see the bibliographical/historical remarks at the end of chapter 7 of [4] for related references.\n\n**References**\n\n[1] Amir-massoud Farahmand. Regularization in Reinforcement Learning. 2011.\n\n[2] Richard S. Sutton. Learning to Predict by the Methods of Temporal Differences. 1988.\n\n[3] Christopher J. C. H. Watkins. Learning from Delayed Rewards. 1989.\n\n[4] Richard S. Sutton and Andrew G. Barto. Reinforcement Learning: An Introduction. 2018."
+            },
+            "questions": {
+                "value": "none"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1352/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1352/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1352/Reviewer_i5KK"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1352/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698548547591,
+        "cdate": 1698548547591,
+        "tmdate": 1699636062541,
+        "mdate": 1699636062541,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "gt3b7114UM",
+        "forum": "G5Fo7H6dqE",
+        "replyto": "G5Fo7H6dqE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_LPKc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_LPKc"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a method which builds on the use of target networks as used by DQN and many other algorithms. Essentially this boils down to introducing K intermediate Q-networks where the Kth such network is roughly equivalent to the online network. The authors further rely on a theorem from Farahmand, 2011 to bound the approximation error and show that their iterative solution can lower the approximation bound from DQN.\n\nThe authors then go on to show that this approach beats DQN empirically and argue that it is largely independent of different improvements on DQN\u2014ie that any method that makes use of a target network can benefit from this improvement."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The idea is simple, but effective across a seemingly wide range of implementations (e.g. all that use a target network). The presentation of the work was very good, and the description of the literature and this works place within the literature was one of the best I've seen in a while (see below for one minor quibble). The analysis of why this should, theoretically, improve over DQN was also effective."
+            },
+            "weaknesses": {
+                "value": "I'm a bit of two minds about this work in that the approach is interesting, but in the comparison with DQN much of the gains can be seemingly reached by just switching the optimizer out for ADAM. Similarly while iDQN can be combined with IQN (as a stand in for newer, more complicated algorithms) I would like to see a more comprehensive treatment of this combination along with perhaps comparison(s) versus more novel algorithms, e.g. Muesli, or against algorithms such as the cited ensemble methods such as REM, due to the fact that iDQN requires an ensemble of K models (ignoring Q_0). \n\nFinally, if we look at the extended 54 Atari experiments there are both a number of examples where DQN+Adam out-performs iDQN. In fact it's not entirely clear to me that iDQN out-performs on average, and it would be useful to see that. It may do so, but it appears close."
+            },
+            "questions": {
+                "value": "See above. In particular it would be helpful for the authors to address the comparisons with DQN+Adam and with more modern algorithms and if they see this as tangential."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1352/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698867929315,
+        "cdate": 1698867929315,
+        "tmdate": 1699636062439,
+        "mdate": 1699636062439,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "bKpNLcVMvj",
+        "forum": "G5Fo7H6dqE",
+        "replyto": "G5Fo7H6dqE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_AD1r"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1352/Reviewer_AD1r"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a novel q-learning method based on incrementally creating additional target and online networks, using the online network of one to define the target network of another. The target networks are periodically updated with the parameters of the previous online network, the one that initialized it. All online networks are updated concurrently by minimizing the sum of the q-learning loss of each online-target network pair. Additionally, new online/target networks are initialized from the most recent online network and the oldest pair are discarded. Finally, each online network shares some layers with each network having their separate \"heads\".\n\nThe proposed method, called iterated deep q-network (iDQN), is informally related to a loss bound for approximate value iteration and empirically evaluated on the Atari domain. Their results show a modest improvement in aggregate score over standard DQN with the adam optimizer. A limited ablation study compares using K=5 and K=10 (where K is the number of networks to keep) and shows K=10 performing better in 2 of the 3 games tried."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The proposed idea of keeping older online/target networks and continuing to optimize them in tandem is a novel and interesting idea. In a way, this feels like an approximation of doing several steps of gradient updates per iteration, but done concurrently and amortized over time, which would have the potential to accelerate learning.\n\nThe writing is clear and the background well discussed.\n\nThe atari experiments follow good experimental practices."
+            },
+            "weaknesses": {
+                "value": "I had trouble understanding the intuition the author's are trying to convey when they refer to \"learning the Bellman iteration\". This is a central concept in various discussions but I'm still unclear about what they mean. Fortunately, the authors also provide more formal descriptions of their method so I am fairly confident I understand what their method is doing, at least mechanistically.\n\nThe theoretical analysis seems very informal and I don't believe we can say much from it. The comparison with the loss bound that the authors make implies that we are talking about the same $Q_k$'s but their definitions differ greatly between the action-values of each step of approximate value iteration and those defined by the proposed method.\n\nIt's not clear whether the comparison to DQN is fair when normalizing for \"gradient steps\". If DQN is twice as fast, could I not do twice as many gradient steps? The question this brings is if this isn't more an observation of update frequency, e.g., doing several updates per environment step, which we know can improve performance with regards to sample efficiency. I'd be interested in hearing the author's thoughts on this.\n\nThe ablation study is quite limited. I understand that these experiments are computationally expensive but some understanding of the behavior of this method and its hyperparameter could still be found with smaller scale experiments in less costly domains. Several of my questions (below) could have been answered with a more complete ablation study."
+            },
+            "questions": {
+                "value": "Why does iDQN have 4 set convolutional layer parameters when discussed in Appendix C, \"$2(2C + (K+1)F)$\"? I count 2, 1 shared amongst the target networks and 1 shared amongst the online networks.\n\nAt a high level, I have trouble understanding why having more networks like proposed would help and I suspect it is contingent on other design choices not explicitly captured by the loss in Eq. (2). This leads me to a series of questions. Which parts are necessary?\n- Does having several online/target network provide any benefits when not sharing layers between networks?\n- Does this idea of having many online/target networks help even with not fixing the target networks (target update period of 1)?\n- What is the effect of rolling online/target networks? Is it necessary? Is more always better?\n\nWhy is the target update period considered an \"additional hyperparameter\" when discussing hyperparameter tuning? Couldn't DQN also benefit from that tuning in that case?\n\nIn Figure 4a, shouldn't $Q_1$ be closer (or equal distance) to $\\Gamma^*\\bar{Q}_0$ compared to $\\bar{Q}_1$ always or did I misunderstand this illustration?\n\nWhy does Figure 3 and Figure 11 (left) have different notation for $Q_0$, e.g., different color and a bar?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1352/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698881510149,
+        "cdate": 1698881510149,
+        "tmdate": 1699636062348,
+        "mdate": 1699636062348,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

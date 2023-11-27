@@ -1,0 +1,224 @@
+[
+    {
+        "id": "rlu2aqlEDN",
+        "forum": "cKGpe1792U",
+        "replyto": "cKGpe1792U",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a novel optimization-based data reconstruction attack on gradients of CNNs trained on classification tasks with cross-entropy losses based on two ingredients: 1. reconstructing the model outputs $\\hat{y}$, which allows to recover the feature maps $\\textbf{provided that one knows all labels}$ 2. inverting the feature map to retrieve the input using a known method. The authors also propose a simple defense mechanism against this attack based on increasing the batch-size."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- the paper introduces a novel loss and approach based on recovering $\\hat{y}$\n- the authors provide open-source code\n- the authors' attack can target CNNs and not only fully connected neural networks although no pooling layer ca, be used\n- the authors test the performance of their attack against different defense mechanisms based on clipping / compression / noise addition of the gradients and show robustness"
+            },
+            "weaknesses": {
+                "value": "Major. \n\n- Few of the authors' claims are supported by evidence.\nAs an example let's take the sentence from the abstract\"this is the $\\textbf{first}$ successful disaggregation of the feature map in $\\textbf{generic FL setting}$\"\n\n$\\textbf{\"first\"}$. \n\nIt is not the first article to disaggregate feature maps, see for instance [1], important reference, $\\textbf{which is missing in the paper}$. \nAlso much less important but very relevant work of [4] is missing as well. If the authors claim they target large batches of large resolutions, [4] would have been the reviewer's first choice as a baseline although [4] uses batch-norm statistics.\n\n$\\textbf{\"generic FL setting\"}$. \n\nThe attack setting described in the threat model by the authors is everything but generic because 1. contrary to most of its competition $\\textbf{the attack requires access to the ground truth labels}$ (also the wording is weird \"$\\mathcal{A}$ can retrieve ground-truth labels from the gradient\", how could $\\mathcal{A}$ do that especially is there a state of the art methods that work with duplicate labels ?) 2. $\\textbf{authors do not tackle the multiple updates case}$, which is characteristic of FL 3. the attack requires access to an external dataset 4. the attack can only work on classification tasks with numerous classes (more than the batch-size). Although 3 and 4 are standard assumptions in this literature, 1 and 2 are extremely contrived. This simplified setting is still of some interest but the claims do not match the reality. In addition, in the code repository, in the attack's code the signature of the function does not include the labels variable so executing the function would throw \"labels is undefined\" errors. This is a misrepresentation of the function in line with what is written in the article. In the same spirit when writing as defense increasing the batch-size it is more a limitation of the attack than a true defense deserving its own section. Furthermore there is no experiment in the main paper on the resolution of the images on the attack's performances whereas it is claimed the attack work on high-resolution images as well.\n\nThroughout the paper, the authors write about the advantages of their method without properly highlighting its limitations. An example is \"without imposing unrealistic assumptions about batch-size, number of classes, and label distribution\": in fact the authors explain that their method can only work if the batch-size is lower than the number of classes (this is even the \"defense\" the authors propose) AND the attack can only work with full knowledge of the labels, which is completely unrealistic. So all such sentences should be replaced by more grounded and precise ones such as \"Although our attack requires the full knowledge of labels, it can tackle any batch-sizes providing that the number of classes is higher than the batch-size. Our attack is also the first to be able to handle label duplication. \" Another example is \"Our approach reveals the vulnerability in cross-entropy loss function and fully-connected layer,\" whereas the author's approach is one of many many research work having explored this setting and the latest to date. The one article, which could have written this sentence is DLG (2019).\n\n- The paper's writing is subpar. Most sentences are either too strong (see above section) or colloquial (use of the adjective \"very\" repeatedly (8 times), \"$\\textbf{we}$ establish the second equation\" followed by a citation, overall sentences' constructions)  or not understandable at all (some of the typos / grammar mistakes are listed in Minor). Can the authors also define notations and acronyms when they are first introduced ?  For instance acronyms, DLG, FGLA, HCGLA, GGL, IG, etc. are not introduced. Neither are notations $y(i)$, $\\nabla \\theta^{W}\\_{L, y(i)} $ $\\mathcal{L}\\_{1}$ and similar math notations. As $\\mathcal{L}\\_{1}$ is not defined \"having lower $\\mathcal{L}\\_{1}$ values\" does not mean anything and therefore he reviewer doesn't know how to read Figure 3. Most of the undefined notations are roughly understandable for readers familiar with the literature but it makes it very painful to read.\n\n- The reviewer would like to see the performance of the attack (and authors' ideas about it) when handling realistic scenarii aka without at least knowing the ground truth labels. Is there a heuristic similar to GradInv [4] that can work ? Can some combinatorial approach be tried ? Also a plot in the main article showing the effect of increasing the number of updates on the performance of the attack is needed. Otherwise the authors should write that they attack FedSGD and not FL.\n\n\nMinor\n- Related works should be rewritten to have an entire paragraph (with a title) with attacks based on data priors (such as R-GAP that is mentioned)\n- Use MacMahan's paper [2] for the FL reference instead of AhishekV et al. 2022 (authors can add Shokri's [3])\n- Rewrite propositions 1 as $\\hat{y}=...$\n- Replace all \"last\" layer of FC by \"first\" layer of FC, usual convention is to count layers starting from the input. The feature map is thus the input of the first layer of the FC not the last. If the authors want to use a different convention the authors have to define it.\n- typos: an analysis method page 3 ? / almost non-loss page 5 ? / will resolve page 4 / \"When B < C, we cannot recover unique y with the established system of equations is overdetermined, thus there may be multiple solutions, of which only one is a right solution, and\nthe remaining solutions are referred to in prior work R-GAP (Zhu & Blaschko, 2020) as the twin solutions.\" this sentence is not correct page 6 \n\n[1] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023.  \n\n[2] McMahan, Brendan, et al. \"Communication-efficient learning of deep networks from decentralized data.\" Artificial intelligence and statistics. PMLR, 2017.  \n\n[3] Shokri, Reza, and Vitaly Shmatikov. \"Privacy-preserving deep learning.\" Proceedings of the 22nd ACM SIGSAC conference on computer and communications security. 2015.\n\n[4] Yin, Hongxu, et al. \"See through gradients: Image batch recovery via gradinversion.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021."
+            },
+            "questions": {
+                "value": "The reviewer encourages the authors to\n- rewrite the claims of the manuscript (specifically highlight the use of ground truth labels and remove the claims related to being the \"first\")\n- improve overall grammar and notations. Especially explain what $\\mathcal{L}\\_{1}$ means so that the reviewer can read Figure 3.\n- perform experiments 1. without ground truth labels 2. with high number of updates 3. varying resolutions to strenghten the contribution and close the gap between what is claimed and what is done\n- explain more clearly if the other methods RGLA is compared to use ground truth labels as well ? If it is not the case the comparison is unfair if it is the case it should read DLG + ground truth labels etc. for most of those methods ,which do not require ground truth labels\n- add a comparison to GradInv [4] removing the loss on BN statistics\n- discuss the frequency of apparition of duplicate labels when randomly sampling batches from say IMAGENET"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_iafz",
+                    "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698328487499,
+        "cdate": 1698328487499,
+        "tmdate": 1699645725088,
+        "mdate": 1699645725088,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "vXstxrbYPt",
+        "forum": "cKGpe1792U",
+        "replyto": "cKGpe1792U",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies gradient leakage attacks in federated learning. Motivated by the inefficacy of existing attacks against large batches of high-resolution images, the authors propose a new attack named reverse gradient leakage attack (RGLA). RGLA involves three stages: first inverts the cross-entropy loss function to obtain the model outputs, which are then disaggregated and inverted to feature maps. Finally, these feature maps are inverted to model inputs, leveraging a pre-trained generator model. Experiments on four datasets (ImageNet, Cifar-10, Cifar-100, and CelebA) verified the effectiveness of the proposed attack."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The proposed attack can be applied to recover large batches of high-resolution images (e.g., 224x224px) with potentially duplicated labels.\n\n- The proposed attack has a much smaller search space compared to optimization-based methods.\n\n- The proposed attack remains effective against highly compressed gradients with added noise.\n\n- Evaluations and comparisons with other attacks validate the value of the proposed attack. The reviewer was particularly impressed by the visualized reconstruction results for a batch of 256 images."
+            },
+            "weaknesses": {
+                "value": "- The proposed method is built on several existing techniques that made disparate adversarial assumptions. As a result, the proposed RGLA combining these techniques requires a quite restrictive threat model, e.g., access to auxiliary datasets and ground-truth labels. In particular, RGLA requires the target network to have no pooling layer, which is hard to justify in practice. On the other hand, RGLA does not need batch statistics for reconstructing batched input but does seem to require B to not exceed C+1.\n\n- The technical contributions of this work are not particularly clear. The core techniques adopted by RGLA for enabling large batch recovery (e.g., disaggregating gradients and training a generator model) were discovered in prior work by Xue et al. and the inversion on the model output was discussed by Zhu & Blaschko et al. The only distinction seems to be the relaxation on duplicate labels. Besides, some closely related works were not compared/discussed. For instance, [1] also trains a model to learn inverse mapping, and the idea of disaggregating and inverting feature vectors is very similar to the cocktail party attack [2].\n\n- The proof of Proposition 2 made assumptions about the expressivity of the model, which should be made explicit in the text.\n\n- The image similarity-based privacy metrics have some inherent limitations. For instance, the reconstructed images on CelebA have high measured PSNR but barely reveal any practically identifiable information. It would be better to add corresponding discussions.\n\n[1] Wu, Ruihan, et al. \"Learning to invert: Simple adaptive attacks for gradient inversion in federated learning.\" Uncertainty in Artificial Intelligence. PMLR, 2023.\n\n[2] Kariyappa, Sanjay, et al. \"Cocktail party attack: Breaking aggregation-based privacy in federated learning using independent component analysis.\" International Conference on Machine Learning. PMLR, 2023."
+            },
+            "questions": {
+                "value": "1. From what the reviewer understands, the performance degradation of exiting attacks in the duplicated label scenario is an artifact of the label ambiguity. If that\u2019s the case, existing optimization-based attacks should perform as well as if there were no duplicated labels in the extreme case where all images come from the same class, but that\u2019s not what\u2019s observed in Table 8 - existing attacks still perform poorly even if there is no label ambiguity. What causes the performance of existing attacks to drop? How would these methods perform if the true labels are assumed to be known?\n\n2. What learning task is considered for experiments on the CelebA dataset? How many classes are there? What is the auxiliary dataset used?\n\n3. The elimination of the twin solution seems to rely on its smaller loss value (as empirically verified in Fig. 3). How are these twin data eliminated on a well-trained model where all training data have relatively small loss values?\n\n4. As RGLA relies on inverting the model output to feature maps, how would defense methods that perturb/modify the FCL part of the model (e.g., [1][2]) affect the attack performance?\n\n5. It is interesting to see that gradient clipping and additive noise have little effect on FGLA as combining these two essentially provides some notion of differential privacy. What is the largest epsilon value that is able to defend FGLA and the proposed RGLA attack?\n\n[1] Sun, Jingwei, et al. \"Soteria: Provable defense against privacy leakage in federated learning from representation perspective.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021.\n\n[2]Scheliga, Daniel, Patrick M\u00e4der, and Marco Seeland. \"Precode-a generic model extension to prevent deep gradient leakage.\" Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2022."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_nX92",
+                    "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698636783285,
+        "cdate": 1698636783285,
+        "tmdate": 1700508888609,
+        "mdate": 1700508888609,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "qSRocBkLc9",
+        "forum": "cKGpe1792U",
+        "replyto": "cKGpe1792U",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a novel gradient leakage attack RGLA, which first invert loss and FC layer gradients to get the final feature map before FC layer, then use a generator to map the final feature maps back to input space to get the reconstructed inputs. The method is shown effective to reconstruct high-resolution (224 x 224) pixels with large batch size (256) with duplicated labels."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The approach is thoughtfully designed, beginning with a solid theoretical analysis that logically leads to its expected effectiveness.\n\n2. The experiments conducted in the paper are extensive and thorough. The authors have performed extensive ablation studies to show the performance. The results are impressive, showcasing good reconstruction fidelity and computational efficiency, thus highlighting the method's effectiveness.\n\n3. The paper is well-written, presenting its concepts and findings with clarity and precision, leaving no ambiguity."
+            },
+            "weaknesses": {
+                "value": "1. The paper lacks sufficient details regarding the training of the generator responsible for mapping final feature maps back into the original input samples. As readers, we are left with questions about the level of effort required to train such a generator and the upper bounds of its capabilities. Additionally, it would be valuable to understand how the performance of the feature inverter generator is affected by the increasing accuracy of the victim model. Could you provide more information into these aspects to enhance our understanding of your work?\n\n2. A small weakness: I notice in the code provided in supplementary materials, the authors made some change to the architecture of Resnet - They remove the average pooling layer (over a 7x7 feature map), thus by stretching the final feature map, the FC layer is indeed 49 times wider than before. This inevitably simplifies the difficulty of reconstructions a lot.  To me this is not a severe concern, since the major part of paper does not assume how feature maps are reshaped to enter the FC layers, and this technical modification is not the focus of the research problem.  But for the researchers studying this problem, they could be concerned about this.  I wonder could authors show how the results will be like, if not removing average pooling, and use the original Resnet architecture in Torchvision implementation? It is expected to see performance drop in that case, but revealing this could give readers more insights about the difficulty of the problem, and understand how much information will be lost by average pooling before FC layer."
+            },
+            "questions": {
+                "value": "1. My primary question is about the information available to the attacker through gradients, which is essentially an aggregated representation from a batch of inputs. I'm curious about how your method manages to distinguish features of different images within the same class. I couldn't identify explicit constraints in the optimization objective that encourage disentanglement between samples from the same class. Intuitively, I would expect that reconstructed samples from the same class might exhibit entangled features, resulting in averaged reconstruction or mixed semantics. Could you provide additional insights, either theoretical or empirical, to clarify how your approach achieves this distinction? This would be my biggest concern for understanding how your approach works.\n\n2. It appears that the reconstructed samples exhibit a degree of over-smoothing, lacking sharp edges and finer details. This effect seems reminiscent of applying a large Total Variation loss or L2 loss. Could you please explain the reasons behind this observation? Is it related to the characteristics of the feature inversion generator? Are there potential room for improvement? If the level of smoothness can be adjusted, what will the results look like if they do not appear so smooth?\n\n3. See weakness 2, I am curious about the performance of proposed approach when using average pooling layer before the final FC layer."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5079/Reviewer_p8x8",
+                    "ICLR.cc/2024/Conference/Submission5079/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5079/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699247197711,
+        "cdate": 1699247197711,
+        "tmdate": 1700420592710,
+        "mdate": 1700420592710,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

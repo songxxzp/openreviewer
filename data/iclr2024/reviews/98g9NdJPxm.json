@@ -1,0 +1,221 @@
+[
+    {
+        "id": "bLiEwp1KhU",
+        "forum": "98g9NdJPxm",
+        "replyto": "98g9NdJPxm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_sB6V"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_sB6V"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper establishes a bound on the success of different gradient leakage attacks at different communication rounds $t$ and proposes it as a measurement of the severity of those attacks. The bound proposed is based on two components - the attack performance at the optimal weights and a term related to the properties of convergence of the underline FedAvg algorithm. The bound depends on several properties of the model (e.g. smoothness and convexity), its gradients (e.g variance and maximum size) and the lipschitzness of the attack function. The authors show experiments with VERY basic models where the properties are true and their parameters can be calculated. For those models the authors compare their bounds to the empirical performance on many gradient leakage attacks and show that certain patterns are shared between the two models."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The authors identify an important problem in federated learning and propose a novel solution\n- The authors directly bound the reconstruction error of different gradient leakage algorithms \n- The authors demonstrate their bound is applicable on a large class of leakage attacks, even on some analytical ones."
+            },
+            "weaknesses": {
+                "value": "- **Dependence on the performance at $w^\\*$**:  \nThe first part of the bound ($\\mathbb{E}[x-\\mathcal{R}(w^\\*)]$) still depends on the performance of the leakage algorithm $\\mathcal{R}$. This means that, in practice, the computational complexity of obtaining the proposed bound is the same as the complexity of the traditional evaluation of leakage attacks (which is very high, especially for attacks based on optimization). It also means that the issues related to estimating the performance of $\\mathcal{R}$ in the presence of randomness ( e.g. from the initialization or the choice of the client data batch) remain as hard to solve for the proposed bound as for the original leakage problem. Further, the problem of choosing the optimal hyperparameters for leakage attacks in the presence of such randomness, which would have been one of the best applications of the proposed bound, also remains as hard as before. Finally, the dependency also introduces possible additional challenges compared to evaluating the attack directly on $w_t$ - in particular, estimating $w^\\*$. While for convex models, such as the ones explored in the paper, estimating $w^\\*$ is not hard, for models with multiple local minima and equivalent solutions ( like generic neural networks ), it is actually challenging to estimate $w^\\*$, and it represents an additional source of randomness.\n- **The bound's dependence on $t$:**   \nIn Section 5 of the paper, the authors demonstrate, both practically and theoretically, that their bound predicts that as $t$ increases, the vulnerability of the attacked model increases. This is in stark contradiction with the empirical observations about gradient leakage attacks where exactly the opposite is true (e.g. See [1,2]). This mismatch is caused by the second part of the bound, which is supposed to precisely capture the dependence of the attack's success through time but, in reality, is based solely on the convergence of FedAvg and disregards any knowledge of $\\mathcal{R}$ but its Lipschitzness. As such, the bound does not capture the evolution of $\\mathcal{R}$ with time, only the evolution of the weights.\n- **Unclear or missing implementation details:**\n1. When the first term of the bound $\\mathbb{E}[x-\\mathcal{R}(w^\\*)]$ is estimated, what is the average taken over? Multiple batches of the client data? Multiple initializations of the algorithms? Across different attack hyperparameters? All?\n2. How is $\\Gamma$ approximated in practice? How is heterogeneity controlled for in general in the experiments provided? Can you demonstrate the results of experiments on different levels of heterogeneity?\n3. The authors in Figure 2 and Algorithm 1 talk about their unrolled network to have parameters $\\theta^i$. Where are those parameters coming from, and what do they represent for the used leakage attacks? Even in Line 4 of Algorithm 1, where they are defined, they don't seem to be used. Also, can you elaborate on why you tune them with layer-wise methods instead of SGD? The authors just say \"better generalizability\" with no context.\n\n- **Problems with the presented evaluation:**   \n1. All empirical results are presented in the plots on a scale, which makes it very hard to interpret them. In particular, I suggest that the authors use two different scales for the bounds and the empirical results. They can still present both results in the same plot for comparison reasons, but they can show the empirical scale on the left part of the figure and the bound scale on the right. This will enable better comparison between the trends in the two modes of evaluation, as now the empirical models always look completely flat.\n2. The paper's main claim is that the proposed bound is a useful tool for evaluating the practical performance of gradient leakage attacks. Yet, the authors do not provide a correlation metric between their bound and the empirical evaluation results. Can the authors precisely measure how correlated their bound is to the actual gradient leakage results?\n3. While the paper focuses on analyzing how gradient leakage performance changes with $E$, $N$, and $t$, I want to see their bounds used for comparing the same gradient leakage attack on different models and architectures, as well as, across different hyperparameters such as initialization strategies, regularizer strengths, etc. See [3].\n4. The authors claim that one needs to interpret their bound as **average** and not **best-case** reconstruction performance ( Section 6 in the paper ), yet they only provide a single experiment ( Figure 9c ) where they compare against average reconstruction performance. All experiments in the paper should show average behavior for the author's claims to be substantiated. \n- **Poor experimental results:**\nThe current experimental results are weak. What I mean by this is that in many experiments, the bounds do not well reflect what happens to practical performance. For example, in Figures 3 and 4, the empirical evaluation puts invGrad and GGL very close to each other in terms of performance, with invGrad sometimes even better. At the same time, the bounds consistently put the performance of invGrad to be similar to DLG and iDLG. Similarly, in Figures 5a and 5c, the bound predicts better reconstructions from DLG compared to invGrad and iDLG, while the practical performance of DLG (expectedly) is quite a lot worse than invGrad and iDLG. If the authors want to claim this is due to average vs best-case performance, they should provide more empirical evidence than Figure 9c for these discrepancies as they are noticeable in **almost** all figures in the paper.\n- **Applicability of the proposed bounds:**\nFor the proposed bounds to be computable, one needs to execute the leakage attacks on federated models and losses that jointly satisfy both $\\mu$-convexity and $L$-smoothness at the same time. Unfortunately, this restricts the usability of the bound to the federated learning models and losses that are jointly \"close to\" representing a quadratic function, even though the original attacks are applicable and tested on much more complex models. Further, those assumptions cannot be trivially disregarded, as the bound does not only make these assumptions but requires estimates of $\\mu$ and $L$ to be computed. This forces the authors to restrict their federated models in their experiments to only Logistic Regression and 2-layer convolutional neural network without activations. \nSimilarly, the bound also depends on upper bounds on the variance and size of gradients, which the authors are forced to unsoundly approximate even for the simple networks used.\nFinally, the precision of the second term of the bound heavily depends on the ability to accurately estimate the Lipshitz constant of $\\mathcal{R}$. This naturally means that more complex methods $\\mathcal{R}$, such as very deep neural networks, are penalized more heavily in their second term when they should not necessarily have to be. For example, methods like [4] and [5] have been shown to be very effective at recovering user data, even if they would likely have large Lipshitz constant estimates.\n- **Not important:**\n1. The authors should cite [1] and [3] as prior frameworks that attempt to analyze leakage attacks.\n2. Some attacks on language models attacks like [6] and [7], might be hard to represent in this framework due to being more look-up-based than optimization-based. Similarly, some malicious server attacks might be hard to represent in this framework due to their dependency on the particular malicious weights sent to the client, which are far away from $w^\\*$ like in [8]. Approaches like [9] also cannot be handled. To this end, the paper can benefit from a discussion of the limitations of the bound in terms of what types of leakage attacks it supports.\n3. In Sec. 3.2, the definition of $\\mathcal{R}(w_t)$ has expectation over $(x,y)$ which makes no sense in this context.\n4. In Sec 3.1, the authors claim that full device participation is \"unrealistic in practice\". Due to cross-silo applications of FL, they might want to tune this claim down.\n5. In Algorithm 2, Line 1, second statement: $\\phi_h$ should be $\\phi_H$ instead\n5. In Appendix C.1.1, the notation for the regularizer parameter of the Logistic Regression $\\gamma$ clashes with $\\gamma$ used in the various bounds in the paper.\n6. In Appendix C.1.1, the paragraph on computing $L$ provides two different bounds on $L$ - one with and one without $2\\gamma$"
+            },
+            "questions": {
+                "value": "- Can you comment on why the bound is important if it requires estimating $\\mathcal{R}(w^\\*)$?\n- Can you comment on the discrepancy between practical and bound behavior of leakage attacks with respect to $t$?\n- In your experiments, when you estimate $[x-\\mathcal{R}(w^\\*)]^2$ what do you average across?\n- Can the authors explain the appropriate details of their unrolled network, its parameters, and training?\n- Can the authors update the paper to fix the scale of empirical results?\n- Can the authors provide correlation metrics between bound and empirical results?\n- Can the authors experiment with the effect of the network and attack hyperparameters on their bound?\n- Can the authors provide more experiments like Figure 9c?\n- Can the authors provide heterogeneity experiments? \n\nAll in all, I feel that the tackled problem is important, and using theoretical bounds is a promising way of tackling it. I just find the particular bound oversimplistic in the way it handles the leakage attacks over time and not that useful due to its dependence on $\\mathcal{R}(w^\\*)$. I think these limitations lead to two major issues - one is that the bound does not model the practical properties of the gradient leakage attacks analyzed that well, and the second is that the bound is as hard, if not harder, to apply than the existing rudimentary evaluation techniques used in papers. On top of that, the authors omit several very important details about their experimental setup and make the empirical plots hard to read by choosing a bad scaling factor, making it hard to feel convinced by some of the experiments provided. Note that I have given you a 3, as I am not allowed to give you a 4 (due to ICLR rules this year), but I am leaning towards a 4.\n\n[1] Balunovi\u0107, Mislav, et al. \"Bayesian framework for gradient leakage.\" arXiv preprint arXiv:2111.04706 (2021).   \n[2] Dimitrov, Dimitar Iliev, et al. \"Data leakage in federated averaging.\" Transactions on Machine Learning Research (2022).    \n[3] Wei, Wenqi, et al. \"A framework for evaluating gradient leakage attacks in federated learning.\" arXiv preprint arXiv:2004.10397 (2020).   \n[4] Wu, Ruihan, et al. \"Learning to invert: Simple adaptive attacks for gradient inversion in federated learning.\" Uncertainty in Artificial Intelligence. PMLR, 2023.   \n[5] Dongyun Xue, Haomiao Yang, Mengyu Ge, Jingwei Li, Guowen Xu, and Hongwei Li. Fast generation-based gradient leakage attacks against highly compressed gradients. IEEE INFO316 COM 2023 - IEEE Conference on Computer Communications, 2023.   \n[6] Fowl, Liam, et al. \"Decepticons: Corrupted transformers breach privacy in federated learning for language models.\" arXiv preprint arXiv:2201.12675 (2022).\n[7] Gupta, Samyak, et al. \"Recovering private text in federated learning of language models.\" Advances in Neural Information Processing Systems 35 (2022): 8130-8143.\n[8] Wen, Yuxin, et al. \"Fishing for user data in large-batch federated learning via gradient magnification.\" arXiv preprint arXiv:2202.00580 (2022).\n[9] Zhu, Junyi, and Matthew Blaschko. \"R-gap: Recursive gradient attack on privacy.\" arXiv preprint arXiv:2010.07733 (2020)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "Not needed"
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6599/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6599/Reviewer_sB6V",
+                    "ICLR.cc/2024/Conference/Submission6599/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6599/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697878192113,
+        "cdate": 1697878192113,
+        "tmdate": 1700662409913,
+        "mdate": 1700662409913,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "U7xKDT2N0V",
+        "forum": "98g9NdJPxm",
+        "replyto": "98g9NdJPxm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_3bse"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_3bse"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper investigates optimization-based model inversion attacks in federated learning from a theoretical standpoint. Under specific assumptions, it determines the upper bound error for data reconstruction. Notably, the study maps the iterative algorithm used for these attacks to an unrolled deep feed-forward network. This mapping facilitates the computation of the upper bound Lipschitz Constant for the attack function using the AutoLip and Power methods. Experimental results further substantiate the presented theoretical findings."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper is well-written and easy to follow.\n- By calculating the upper bound error for attacks, it offers a valuable metric to assess the privacy leakage associated with model inversion attacks."
+            },
+            "weaknesses": {
+                "value": "- The main concern is the low correlation between the proposed upper bound Lipschitz Constant and true reconstruction error. Offering a clearer and more understandable explanation would elevate the persuasiveness and lucidity of the research.\n- While MSE emphasizes pixel-wise differences, this can sometimes be misleading. For instance, a reconstruction might visually appear impeccable, but if there are a few pixels that greatly deviate from their counterparts, the MSE value could be disproportionately high. Metrics like SSIM provide a perception-based assessment, and LPIPS offers a learned perceptual similarity, which might capture human perceptual judgment more accurately. It would be beneficial to integrate these non-norm-based metrics."
+            },
+            "questions": {
+                "value": "Please see weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6599/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6599/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6599/Reviewer_3bse"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6599/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698230434987,
+        "cdate": 1698230434987,
+        "tmdate": 1699636751100,
+        "mdate": 1699636751100,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0Dx7AfK1wL",
+        "forum": "98g9NdJPxm",
+        "replyto": "98g9NdJPxm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_kviX"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6599/Reviewer_kviX"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the data reconstruction attack in federated learning. It proposes a theoretical upper bound for the data reconstruction attack and then introduces how to calculate the upper bound. In the experiment section, the paper shows the comparison between different data reconstruction attacks and their upper bound."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "1. The clarity is good. The flow of the writing is smooth.\n2. In the introduction section, the paper points out three meaningful limitations of existing attack methods: high sensitivity to the initialization; evaluation highly depending on the choice of model snapshot; and lack of theoretical analysis."
+            },
+            "weaknesses": {
+                "value": "My main concern is about the significance. In details\n1. Theorems on the attack upper bound need unrealistic assumptions.\n-  The FL model is required to be strongly convex and smooth, etc. This is far away from the scenario where those attack methods are located -- those attack methods are commonly evaluated for deep neural networks as the input is the image in the evaluation.\n- The reconstruction method is assumed to have a Lipschitz constant. However, the attack methods studied in the paper are optimization-based attacks and do not have an explicit Lipschitz constant. Although the paper proposes a method to approximately calculate the constant, there's no guarantee how large the approximation error would be. This might introduce an additional arbitrarily large noise to calculate the upper bound.\n2. As shown in the empirical results, there is a large gap between the upper bound and the attack performance. It might be hard to indicate a useful conclusion from this bound."
+            },
+            "questions": {
+                "value": "Please see the weakness above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6599/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698705960557,
+        "cdate": 1698705960557,
+        "tmdate": 1699636750938,
+        "mdate": 1699636750938,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

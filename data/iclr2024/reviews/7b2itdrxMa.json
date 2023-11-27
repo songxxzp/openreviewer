@@ -1,0 +1,348 @@
+[
+    {
+        "id": "l2IyUJvBxZ",
+        "forum": "7b2itdrxMa",
+        "replyto": "7b2itdrxMa",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_FUEG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_FUEG"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies human and RL curriculum learning in a set of procedurally generated games."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "Parallel studies of human and machine learning is a very exciting line of work that will help make progress in both disciplines. I think the paper is well motivated and clearly written."
+            },
+            "weaknesses": {
+                "value": "Level progress is a confusing term for curriculum learning researchers. \u201cLearning progress\u201d or \u201ccompetence progress\u201d is a standard proposition of intrinsic motivation to guide curricula, it refers to the derivative of the competence measure with respect to time: how much the competence increases or decreases. Here you use the term \u201cprogress\u201d but it refers to what people call \u201ccompetence,\u201d a measure of success, a score. For instance, if you play the same level 10 times and reach the same score each time, there is no progress at all across-episodes, the progress is only intra-episode. I know that level progress describes what you expect it to describe in the language of video games, but it\u2019s confusing for researchers in this field: I thought you meant learning progress for the first 4-5 pages. Could you consider using another term? Competence is the standard term I think, score or performance could be good as well.\n\nThe hypothesis supported here is not very clearly stated. I can see several alternative hypotheses that could explain the data:\n* Children have some form of heuristic curriculum strategy that would look a bit like this: if i\u2019m very good, i switch to a harder task, if i intermediate I stay there, if i\u2019m bad i either stay or try something easier. \n* Children have a causal understanding of the world and maximize their causal learning\n* Children have an intermediate difficulty bias (~Florensa\u2019s paper): they keep doing the task for which they have intermediate competence / performance. \n* Children have a bias towards learning progress: they can estimate expected learning progress in a model-based way and select the task that maximizes it. When a game is solved there is no further learning progress so they switch up, when they perform poorly they might expect more progress soon and stay, or not expect progress and recalibrate their estimations, which leads them to switch down.\n\nI feel like the paper is arguing for the second interpretation, although it\u2019s not stated clearly. I don\u2019t see anything in the paper that would allow us to argue for one more than the others?\n\nAn interesting experiment could be to include levels from games different from the target game level. If children optimize for learning progress only, then we should see children select easy levels of the non-target games as well. Instead, we would probably see children almost never select the irrelevant game, which argues for a combination of intrinsic (LP-like) and extrinsic (going for the target level) curriculum. \n\nRL experiments:\n* The switch threshold appears to be an important hyperparameter, it would be interesting to see how it affects the results: .9 seems high given that children seem to switch up around 75%.\n* I\u2019m not 100% sure I understand the manual curriculum: \n* why is there 16 parallel tasks?\n* what does it mean to increment the difficulty by 1/16? I thought the difficulty was the number of lanes (1\u20135)? if the agent passes 0.9 in the current level (eg 1 lane), I expect the 16 tasks to become 2-lane tasks and the agent to be trained on these? Here it sounds like one of the 16 tasks becomes a lane-2 task, but then how is compute the score metric now? It it computed as the average level progress over the 16 taks (15 1-lane and 1 2-lane)?\n* You use an on-policy algorithm that does not leverage a replay buffer. This means that old data from easier levels are thrown away. Using an off-policy algorithm (eg DDPG) would reuse past data, which may mitigate the catastrophic forgetting problem?\n\nCatastrophic forgetting for curriculum learning is a known problem, which is why all curriculum approaches perform stochastic selection: they do not switch from one level to the other but sample all levels with varying probabilities that are a function of the intrinsic motivation. Eg selecting the current best level with probability .7 and the rest with .3 / n_other_levels may fix the issue, see Jiang\u2019s paper and Colas 2019 for examples.\n\nStudies of curriculum algorithms always include the presentation of the random baseline selecting level uniformly. This baseline does not suffer from distribution shifts. \n\nI\u2019m not sure how the intrinsic reward is used here. As far as I understand, it seems that the curriculum (level selection) is the same as before but that PPO now uses what the so-called intrinsic reward in addition, right?\nIf so, this is a problem. Intrinsic motivations must be agnostic of the goal (this is what intrinsic means). They can be either state-based: assigning an intrinsic reward to states; or goal-based: assigning an intrinsic reward to goals / tasks.\nWhat you propose is to assign a reward to a state, but this reward is extrinsic, it measures performance in the task. Practically, you\u2019ve just replaced a sparse reward with a dense reward, no intrinsic motivation here.\nWhat curriculum people do in that situation usually is to use that competence measure to guide the level-selection (goal-based reward): the level selected could be the one where there is the most progress (score now vs score before, not the level progress), or the one where the competence (level progress) is intermediate. These rewards are extrinsic because they are not tied to particular levels: the level-selector only cares about learning progress or intermediate difficulty, not about any level in particular. This would involve using a bandit algorithm to explore levels and maximize that score. \n\nThe idea of a causal curriculum is interesting, but the papers cited when discussing this topic do not engage with any form of causality: eg Florensa 2018, Sukhbaatar 2017, Bengio 2009.\n\nA good way of discussing curriculum approaches is by making explicit the distal objective of the curriculum (maximizing performance on a set of target tasks), describing the proximal objective optimized by the approach (which usually includes forms of intrinsic motivation), and discussing what is the control parameter (the part of the MDP that is varied to maximize the proximal objective), see framework from Portelas et al 2020. Proximal objectives include: novelty, intermediate difficulty, learning progress, things that can be varied include: state space, transition space, goals, rewards, etc. The current review is not very clearly structured and omits large chunks of the field (eg learning progress maximizing methods). These are probably the closest to the one proposed in this paper so they should be mentioned. In particular, this paper proposes a curriculum over tasks (variation of state space, and transition function) where the proximal objective is an intermediate difficulty (intermediate level progress). \n\nWhat I would need to update my score:\n* Further details and explanations for the points raised above\n* Better account of existing curriculum approaches\n* Explicit statement about the hypothesis proposed here + discussion about how the result support that hypothesis, and may or may not bring sufficient evidence to separate the different hypotheses i listed above\n* I may have understood it wrong, but it seems that the authors completely missed the mark on the curriculum RL implementations: missing random baseline, deterministic level sampling instead of stochastic ones that's common in the field and, more importantly, the reward used is extrinsic and not intrinsic. It should be a goal-based reward and not a state-based reward. Again I may have understood it wrong so i'm open to discussions. \n\nI believe that this setup is interesting and the scientific goal is good. I'm looking forward to future improved versions of this paper. \n\n\nMinor comments: \n* Vygotsky\u2019s citation is broken (missing y, no year)."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8916/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697475503204,
+        "cdate": 1697475503204,
+        "tmdate": 1699637122537,
+        "mdate": 1699637122537,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "nnbONGP7Cj",
+        "forum": "7b2itdrxMa",
+        "replyto": "7b2itdrxMa",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_MFeg"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_MFeg"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper first exams the learning strategies of children in tackling challenging tasks. The study used Procgen environments with various difficulty levels to investigate how 5 to 7 years old children adapt to these challenges. The findings reveal that children use their progress through the levels as an intrinsic reward, motivating them to excel at easier levels before tackling harder ones. \n\nThen this paper shows that RL agents that follow a similar approach, incorporating level progress as an intrinsic reward, show better stability and convergence during training than agents relying solely on extrinsic rewards. Curriculum designed in this way also boost the sample efficiency."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "(1) The analysis on children playing Procgen games are enlightening and thorough.  \n(2) The idea of adopting the behavioral findings from human studies to solve ProcGen is inspiring."
+            },
+            "weaknesses": {
+                "value": "(1) Level progress is not defined clearly at all through the whole paper leaving the other discussion built upon it shaky.  \n(2) From my understanding after reading the texts, level progress seems to be a rough measure of how far you have gone in this level. Putting aside how we can access such information, if we do, this will vary from environment to environment and it seems to be simply a denser supervision signal for each move the agent makes towards accomplishing the task. So, the proposed method is both inaccessible and not generalizable.  \n(3) In the experiment section, the authors didn't show training results with multiple random seeds but only single runs."
+            },
+            "questions": {
+                "value": "Questions are related to the weaknesses section.   \n(1) What is the formal definition of level progress?  \n(2) How do you plan to access the level progress you defined?  \n(3) Could you do a parameter search and change the network structure with multiple random seeds to see if it's poor training causing the catastrophic forgetting? In another word, is it really because the sparse reward signals?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Responsible research practice (e.g., human subjects, data release)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I am not sure if the authors have been authorized to do human subjects experiments as there are no such sections stating that in the paper. So, I would suggest a double check."
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Reviewer_MFeg"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8916/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698716906394,
+        "cdate": 1698716906394,
+        "tmdate": 1699637122325,
+        "mdate": 1699637122325,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "9w1J9Drfda",
+        "forum": "7b2itdrxMa",
+        "replyto": "7b2itdrxMa",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_tuxP"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_tuxP"
+        ],
+        "content": {
+            "summary": {
+                "value": "Based on the observation that children use their current level progress to determine the next level in their curriculum, this study proposes a curriculum approach for reinforcement learning agents. Using level progress as an intrinsic reward signal, similar to the way children do, the study argues for improved data efficiency and convergence in reinforcement learning agents."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- This study draws inspiration from observing real 5-7-year-old children, making it interesting as a human-inspired finding.\n- The intrinsic reward method proposed in this study reduces catastrophic forgetting and improves convergence."
+            },
+            "weaknesses": {
+                "value": "- The analysis of the behavior of 5-7-year-old children, obtained through observation, is intriguing, but the transition to rl-agent experiments is somewhat lacking. While the study claims to use an intrinsic reward, it seems to be primarily based on \"how far the agent is into the task,\" leaving questions about whether this intrinsic reward function has more significant implications than the distinction between \"sparse reward\" and \"dense reward\" typically used in the general RL community.\n- The explanation of the experimental results is somewhat vague, and the experimental environment appears to be limited.\n- If the way 5-7-year-old children change their levels does not apply to RL agents, it suggests that the study has not fully integrated the observations from children's behavior into RL agents.\n- There is no comparison with baselines or prior work."
+            },
+            "questions": {
+                "value": "- In both Experiment 5.3 and 5.4, does the agent move to the next level when it achieve an average reward of 9 means (as explained in section 5.2)?\n- Did the proposed method in 5.4 incorporate the way 5-7-year-old children change their levels?\n- While it's mentioned that 5-7-year-old children use level progress as an intrinsic reward signal to decide which level to play to solve the most challenging level, does the proposed method in section 5.4 actually use this intrinsic reward function (2* lambda / 100) for transitioning between levels? (i.e. do they use it when they determine whether they change their level or not?, or just determine the level transition based on if(mean episode reward>9)? )\n- How many seeds were used to obtain the experimental results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8916/Reviewer_tuxP"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8916/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698751166060,
+        "cdate": 1698751166060,
+        "tmdate": 1699637122196,
+        "mdate": 1699637122196,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "LM5ZuFK5PE",
+        "forum": "7b2itdrxMa",
+        "replyto": "7b2itdrxMa",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_Rafo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_Rafo"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors study curriculum learning in reinforcement learning by conducting human experiments on complex sequential tasks. They discover that children successfully solve the final complex tasks by taking the correct curriculum arrangement according to the task progress. Motivated by this, the authors design a reinforcement learning experiment to verify this finding by setting progress level as an intrinsic reward. The experimental results indicate that the progress level intrinsic reward improves the curriculum learning performance."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1.\tThe authors conduct an interesting and informative human experiment.\n\n2.\tThe paper is well-organized."
+            },
+            "weaknesses": {
+                "value": "Please refer to the questions below."
+            },
+            "questions": {
+                "value": "1.\tI\u2019m sorry that I\u2019m not very familiar with the human experiments in cog-science. But I worry that the number of children (only 22 children) in this study is too small. How do you guarantee that the results obtained from such a small group of children is unbiased and trustable? Maybe please point us to some related works that also conducted human experiments and claimed that such a small experimental population would be enough.\n\n2.\tAnother concern is about novelty. I admire the motivation from human experiments. However, utilizing task progress is not a novel idea in reinforcement learning [1], so I worry that the proposed method is more like a trick.\n\n3.\tThere are many previous works taking advantage of various heuristics to design curriculars. I think it is necessary to compare your method with them. Would you please show us some comparison results with existing techniques?\n\n[1] Bruce J, Anand A, Mazoure B, et al. Learning about progress from experts"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8916/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698823381535,
+        "cdate": 1698823381535,
+        "tmdate": 1699637122086,
+        "mdate": 1699637122086,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0bnYXFwg2G",
+        "forum": "7b2itdrxMa",
+        "replyto": "7b2itdrxMa",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_5JBB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8916/Reviewer_5JBB"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper studies intrinsic learning in children and how they use \u2018level progress\u2019 information to modulate their understanding of goals and make progression towards task goals. This automated curriculum selection in children isn\u2019t random (as shown with experiments) and helps them learn. Authors use the same principle to design RL agents to solve simple game playing tasks with varying levels and design hand-crafted curriculum and conduct experiments to understand how RL agents learn in the absence of extrinsic rewards and whether they are able to recover from failures. The baseline they develop isn\u2019t able to achieve goals as difficulty levels increase. \u201cAlthough for simpler environments it may be possible to recover, as the complexity is smaller and random actions may find the goal, for harder environments with multiple lanes, this divergence is unrecoverable.\u201d From Fig 5b, Before training divergence (which happens with increasing levels of difficulty and catastrophic forgetting), the exact relationship of reward and level progress depends on the task complexity. The easiest task (1 water lane, dark blue) has the greatest slope, since changes in level progress yield relatively greater mean training reward. However, this pattern does not transfer as the complexity increases. With inspiration from how children use the level progress as a proxy for reward signal, authors conduct experiments using the similar level progress information as intrinsic reward signal. RL agents learn much better and can recover from catastrophic forgetting when using this intrinsic progress as a reward signal after every episode. Intrinsic rewards decrease as levels progress however they do not collapse and can increase (recover) in certain circumstances. Authors suggest understanding how to integrate these intrinsic level progression into RL agents from the world states (eg. From high dimensional images) will be crucial towards the path for more general learning agents."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "- Design the complex experiments to understand how small children learn using simple games that contain difficulty levels and drawing inferences on what signals children utilize as intrinsic signal for achieving goals is a very good contribution of this study. Many ideas in the paper seem intuitive; however, these scientific experiments and evaluation to generate various hypothesis is commendable. \n-  The paper is equally divided into a user study of children to understand how they use automated curriculum learning to solve tasks and then explore how RL agents can learn on same tasks using similar automated learning strategies. Authors show promising results and future directions of the work to highlight where the field should focus to utilize automated curriculum learning with RL agents and how to design these intrinsic rewards."
+            },
+            "weaknesses": {
+                "value": "- Although very inspirational work, there are many questions around the user study that is not clear. How reliable are children responses? How was this controlled for and simplified so children could understand and respond appropriately? \n- Asking 5 year olds multiple choice questions pertaining to the true causal rules of games needs more supportive evidence. \n- These are small experiments - Children\u2019s selection of an easier level after failing a level is spread over different levels (including 1/7 choosing a more difficult level). 42.1% of failed levels led to choosing an easier level, 37.4% of failed levels led to choosing the same level. - how reliable is this and it is not clear how the authors are utilizing any of this fine-grained signals in the intrinsic reward design process for RL agents."
+            },
+            "questions": {
+                "value": "(please address the points under weakness section)\n- RL experiments are done with only Leaper game. Are the results similar on other games?\n\nMinor comments:\n- Table 2 missing\n- Section 3, 5th line - unclear - \u201cwe heightened the difficulty by increasing the number of platforms\u201d - what\u2019s a platform here?\n- Fig 3 references fig 9 and fig 10 in appendix (not present)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8916/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699127710401,
+        "cdate": 1699127710401,
+        "tmdate": 1699637121945,
+        "mdate": 1699637121945,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

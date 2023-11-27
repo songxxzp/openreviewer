@@ -1,0 +1,213 @@
+[
+    {
+        "id": "jZuKDb43Xb",
+        "forum": "vKViCoKGcB",
+        "replyto": "vKViCoKGcB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_3yAm"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_3yAm"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work considers the topic of data attribution with diffusion models, which means quantifying the importance of training examples to model generations. Previous work on this topic has explored a range of techniques, including with gradient-based calculations and retraining-based calculations, and this work builds off of TRAK (a gradient-based method that can leverage retraining runs, but can also avoid doing so). \n\nThe proposed method, D-TRAK, deviates from TRAK in ways that the authors describe as theoretically unjustified. Namely, they use a non-standard measure of parameter sensitivity for each generation, and they omit a term that should only be ignored when the loss and model output $\\mathcal{F}$ are identical. Surprisingly, they find that this heuristic version of TRAK works better than the original version, achieving better performance in the LDS metric that's designed around TRAK's original formulation.\n\nThis raises natural questions about why, which the authors don't answer. However, they observe consistently better performance than competing methods across several datasets, a couple evaluation approaches, and that performance improves when several retraining runs are used."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Data attribution is an interesting problem that's increasingly important with widely used generative models trained on web-scraped datasets. It's computationally and theoretically challenging, so developing new methods for this task is a valuable contribution. This work builds off of one the better-performing methods in the literature, TRAK, and observes performance for D-TRAK that makes it, to my knowledge, the most effective method available. And it preserves the advantages of TRAK, particularly the relative efficiency compared to methods that require many model retraining runs (e.g., the original datamodels approach from which TRAK is derived).\n\nThe evaluation is thorough, although it's restricted mostly to small datasets. This is perhaps understandable given the cost of running certain retraining based methods, but it would be helpful for the authors to clarify why they can't use ArtBench itself, for example. It seems like the cost of running TRAK/D-TRAK should be manageable, given that retraining is optional in these methods?\n\nThe experiments are also thorough in terms of the baselines considered. I appreciated the appendix section that concisely describes each method."
+            },
+            "weaknesses": {
+                "value": "The main weakness is that in terms of data attribution methodology, the contribution here is shallow. The paper essentially finds that a couple heuristics improve performance, and offers no explanation for why. The paper acknowledges this with statements like \"the mechanism of data attribution requires a deeper understanding,\" which are true, but this is not ideal for a publication. A paper proposing a new and improved method should offer some understanding of why it works, and the paper barely attempts to do so. The analysis in Section 3.2 about interpolating between TRAK and D-TRAK provides no insight on why D-TRAK works, it only shows that interpolated versions are strictly worse (which is not an especially interesting point, I don't see why we would have expected this to work).\n\nThe point above is my main concern, and I wonder whether this paper could be more valuable given time to revise it and offer an appropriate explanation for why D-TRAK works.\n\nSeveral other thoughts:\n\n- There is an emphasis in the introduction on the role of non-convexity in this setting, and its potential impact on TRAK not working as expected. After reading the paper, I'm not sure it ultimately addresses this point, or offers any explanation for how D-TRAK circumvents the issue. Can the authors expand on that subject in the paper?\n\n- In Section 2.2, I'm not sure it's correct that Shapley values are proposed to *evaluate* data attributions, they're suggested to define data attributions (or more specifically, data valuation scores). In any case, this would be due to Ghorbani & Zou, not Lundberg & Lee.\n\n- In Section 2.2, the lead-up to Definition 2 is hard to follow. It might be helpful to explicitly state that the LDS score considers the sum of attributions as an additive proxy for $\\mathcal{F}$, as it's explained in the original datamodels work.\n\n- In Section 2.3, the authors write that retraining-based methods offer better efficacy than gradient-based methods. Is there existing work that makes this point, or or is this an allusion to results showing that D-TRAK/TRAK improve when using retraining runs? I'm not clear on whether this point is generally true or only true for TRAK, so it could be helpful to clarify.\n\n- Many of the results reflect that the LDS score depends strongly on the number of time steps used when approximating the expectation $\\mathbb{E}_t$. It therefore seems like the results entangle two separate concerns: the intrinsic correctness of the attribution method, and the efficiency of estimation. Both matter, but interpreting the results is more difficult because we don't know if either method has converged to its theoretical value due to imprecision in the expectation. I wonder if this subject deserves more discussion in the paper. For example, is there a good reason why D-TRAK should be easier to estimate?\n\n- Can the authors explain the consistent drops in LDS scores when shifting from validation examples to generations? \n\n- Related to my main concern described above, do the authors have any other ideas for why their alternative $\\mathcal{L}$ formulations make sense? The point in eq. 8 doesn't tell us much. One intuition I have is that it's fundamentally difficult to predict the exact noise value, because there are many \"denoising paths\" to recover the original image when large noise is added. $\\mathcal{L}_{simple}$ therefore seems like a questionable choice to determine whether the model works well for a given image. I'm not sure the new proposals are more sensible, but perhaps they get at, in a limited sense, whether the predicted noise values are at least Gaussian? Further discussion around why they work seems important for the paper.\n\n- On a broader note, can the authors justify their choice to focus on the LDS metric defined via $\\mathcal{L}_{simple}$? It seems convenient and natural in a way, because it's how the model is trained, but I don't see an argument that this faithfully represents the model's tendency to generate particular images. I see that this design choice is motivated by prior work, but it seems like a strange implementation decision because it's disconnected from what we really care about, which is whether the model will produce certain generations."
+            },
+            "questions": {
+                "value": "Several questions are mentioned in the weaknesses section above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5084/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698882238627,
+        "cdate": 1698882238627,
+        "tmdate": 1699636499087,
+        "mdate": 1699636499087,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3mOjwozVt2",
+        "forum": "vKViCoKGcB",
+        "replyto": "vKViCoKGcB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_nsDq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_nsDq"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper tackles the problem of attributing images generated by diffusion models back to the training data of these models. They make simple modifications to existing methods [1, 2] and report significantly better results on a standard evaluation metric (LDS) for this task. The authors do not provide a justification for the discrepancy in empirical results between their method and [1], and call for further exploration of the design choices within data attribution methods for diffusion models.\n\n\n[1] Sung Min Park, Kristian Georgiev, Andrew Ilyas, Guillaume Leclerc, and Aleksander Madry. Trak:\nAttributing model behavior at scale. In International Conference on Machine Learning (ICML),\n2023.\n\n[2] Kristian Georgiev, Joshua Vendrow, Hadi Salman, Sung Min Park, and Aleksander Madry. The\njourney, not the destination: How data guides diffusion models. In Workshop on Challenges in\nDeployable Generative AI at International Conference on Machine Learning (ICML), 2023.\n\n---\n\nScore raised from 5 to 6 after authors' response."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The authors thoroughly test their proposed method on a number of datasets \n- The authors present strong empirical results across a variety of settings"
+            },
+            "weaknesses": {
+                "value": "- Out of the listed baselines, to the best of my knowledge only Journey TRAK [1] has been explicitly used for diffusion models in previous work. As the authors note, Journey TRAK is not meant to be used to attribute the *final* image $x$ (i.e., the entire sampling trajectory). Rather, it is meant to attribute noisy images $x_t$ (i.e., specific denoising steps along the sampling trajectory). Thus, the direct comparison with Journey TRAK in the evaluation section is not on equal grounds.\n\n- For the counterfactual experiments, I would have liked to see a comparison against Journey TRAK [1] used at a particular step of the the sampling trajectory. In particular, [1, Figure 2] shows a much larger effect of removing high-scoring images according to Journey TRAK, in comparison with CLIP cosine similarity. \n\n- Given that the proposed method is only a minor modification of existing methods [1, 2], I would have appreciated a more thorough attempt at explaining/justifying the changes proposed by the authors.\n\n[1] Kristian Georgiev, Joshua Vendrow, Hadi Salman, Sung Min Park, and Aleksander Madry. The\njourney, not the destination: How data guides diffusion models. In Workshop on Challenges in\nDeployable Generative AI at International Conference on Machine Learning (ICML), 2023.\n\n[2] Sung Min Park, Kristian Georgiev, Andrew Ilyas, Guillaume Leclerc, and Aleksander Madry. Trak:\nAttributing model behavior at scale. In International Conference on Machine Learning (ICML),\n2023."
+            },
+            "questions": {
+                "value": "- Why is the rank correlation close to $0$ when $\\mathcal{L}\\_{square}$ is used for both $\\phi^s$ and $\\mathcal{F}$ (Table 4)?\nThe authors have observed that $\\mathcal{L}\\_{square}$ is useful as a model output function when predicting $\\mathcal{L}\\_{simple}$ or $\\mathcal{L}\\_{ELBO}$. It is particularly odd then that it does not do a good job at predicting *itself*. Is there any particular reason why that might be the case?\n\n- Why set $\\mathcal{Q}\\equiv \\frac{\\partial\\mathcal{L}}{\\partial\\mathcal{F}}$ to be the identity matrix even when $\\mathcal{F}\\neq \\mathcal{L}$?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Reviewer_nsDq"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5084/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699303344877,
+        "cdate": 1699303344877,
+        "tmdate": 1700417185083,
+        "mdate": 1700417185083,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "vFhRwsFRPk",
+        "forum": "vKViCoKGcB",
+        "replyto": "vKViCoKGcB",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_yBWG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5084/Reviewer_yBWG"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes variants of TRAK for diffusion models by calculating the gradients with respect to various different loss functions and discover that alternative loss functions perform better than the original TRAK in terms of LDS, a data attribution metric."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper is simple and easy to follow. The extensive experiments on different settings provide solid evidence of D-TRAK performing better than TRAK in terms of LDS. Readers can be easily convinced that there is an issue with either TRAK as a data attribution method or LDS as a data attribution metric."
+            },
+            "weaknesses": {
+                "value": "Despite the solid experiment results, the desiderata of a data attribution paper is different from an adversarial attack paper. For adversarial attacks, the success of an attack is a sufficient contribution. This could not be said for data attribution. Successfully finding techniques to optimize for a data attribution metric is only meaningful **if the technique reveals insight**, because in practice attackers have no control over the data attribution method. Therefore, unlike writing adversarial attack papers, more insight to explain why changing the loss function would lead to better LDS score should be provided. Is the non-convexity at fault? Is LDS not an appropriate metric? Is there something special about diffusion models that TRAK fails to capture? How does different norm losses lead to better or worse LDS score?\n\nThe observation of this paper is extremely interesting. Providing some insights about the success of D-TRAK over TRAK would make it publication-worthy."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5084/Reviewer_yBWG"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5084/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699313968089,
+        "cdate": 1699313968089,
+        "tmdate": 1700673589584,
+        "mdate": 1700673589584,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

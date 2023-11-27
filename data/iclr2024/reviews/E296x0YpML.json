@@ -1,0 +1,283 @@
+[
+    {
+        "id": "dJL6OPTttJ",
+        "forum": "E296x0YpML",
+        "replyto": "E296x0YpML",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_2d4f"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_2d4f"
+        ],
+        "content": {
+            "summary": {
+                "value": "1. GOAL:\n\n* 1A. The problem statement:\nIt is possible to do black box word level attacks by determining the most important words in the input by repeated query and replacing them (with synonyms).\n\n* 1B. What their solution is:\nconfuse the adversarial black-box attack with a system called \"AdvFooler\" that randomizes the latent space. \n\n\n\n2. METHOD:\nThe latent space is randomized by adding an independent gaussian noise vector to the l-th layer of a pretrained classification model. The magnitude of noise is selected based on how much the clean accuracy drops by a chosen percentage on a small held out clean set (1% drop is used in paper). Though it\u2019s not actually stated in the paper, I assume this noise is added during evaluation time (so each adversarial query yields slightly different perturbed outputs, and the attack has a hard time figuring out what words to perturb in it\u2019s attack).\n\nClaims Made:\n- does not need more compute during training (True)\n- does not rely on assumptions about adversarial perturbation word set for a word substitution attack (True)\n- theoretical and empirical results presented on adversarial set and clean accuracy (True, they are presented)\n\n3. RESULTS:\nThere are many metrics to evaluate on, so we'll go metric by metric: high clean accuracy (A), middling robustness-accuracy tradeoff (B/C), great implementation ease (D), and (probably) low compute time needed which is great (E)\n\n* 3A. By design the clean accuracy does not suffer more than 1% on their method (when used alone), and they show an example where they are still able to change the most significant words.\n\n* 3B. Their method isn't the best method in terms of robustness and accuracy tradeoff, but it is reasonably robust (i.e. does improve robustness significantly). Conclusions based on these comparisons are hard to make to be honest. More details in the Weaknesses section.\n\n* 3C. Some results in Fig 4 demonstrate the tradeoff between clean accuracy and adversarial attack accuracy for this method specifically. Is is unclear why the clean accuracy drops so little at really high noise rates, and that's not really explained.\n\n* 3D. Where their method absolutely shines is how simple the method is to implement and use based on reading the methods section alone. They don't highlight ease of implementation in the paper, but it's absolutely something that would make this method much easier to adopt. \n\n* 3E. They repeatedly highlight low added compute as a big win for this method. They mention they have results about compute usage across the methods in Supplemental Materials, but I was not able to find these. Please add. Still reading the methods section gives a clear picture that the added compute for this method is very negligible. (It's unclear to me if some adversarial training baseline methods are also reasonably negligible in terms of compute time. Computing synonyms is very cheap, and training on some added adversarial examples is also not marginally more expensive in any meaningful way)."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "The primary and significant strength of this paper is that their method is dead simple to implement and use, and takes almost no added compute time. Even if it's not SOTA (and it doesn't actually claim to be SOTA), it is strongly worth disseminating (after adding some missing results: see Weaknesses). \n\nIn much the way drop out rates approximate ensemble training and save us all compute time, this method approximates diverse ensembles used to achieve adversarial robustness (ex: the ADP regularizer  https://proceedings.mlr.press/v97/pang19a), and can save some compute time. Because it's so easy to implement and tune for accuracy, it would have high practical impact -- for that reason alone, it's worth disseminating (after some weaknesses are addressed, see below)."
+            },
+            "weaknesses": {
+                "value": "3 weaknesses and 2 baseline suggestions, enumerated below as 1-5. I am very amenable to changing my decision to an accept if these are addressed (esp. 1 and 3, with a very strong suggestion for 4 and 2).\n\n1. It's really hard to draw conclusions about robustness-accuracy tradeoffs from Tables 2 and 3. The claim that your method performs \"close\" to SOTA needs some added substantiation. I'd like:\n\n  *  1.A) Standard deviations on at-least three runs for each setting. In many of these datasets, a 1pp improvement is significant. But accuracies on adversarial datasets often have high variance, so it's unclear how to interpret when your method isn't clearly better and often appears to be much below a handful of the other methods.\n\nMore details: TMD more reliably seems to perform better esp, on Imdb:Roberta, RanMASK and SAFER sometimes outperform on  robustness to attack/clean accuracy). It's hard to verify what \"close\" is, because there are no standard deviations, and on a few of the tasks, AdvFooler really does appear to significantly underperform a couple of the other methods by a  bit. (It's still reliably top 3 among the methods though, and I don't think you need to be better than all to have a case for publication).\n\n   * 1.B. Tune SAFER and RunMASK (tune the rate of substitution/masking) until either the robustness or the accuracy matches your method, so. you can draw a clean comparison. (Or tune your method to their accuracy if that's easier). As is, not clear at all that one is Pareto dominant (or even comparable) to the other. \n\nExample: While RunMASK does suffer on accuracy, it makes things more robust (on AGNEWS dataset BERT for instance). Based on the data available, I'd say it's a toss up whether it's better or worse than AdvFooler.\n\n\n\n2. I think the most compelling case for publication is how lightweight your system is. I would include compute time results somewhere. I was unable to find them). It's also unclear to me that simple adversarial training on word substitutions is actually significantly more compute intensive (generating synonyms is super quick, and training on more examples isn't too much of an added burden when you're already finetuning -- esp. if you're comparing to needing to tune your noise param for AdvFooler, which while cheap is still some added compute time). \n\n\n3. In your system, HotFlip is not perhaps an accurate white-box attack (Appendix C7). HotFlip relies on gradients, but are you giving it the unnoised gradients, or the parameters across all iterations of the model (so someone can reverse engineer the likely original unnoised parameters?). I suspect that if it were truly a white box attack, the certified robustness systems and TMD would outperform. I think these results as presented are a bit misleading otherwise, and one option is to remove them. I would suggest either demonstrating the white-box capabilities fully by (1) giving access to unnoised params, or each set of params so you can derive unnoised params AND (2) comparing to TMD and the certified methods. OR I'd like to see the claim about the defense being \"attack agnostic\" in the main paper, and the claims of being robust to \"white-box attack\" toned down.\n\n4. New Baseline Suggestion 1/2: While I understand that it would not be as lightweight as AdvFooler, the style of your method, suggests that a comparison with a diverse ensemble designed to induce adversarial robustness would be very apt since it also tries to induce robustness in much the same way (added random noise) (see my strengths section for the analogy). (I suggest this one: https://proceedings.mlr.press/v97/pang19a , the ADP regularizer)\n\n5. New Baseline Suggestion 2/2: Choose Dirichlet Neighborhood Ensemble (DNE)  over ASCC. While both methods model the perturbation space as the convex hull of word synonyms, DNE far outperforms ASCC (See TMD paper Table 1 where DNE nearly outperforms TMD on AGNews while maintaining a high clean accuracy)."
+            },
+            "questions": {
+                "value": "1. How often are are the predictions for F_advfooler the same as those for F under different noise rates? (Claim in 3.1) The chart showing adversarial robustness dropping while clean accuracy only slightly drops, gets at this question somewhat. But if possible, I'd like something that's even cleaner of a comparison that can maybe help provide intuition for why the clean accuracy doesn't really suffer much (Esp on IMDB) while adversarial robustness totally craters under high noise (Fig 4). \n\nSuggestions for added baselines (2 of them) included in the Weaknesses section (numbers 4 and 5)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethnical concerns really. It's a standard adversarial robustness defense paper for word substitution attacks."
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9033/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9033/Reviewer_2d4f",
+                    "ICLR.cc/2024/Conference/Submission9033/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9033/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697675301127,
+        "cdate": 1697675301127,
+        "tmdate": 1700638653932,
+        "mdate": 1700638653932,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "kB9rx2EOwQ",
+        "forum": "E296x0YpML",
+        "replyto": "E296x0YpML",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_bLP9"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_bLP9"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this work, the authors propose a simple defense method AdvFooler against textual adversarial attacks. Specifically, AdvFooler adds a Gaussian noise at each layer for forward propagation to randomize the latent defense. With such randomization, the attacker cannot find significant words for substitution, making the model robust."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and easy to follow.\n\n2. AdvFooler is simple and seems to be effective against several attacks."
+            },
+            "weaknesses": {
+                "value": "1. The motivation is not clear. Why does such randomization fool the attackers while not degrading the benign performance?\n\n2. Why does AdvFooler can only perplex query-based black-box attacks? It is significant for a defense method to defend against various attacks, such as white-box attacks [1], decision-based attacks [2,3], and so on. It is necessary to validate the effectiveness against these attacks to show the generality of AdvFooler.\n\n3. AdvFooler does not outperform the SOTA baselines against various attacks.\n\n4. From Figure 4, it might be hard to choose a consistent noise scale for different datasets and models.\n\n[1] Wang et al. Adversarial Training with Fast Gradient Projection Method against Synonym Substitution based Text Attacks. AAAI 2021.\n\n[2] Maheshwary et al. Generating Natural Language Attacks in a Hard Label Black Box Setting. AAAI 2021.\n\n[3] Yu et al. TextHacker: Learning based Hybrid Local Search Algorithm for Text Hard-label Adversarial Attack. EMNLP 2022."
+            },
+            "questions": {
+                "value": "See weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9033/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697874823826,
+        "cdate": 1697874823826,
+        "tmdate": 1699637137490,
+        "mdate": 1699637137490,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "tpOkjYR7yc",
+        "forum": "E296x0YpML",
+        "replyto": "E296x0YpML",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_9Kvp"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_9Kvp"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a lightweight and attack-agnostic defense method to against query-based black-box attacks called AdvFooler. AdvFooler accomplishes this by introducing randomization to the latent input representation during inference.  The advantage of Advfooler is that it does not need additional computational overhead during training nor relies on assumptions about the potential adversarial perturbation set."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Compared with other defense methods, the proposed method AdvFooler is simple, pluggable and does not require additional computational overhead during testing or access to training.\n2. The authors conducted comprehensive experiments to assess the effectiveness of AdvFooler, employing two BERT models, two distinct datasets, and three different attack methods. Furthermore, they provided qualitative analyses of their results."
+            },
+            "weaknesses": {
+                "value": "1. Despite its advantages in terms of simple implementation and minimal computational overhead, AdvFooler's performance falls short of the state-of-the-art. In Table 2, on the AGNEWS dataset, AdvFooler exhibits lower accuracy under attack compared to RanMASK for the BERT-base model, and it also demonstrates lower accuracy under attack than both TMD and RanMASK for the RoBERTa-base model.\n\n2. The selection of the hyper-parameter for noise scale in AdvFooler is not entirely clear. The authors claim that they choose the \u03bd value based on the criterion that the clean accuracy drops by at most 1% using the test set. However, it seems not the case in Table 2 and 3. In Figure 4, the curves of AuA are not monotone. Do authors also consider AuA values when choosing noise scale?"
+            },
+            "questions": {
+                "value": "Instead of adding noises to all layers by the same noise scale, what would the results be if adding different noise scale to different layers?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9033/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9033/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission9033/Reviewer_9Kvp"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9033/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698834806669,
+        "cdate": 1698834806669,
+        "tmdate": 1699637137386,
+        "mdate": 1699637137386,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "EtDtC1WTsD",
+        "forum": "E296x0YpML",
+        "replyto": "E296x0YpML",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_UMzy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission9033/Reviewer_UMzy"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors observe that adding noise to hidden layers can result in obscuring identification of important words in a sentence, a crucial step needed for launching attacks. They evaluate their proposal and highlight efficacy."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Low cost defense."
+            },
+            "weaknesses": {
+                "value": "1. Does not perform better than prior works.\n2. Similar in ideology to DP."
+            },
+            "questions": {
+                "value": "1. Could the authors compare and contrast their approach to applying DP-style noise to the embeddings generated by the hidden layer?\n2. Results from Table 2 suggest that their approach is not the very best compared to other approaches. What are the merits of the proposal then? Apart from reduced computational overheads?\n3. The authors empirically note that adding small amounts of noise to the logins does not change the prediction. But this is not fundamental nor clear why this is the case. Could the authors elaborate?\n4. Why can\u2019t the adversary utilize a proxy model to launch its attacks instead of the current black-box setup i.e., use the proxy model and attention values to identify important words?\n5. Alternatively, the adversary could also replace subsets of words using brute force. For small spans of text (as considered in the evaluation), this is not computationally prohibitive. Could the authors elaborate further the specific scenarios where important word selection inhibition is prudent?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission9033/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699326512346,
+        "cdate": 1699326512346,
+        "tmdate": 1699637137246,
+        "mdate": 1699637137246,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

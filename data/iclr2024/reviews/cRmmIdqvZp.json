@@ -1,0 +1,214 @@
+[
+    {
+        "id": "VIdEN37k0R",
+        "forum": "cRmmIdqvZp",
+        "replyto": "cRmmIdqvZp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_ZCpy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_ZCpy"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses the challenge of uncovering explanatory factors of user preferences by aligning behavioral data with side information from textual descriptions modality. The work tackles the complex problem of aligning user interest factors from unsupervised modalities. It introduces a novel approach called BANDVAE, treating discovered interest factors as discrete probability masses and formulating their alignment as an optimal transport problem. The alignment probability not only serves as prior information but also is used to fuse interest factors through a barycentric strategy, thus transferring knowledge about user preferences between the mutually disentangled modalities. \n\nThe text is well-structured and easy to read. The theory behind the proposed approach is presented clearly and coherently. The overall solution looks interesting and novel. Authors provide a comprehensive experimental verification on several benchmark datasets. The research has the potential to advance the understanding of user preference factors and their transfer between related modalities. However, I have several issues with the conceptualization of the problem solved by the authors and several related questions, which are provided below.\n\n**Update**. The responses from the authors provide additional valuable context. However, the issue with obscuring a standard hybrid recommender system behind the multi-modality concept remains unresolved. The claim on the superiority of hybrid recommender systems over the standard collaborative filtering models does not have sufficient evidence, the authors overstate the importance of side features, which leads to incomplete experiments and testing scenarios (e.g., cold start). While I do see novelty and originality in the proposed approach, I'm lowering my vote for this paper after carefully reading the responses. The work should be properly positioned in the landscape of hybrid methods and provide better experimental evidence of the superiority over both hybrid methods and strong non-hybrid collaborative filtering approaches (for example, EASEr model, a linear shallow autoencoder by Harald Steck)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- a novel alignment strategy to extract and fuse knowledge about various aspects of user preferences with barycentric strategy\n- solid mathematical foundation for the solution\n- rich experimental base that provides a detailed look at the performance of the proposed approach"
+            },
+            "weaknesses": {
+                "value": "- the work implicitly relies on the assumption of the relatedness between behavioral data and side information, which in general is not supported by prior empirical evidence\n- the work is focused on a specific type of side information - textual description, which limits its generality\n- in important testing scenario related to cold-start settings is missing"
+            },
+            "questions": {
+                "value": "### **Main concerns**\nIn many places in the text, there's an implicit assumption that modalities are mutually related, e.g., \"transfer knowledge between interest factors from mutually related modalities\". This assumption may not be true in practice, i.e., modalities may be \"non-alignable\". It is especially true for side information, i.e., static descriptive features and attributes of users and items. The authors state that \"side information could complement those mined from user consumption behaviors\". So, the work implicitly assumes that ratings are not expressive enough. The verification of that requires very rigorous study. In the general case, focusing on side features mostly leads to the so-called overspecialization, meaning that side features are not descriptive enough to provide any additional knowledge on top of what's hidden in the behavioral data and can only limit the expressivity of models, not improve it. See, for example, a classical study on the \"even few ratings are more valuable than metadata\" effect by [Pil\u00e1szy and Tikk 2009].  The exception is the cold-start scenario, where no preferences are provided and only side features are present, which apparently requires a mapping between collaborative and side information spaces. Application of hybrid models (which the proposed approach also belongs to) is logical in this scenario. Unfortunately, the authors do not provide any experimental results related to that scenario and only test their approach against the standard collaborative filtering task, which greatly limits the understanding of the utility of their approach.\n\nI have some concerns about the interpretation part of the work as well. A common observation that the more interpretable the model is, the lower its quality. This observation is also confirmed in the current work, where the authors say that smaller $\\epsilon$ that favor interpretability leads to worse recommendations. This is also in line with the aforementioned overspecialization remark. On the other hand, the proposed architecture still puts a lot of focus on interpretability. For example, according to the authors, \"turning off effect of $\\mathcal{L}^t_u$ hurts recommendation accuracy, showing its benefit.\" This claim is not directly supported by empirical evidence. The results provided to support this claim show no statistical significance. The visible improvement may be simply due to overfitting to specific factor (like popular words) or some other training/data-splitting artifacts that lead occasionally higher values because the model is sensitive to those factors. I also miss the confidence intervals for these data. \n\nIn addition to that, no comparison is made with simpler modes, i.e. Factorization Machines (FM) by [Rendle 2010]. The adherence between items and features, which is used by the authors to highlight interpretability, can be analyzed via inner products of the item and feature vectors learned by FM. So, the interpretability aspect cannot be considered novel here, although, the approach to obtain representations to be analyzed is different. Overall, the utility of the interpretation part of the architecture (text decoder) is not convincing from the empirical perspective and underscoring its importance generally contradicts common observations. It seems that the model learns just fine without it. Maybe there would be a difference in the cold-start scenario, but no empirical results are provided for this case.\n\nThe text also suffers from excessive generalization of the results and conclusions, starting even from the title of the paper. The title is too general, and the promise of the title doesn't correspond to the provided results. Only textual factors are considered in the work, which is not the general case of arbitrary modalities. No other features were considered. User features are also out of context. I'd suggest reformulating the title and changing the text in the introduction and conclusion accordingly to better reflect the limitations of the work and its applicability.\n\nMoreover, there's already the term for the type of models that mix behavioral and side information - \"hybrid models\" (such as FM,  HybridSVD [Frolov and Oseledets 2019], or \"hybrid\" EASEr [Jeunen at el. 2020]). A clear connection must be made to this family of models, as the term \"modalities\" is not used there while the same general task is being solved.\n\n### **Other issues**\n- Figure 1 lacks notation, adding and denoting the different weight matrices on the provided scheme would help to better understand the approach.  \n\n- $(r^{uy}_k , o^{uy}_k )$\u00a0- \u00a0the notation is not clear, is it a concatenation?  \n\n- Movielens dataset is described as: 15,000 users; 7,892 items; 1,005,820 interactions; 8,000 words.\u00a0 There are multiple Movielens datasets, which one exactly is used? It doesn't match the dimensions of the standard Movielens-1M dataset.  Also, having a dedicated table with dataset statistics would improve the methodological part of the work.\n\n- Only one training epoch\u00a0is analyzed in terms of computational efficiency. This information is not sufficient. How many epochs are required to train an optimal model in each case? More substantial analysis is required. A comparison with simpler models that do not use side features is also required. The marginal gains of using side features may not be worth the increased computational demands.\n\n### **References**\nPil\u00e1szy, I. and Tikk, D., 2009. Recommending new movies: even a few ratings are more valuable than metadata. In\u00a0_Proceedings of the third ACM conference on Recommender systems_\u00a0(pp. 93-100).\n\nRendle, S., 2010, December. Factorization machines. In\u00a0_2010 IEEE International conference on data mining_\u00a0(pp. 995-1000). IEEE.\n\nFrolov, E. and Oseledets, I., 2019, September. HybridSVD: when collaborative information is not enough. In\u00a0_Proceedings of the 13th ACM conference on recommender systems_\u00a0(pp. 331-339).\n\nJeunen, O., Van Balen, J. and Goethals, B., 2020, September. Closed-form models for collaborative filtering with side-information. In\u00a0_Proceedings of the 14th ACM Conference on Recommender Systems_\u00a0(pp. 651-656)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4971/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4971/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4971/Reviewer_ZCpy"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4971/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698762610416,
+        "cdate": 1698762610416,
+        "tmdate": 1700776198804,
+        "mdate": 1700776198804,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "nLEWAiPj40",
+        "forum": "cRmmIdqvZp",
+        "replyto": "cRmmIdqvZp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_Mi6r"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_Mi6r"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a method to disentangle and align interest factors across modalities for recommendation. The model is named BandVAE, short for Barycentric Alignment of Mutually Disentangled Modalities with Variational AutoEncoder. First, the specific interest factors from two modalities (i.e., ratings and textual descriptions of items) are uncovered. Second, as such factors are regarded as supporting points of two discrete measures, the authors perform their alignment by means of optimal transportation (OT). Third, two approaches are proposed for the knowledge transfer problem, namely: 1) a regulariser term is added to the loss function to guide alignment, and 2) barycentric mapping is adopted to map ratings to the textual content of items and vice versa, while the two signals are reconstructed through a decoder to allow the knowledge transfer across the two modalities. The proposed approach is tested on three popular recommendation datasets against seven VAE-like recommendation models from the literature, demonstrating the efficacy of the BandVAE solution. Finally, several ablation studies and hyper-parameter value analyses, along with an interpretability assessment of the model, further motivate the goodness of BandVAE."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+ Using optimal transportation in the case of mutual alignment of modalities for recommendation is relatively new in the field.\n+ The formalization of the method is adequately sound.\n+ The authors release the code at review time in the supplementary materials.\n+ The experimental setting is extensive with several evaluation dimensions.\n+ The interpretability analysis is quite helpful to further justify the efficacy of the approach."
+            },
+            "weaknesses": {
+                "value": "- Ratings are not usually regarded as one modality in recommendation.\n- With reference to Table 1, it seems that the improvement over the tested baselines is not sufficiently large to justify the efficacy of the proposed approach; the authors may provide additional results (if any) to effectively test BandVAE\u2019s performance against the other baselines.\n\n**After rebuttal.** All concerns have been addressed by the authors in the rebuttal."
+            },
+            "questions": {
+                "value": "* Why did the authors decide to adopt ratings as one of the modalities involved in recommendation? A common approach in recommendation leveraging multimodalities is to exploit visual and textual features of product images, which might represent an interesting direction to follow.\n* Can the authors provide justifications for the not-so-high improvement with respect to the tested baselines in Table 1?\n\n**After rebuttal.** All concerns have been addressed by the authors in the rebuttal."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4971/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4971/Reviewer_Mi6r",
+                    "ICLR.cc/2024/Conference/Submission4971/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4971/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699259191174,
+        "cdate": 1699259191174,
+        "tmdate": 1700502459626,
+        "mdate": 1700502459626,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "B6lecYhedC",
+        "forum": "cRmmIdqvZp",
+        "replyto": "cRmmIdqvZp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_esB1"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4971/Reviewer_esB1"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, the authors study the problem of aligning factors from disentangled modalities and ideate a novel method which aligns disentangled factors via a transfer knowledge method through guided regularization and barycentric mapping."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "One of the strengths of this paper is that it addresses a very challenging problem. User signals/rating maps are very sparse and it often helps to mine other data modalities and then relate the two to get some relevant recommendations out of it."
+            },
+            "weaknesses": {
+                "value": "Lacking some real-world applications of this approach."
+            },
+            "questions": {
+                "value": "None"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4971/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699259196033,
+        "cdate": 1699259196033,
+        "tmdate": 1699636484167,
+        "mdate": 1699636484167,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,197 @@
+[
+    {
+        "id": "yYfMxEQhNr",
+        "forum": "VuCRpguZOr",
+        "replyto": "VuCRpguZOr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_jkcF"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_jkcF"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce a new model for self-supervised learning of contrastive representations on graphs. The latter focuses on instance-level discrimination as a recent model based on Canonical Correlation Analysis (CCA-SSG), which has been shown to avoid several problems of previous contrastive learning methods, such as sample augmentation efficiency and dimension collapse. Instead, the authors base their analysis on mutual information (MI) under Gaussian assumptions that benefit from closed-form solutions that avoid complex estimators of MI as is often the case in this literature. Thus, they introduce a first contrastive learning approach for Gaussian MI and two other variants to overcome some computational limitations. They then explicit certain theoretical links with the CCA-SSG model. Finally, they conclude with a benchmark of SSL methods for node classification tasks and several ablation studies that show the competitiveness of their methods."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "-\tOverall the paper is well-written, the methods and results are clearly presented.\n-\tPropose several new models with different contrastive loss functions: i) a Gaussian Mutual Information (IG) loss that depends on determinant of covariance matrices over augmented views \u2013 ii) A transformed IG loss (GMIM) that adds an offset and scaling to these covariance matrices to overcome stability issues of IG as determinants converge to zero when seeking for decorrelated dimensions \u2013 iii) GMIM-IC which results from a reformulation of GMIM via conditional entropies further assumed to reduce to the identity.\n-\tAuthors evaluate their approach by learning node embeddings using GMIM in an unsupervised setting. Then evaluate their embeddings in a supervised way on node-classification tasks using logistic regressions. In this framework, GMIM and GMIM-IC performances compete or outperform over SSL approaches.\n-\tConduct several additional analysis of interest : (main paper) effect of representation dimension, balancing coefficients for GMIM-IC, cumulated losses synergy and (supplementary) feature and edge removal probabilities."
+            },
+            "weaknesses": {
+                "value": "**Overall appreciation**:  The empirical and theoretical analysis is clearly a continuation of previous work. The main contributions seem to be ways of stabilizing the learning of these models by introducing certain biases. This is clearly necessary for more advanced reflections in the future. However, as it stands, these considerations seem to me to be under-exploited and would greatly benefit from the introduction of several current reflections on the GNN literature.\n\n1.\t**Redundant theoretical analysis**: The theoretical contributions seem rather straight-forward as most can be found or deduced from other papers without these being clearly mentioned.\n-    a)\tMutual Information between multivariate Gaussians is already well-studied and can be found in several classical books of Information Theory & Statistics. As it clearly connects with closed-form solutions for the KL divergence e.g [A], [B] and references therein.\n-    b)\tThe relations and differences to the CorInfoMax paper should be clearly stated in terms of (theoretical) design to provide a more comprehensive overview of MI variants. As indeed CorInfoMax relies on log-determinant MI (LDMI) which directly connects with the entropy of gaussian distributions. Differences with GMIM mostly lie in the way to handle instability with different offset and scaling techniques. Note that some theoretical analysis of LDMI-based papers also overlap with some results in the paper.\n-    c)\tAnalysis of IG-based solutions clearly connect with the information theory point of view of CCA-SSG already developed in this paper.\n\n2.\t**Missing points in the experiments**:\n   - a)\tThere are no clear descriptions of the architectures, validated hyperparameters / best configurations reported in Table 1. This prevents us from accessing the fairness of these benchmarks. Please could you provide those ?\n   - b)\tGains in terms of performances seem rather marginal CCA-SSG. As briefly mentioned in the conclusion, it would have been relevant to explore different prior distributions.\n   - c)\tlack of clarity or hindsight w.r.t the evaluation : No clear justifications for the choice of supervised evaluation. No experiments in semi-supervised settings. No fully unsupervised evaluations, e.g using KL-based clustering methods such as KL-quantization methods.\n   - d)\tNo sensitivity analysis w.r.t the encoder, I guess a GNN backbone. Nor a clear comparison between performances of this GNN backbone in a fully supervised setting vs the 2-step strategy used by authors to evaluate GMIM embeddings. Such analysis could relate to the common concerns in the GNN literature e.g i) expressivity simply considering e.g several GNN layers using Jumping Knowledge based backbones; ii) homophily vs heterophily via e.g [C] whose supervised models exhibit much higher classification performances than those reported in Table 1.\n   - e)\tIncomplete or arguable analysis of the results.\n\n[A] Bouhlel, N., & Dziri, A. (2019). Kullback\u2013Leibler divergence between multivariate generalized gaussian distributions. IEEE Signal Processing Letters, 26(7), 1021-1025.\n\n[B] Zhang, Y., Liu, W., Chen, Z., Wang, J., & Li, K. (2021). On the Properties of Kullback-Leibler Divergence Between Multivariate Gaussian Distributions. arXiv.\n\n[C] Luan, Sitao, et al. \"Revisiting heterophily for graph neural networks.\" Advances in neural information processing systems35 (2022): 1362-1375."
+            },
+            "questions": {
+                "value": "I invite the authors to discuss the weaknesses I have mentioned above and to provide additional results/analyses for refutation, so that I can eventually increase my score. Follows some questions to clarify some points.\n\n**Q1.** In my opinion the analysis of the dynamics w.r.t the embedding dimension is really biased by the choice of linear classifier that is used in the paper (and other papers). From my understanding, the \u201cmacro\u201d-dynamics are the following: It is expected that in small dimensions, the embeddings have a highly non-linear geometry. Whereas the latter tends to be more linear as the dimension grows. So the linear classifier would better suit these settings but it does not mean that embeddings are more informative. Moreover, every statistical tools involved e.g empirical covariance matrices would be poorer estimates of true covariance matrices (cf classical concentration inequalities) given a fixed number of nodes while increasing the dimension. So could you \n\n-\ti) further justify this choice of linear classifier\n-\tIi) provide evaluations with a non-linear classifier e.g 2-MLP with ReLU activation ?\n-\tiii) complete figure 2 with the other benchmarked datasets and check if there are correlations with their statistics provided in Table 4 ?\n\n**Q2.** I am not convinced by conclusions and analysis regarding the non-gaussian behaviour of components in the embedding, and believe that it is mostly a bias that comes from the GNN backbone.\n\n-    i ) Could you detail experiments that correspond to Figure 6 ?\n-    ii) Could you also check via hypothesis testing the evolution of the gaussian behaviour w.r.t the embedding dimensions ?\n\n**Q3.** Isotropic gaussian distributions are probably the best ones to promote uniformity in the embedding space so it does not seem so obvious that other prior distributions would perform better. Could you further discuss this point ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3023/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698273370245,
+        "cdate": 1698273370245,
+        "tmdate": 1699636247093,
+        "mdate": 1699636247093,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "b1MNqwBqX6",
+        "forum": "VuCRpguZOr",
+        "replyto": "VuCRpguZOr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_r9Qc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_r9Qc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents Gaussian Mutual Information (GMI) as a computationally tractable surrogate for mutual information in graph contrastive learning. GMI eliminates the need for additional parameters and improves computational efficiency compared to conventional methods. The authors also highlight the connection between contrastive-based and decorrelation-based SSL methods, bridging the gap between the two research areas. Extensive experiments and empirical evidence support the effectiveness and efficiency of GMI."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and easy to understand the findings.\n2. The authors present complete and accurate derivation process of GMI based on the commonly used Gaussian assumption for node representation. Also, the relationship between the proposed GMI and other types of SSL (decorrelation-based, infoNCE) are clearly illustrated.\n3. Extensive experiments are conducted while demonstrating the effectiveness of proposed GMI, especially, the efficiency comparison is surprisingly, both of the training time and memory cost are significantly decrease with the usage of GMI."
+            },
+            "weaknesses": {
+                "value": "1. The main contribution of this paper is the finding of tractable surrogate for maximizing mutual information under the Gaussian assumption, resulting in an efficient SSL method. The proposed method demonstrates effectiveness and efficiency on datasets that adhere to or approximate a Gaussian distribution. Although the author mentions that the method maintains performance under non-Gaussian conditions, this claim is based on datasets that did not pass the hypothesis testing for Gaussian distribution. While Fig. 6 shows some similarity between the dataset distribution and Gaussian distribution, the slight disparity is unlikely to significantly impact model performance. Thus, this claim might be over-sell, additional evidence with alternative datasets would be valuable.\n\n2. The results in Table 2 demonstrate a notable enhancement in the efficiency of the proposed method. The author attributes this improvement to the reduced computational cost of mutual information estimators. However, there seems to be a similarity in the calculation process between infoNCE and the proposed GMI outlined in Algorithm 3. Therefore, it is necessary to provide further clarification on the underlying reason for the efficiency difference between the two methods. Additional explanation would be beneficial in addressing this question.\n\n3. Given that the objective of SSL methods is to acquire a discriminative and robust representation, it is important to include visualizations of the learned representations and conduct comparisons. Additionally, it is crucial to further investigate whether the generalization performance of the representation is influenced by the Gaussian assumption. These aspects require additional verification to provide a comprehensive evaluation of the proposed method."
+            },
+            "questions": {
+                "value": "Please refer to weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3023/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698627519710,
+        "cdate": 1698627519710,
+        "tmdate": 1699636247012,
+        "mdate": 1699636247012,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "L6f39X7xIx",
+        "forum": "VuCRpguZOr",
+        "replyto": "VuCRpguZOr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_qTvu"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3023/Reviewer_qTvu"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper discussed self-supervised learning based on two views of data on graphs using decorrelation of the embedding dimensions to avoid collapse. The decorrelation is motivated under a Gaussian assumption of node embedding (but no Gaussian prior is actually imposed). The specific objective focuses on the log determinant form of entropy and maximizes this entropy with the self-supervised penalty that two augmented views of the same data should have similar views. This form is shown to correspond to information maximization.  Besides these results, empirical evidence highlighting the superiority of the method over other methods including directly supervised on a number of standard node classification problems for data on graphs (publication graphs, etc.)."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The methods in the paper have a sound basis and are logical (the Gaussian assumption approach seems well-motivated, since the embedding network is being learned). The paper is mostly clear, and most formulations are clearly stated mathematically. The self-supervised learning is still of significant interest to the community. The reported results are consistently better.  The results in the appendix show a variety of tests that verify the quality of the method."
+            },
+            "weaknesses": {
+                "value": "**Clarity of context**\nThe paper is not clear on the graph context. Although many references to related work, the formulation of the problem in graph terms is missing. At the same time it is not clear why the paper should be limited in scope to graph data. While the structure of graph data is interesting, the data itself at nodes may be simpler than data say from images? I don't see a strong reason to limit the scope to data on nodes with graph now. In any case, it should be stated clearly upfront, but until the contributions (bottom of page 2) the setting of graphs is not clear. The reader is left to ponder if this data on graphs, are the nodes the data, or is the graph the data?  Even at the end of the introduction, it is not exactly clear what is envisioned. It is not until experiments that the graph convolutional network (GCN) is mentioned.  At the end of section 3.1 it should be stated the domain, range, and operation of $f_\\theta$ as a graph convolutional encoder. \n\n**More discussion of uncorrelated Gaussians in auto-encoders, blind source separation, etc.**\nThe Gaussian assumption approach seems well motivated since it is not about the data, but rather about the embedding of data. Yet, I was expecting to see more references to non-linear independent component analysis and disentanglement methods for the latent space of auto-encoders as in beta-VAE. Foundational references to decorrelation methods for independent component analysis could also be mentioned.  \n\nThe derivation of mutual information for Gaussians is not novel and is well-known. The statement that this is a contribution (and a proposition that requires a proof) is misleading. \n\n**Organization of results in not straightforward**\nProperty 2 is a statement of PCA, I'm not sure I understand the reasoning of \"Property 2 potentially suggests that the unevenness of the eigenvalues of the covariance matrix leads to the issue of dimensional collapse.\" Theorem 1 is talking about an empirical version but could be combined with Proposition 2. It seems easier to say that maximizing the determinant ensures maximum entropy and isotropic covariance. \n\n**Major concerns**\nConcern 1).  It is not clear why the method is not directly compared with the work by Ozsoy et al. in the main body. As this work mentions in an appendix, this work already developed decorrelation-based self-supervision and has a similar objective.  \n\n[2]Ozsoy, Serdar, Shadi Hamdan, Sercan Arik, Deniz Yuret, and Alper Erdogan. \"Self-supervised learning with an information maximization criterion.\" Advances in Neural Information Processing Systems 35 (2022): 35240-35253.\n\nConcern 2: rigorous\u00a0and fair comparison for hyper-parameters ) \nHow are hyper-parameter searched? What are the details of the linear classifier, as many are possible, i.e., regularization or penalty hyper-parameters and how are these selected? To be truly self-supervised a validation set would not be available.  Is it a grid search on dimension and trade-off parameter?  The augmentation intensities $p_f$ and $p_e$ have to be selected and the results in Figure 10 show that these also have a large effect. Notably, the variation across hyper-parameters seems greater than the performance gains of the proposed methodology. CCA-SSG outperforms GMIM and GMIM-IC (with a hyper-parameter) outperforms CCA-SSG. \n\nAre competing baselines using defaults or do they also enjoy a hyper-parameter search? It is not clear if the hyper-parameter search is fair: \"to get relevant results based on the officially released source code. \" This does not clarify if hyper-parameter selection is used for all methods. \n\n**Minor points:** \nDefinition 1 should be specific that the densities are required (not the distribution as stated).  \n\nThe discussion of Proposition 3 about distributions on hyper-spheres can be related to Gaussian distribution [1].\n[1] Davidson, Tim R., Luca Falorsi, Nicola De Cao, Thomas Kipf, and Jakub M. Tomczak. \"Hyperspherical variational auto-encoders.\" In 34th Conference on Uncertainty in Artificial Intelligence 2018, UAI 2018, pp. 856-865. Association For Uncertainty in Artificial Intelligence (AUAI), 2018.\n\n'obey a potential Gaussian distribution' -> 'obey a Gaussian distribution' \n\nPage 1 not clear what is meant by \"specific equipment\" \n\nPage 2\"decorrecting differences\" \n\n\"Imposing cross-view identity constraint\" -> \"Imposing a cross-view identity constraint\"\nI'm not sure what \"as a pivot to elucidate\" means. \n\nPage 5 \"Th\" in between equations 4 and 5. \n\nAfter equation (7), \"still stands up\" is too informal. The point is a similar relation holds for $B$. \n\nPage 7 \"guilds the model\" -> \"guides the model\" \n\nNitpick : trace can be denoted in Roman font $\\mathrm{tr}$ instead of italics just like $\\ln$ and $\\det$."
+            },
+            "questions": {
+                "value": "Please see questions above regarding comparison to previous work and hyper-parameter search."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3023/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698769367525,
+        "cdate": 1698769367525,
+        "tmdate": 1699636246899,
+        "mdate": 1699636246899,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

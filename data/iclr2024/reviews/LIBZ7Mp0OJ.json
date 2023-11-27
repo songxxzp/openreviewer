@@ -1,0 +1,271 @@
+[
+    {
+        "id": "UzJnJqTlVO",
+        "forum": "LIBZ7Mp0OJ",
+        "replyto": "LIBZ7Mp0OJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_RKvV"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_RKvV"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this manuscript, the authors propose and present a many-objective optimization approach to fair ML, where models are optimized simultaneously for a standard performance metric (F1 score) as well as multiple fairness-motivated metrics. Standard tools from many-objective optimization are used (NSGA-III, an evolutionary algorithm) to solve the optimization problem, and the multi-dimensional fairness-accuracy Pareto frontiers resulting from the specified hyperparameter search space are analyzed.\n\nThroughout the manuscript, particular emphasis is placed on incompatibilities between different fairness metric: are two metrics indeed conflicting, and if yes, how strongly? The authors propose a way to quantify the strength of the association between two metrics in terms of Pareto set hypervolume contrasts.\n\nThe authors apply their method to three different model structures - XGBoost, Random Forests, and shallow MLPs - on five standard (tabular) algorithmic fairness datasets. They show a range of visualizations of the Pareto frontiers as well as the conflicts (or compatibilities) between all optimization objectives. They conclude with a call for multi-objective optimization-based exploration of potentially conflicting fairness objectives as a standard analysis step in fair ML."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper is very well written and easy to follow. \n\nThe idea is simple, intuitive, and widely applicable, and the visualizations are very helpful in understanding the extent of practical conflicts between different fairness objectives. \n\nThe case studies, while limited to tabular data and rather low-dimensional models, showcase the broad applicability of the proposed method.\n\nStandard methodology is used throughout, and I would expect the results to be relatively simple to reproduce."
+            },
+            "weaknesses": {
+                "value": "## Many-objective optimization as the solution to fairness metric conflicts\nI am generally very receptive to the idea of using MOO in fairML, both for interactive exploration and visualization of trade-offs, as well as for training and selecting the final model. I am, however, concerned about the broader framing adopted in the paper.\n\nThe manuscript begins by acknowledging the well-known fairness impossibility theorems. The authors then proceed to make statements such as:\n- \"We open the door to further socio-technical research on effectively combining the complementary benefits of different notions of fairness\"\n- \"Rather than resisting these criticisms, we embrace them, agreeing that FairML approaches that over-simplify the complex and socio-technical nature of the FairML problem actually risk doing more social harm than good.\"\n- \"It is essential to recognize and treat fairness metrics as potentially conflicting objectives.\"\n\nThe authors then proceed to take a more or less arbitrary selection of fairness metrics and apply them indiscriminately to five different datasets.\n\nHowever, I would contest that this is the right approach to dealing with these impossibility statements (of which there are less than is often believed*). There is a reason why, for instance, demographic parity and equalized odds are fundamentally incompatible: *they are asking for completely different things*. They are also applicable (=usually considered ethically desirable) in completely different scenarios. There are no \"complementary benefits\" of enforcing these simultaneously; I cannot think of a real situation where one would want a little bit of both. Enforcing statistical parity in a medical scenario will give you a classifier that predicts breast cancer on 50% of men and 50% of women, even though women have a much higher disease incidence, and provide no benefit at all.\n\nThe way to address incompatibility results is, in my opinion, not to mash all of them together and hope that the resulting model will be somewhat \"fair\" according to all metrics; it is to understand and reflect on the *reasons* why certain metrics are incompatible, and to deliberate with stakeholders and practitioners which fairness conception would appear to be the right one for a given application scenario.\n\nWith all that said, I still believe that MOO can be a very useful tool! I can certainly imagine it being very useful for interactive explorations of various trade-offs between multiple metrics that have been selected as indeed desirable in a certain application. I would, however, suggest that the authors place more emphasis on *understanding* the different fairness metrics, and actively deciding on the appropriate ones for a given application, before embarking on fully-automated many-objective optimization of all of them simultaneously. \n\nIn this regard, I would also suggest choosing a more realistic combination of fairness metrics for the application scenarios, or at least a cursory justification of the ones selected here. (Also note in this regard that DEOP is a subset of DEOD, and selecting both of them as simultaneous but separate optimization objective appears a bit odd.)\n\nMany of the experimental results might also make more sense if interpreted based on knowledge about what these metrics mean. For instance, the harms caused by enforcing statistical parity depend on the magnitude of the prevalence differences between the different groups in the dataset (Zhao and Gordon, 2022). This might explain some of the differences observed between the five datasets, such as in Fig. 2. (The group-stratified prevalences are currently not given in the manuscript, so this is hard to assess right now.) Similarly, it might be expected that DDSP and INVD do not seem to be in conflict, since they probably optimize for something very similar. (I could not figure out what exactly INVD does - what is \"m\" in table 2 in the appendix, and what are the sets being summed over?)\n\n*Equalized odds and calibration by groups and AUROC fairness are all compatible in principle, see e.g. Lazar Reich and Vijaykumar (2020) or Petersen et al. (2023). They are all at odds with statistical parity, which simply does not make any sense in any predictive scenario and is fully incompatible with any predictive performance-based fairness notion (Zhao and Gordon, 2022). They are also in conflict with PPV/NPV equality, which simply does not make sense to ask for in the case of prevalence differences. For a predictive performance fairness setting, I am not aware of any meaningful fundamental impossibility statements between different actually desirable fairness metrics.\n\n## Prior work and significance of contributions\nFairness-related trade-offs and Pareto frontiers have already received significant attention in the literature; cf., e.g., Cooper et al. (2021), Islam et al. (2021), Martinez et al. (2020),  Rodolfa et al. (2021), Wei and Niethammer (2021), Yu et al. (2020).\n\nWhat does the present study contribute to this already quite large body of literature? I would venture to say: a useful, practical tool, as well as appropriate metrics, for exploring such trade-offs in a given dataset. That is most certainly a useful contribution (even though probably limited to rather small and simple cases with low-dimensional models?), but then I would recommend discussing this prior work more extensively, and clarifying the contributions of the present manuscript in this regard.\n\nFinally, I am not entirely certain about the topical fit of this piece for ICLR, seeing that the manuscript is not at all focused on representation learning. (Fairness constraints will, of course, affect the learned representations. However, these learned representations are also not assessed in any way in the study, and, again, only low-dimensional, tabular case studies are considered.)\n\n## References\n- Cooper et al. (2021), Emergent Unfairness in Algorithmic Fairness-Accuracy Trade-Off Research, https://dl.acm.org/doi/abs/10.1145/3461702.3462519\n- Islam et al. (2021), Can we obtain fairness for free?, https://dl.acm.org/doi/abs/10.1145/3461702.3462614\n- Lazar Reich and Vijaykumar (2020), A Possibility in Algorithmic Fairness: Can Calibration and Equal Error Rates Be Reconciled?, https://drops.dagstuhl.de/opus/volltexte/2021/13872\n- Martinez et al. (2020), Minimax Pareto Fairness: A Multi Objective Perspective, http://proceedings.mlr.press/v119/martinez20a.html\n- Petersen et al. (2023), On (assessing) the fairness of risk score models, https://arxiv.org/pdf/2302.08851.pdf\n- Rodolfa et al. (2021), Empirical observation of negligible fairness\u2013accuracy trade-offs in machine learning for public policy, https://www.nature.com/articles/s42256-021-00396-x\n- Wei and Niethammer (2021), The fairness-accuracy Pareto front https://onlinelibrary.wiley.com/doi/full/10.1002/sam.11560\n- Yu et al. (2020), Keeping Designers in the Loop: Communicating Inherent Algorithmic Trade-offs Across Multiple Objectives, https://doi.org/10.1145/3357236.3395528\n- Zhao and Gordon (2022), Inherent Tradeoffs in Learning Fair Representations, https://jmlr.org/papers/volume23/21-1427/21-1427.pdf"
+            },
+            "questions": {
+                "value": "--"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1191/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1191/Reviewer_RKvV",
+                    "ICLR.cc/2024/Conference/Submission1191/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1191/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698767441639,
+        "cdate": 1698767441639,
+        "tmdate": 1700662996153,
+        "mdate": 1700662996153,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Nbojc2LTQB",
+        "forum": "LIBZ7Mp0OJ",
+        "replyto": "LIBZ7Mp0OJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_k3oE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_k3oE"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the trade-offs among different fairness objectives in fair machine learning. Motivated by the well-known impossibility results among fairness metrics in fair ML, the authors adopted a many-objective optimization (MaO) perspective to formulate the problem of ML with multiple fairness objectives. Their main result included a ManyFairHPO framework that enables model designers to specify multiple fairness objectives, and utilizes hyperparamter optimization to select a ML model attaining desirable trade-offs among the specified objectives. On several datasets, the authors first provided new empirical evidence for the necessary trade-offs among fairness metrics in ML, then applied the ManyFairHPO framework to simultaneously consider multiple fairness metrics in the ML model. They argued that their framework is effective at reaching a superior fairness balance compared to the conventional approach of ML with a single fairness metric."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper provided a systematic approach for understanding and mitigating the potential conflicts among multiple fairness objectives. The \u2018Contrast\u2019 measure gives a convenient way to visualize the differences between the fairness-accuracy trade-offs under different fairness requirement. The experiment considered a broad set of datasets and ML models. In addition, the proposed framework is compatible with existing ML tool (scikit-learn) and fair ML library (IBM aif360)."
+            },
+            "weaknesses": {
+                "value": "The problem of incorporating multiple fairness objectives is well recognized in the fair ML community, and the adopted method based on multi-objective optimization is also conventional. When one wishes to consider multiple fairness goals, it is a natural attempt to apply multi-objective optimization methods to include all of them. Although there is certainly value in working on the technical details and running experiments to validate performance, I see limited novelty and depth in the proposed ManyFairHPO framework special and useful.   \n\nAnother concern is that using multiple fairness objectives makes the task of model interpretation and selection more difficult. The proposed framework can give more information about whether two fairness objectives are conflicting or not, but it is not as helpful for handling the more fundamental task of what combination of the candidate fairness objectives should be used. Since there are always trade-offs among different fairness goals, instead of trying to optimize all of them, one may wish to examine the more important goals and be more selective with which fairness definitions to include. The paper may benefit from highlighting the need for caution when applying the new framework."
+            },
+            "questions": {
+                "value": "1.\tThe experiments only considered the fair ML methods available from IBM aif360 library. To consider other fairness definitions or fair ML methods, how to achieve that with the proposed framework? \n\n2.\tWhat is the use of hyperparameter optimization in the ManyFairHPO framework? Are conventional approaches to hyperparameter tuning sufficient, or are special techniques requires to handle the new multi-objective setup?\n\n3.\tAre there practical evidence that decision makers will prefer to simultaneously optimize multiple types of fairness, rather than separately study each fairness definition and select the better one?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1191/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698788004861,
+        "cdate": 1698788004861,
+        "tmdate": 1699636045421,
+        "mdate": 1699636045421,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "1BMM1iww6Y",
+        "forum": "LIBZ7Mp0OJ",
+        "replyto": "LIBZ7Mp0OJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_XwAL"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_XwAL"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, the authors discuss challenges in Fairness-aware Machine Learning (FairML), highlighting that optimizing for a single fairness objective can lead to neglect of other important fairness criteria. To address this, the authors introduce ManyFairHPO, a new many-objective hyper-parameter optimization framework, aimed at balancing multiple fairness objectives and exploring various fairness-accuracy trade-offs. The results on five real-world datasets are present."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1.\tThe paper addresses the complexities of machine learning fairness by considering multiple, potentially conflicting notions of fairness.\n\n2.\t The authors have conducted extensive evaluations of their proposed framework across multiple real-world datasets. This comprehensive testing not only demonstrates the framework's versatility and adaptability to different contexts and applications but also adds credibility and robustness to the presented results.\n\n3.\tThe incorporation of visual representations effectively communicates the experimental results, making it easier for readers to comprehend the performance and benefits of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1.\tWhile the authors propose optimizing model fairness through the Pareto frontier and simultaneous measurement of multiple fairness indicators, they do not provide a theoretical demonstration of how trading off one fairness metric for another could lead to an overall improvement in model fairness. A deeper theoretical exploration in this area could strengthen the paper, offering clearer guidelines on how to navigate fairness trade-offs effectively.\n\n2.\tThe paper lacks theoretical analysis on how to select among different Pareto-optimal outcomes, especially when one fairness metric  is already at its optimal is one of the Pareto-optimal outcomes, i.e., there is no difference from a single optimization outcome. A theoretical framework or set of criteria for making these choices would be beneficial, providing practitioners with a robust method for decision-making in situations with multiple optimal fairness solutions.\n\n3.\tThe authors only use one performance to evaluate the model performance. In the context of FairML, where the applications are intricate and multifaceted, relying on a single performance metric may not sufficiently capture the model\u2019s overall performance and impact. A diverse set of performance metrics would provide a more holistic view, ensuring a balanced and thorough evaluation.\n\n4.\tIn the experimental section, the authors have not conducted comparisons with existing fairness algorithms. Integrating benchmark comparisons against state-of-the-art fairness algorithms would significantly enhance the paper. It would offer tangible evidence of the proposed method's performance and effectively position the ManyFairHPO framework within the existing FairML research landscape."
+            },
+            "questions": {
+                "value": "In the paper, the authors propose optimizing model fairness through the Pareto frontier by measuring multiple fairness indicators simultaneously. I appreciate it if the authors could provide more theoretical insights or guidelines on how trading off one fairness metric for another could lead to an overall improvement in model fairness? Specifically, how should practitioners approach situations where improving one aspect of fairness might lead to a decrease in another, and how can they ensure that these trade-offs result in a net positive impact on model fairness?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1191/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698813698409,
+        "cdate": 1698813698409,
+        "tmdate": 1699636045346,
+        "mdate": 1699636045346,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "U8WgcHINDi",
+        "forum": "LIBZ7Mp0OJ",
+        "replyto": "LIBZ7Mp0OJ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_bcZi"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1191/Reviewer_bcZi"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposed ManyFairHPO framework, a many-objective (MaO) hyper-parameter optimization (HPO) approach to study and balance the tradeoff between different fairness metrics."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and organized.\n2. The paper is well-motivated.\n3. Experiments are comprehensive."
+            },
+            "weaknesses": {
+                "value": "1. The biggest problem of the paper is the lack of novelty and technical contributions. The proposed ManyFairHPO does not show any technical improvement *adapted to fairness* compared to the prior work on multi-objective optimization or hyperparameter optimization. \n2. The authors mentioned constrained optimization (CO) approaches in the related work. However, such a baseline is missing in the empirical evaluation. It would be better to compare CO with MaO empirically and provide more insights into the pros and cons of both approaches."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1191/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698993370767,
+        "cdate": 1698993370767,
+        "tmdate": 1699636045267,
+        "mdate": 1699636045267,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

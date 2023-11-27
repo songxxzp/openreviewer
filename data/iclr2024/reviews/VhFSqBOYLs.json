@@ -1,0 +1,292 @@
+[
+    {
+        "id": "IhFBFjUbz0",
+        "forum": "VhFSqBOYLs",
+        "replyto": "VhFSqBOYLs",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_MUY9"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_MUY9"
+        ],
+        "content": {
+            "summary": {
+                "value": "NeuroSURF is a new method that takes posed depth images of an arbitrary static object as input and returns its SDF surface reconstruction. First, it computes mean and Gaussian curvatures of the backprojected depth in image space for each depth image. Then, the backprojected depth images/camera-space SDFs are merged in a coarse voxel grid. In addition, during merging, the curvatures are also merged and, as in a prior work on which the submission builds, each voxel also stores an uncertainty value and the gradient of the SDF. This voxel grid can then be very quickly queried to determine the curvature for arbitrary points via nearest-neighbor interpolation and uncertainty computation, which in turn allows to determine low-/middle-/high-curvature samples. Finally, these samples (positions, interpolated uncertainty, SDF gradient) are used to directly supervise a coordinate-based MLP that regresses SDF and uncertainty. I do not understand what happens afterwards. The main contribution/novelty lies in using curvature to guide the sampling and in using the uncertainty to mask out areas without supporting depth-image evidence during mesh extraction with Marching Cubes."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The uncertainty value can be used as a mask when extracting a mesh from the SDF field via Marching Cubes. This enables open surfaces. \n\n- The scheme can be swapped into other methods, for example IGR, to improve their results. The experiments support this claim quantitatively. The authors promise to release code.\n\n- The results on sparse (only a few thousand points, fairly uniformly distributed) are qualitatively and quantitatively much better than prior work."
+            },
+            "weaknesses": {
+                "value": "*Method*\n\n- Are depth discontinuities between neighboring pixels (e.g. from occlusions) taken into account when computing depth derivatives in image space? If not, that should be stated in the limitations.\n\n- What is the point of transferring the information of the voxel grid into an MLP? The values extracted from the voxel grid are used directly for supervision of the MLP, such that the MLP will learn to simply reproduce the extracted values. Why not then directly treat the extracted values as the surface reconstruction functions? What does storing them in an MLP do? Memory savings? But that comes at the cost of speed, no?\n\n- An overview figure would help with putting together the components. What is happening in Sec. 3.4? I think this part would benefit from feedback by someone not closely involved in the submission. It's currently plain confusing. Does SIREN/Neural-Pull become a part of NeuroSURF? If so, what does that mean? Or is the NeuroSURF sampling used in SIREN/Neural-Pull? I.e. instead of projecting a random point onto the closest surface by using the SDF and its gradient (obtained via back-prop through the SDF MLP of SIREN/Neural-Pull), the coarse voxel grid which stores SDF values and SDF gradients is queried? Doesn't turning that voxel grid into an MLP (see previous point) defeat the point then, which presumably is speed-up?\n\n- Are Sec. 3.1 and 3.2 the core of the method, namely sampling; Sec. 3.3 is a straightforward application to surface reconstruction; and Sec. 3.4 is *another* application of Sec. 3.1 and 3.2 to surface reconstruction, by incorporating the sampling into prior reconstruction methods? Please add introductory sentences for context.\n\n- Please explain better which parts of the method are responsible for which important downstream advantage. This motivation is missing. Why were these design choices made? What is the goal of each step of the method section?\n\n*Results*\n\n- There are a number of papers that I would like the authors to comment on in the rebuttal and in a revision of the submission, especially as to why comparisons to them are not required: \n* Duan et al. Curriculum DeepSDF discusses sampling/weighting schemes for training DeepSDF-like networks. \n* Hanocka et al. Point2Mesh is classical in spirit and allows for adding finer resolutions without re-running the entire coarser pipeline and it shows results on quite noisy/sparse point clouds, i.e. it does not share the limitations argued in Related Work regarding classical surface reconstruction methods. \n* Atzmon et al. SAL: Sign Agnostic Learning of Shapes from Raw Data is a deep implicit surface reconstruction method that works from unoriented and noisy raw point clouds, i.e. it does not share the limitations of learning-based methods mentioned in Related Work. \n* Takikawa et al. Neural Geometric Level of Detail is a major implicit surface reconstruction method. \n* Lindell et al. BACON: Band-limited Coordinate Networks for Multiscale Scene Representation is another major implicit surface reconstruction method.\n* And a couple of papers from 2022 by Zhizhong Han beyond the 2020 paper Neural-Pull (which the submission compares to), namely Li et al. Learning Deep Implicit Functions for 3D Shapes with Dynamic Code Clouds and Ma et al. Reconstructing Surfaces for Sparse Point Clouds with On-Surface Priors.\n* Also, why is there no comparison/ablation to Gradient-SDF, which appears to be the basis for the submission?\n\n- Do SIREN, IGR and Ours use the same resolution and bounding box for Marching Cubes? IGR shows clear Marching Cubes artifacts, while the other two don't. That is relevant because IGR looks very similar to Ours except for these artifacts.\n\n- As discussed in *Method* above, I'd like to see results when extracting values from the voxel grid directly (in the same manner as when generating samples for MLP supervision) instead of transferring them into an MLP. How does the quality change? What about memory and speed? \n\n- In the middle of the first paragraph of Sec. 4, it says that for methods from prior work that take point clouds as input, these point clouds are obtained via the voxel grid. Does that mean that the voxel grid from the submission is used for that? Wouldn't that imply that the voxel grid, i.e. the proposed method, upper-bounds all other methods because the other ones only get as input what the submission produces as intermediate output? That seems like an unfair setup?\n\n- There are no qualitative results that allow to assess the qualitative difference that swapping the proposed method into IGR makes."
+            },
+            "questions": {
+                "value": "As of now, the writing is too confusing and unclear. The motivation of design choices, context, and even the overall goal of the method is unclear to me. Furthermore, I'd like to see comparisons (or a discussion as to why that's unnecessary) to works from after 2020. These two aspects are my main objections to accepting the paper. \n\n\n*Minor notes*\n\nBeyond the questions in Weaknesses, please address the following questions in a rebuttal:\n\n- What is l_E, the last loss term in equation 9?\n\n- Sec. 3.3 early on mentions an uncertainty threshold tau. What is it set to? 0?\n\n- Is uncertainty ever used for anything other than as a binary mask during Marching Cubes where it is presumably \"threshold-ed\" at 0, i.e. parts that where never observed in the input depth images are removed?\n\n- What is the point of the last paragraph of Sec. 3.4? Doesn't the ability to project points to the surface come from the prior work of Gradient-SDF? If so, it should be clearer that this paragraph isn't a contribution by the submission.\n\n- Are arbitrary non-intersecting open surfaces possible? Using a mask in Marching Cubes seems like it might be restrictive? Beyond issues that would arise due to an insufficient resolution of the voxel grid?\n\n- Are the three groups of curvature samples (end of Sec. 3.2) ever used for anything? Where in the method does it matter that they were split into three groups?\n\n- Is there a reason why Gaussian curvature is never used in the experiments? A comparison between Gaussian and mean curvatures would be interesting for people who want to use the method. (This is optional since Gaussian curvature could also just be removed from the method section.)\n\n\nThese are just some other notes that do not need to be addressed:\n\n- Not strictly necessary, but a point towards sophisticated classical shape representations would be helpful, e.g. Ohtake et al. Multi-level partition of unity implicits from 2005. \n\n- I'm not following how Sec. 3.1 and Sec. A.2.3 are connected. Does invariance to parametrization changes (main text) relate to the Jacobian of parametrization changes having non-zero determinant (appendix)? Please make the connection to the main text more explicit in the appendix.\n\n- Should Equation 5 use psi_p instead of psi_x? psi_x is not defined as far as I can see.\n\n- At the end of Sec. 3.2, there is a reference to Sec. 3.2.\n\n- I assume Figures 11 and 12 belong to Sec. A.3? A sentence in Sec. A.3 referring to them would clarify that.\n\n- Figure 9 does not look that convincing. The bunny evolves nicely during training both with and without the proposed sampling. Another shape might demonstrate the advantages better, like the right one. \n\n- The caption of Figure 8 should state what solid and dashed means, not just the main text on the previous page.\n\n- Figure 5 could be easily extended by a neat ablation: a qualitative result from the full proposed method with and without the Marching Cubes thresholding."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1905/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697992494001,
+        "cdate": 1697992494001,
+        "tmdate": 1699636120921,
+        "mdate": 1699636120921,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "MJijIhOgcb",
+        "forum": "VhFSqBOYLs",
+        "replyto": "VhFSqBOYLs",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_PKLg"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_PKLg"
+        ],
+        "content": {
+            "summary": {
+                "value": "The manuscript introduces a pipeline designed for the reconstruction of surfaces from depth images. NeuroSURF is founded upon the voxelized SDF representation initially proposed by [Sommer et al, 2022]. It leverages a mean-curvature guided sampling approach, coupled with uncertainty values, to facilitate the extraction of open surfaces. NeuroSURF's performance was assessed across diverse datasets, encompassing synthetic scenes featuring ideal depth images, as well as real-world scans of indoor environments and objects."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "-\tThe problem is of interest to the research community, as depth images can be cheaply available from depth sensors.\n-\tThe formulation of open-surface extraction is intuitively sound, which has been a common issue for SDF representations.\n-\tThe experiment setup is diverse, including real-world and synthetic datasets. This setup helps readers understand the values of the proposed approach."
+            },
+            "weaknesses": {
+                "value": "- Theoretical Limitations:\n\n  - **Curvature Sampling Limitations**: The utilization of curvature information to capture high-frequency surface details introduces certain limitations when employing mean and Gaussian curvatures. Sampling-based on mean curvature may overlook saddle regions where the curvature is positive in one direction but negative in another. Similarly, sampling based on Gaussian curvature might miss developable regions where one direction exhibits zero curvature while the other has high curvature. Although Figure 11 demonstrates the distinct biases of Gaussian and mean curvatures in sampling, the manuscript does not address their potential impact on performance.\n\n  -  **Noise Sensitivity in Curvature-Based Sampling**: Sampling-based on curvature inherently exhibits sensitivity to noise. In the presence of a noisy depth map, all pixels tend to exhibit high curvature and, consequently, receive heavy sampling. The manuscript does not discuss strategies to mitigate this sensitivity to data noise effectively.\n\n  - **Discontinuities in Voxelized Representation**:  The adoption of a voxelized representation with only a single center point and no interpolation between neighboring voxels can inherently introduce discontinuities in the SDF, as inferred from Equation 4 and the descriptions on Page 5. \n\n\n\n- Inadequate Experiment Results:\n  - While NeuroSURF is compared against many recent generic representations such as SIREN and application-specific approaches such as Neural-Pull, the baselines in both cases are somewhat inadequate. \t\n    - More recent generic representations such as Instant NGP [M\u00fcller et al, 2022] are not included, which potentially can resolve the lack of high frequency details issue. \n    - As for converting depth/point cloud to surfaces, there are also techniques such as recent NKSR [Huang et al, 2023], and differentiable possion SAP [Peng et al, 2021], which are robust to noise while recovering the geometric details.\n    - The formulation (Equation 18-21) proposed in Appendix A.2.2 is similar to truncated signed distance function (TSDF) [Curless and Levoy, 1996]. In this case, I wonder if TSDF is adequate enough for recovering the surfaces accurately.\n\n-\tUnclear descriptions: \n  - The manuscript lacks a clear explanation of how uncertainties and SDF values are computed from the depth images. This information is crucial for understanding the constraints and potential limitations of the surface recovery process from depth data.\n  - The use of notations within the manuscript can be confusing. It remains unclear what represents network estimates and what are the inputs, despite the presence of Table 4 in the appendix. Additionally, the manuscript does not provide formal definitions for certain notations like $\\psi^x$ in Equation 5.\n\n\nReferences: \n\nM\u00fcller, T., Evans, A., Schied, C., & Keller, A. (2022). Instant neural graphics primitives with a multiresolution hash encoding. ACM Transactions on Graphics (ToG), 41(4), 1-15.\n\nHuang, J., Gojcic, Z., Atzmon, M., Litany, O., Fidler, S., & Williams, F. (2023). Neural Kernel Surface Reconstruction. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (pp. 4369-4379).\n\nCurless, B., & Levoy, M. (1996, August). A volumetric method for building complex models from range images. In Proceedings of the 23rd annual conference on Computer graphics and interactive techniques (pp. 303-312).\n\nPeng, S., Jiang, C., Liao, Y., Niemeyer, M., Pollefeys, M., & Geiger, A. (2021). Shape as points: A differentiable poisson solver. Advances in Neural Information Processing Systems, 34, 13032-13044."
+            },
+            "questions": {
+                "value": "-\tGiven the limitations of mean/gaussian curvatures, could there be some ablations to further understand the impact on performance? Can the manuscript use total curvature instead? \n-\tHow sensitive the NeuroSURF is w.r.t noise? Could the manuscript provide some ablations?\n-\tCan the authors provide clarifications on if there are discontinuities across voxels?\n-\tCan the authors provide justifications for why some of the sensible baselines are not included? If they are indeed sensible baselines, could the manuscript include their results?\n-\tCould the authors provide clarifications on the preprocessing of depth images to obtain SDF and uncertainties? \n-\tCould the manuscript clarify what are the optimizable variables and what are the inputs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Reviewer_PKLg"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1905/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698601109773,
+        "cdate": 1698601109773,
+        "tmdate": 1699636120847,
+        "mdate": 1699636120847,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "er53YCIIKS",
+        "forum": "VhFSqBOYLs",
+        "replyto": "VhFSqBOYLs",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_Mh1P"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_Mh1P"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a technique for surface reconstruction from depth maps using an optimization-based approach. Central to this method is the emphasis on proficient sampling and filtering of input points, which are then integrated into a reconstruction method that employs an implicit field as its underlying representation. The filtering process proceeds by transforming the initial point cloud into voxels and adeptly determining attributes for these voxels, such as the SDF, gradient vector, and curvatures. Consequently, the optimization-based methods receive sampled points derived from the voxel grid structure. Beyond just surface attributes, the implicit field can incorporate surface uncertainty, facilitating intuitive open surface extraction and noise mitigation. When compared with several prevailing methods like Poisson Surface Reconstruction and IGR, the proposed sampling method's efficacy becomes evident."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The technique addresses the innovative challenge of point cloud sampling specifically tailored for neural reconstruction from depth maps. It harnesses the voxel grid structure as a foundation to accelerate both computation and sampling processes.\n\n- A distinctive feature of the method is its ability to produce uncertainty as an auxiliary output. This capability paves the way for a bunch of subsequent applications, including navigation.\n\n- The experiments conducted are exhaustive, and the ablation analysis adeptly showcases the potency of each individual component."
+            },
+            "weaknesses": {
+                "value": "- The motivation is somewhat unconvincing. The justification for adopting biased sampling remains ambiguous, and the choice to utilize voxel-based sub-samples over complete samples isn't adequately described.\n\n- The section detailing the method is ambiguous, with many important details being omitted. This absence hinders the algorithm's reproducibility. Please see the 'Questions' section for a more in-depth breakdown.\n\n- The computation of the uncertainty lacks a straightforward explanation. Specifically, where does the uncertainty come from? Are they coming from the quantization artifact introduced by voxelizing the points or coming from the sensor themselves (for example the angle between the surface normal and camera ray)? The authors should provide some intuitive examples demonstrating low and high confidence areas.\n\n- The method's innovation is questionable. Employing curvature as a guiding principle for sampling isn't a novel approach (as already pointed out in the related works section). Moreover, the inherent characteristics of depth maps don't appear to be optimally leveraged."
+            },
+            "questions": {
+                "value": "- How is the voxel grid built? How are the attributes such as gradient initialized for each voxel grid?\n\n- Why is the geometry within each voxel being approximated as planar patches? Could fitting primitives such as ellipsoid or parabolic surfaces improve the results?\n\n- Why is the uncertainty smaller if the points are far away from the voxel, as explained on Page 4?\n\n- Fig.4 is not clear. Why would the sample still be evenly distributed on the surface given the curvature-aware sampling?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "Not applicable."
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Reviewer_Mh1P"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1905/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698647649159,
+        "cdate": 1698647649159,
+        "tmdate": 1699636120762,
+        "mdate": 1699636120762,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Txrv7igGU2",
+        "forum": "VhFSqBOYLs",
+        "replyto": "VhFSqBOYLs",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_drJN"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1905/Reviewer_drJN"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addresses the problem of surface reconstruction from sparse input depth images/point cloud and is based on implicit neural shape representations. The key idea is a curvature guided sampling strategy that should help to improve reconstruction quality for sparse inputs by correcting for unevenly distributed points and enable interpolation among spares inputs. Furthermore the authors suggest integrating uncertainty in the loss and during the surface extraction which enables extracting open surfaces from implicit neural representations. The authors conduct experiments on object-level datasets as well as real-world datasets.The quantitative comparison on the object level shows especially good performance in the sparse inputs case."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper is well written and technical sound.\nThe curvature term is well explained and easy to follow how it is integrated in the method.\nThe idea of incorporating uncertainty to model open spaces with neural representations is novel and interesting.\nComparison with valid baselines is provided."
+            },
+            "weaknesses": {
+                "value": "1) The loss function contains four parts. I\u2019m missing an ablation study on the impact of each part for the final results, e.g. it stays unclear how much impact to the smoothness comes from the normal regularizer vs. from the interpolation sampling.\n2) The paper does not discuss the network architecture of f(x, theta) in equation . As shown in previous works (SIREN, Fourier Features), there is a huge impact of the actual network architecture and input features to the final output shape, as the network acts as predefined prior. However, there is no explanation of the used architecture."
+            },
+            "questions": {
+                "value": "It would be great to get more insights wrt. the loss function as mentioned in the weakness 1.\n\nRegarding weakness 2) the role of f(x, theta) remains unclear to me. Please provide more explanation on that."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1905/Reviewer_drJN"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1905/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698837537307,
+        "cdate": 1698837537307,
+        "tmdate": 1699636120663,
+        "mdate": 1699636120663,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,209 @@
+[
+    {
+        "id": "gfFWnxt087",
+        "forum": "BkvdAYhyqm",
+        "replyto": "BkvdAYhyqm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_CSdo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_CSdo"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces Summarize and Score (SASC), a method which generates natural language descriptions of text models, where a text model is any function that takes in text and outputs a scalar. This method does not require the model to be differentiable, and can operate by accessing paired input/outputs of the model.\n\nI've read both the main paper and the supplemental. Their proposed model consists of three steps:\n1. The probe step. Where they score natural language phrases taken from dataset. \n2. The summary step. They take a random subset of the top-scoring phrases, and provide them to a language model. The language model is prompted to provide multiple explanation of what activates a language model.\n2. The scoring step. When they prompt a language model to generate phrases related and unrelated to the explanation. An average of the difference is computed after proving the generate phrases to the original probed model, which is used to rank the proposed explainations.\n\nThey evaluate their proposed method in a couple of ways:\n1. Using the INSTRUCTOR-XL text embedding models, with a prompt for the model to cluster. Followed by negative euclidean distance.\n2. Using BERT combined with non-negative factorized dictionary coefficients.\n3. For fMRI voxels on a passive listening task, on \"The Moth\" among other works."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "I think on balance the authors did a good exploration of their method, and the method is generally well described.\n\n1. By evaluating on embedding models, you have a ground truth target to evaluate against. Assuming the embedding model is accurate, which is not an unreasonable assumption. \n2. By interpreting BERT transformer factors against previous human evaluations -- this is a direct comparison against a human baseline.\n3. By looking at fMRI data, this evaluates SASC on a noisy scenario where the various brain regions are can only be observed under a noisy setting. \n\nThe assumptions used in the paper are weak and reasonable, and do not require differentiability assumptions, a residual/skip connection assumption (for example in the logit lens paper). Compared to \"Language models can explain neurons in language models\" paper from OpenAI, their approach of using a corpus rather than per-token scoring is more sound, and it allows for more context dependent explanations.\n\nGiven that interpretability is a significant issue in the use of large language models, this paper addresses a timely and important problem."
+            },
+            "weaknesses": {
+                "value": "I have a couple of concerns on the evaluation done in this paper.\n\n1. I think their corpus + score approach is more sound than the OpenAI's approach of token-wise scoring. But there is one problem I would like to see resolved:\n\n   a. There is no ablation study on the corpus size and the effect on explanation scores. Ideally the authors could explore the outcome using for example 10k, 20k, 40k, 80k, .... all n-grams.\n\n2. The scoring step in my view is suspect, and introduces an unnecessary confound in terms of their procedures. It seems very wrong to evaluate $E(f(\\text{Text}^{+})-f(\\text{Text}^{-}))$. In this case, you are asking the language model to generate the phrases unrelated to an explanation, so the final score is not just related to how good the positives are, but also how \"good\" the negatives are. Perhaps a more correct step should be $E(f(\\text{Text}^{+})-f(\\text{Text}^{\\text{all}}))$. This is less problematic if this was just used as an internal component, but I think it is problematic when the authors use it as a point of comparison in Table 4, Figure 3, Table 6, fMRI experiments, Table A4, and Table A8. \n\n3. The \"Default\" setting in \"synthetic modules\" experiment is not very sound in my view. Ideally the exploration of the 54 modules should not be relying on a corpus which is known to contain the relevant ngrams, but the exploration of the modules should use the same (random) selection of ngrams. \n\n4. It is a bit questionable that the authors use manual inspection to evaluate their method. Scanning both the main text and the supplemental, the authors do not use Amazon Mechanical Turk or Prolific, and do not include any details on this human study. I can only assume that this experiment was done by the authors themselves, which is prone to bias. A more accurate approach would be to take a different text embedding model (for example bge-large, other models are fine too), compute the n-way cosine similarities among the 54 models to the 54 explainations, and compute the argmax agreement (is the n-th explanation generated by the SASC cosine similarity maximized by the n-th model), or even the cosine distance when n-way classification is not appropriate. \n\n5. The clarity in some specific methods are poor. There is no details in either the main text or the supplemental. Concretely, I was unable to find details for the following:\n\n    a. ngram summarization baseline used in Table 1. I looked at the references provided by the author (Kadar et al. and Na et al.), neither are actually performing ngram summarization. The first citation uses a omission based approach, while the second uses a parsing + text replication approach.\n\n   b . Can the authors describe how they get the spearman rank correlation sem? I would not otherwise ask if the effect is strong, but the correlation is very low. Do the authors find the sem via a bootstrap? Could the authors report a t-statistic instead? \n\n6. It seems like this proposed method would only work on semantic selectivity, and it is unclear if this method can work on low-level text patterns. This is okay, but the authors should more clearly discuss this limitation in their paper.\n\nOverall I like the paper. And the proposed method is well described, but the author's evaluation broadly does not strike me as sound. I would happily re-evaluate if the authors can answer my questions."
+            },
+            "questions": {
+                "value": "Please see above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7582/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7582/Reviewer_CSdo",
+                    "ICLR.cc/2024/Conference/Submission7582/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7582/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698624944899,
+        "cdate": 1698624944899,
+        "tmdate": 1700329351232,
+        "mdate": 1700329351232,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "STLKWfafgu",
+        "forum": "BkvdAYhyqm",
+        "replyto": "BkvdAYhyqm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_Tacm"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_Tacm"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces Summarize and Score (SASC), a method to automatically generate natural language explanations for black box text processing modules, such as those in large language models. SASC was evaluated on synthetic modules, BERT modules, and fMRI data mapping text stimuli to voxel responses. The method often recovered ground truth explanations on synthetic data. When applied to BERT, SASC enabled inspection of the model's internals, while application to fMRI data allowed fine-grained mapping of language selectivity in the brain. Limitations include only explaining top module responses in isolation rather than relationships between modules. Overall, SASC shows promise for interpretability of LLMs and could be a useful scientific tool for domains analyzing text models like social science, medicine, and neuroscience."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper tackles the timely and important topic of interpreting black box natural language processing models like large language models. The proposed SASC framework enables inspecting model internals and explaining model predictions in an interpretable way.\n2. The SASC framework is novel and theoretically grounded. The approach of using a separate helper model to generate explanations is creative.\n3. The experiments reveal fascinating patterns in how different models generate explanations. The results indicate SASC has potential for analyzing text models in fields like social science, medicine, and neuroscience."
+            },
+            "weaknesses": {
+                "value": "Please refer to the questions section"
+            },
+            "questions": {
+                "value": "1. How do the authors decide whether an explanation is correct or not? For example, for Table 3, why \u2018facts\u2019 is considered to be equal for \u2018information or knowledge\u2019, while \u2018language\u2019 is considered to be unequal to \u2018ungrammatical\u2019? What is the criteria to decide if an explanation is correct or not?\n2. It would be great if the authors could give some hints in scenarios where the proposed SASC algorithm does not have satisfactory results. Whether the reason is due to the limitation of the ngrams or the limitations of the helper LLMs.\n3. It would be great if the authors could clarify in more detail what does \u2018transformer factors\u2019 mean for BERT in Section 4. Additionally, what are the ground truth for these transformer factors? How is the SASC win percentage: 61% calculated?\n4. What GPT-3 is used as the helper LLM, rather than a more advanced model, such as GPT-3.5?\n5. Another interesting finding in Figure 3 is that, as the BERT layer increases, the explanation score tends to decrease. Could the authors give some hints on why this happens?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7582/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698693880408,
+        "cdate": 1698693880408,
+        "tmdate": 1699636917957,
+        "mdate": 1699636917957,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "uP5JKi3wVD",
+        "forum": "BkvdAYhyqm",
+        "replyto": "BkvdAYhyqm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_beYn"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7582/Reviewer_beYn"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a method called Summarize and Score (SASC) that generates natural language explanations for black-box text modules. The authors evaluate SASC on synthetic modules, explaining modules found within a pre-trained BERT model, and generating explanations for the response of individual fMRI voxels to language stimuli. The results show that SASC can generate high-quality explanations that are both accurate and human-readable. The authors also provide insights into the inner workings of the pre-trained BERT model and demonstrate the potential of SASC for fine-grained brain mapping. Overall, the paper presents a promising approach for improving the interpretability of black box text modules."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1.\tThe paper proposes a new method called Summarize and Score (SASC) that generates natural language explanations for black-box text modules.\n2.\tThe authors evaluate SASC on synthetic modules, explaining modules found within a pre-trained BERT model and generating explanations for the response of individual fMRI voxels to language stimuli.\n3.\tThe results show that SASC can generate high-quality explanations that are both accurate and human-readable.\n4.\tThe proposed method has significant implications for improving the interpretability of machine learning models."
+            },
+            "weaknesses": {
+                "value": "1.\tThe paper does not compare SASC to other state-of-the-art methods for generating natural language explanations for black box models. It would be useful to compare SASC to other methods, such as LIME and SHAP, to determine how it performs in comparison.\n2.\tIn SASC design, the first step is to input the n-grams from the reference corpus into the text module, which could contain many instances. How to ensure the efficiency of the proposed method remains undiscussed. It would be better for authors to provide a detailed analysis of the computational complexity of SASC. It would be useful to provide information on the computational requirements of the proposed method and potential ways to optimize it.\n3.\tThe design of synthetic scoring is heuristic and without any theoretical analysis to support this design. And most importantly, there is no ablation study to verify the effectiveness of this model design."
+            },
+            "questions": {
+                "value": "1.\tCan you provide a comparison of SASC to other state-of-the-art methods for generating natural language explanations for black box models? This would help readers understand how SASC performs in comparison to other methods.\n2.\tCan you provide more information on the computational complexity of SASC? Specifically, how long does it take to generate explanations for a given module and what are the computational requirements of the proposed method? This would help readers understand the practical limitations of SASC and potential ways to optimize it."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7582/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698814103838,
+        "cdate": 1698814103838,
+        "tmdate": 1699636917851,
+        "mdate": 1699636917851,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

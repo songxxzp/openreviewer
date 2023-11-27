@@ -1,0 +1,300 @@
+[
+    {
+        "id": "JSOz9EpyWK",
+        "forum": "sojpn00o8z",
+        "replyto": "sojpn00o8z",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_hZLh"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_hZLh"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes the use of cascaded diffusion models for optimizing the likelihood of samples in diffusion models, with the motivation that cascaded models have shown excellent performance on image quality but have not been utilized as likelihood models. The paper goes on to present a method to facilitate likelihood modelling with cascaded diffusion by introducing *hierarchical volume-preserving maps*, allowing to express the model likelihood as a joint likelihood over different hierarchical scales. In practice, this includes wavelet and Laplacian pyramid transforms. The paper also proposes a surprising connection with the denoising score matching loss over the different scales of the hierarchical maps and optimal transport. The new models show impressive performance in model likelihoods on CIFAR-10 & different-resolution ImageNet datasets, out-of-distribution detection and lossless compression."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+ The paper clearly demonstrates that the proposed method provides improvements in log-likelihoods over non-cascaded models. As far as I am aware, the paper is the first to showcase that cascaded diffusion models can be used to improve log-likelihoods (in contrast to just the image quality).\n+ The paper is well-written and easy to follow.\n+ The new method is evaluated thoroughly, showcasing the performance of the model on applications relevant to log-likelihoods: OOD-detection and data compression.\n+ I found the proposed connections to optimal transport particularly surprising, and this connection may be useful in further work."
+            },
+            "weaknesses": {
+                "value": "## Minor issues\n- The notation in some parts could be improved: E.g., eq. 27 takes the expectation over $\\epsilon$ but refers to the noisy data variables $\\tilde z^{(s)}$. On the next line, $\\tilde z^{(s)}$ transforms to $\\tilde x_k$. Small issues like this make the paper slightly difficult to read at times. \n\nFor other issues, see the questions part."
+            },
+            "questions": {
+                "value": "### On the connection to the EMD metric:\n- Given that it is the central part of the proof, I would like more elaboration on how exactly the connection to Theorem 2 of Shirdhonkar & Jacobs is made. One way to do this would be to repeat the theorem and its assumptions in the paper and showing step-by-step how does it apply here. In particular, I wasn\u2019t able to see how do the $2^{-j(s+n/2)}$ terms in their statement of the Theorem connect to the application of it in the paper. \n- What exactly does the paper claim by making the connection with score matching on wavelet representations and EMD? The last sentence of section 5.2. seems to claim that the method allows training diffusion models with the EMD measure, which does not quite seem to be the case here. While the connection between wavelets and EMD is definitely interesting, the connection to diffusion models doesn't seem particularly important as of now.\n### On the ELBO and the necessity of volume-preserving maps:\n- I might be confused, but it seems to me that volume-preserving maps are not necessary to form an ELBO with cascaded diffusion models. My thinking is as follows: We have the data $x$, and S sequences of latent variables $z_{1:T}^s$ with different resolutions and noise levels. The generative process, as defined in the paper, is $p_\\theta(x,z)=p(x|z_1^S)\\prod_{s=1}^S\\prod_{t=2}^T p_\\theta(z_{t-1}^s|z_{t}^s,z_1^{(<s)})p(z_T^s)$. We can then form the following inference process that is factorized for the different resolutions: $q(z|x) = \\prod_{s=1}^S \\prod_{t=2}^T q(z_t^s|z_{t-1}^s)q(z_1^s|x)$. Here $q(z_1^s|x)$ downsamples $x$ and adds the smallest level of noise in the diffusion process. Now if we form the ELBO, we get: $E_q[-\\log p_\\theta(x)]\\leq E_q[-\\log\\frac{p_\\theta(x,z)}{q(z|x)}]=E_q[-\\log \\frac{p_\\theta(x|z_1^S)\\prod_{s=1}^S\\prod_{t=2}^Tp_\\theta(z_{t-1}^s|z_t^s,z_1^{(<s)]})p(z_T^s)}{\\prod_{s=1}^S \\prod_{t=2}^T q(z_t^s|z_{t-1}^s)q(z_1^s|x)}]$, and further $=E_q[-\\log p_\\theta(x|z_1^S) - \\sum_{s=1}^S[\\sum_{t=2}^T\\log\\frac{p_\\theta(z_{t-1}^s|z_t^s,z_t^{(<s)})}{q(z_t^s|z_{t-1}^s)} + \\log p(z_T^s) - \\log q(z_1^s|x) ]]$. From here, we can follow the standard derivation to get to the KL divergences (e.g., Appendix A in Ho et al., Eq.19., with the difference that their $x_{1:T}$ is redefined to $z_{1:T}^s$ and $x_0$ to $x$). I think this results in the same ELBO as in the submission, with the difference that instead of having a $p(x|z)$ term for each scale, this would only have it for the last scale. Do the authors agree with this point of view, or have I potentially misunderstood something? In case I have not misunderstood, this seems to be a major issue with the paper, since there is no comparison to cascading diffusion models without volume-preserving maps, making the significance of volume-preserving maps unclear. \n\n## Overall\n\nWhile the paper is well-written, the method showcases improvements and is well-evaluated, I hesitate to give an accepting score before I can see more clearly what is the benefit of volume-preserving maps. It is possible that I have missed something, and if so, I am willing to raise my score. Otherwise, I think that the paper requires more elaboration on what exactly is the role of volume-preserving maps in likelihood training of cascaded diffusion models. I would also like to see a clearer derivation for the EMD metric connection, as well as more elaboration on what is the significance of the connection. \n\nReferences:\nHo et al., Denoising Diffusion Probabilistic Models, NeurIPS 2020"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Reviewer_hZLh",
+                    "ICLR.cc/2024/Conference/Submission8130/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8130/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698413610525,
+        "cdate": 1698413610525,
+        "tmdate": 1700675464561,
+        "mdate": 1700675464561,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "8lIIJ5kCa7",
+        "forum": "sojpn00o8z",
+        "replyto": "sojpn00o8z",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_y69M"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_y69M"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper shows that volume-preserving maps can be used to define multiscale (cascaded) generative models with tractable likelihood. Extensive numerical experiments demonstrate the improvements in likelihood modeling, out-of-distribution detection, and compression achieved by the ability to use multiscale models. The paper also makes a connection between multiscale diffusion models and optimal transport with the earth's mover distance."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The authors tackle an important problem, which is the use of cascaded approaches for likelihood modeling. The proposed solution is simple (which I mean in the best possible way!) and the numerical experiments are solid and convincing. The paper is also clearly written (except that the core concept is not stated until page 6, see Weaknesses)."
+            },
+            "weaknesses": {
+                "value": "- The theoretical setting of the paper is general, with possibly non-linear volume-preserving maps $h$, but in practice only linear $h$ are used, which thus boil down to using an orthogonal transform (for wavelets) or a tight frame (for Laplacian pyramid). The linear setting already leads to important improvements, and the possibility of the extension to non-linear maps is interesting for future research, but it obfuscates slightly the results of the paper behind unnecessary complexity. In particular, using \"Hierarchical volume-preserving maps\" in the title instead of a more explicit reference to orthogonal wavelet transforms (which yield the best results) does not accurately describe the contents of the paper and makes it harder for the reader to connect the contributions of the paper to known concepts. Orthogonal transforms are not mentioned anywhere before page 6, yet are the core component of the method.\n- Related to the previous point, orthogonal wavelets have been used for multiscale generative modeling in several missed previous works: see [1] for nomalizing flows, [2] for direct likelihood modeling, and [3] for diffusion models (closest to the setting of the paper, though the focus is on image quality rather than likelihood modeling). In particular, [1] and [2] critically rely on the orthogonality of the transform to model the likelihood. Also, the recombination of $z^{(<s)}$ into a same-resolution image mentioned in Appendix B is crucially used by [1-3] to parameterize efficiently the conditional likelihood.\n- The connection to the earth's mover distance seems problematic to me. First, it is unclear what benefits it brings to the paper: I do not understand how to interpret Theorem 5.1, since here the transport is between the true and approximated scores (seen as distributions on $\\mathbb R^2$), as opposed to transport between distributions of images as is usually the case. Second, the soundness of the results look questionable to me. For instance, the Wasserstein-p distance is defined between probability distributions, which thus requires that the scores have non-negative entries that sum to one. The authors do not mention this restriction anywhere in the paper. Second, the proof seems to assume that the wavelet coefficients of the image score $\\nabla \\log q(x)$ are the wavelet conditional scores $\\nabla \\log q(z^{(s)} | z^{(<s)})$, but this is not the case. Indeed, one has $\\log q(x) = \\log q(z^{(1)}) + \\log q(z^{(2)} | z^{(1)})$ (with $S = 2$ for simplicity), and thus the $z^{(1)}$ component of the image score includes an additional term coming from the high-frequency score component (called \"free energy\" in [2]). For this reason, the equivalence between wavelet and Laplacian pyramid for the score matching losses also breaks down (which is a more plausible explanation for the difference in performance than the authors' footnote 1).\n\nDespite these weaknesses, I recommend acceptance (see Strengths above). I am willing to increase my score if the authors address these points.\n\n[1] Jason J Yu, Konstantinos G Derpanis, and Marcus A Brubaker. \u201cWavelet Flow: Fast Training of High Resolution Normalizing Flows.\u201d In Advances in Neural Information Processing Systems, 2020.\n\n[2] Tanguy Marchand, Misaki Ozawa, Giulio Biroli, and Stephane Mallat. \u201cWavelet Conditional Renormalization Group.\u201d\n\n[3] Florentin Guth, Simon Coste, Valentin De Bortoli, and Stephane Mallat. \"Wavelet score-based generative modeling.\" Advances in Neural Information Processing Systems, 2022."
+            },
+            "questions": {
+                "value": "- If $z$ is higher-dimensional than $x$, then $z = h(x)$ does not admit a probability density (it is not absolutely continuous with respect to the Lebesgue measure). How do the authors deal with this difficulty, and how is Lemma 4.1 not meaningless in this case?\n- The authors mention switching to a different architecture and weighting scheme for optimizing FID as opposed to likelihood. Does the improvement in FID come with an increase in BPD? If so, the tradeoff between the two should be acknowledged explicitly.\n- Why not using $M=1$ in the OOD detection task? In high-dimensions, we expect from concentration of measure that $-\\log p(x) \\approx \\mathbb H(p(x))$ for almost all $x$, so we should be able to detect changes in distribution from just one sample?\n\nMinor suggestions:\n- Multiscale image modeling has a much older history than 2017, e.g., [4-10] for a very incomplete list, which seems more relevant than the reference [Horstemeyer, 2010]. Though these earlier works generally focus on other tasks such as denoising or compression, the motivations for using a multiscale representation remain the same.\n- Line before equation (5) should read $\\log p_\\theta(x_0)$ instead of $p_\\theta(x_0)$.\n- Any linear map could be used for cascaded likelihood modeling, even if its determinant is not one (as long as it is not zero). Indeed, it just introduces a constant offset in the likelihood, which has no effect for training, and this offset can be estimated once offline for test-time likelihood evaluation. In particular, the standard cascaded hierarchy is in this case.\n- The discussion below Definition 1 should state that it requires $\\mathrm{dim} \\mathcal{Z} \\geq \\mathrm{dim} \\mathcal{X}$ with a full-rank Jacobian $\\mathrm{rank}(A) = \\mathrm{dim} \\mathcal{X}$. Also, the convention used for the Jacobian matrix should be stated to avoid confusions with its transpose: i.e., $A \\in \\mathbb R^{\\mathrm{dim} \\mathcal{Z} \\times \\mathrm{dim} \\mathcal{X}}$.\n\n\n[4] P J Burt and E H Adelson. The Laplacian pyramid as a compact image code. IEEE Trans Comm, Apr 1983.\n\n[5] S Mallat. A wavelet tour of signal processing: The sparse way. Academic Press, 2008.\n\n[6] A Chambolle, R A DeVore, N Lee, and B J Lucier. Nonlinear wavelet image processing: Variational problems, compression, and noise removal through wavelet shrinkage. IEEE Trans Image Processing, Mar 1998.\n\n[7] R W Buccigrossi and E P Simoncelli. Image compression via joint statistical characterization in the wavelet domain. IEEE Trans Image Processing, Dec 1999.\n\n[8] M J Wainwright, E P Simoncelli, and A S Willsky. Random cascades on wavelet trees and their use in modeling and analyzing natural imagery. Applied and Computational Harmonic Analysis, Jul 2001.\n\n[9] L \u015eendur and I W Selesnick. Bivariate shrinkage functions for wavelet-based denoising exploiting interscale dependency. IEEE Trans Signal Processing, Nov 2002.\n\n[10] J Portilla, V Strela, M J Wainwright, and E P Simoncelli. Image denoising using scale mixtures of Gaussians in the wavelet domain. IEEE Trans Image Processing, Nov 2003."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Reviewer_y69M",
+                    "ICLR.cc/2024/Conference/Submission8130/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8130/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698598479796,
+        "cdate": 1698598479796,
+        "tmdate": 1700537085440,
+        "mdate": 1700537085440,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Ue92whAyB2",
+        "forum": "sojpn00o8z",
+        "replyto": "sojpn00o8z",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_ocEJ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_ocEJ"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes considers multi-scale diffusion models, and shows theoretically that one needs volume-preserving scale transformations to make the likelihood behave \u201cnicely\u201d. The empirical results are excellent.\n\n--- \n\nPost-discussion update: My concerns were sufficiently addressed, and all the confusions I had were clarified. This is a high-quality, substantial contribution to diffusion models from solid theoretical understanding."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- Excellent empirical results, which are great throughout.\n- The method sheds light on the Laplacian and Wavelet decompositions, and proposes a relatively principled training scheme for them. The theoretical analyses of the scale transformations are delightful to see, and this discussion is a significant viewpoint to diffusion models"
+            },
+            "weaknesses": {
+                "value": "- The theoretical presentation is informal and imprecise. I couldn\u2019t follow the theory or substantiate the claims made by the paper. The final model is also ultimately undefined and feels very adhoc despite the principled approach. It\u2019s also confusing what is the contribution of this paper, since it seems that ultimately the paper just uses the Laplace/Wavelet transforms as-is, which are already well known.\n- The experiments do not compare to recent diffusion works [there is no comparisons to 2023 methods, and only one 2022 method (!)], and lack direct comparisons to diffusion models with super-resolution, wavelet or laplace transforms. The experiments are quite roundabout and describe just the overall performance, and don\u2019t directly substantiate specific contributions made in this paper. It is then difficult to see why we improve, or if the theoretical contributions had anything to do with it. There are no ablations. There are very little result exposition or illustrations."
+            },
+            "questions": {
+                "value": "Minor comments\n\n- The eq 3 is looks like the simple forward process, but is instead the forward \u201cposterior\u201d. For instance, DDPM paper (Ho et al 2020) eq 2 LHS is the same equation as eq 3 LHS here, but has a conflicting RHS. Can you clarify which q interpretation you are using, and which q the eq 5 is taken over.\n- I\u2019m not sure I if I understand the premise of the paper. I agree that with invariant transformation we have p(x) = p(h(x)) property. However, this is useful only if the joint distribution p(z^1, \u2026, z^S) decomposes independently into p(z^1) * \u2026 * p(z^S); and I don\u2019t see why this would happen. Surely the different scales are highly dependent, and you would have to do a chain rule p(z^S | z^S-1) \u2026 p(z^2 | z^1) p(z^1) [or some other decomposition], and in this setting I don\u2019t see the invariant property being useful. The paper should clarify the invariance wrt scale independence, preferably in the introduction and in beginning of sec 4. Right now the main claim of the paper does not convince. For instance, *\u201cif h(x) is the scales of the hierarchical model, then we can directly use the joint likelihood over these scales as the desired model likelihood\u201d* is generally false as far as I can see.\n- Eq 8 has square root, but why? It does not seem to do anything when det=1.\n- What does z(1), z(2), . . . , z(S) = h(x) mean? I don\u2019t understand the notation. Does h(x) return S different things, or does h return one thing as in z1=h; z2=h; etc? h seems to be a downscaling operator, is this true? The nature of \u201ch\u201d is a bit confusing at this stage of the paper. What does h output? What resolution?\n- What does \u201cp_theta trained on z1..zS\u201d mean? Trained how? Against what objective? What kind of p_theta? These statements are overly casual, and need to be made precise, explicit, rigorous and transparent.\n- \u201cThen the model likelihood\u201d. What does model likelihood mean? Can you make this rigorous? This is too informal. Or is this supposed to be informal and imprecise?\n- What does p_theta(x) mean in eq 9? Does it refer to eq 7 or something else? What does it mean to apply h(x) to eq 7: do we apply h() to all z\u2019s together, or separately, or what..?\n- I don\u2019t think the statements after eq 9 are true; I see no convincing arguments for this. It\u2019s not clear what the terms in eq 9 even mean or how they are defined, and the dependency issue of the joint still remains.\n- In eq 10 the h is now some kind of linear operator, while earlier it was a function. Is the idea that h(x)=h*x? It would be good to clarify the distinction between function h and operator tensor h.\n- What does * mean in (j*2)? Is this a product or convolution? If this is a convolution, what does it mean to convolve j with 2?\n- What does fig 2 show? I think it shows y^4 and z^3...z^1. Can you clarify?\n- What does tight frame mean? Can you give a conceptual explanation? What does \u201ch\u201d mean in parseval equation? There is no \u201ch\u201d in the Laplace section of the paper at all: does some of this stuff (y,z,d,u) relate to h?\n- Again, what is the \u201cmapping\u201d h in Wavelet case? Is it the z\u2019s, or y\u2019s, or them together, or something else?\n- The wavelet and Laplacian pyramids both retain the original resolution of the image. Wasn\u2019t the goal of this paper to reduce resolution? I\u2019m a bit confused. Can you clarify the notion of resolution vs scale, and clarify which one you want to reduce? The very first sentence of the paper in introduction talks about super-resolution, which leads me to believe that one should change resolution somewhere in the paper, but neither of the transform types seems to change resolution. Can you clarify these aspects?\n- I don\u2019t see what lemma 4.1. has to do with eq 15. It seems that you just apply the x=z1\u2026zS substitution and use chain rule to split the p(x) to p(zs|z_<s). Where is lemma 4.1 here? Also, the paper has already defined p(x) in eq 7, which seems to conflict with the p(x) in eq 15. Can you clarify? Is this a redefinition, or are both true?\n- What is the q in eq 16?\n- What is z_0^s in eq 16? How do you get them? How do you get the z_1\u2019s? How do you get the z_k\u2019s? What are the terms here: I can\u2019t really follow any of them. Can you explain all three terms (the logp and two KLs). For instance, the regular logp term is the probability of observed image given z^1 while marginalising all intermediate states away. Here isntead we have p(z^s_0 | z_1^s, z_0^<s). So we are looking at one scale likelihood, but somehow conditioning with earlier scale \u201cobservations\u201d? I can\u2019t really follow at all what is happening, since very little of eq 16 or the underlying processes have been defined or characterised. Please include an algorithm boxes for training and sampling. It\u2019s also confusing what is h here.\n- I\u2019m having hard time understanding what the eq 18 is conceptually representing. Is the idea that criss-cross the pixels from one image to another by moving the pixel locations around?\n- Eq 19 is a lot of stuff without much motivation, introduction or exposition. I have hard time understanding what this means or how it connects with the paper. Somehow optimising the scale losses is equivalent to reordering pixel locations in the scores\u2026? Err.. what? This feels very strange, and I can\u2019t follow. I also don\u2019t see why this is significant: what are you trying to argue here? How do we benefit from this connection? If you want to present this theoretical connection, it needs to be presented in a way that is digestable, and requires more exposition and explanation, and also helpful illustrations.\n- At experiments I still don\u2019t know what does the function \u201ch\u201d mean in this paper, or what it is. I guess it\u2019s the Laplace pyramid, but not sure which part. I\u2019m also not sure how did we now solve the problem of joint needing to be marginalised to only evaluate the final image. I can\u2019t really connect the problem statement in introduction to the methods presented in the paper. I think the paper needs a method summary section that explains how all the pieces come together to solve the original problem, while including an algorithm box.\n- The paper should cite to simple diffusion, that also tackles multi-resolution.\n- In experiment the key comparison is how does this method fare against diffusion models that utilise laplace or wavelet pyramids; or have an explicit super-resolution component. Looking at table 1 almost all comparison targets are irrelevant old methods, and I fail to see many if any super-resolution/laplace/wavelet methods. There is only a single comparison to a 2022 method, and none to 2023. Given the astronomical pace of the research in diffusion, this is not acceptable. The paper needs to compare both to (i) other super/wavelet/laplace diffusion models, and more comprehensively to 2022 and 2023 diffusion models. The claims of state-of-the-art performance is unsubstantiated.\n- The OOD experiments only seem to compare to quite old generative models. Why not compare to other diffusion models? Wasn\u2019t the point of the paper to improve the multi-scale handling of diffusion models, so surely one should then compare to other diffusion models with more adhoc multi-scalings, or to diffusion models with a single scale only. I\u2019m also not sure what the table 2 rows mean.\n- In 6.3. there are comparisons to uni-scale diffusion models (which is great), but one should also compare to competing multi-scale diffusion models."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Reviewer_ocEJ"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8130/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699274174375,
+        "cdate": 1699274174375,
+        "tmdate": 1700593458605,
+        "mdate": 1700593458605,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4ntUtAwsGB",
+        "forum": "sojpn00o8z",
+        "replyto": "sojpn00o8z",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_PAyK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8130/Reviewer_PAyK"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes the cascaded diffusion models for high-fidelity image synthesis that also works as a likelihood model, by overcoming the intractability issue of the likelihood function in multi-scale diffusion models. To do this, this paper provides some hierarchical model of the latent variables, to reduce the marginal likelihood problem into the cascaded conditional likelihood problem. To do this, a class of transformations called hierarchical volume-preserving maps. Some special yet natural instances of the hierarchical volume-preserving maps include Laplacian pyramids, where the image data is divided into its low-pass filter part and its counterparts sequentially, and the wavelet decomposition, which is more general and more rank-preserving transformation, first orthogonalize the image into four filters (low-low, low-high, high-low, high-high) which is also called subbands. Then, the subbands that include high-pass filter in at least one coordinate (vertical or horizontal) is kept and low-low subband is hierarchically downsampled and again taken the wavelet transform. \n\nThen, the likelihood training of this cascaded diffusion model is done by the factorization of the variational objective of the diffusion model into the sum of the conditional variational objective with respect to each hierarchical latent variables. Finally, the paper suggests the connection of this paper to the optimal transport concept, by providing that the Wasserstein-p distance between the approximate and exact score is upper-bounded by the cascaded diffusion objective. The experiments show that the cascaded volume-preserving diffusion model yields better likelihood measure compared to other existing flow-based models and diffusion models. Furthermore,"
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* The writing of the concepts is clear and easy to understand, starting from the necessity of the cascaded latent variable models, and introduce the diffusion models that are involved with this LVM with the volume-preserving map. And in case of the volume-preserving maps, the paper showed that like in the existing original diffusion models, this hierarchical volume-preserving diffusion models also works  as the minimizer of the Wasserstein distance.\n * This paper showed superior performance in case of the log-likelihood measures of CIFAR-10 datasets, compared to the existing semi-autoregressive methods."
+            },
+            "weaknesses": {
+                "value": "* The use of semi-autoregressive hierarchical diffusion models is a common approach, including the use of wavelets, latent variables, and null-space vectors for upsampling the images. The use of cascaded volume-preserving maps do not seem to give differences to these existing works, and the related works on multi-scale diffusion models should be more carefully added.\n * The optimal transport theorem (5.1) does not enough evidence that the hierarchical volume-preserving map is more feasible to use for matching score function than the original diffusion models. Kwon et al. (2022), already showed the similar theorem such that the diffusion model upper bounds the Wasserstein distance between the approximate and the exact score.\n\nD. Kwon et al, \"Score-based Generative Modeling Secretly Minimizes the Wasserstein Distance\" (2022)"
+            },
+            "questions": {
+                "value": "* According to the specific features of the hierarchical models, the architecture description in appendix B should be more precisely described. Now it is not easy to understand which architecture is used for training multiscale models (single model for all scales, or multiple models such that the (conditional) score for each scale is learned in each model?), including the number of parameters. (This might not be a problem since this paper used the same architecture to the VDM paper.)\n\n===============\n\n * Many parentheses are not closed; I recommend using ( \\left[, \\right] ) and ( \\left(, \\right) ) command.\n * In the first paragraph of Section 5.1, $z^{(1)},\\cdots,z^{(S)} = h(x)$ is considered to be the abuse of denoting the hierarchical volume-preserving map. Please consider using clearer notation to represent this."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8130/Reviewer_PAyK"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8130/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699475540101,
+        "cdate": 1699475540101,
+        "tmdate": 1699637007319,
+        "mdate": 1699637007319,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

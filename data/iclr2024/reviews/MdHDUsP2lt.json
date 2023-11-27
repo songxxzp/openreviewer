@@ -1,0 +1,278 @@
+[
+    {
+        "id": "nb04UQo0aw",
+        "forum": "MdHDUsP2lt",
+        "replyto": "MdHDUsP2lt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_Dg3d"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_Dg3d"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes to maximize mutual information between the current state and future state while minimizing mutual information between the past state and current state.  This is then added as an auxiliary loss into the soft actor critic setup, and is used in continuous control tasks with known rewards.  One of my biggest issues with this paper is the empirical weakness of the results, which are inconclusive in the noisy setting, and much worse in the noise-free setting (in the appendix).  The other issue concerns the quality and novelty of the idea.  It feels very similar to the InfoPower paper and it's not obvious that the proposed objective is a good way of removing distractors, nor is it clearly justified.  \n\nNotes: \n  -Filtering background noise from videos.  \n  -Minimize past information, keep info about future.  \n  -SAC with information-based loss.  \n  -Uses \"CLUB\" mutual information method to increase MI between current state and future state."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "-The idea of maximizing mutual information between current/future state while minimizing mutual information between past/current state is intriguing but a bit counterintuitive.  \n  -Doing noise removal in the online setting seems like an important problem."
+            },
+            "weaknesses": {
+                "value": "-The reconstructions aren't terribly compelling.  While background info is removed, it's not obvious if all the information about the agent is correctly retained.  \n  -Papers like ACRO (Islam 2022) and InfoGating (Tomar 2023, which I suppose is a bit recent) should be cited.  InfoPower also feels relevant, and while it is cited, the difference doesn't seem to be sufficiently discussed.  \n  -The integration with SAC feels overly specific.  \n  -The experimental results seem fairly weak.  There is a clear improvement in cheetah run and a small improvement in walker walk, but other tasks are more modest.  \n  -The results in the appendix on standard setup seem quite bad as the proposed method is badly losing to Dreamer.  \n  -The paper doesn't do much to analyze what is happening in the information bottleneck."
+            },
+            "questions": {
+                "value": "-The paper refers to the setup as a lagrangian formulation, but for this to work, it seems insufficient to treat beta as a hyperparameter.  So what exactly makes it a lagrangian setup, as opposed to just adding an extra penalty?  \n\n  -What is the reason to think that increasing mutual information between present and future states is compatible with removing distractors?  For example, the background video will have temporal correlation, so we could potentially maximize that by keeping the TV in the state.  See Efroni 2022 (PPE) as well as Lamb 2022 (AC-State) for some discussion of this issue."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7554/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698766620896,
+        "cdate": 1698766620896,
+        "tmdate": 1699636914185,
+        "mdate": 1699636914185,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "egiyTEdIx3",
+        "forum": "MdHDUsP2lt",
+        "replyto": "MdHDUsP2lt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_cwoe"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_cwoe"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper purports to introduce a mutual-information based object for learning representations in RL that will be robust to noise. The loss is composed of 4 components that are designed to either maximize or minimize the mutual information of various quantities, with bound provided on each part.  The method performs favorably on some benchmark tasks that involve background noise."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Using mutual information as a \"grounding principle\" for representation learning has some strong precedent given prior works, the ease of theoretical interpretation, and existing tractable methodology. The problem is well grounded as \"avoiding nuisance variables\" in representation learning is important (e.g., for identifiability / generalization). The results are not bad and demonstrate some of the ideas here work."
+            },
+            "weaknesses": {
+                "value": "Unfortunately, the paper has several issues that cannot be overlooked. \n\nFirst and foremost, much of the story is a bit sloppy and even problematic at places: the introduction seems to claim without much support that RL only works well when the observations do not contain noise variables that aren't related to the task at hand. There's sort of a skimming over the real problem, particularly in POMDP settings, where reward-relevant signal might be particularly sparse in observations, which can hurt the sample complexity of algorithms in many problems. The problem is often multifaceted, as the SNR (wrt task relevant factors, eg are the task variables themselves noised), reward sparsity, the degree of which the environment is partially observed, etc all factor in towards the success of various algorithms. But overall I'm not sure why, given the story of the introduction, that this has anything to do with task relevance in the representations: learning all of the transition function, even the noisy part, still should be decodable to a policy that can maximize returns. The problem is that these representations might not generalize well (e.g., when the noise correlates with a subset of task-relevant variables).\n\nSecond, the components of the loss are a bit complex and not well motivated. Some of the components seem to be doing similar things, e.g., it's unclear whether the two bottleneck terms need to both be included since all the messaging needs to be passed through z_t anyways. Why are all of these terms needed and what do they do that is distinct from the others?\n\nSome of the bounds are fine and rather standard, but it's unclear whether L_CLUB is doing a good thing or not: since we've now introduced the conditional on the actions on the top, it seems like this will discourage the model from remembering which actions were taken in the past. Wouldn't this do the opposite as stated is a goal for this model: to encode controllable, task-relevant information? But then we have I_LTC which has actions as the conditioning variable on the top of the upper bound: it seems like this and the action conditioning part of I_CLUB are doing opposite things?\n\nThere is a missing baseline which I think is very important and should be tested agains: Self-Predictive Representations (SPR).\n\nBut related to baselines (including SPR), what is really missing is what precisely all of the loss components of this model has are either 1) present in existing baselines or 2) not present in existing baselines. The overall claim is this paper is contributing through MI, but this has been done many times before, just not in the precise form. So much more work needs to be done to ground the contributions wrt the loss components in prior works, as well as better motivating these as mentioned above. And more to the point it's unclear *why* having a MI based objective of this form(s) is necessary: there are other ways to implement MI maximizations / minimizations approximately (eg regression losses as in SPR) that may just work better.\n\nFinally, the results are a bit lackluster. On some experiments (e.g., cheetah run) things go very well, but others it's not so clear (most in fact). This makes me concerned that some bit of hyper parameter tuning was performed on half cheetah that wasn't done on other environments (or baselines)."
+            },
+            "questions": {
+                "value": "Most of my questions are as concerns / weaknesses above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7554/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698783295544,
+        "cdate": 1698783295544,
+        "tmdate": 1699636914056,
+        "mdate": 1699636914056,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "JiGCng7R7g",
+        "forum": "MdHDUsP2lt",
+        "replyto": "MdHDUsP2lt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_qnYC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_qnYC"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a novel information-theoretic world model through leveraging the principle of information bottleneck. It can distill task-relevant information for policy learning in noise-saturated environments."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper focused on unexplored noise-saturated scenarios and proposed a new methed, Denoised Predictive Imagination, to tackle such situations. \n2. A detailed derivation of Denoised Predictive Imagination was given in the paper.\n3. DPI outperformed five state-of-the-art baseline models on six modified DeepMind control tasks."
+            },
+            "weaknesses": {
+                "value": "1. The design of experiments can be improved. Switching background is not convincing enough to demonstrated the effectiveness of the proposed method.\n\n2. Other basline model like DreamerV2 and DreamerV3 can also be included for comparison."
+            },
+            "questions": {
+                "value": "I will increase my rating if all of my concerns are properly addressed.\n\nThank authors' for their detailed rebuttal, hovewer, not all of my concerns are well addressed. I will keep my score unchanged."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Reviewer_qnYC"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7554/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698798983929,
+        "cdate": 1698798983929,
+        "tmdate": 1700929165663,
+        "mdate": 1700929165663,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "k4XXKXI1be",
+        "forum": "MdHDUsP2lt",
+        "replyto": "MdHDUsP2lt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_7DVA"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7554/Reviewer_7DVA"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper the authors present a novel approach to reinforcement learning problems in noisy environments through a world model that learns denoised predictions of the environment. The effect is essentially like an encoder or a dimensionality reducer, using a set of models to identify only relevant features from the environment. After compression, these features are then used to reconstruct the state in terms of only relevant features, which is then used to guide an agent. The paper presents results across three cases, finding that their approach meets or exceeds the performance of relevant baselines."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "In terms of clarity, the paper does a good job making an argument for the importance of this problem and the authors' approach to solving it. The technical details are somewhat dense, but exhaustive which helps clearly express the approach. The setup for the experiments is also very clear. \n\nIn terms of quality, the technical quality of the work is high. The detail in the paper is sufficient for reproducibility concerns, which is further strengthened with the supplementary material. There don't appear to be major issues with any equations or figures. \n\nIn terms of originality, while there are prior work in terms of denoising and reinforcement learning, the authors do a good job of overviewing it and differentiating their approach. \n\nIn terms of significance, the paper would certainly be of interest to researchers interested in RL for noisy environments."
+            },
+            "weaknesses": {
+                "value": "I identify one major and one minor weakness in the current paper draft. \n\nThe major weakness is in the experiment setups, results, and discussion around them. In the paper, the authors refer to the results of the first experiment with the static backgrounds as \"competitive with all other methods\". This is perhaps a bit generous, when DPI as below median performance in four of the six settings. For the natural background settings, the claim is that \"DPI achieves better rewards in nearly all environments\", which may be true in terms of the blue line spinning above the others, but the performance of DPI only outperforms the baselines in two of the six tasks (Cheetah Run and Walker Walk). Finally, for the random background setting, results are only given for DPI's best performing environment (Cheetah Run). Cheetah Run is also the only environment in the visualized examples, which further supports that it is DPI's best performing environment. Beyond the text perhaps overstating the performance of DPI, there's also no discussion of why the performance of DPI should improve so much in this one environment compared to the others or why it's appropriate to only showcase visualizations and random background performance in it. These issues currently lead to me, as a reader, wondering if the complexity of DPI is justified by the relatively small number of environments it improves in, compared to baselines. Clarification on this point would be greatly appreciated. \n\nIn terms of the minor weakness, the technical approach section is very dense, making it difficult to get a clear sense of the high level structure of the approach. Figure 2 exists, but is a model of the problem without a strong connection to the implemented solution. Figure 3 also exists but only covers two of the models in the approach. A complete pipeline diagram or text overview would be greatly appreciated."
+            },
+            "questions": {
+                "value": "1. Why does DPI perform so much better in Cheetah Run?\n2. Why does DPI's performance in the static environments perform below the median in so many cases?\n3. Why only include visualizations and random background results in Cheetah Run? What did the other environments look like?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7554/Reviewer_7DVA"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7554/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698985567692,
+        "cdate": 1698985567692,
+        "tmdate": 1700535473556,
+        "mdate": 1700535473556,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,356 @@
+[
+    {
+        "id": "zi5FviC7T6",
+        "forum": "B4vzu2aokv",
+        "replyto": "B4vzu2aokv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_QcUt"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_QcUt"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents an approach to Point Level Supervised Instance Segmentation based on mutual learning and knowledge distillation. The proposed algorithm, P2seg, introduces mutual distillation to recover instance segmentation based on points supervision. Comparison with the state-of-the-art methods is done using Pascal Voc-2012 and COCO-2017."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Originality. Point-supervised instance segmentation is not new in the weakly supervised literature, most approaches being more oriented to panoptic segmentation, ensuring a parsing of scenes better than instance segmentation. The novelty here is to use mutual learning between semantic segmentation and instance segmentation. The mutual information module is formed by a network S2I that transfers the semantic information to instances and a module I2S that uses the instance affinity matrices, class maps and offsets map predicted by an off-the-shelf segmentation network, namely HRNet (see e.g. \\cite{ YuanCW19} and (https://github.com/HRNet/HRNet-Semantic-Segmentation) to refine results cyclically. \n\nQuality and clarity. The effort of explaining the architecture with a number of images and sketches is appreciable. \n\nSignificance. The proposed mutual information-based method could, in principle, be lifted to large-scale datasets."
+            },
+            "weaknesses": {
+                "value": "Novelty:\\\nThe paper is quite similar to BESTIE [Kim et Al., CVPR 2022], with the mutual distillation mimicking the semantic knowledge transfer defined in BESTIE. Many passages are pretty similar, though BESTIE provides algorithms and thorough explanations of the complex architecture, which are not given here.\n\nOrganization:\\\n-No information is given on the instance affinity matrix and class map, as computed by HRNet (as stated in the last line of pg. 3, Overview of Method). HRNet is a semantic segmentation net \\cite{YuanCW19}, which is never cited, and its practical role is not defined. \n\n-No ablation is provided to understand the effect of each component. For example, it needs to be clarified if the semantic segmentation map is obtained by full supervision or by weak supervision. The mIoU of the obtained semantic segmentation is not provided.\\\n-The number of points supplied at input, how they are collected, and the relation between them and the targets should be discussed.\\\nThe number of iterations used seems to be quite high.\n\nIn particular: \\\n A table showing scores, according to the number of points taken as input, was expected. Table 5, named \u201chard pixel ratio\u201d, does not seem to be informative. \\\nA table showing the number of parameters for HRNet, MDM, and Mask-RCNN, used to retrain the MDM, was also expected, given the number of modules used.  \\\nA table showing the impact of semantic segmentation was expected.\\\n\nAmbiguities:\n- The full loss L = \\lambda_{I2S} L_{I2S} + \\lambda_{S2I} L_{S2I} is such that L_{S2I} = L_{offset} + L_{segmentation}, though no weight for balancing L_{S2I} is added. \nHowever, on page 6, paragraph Training details, it is written that the weight of the segmentation loss is 1.0 and the weight of the offset loss is 0.01, which do not sum to 1 for L_{S2I}.\n- As stated in Training details, Mask R-CNN is used for retraining MDM. Table 4 result is, in fact, the same as the result given in Table 1.\\\nHowever, in Table 1, BESTIE (points) is given on PascalVOC-2012 a mAP_{50} score of 52.8, while on BESTIE paper is reported 56.0, higher than the 55.6 mAP_{50} of the paper under revision. Likewise, there is no value for BESTIE mAP_{70}, which instead is 36.5. On COCO-2017 BESTIE obtains 34.0, while the results displayed here, on Table 2, are 33.6, therefore less than BESTIE. \n- In the two paragraphs \u201cResults on Pascal VOC 2012\u201d and \u201cResults on MS COCO 2017\u201d, it is written that the BESTIE algorithm is retrained to justify the lower scores reported, but it is not discussed why; while being the method almost similar an explanation is required. Therefore, apparently, the presented work does not improve on the SOTA. \\\nFurthermore, the works of \\cite{Kim_2023_CVPR} and \\cite{liao2023attentionshift} are not even reported, providing better results than those displayed in the paper under revision. \n\n- Possibly incorrectly reported values:\nThe difference between panoptic segmentation and instance segmentation is that instance segmentation does not consider \u2018stuff\u2019, and the metric mAP on \u2018things\u2019 allows confidence on overlapping objects. The difference implies (see \\cite{Kirillov_2019_CVPR}) that the metric PQ^{th}, that is panoptic quality on \u2018things\u2019, is like AP when from AP the non-overlapping predictions are subtracted, which means that AP benefits from predicting multiple overlapping hypotheses.\\\nThis paper, under revision, reports on Table 1 and 2 comparisons with Point2Mask \\cite{ li2023point2mask}) quite inexactly. \\\nIn fact, Point2Mask obtains on VOC 2012 results with PQ^{th}, namely panoptic quality on \u2018things\u2019, equal to 59.4 (with swin-transformer), and 53.0 with Resnet-101 while on Table 1 it is reported as mAP_{50} = 48.4 and mAP_{75} = 22.8. Similarly, on COCO-2017, no justification for these reported results is given.\n\n\nOther comments:\n1. Hadarmad should be Hadamard, which is repeated twice on pages 5 and 8.\n2. Pg. 5: The concept of \u201cinstance ownership relation\u201d is not introduced.\n3. Pg. 5, eq. (5), it should be noted that A is assumed to be generated by the network HRNet, which is not referred to and it is a segmentation network. \n4. Pg 6: The description of COCO-2017 is wrong. It is written that COCO (i.e. COCO 2017) includes 110k images, but COCO 2017 includes 118k images. The test set is not reported. This is made of 40670 images, does this imply that no tests were made? Actually, there are no results on the test set.\n5. Pg. 6 declares, \u201cWe assess the performance of object detection using two measures. We measure the performance using the standard protocol mean Average Precision(mAP). \u201cObject detection\u201d? The performance should be about instance segmentation unless it starts with HRNet object detection. \n \n\nReferences\\\n@article{YuanCW19,\\\n  title={Object-Contextual Representations for Semantic Segmentation},\\\n  author={Yuhui Yuan and Xilin Chen and Jingdong Wang},\\\n  booktitle={ECCV},\\\n  year={2020}\\\n}\\\n@inproceedings{li2023point2mask,\\\n  title={Point2mask: Point-supervised panoptic segmentation via optimal transport},\\\n  author={Li, Wentong and Yuan, Yuqian and Wang, Song and Zhu, Jianke and Li, Jianshu and Liu, Jian and Zhang, Lei},\\\n  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},\\\n  pages={572--581},\\\n  year={2023}\\\n \n@InProceedings{Kirillov_2019_CVPR,\\\n author = {Kirillov, Alexander and He, Kaiming and Girshick, Ross and Rother, Carsten and Dollar, Piotr},\\\n title = {Panoptic Segmentation},\\\n booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\\\n month = {June},\\\n year = {2019}\\\n }\\\n@inproceedings{fan2022pointly,\\\n  title={Pointly-supervised panoptic segmentation},\\\n  author={Fan, Junsong and Zhang, Zhaoxiang and Tan, Tieniu},\\\n  booktitle={European Conference on Computer Vision},\\\n  pages={319--336},\\\n  year={2022},\\\n  organization={Springer}\\\n}\\\n@inproceedings{liao2023attentionshift,\\\n  title={AttentionShift: Iteratively Estimated Part-Based Attention Map for Pointly Supervised Instance Segmentation},\\\n  author={Liao, Mingxiang and Guo, Zonghao and Wang, Yuze and Yuan, Peng and Feng, Bailan and Wan, Fang},\\\n  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},\\\n  pages={19519--19528},\\\nyear={2023}\\\n}\\\n \n@InProceedings{Kim_2023_CVPR,\\\n author = {Kim, Beomyoung and Jeong, Joonhyun and Han, Dongyoon and Hwang, Sung Ju}, \\\ntitle = {The Devil Is in the Points: Weakly Semi-Supervised Instance Segmentation via Point-Guided Mask Representation}, \\\nbooktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, \\\nmonth = {June}, year = {2023}, pages = {11360-11370} }\\"
+            },
+            "questions": {
+                "value": "Please explain:\n\n    how the semantic segmentation is obtained.\n    Why BESTIE is retrained, for both PascalVOC-2012 and COCO-2017.\n    Why so many iterations are used, and what is included.\n    Provide details about the number of points used and the relations points-targets."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission688/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698674683145,
+        "cdate": 1698674683145,
+        "tmdate": 1699635996043,
+        "mdate": 1699635996043,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "FWARqYM7QC",
+        "forum": "B4vzu2aokv",
+        "replyto": "B4vzu2aokv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_3EDk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_3EDk"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper focuses on the problems of local response and seprated semantic and instance learning on the pointly-supervised instance segmentation task. To solve the problems, the authors propose the Mutual Distillation Module, which achieves the conversion and cooperation between semantic and instance segmentation by predicting class, offset, and affinity, thus leveraging the complementary strengths of instance and semantic. Various experiments demonstrate the effective of the proposed method."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "** The analysis of the complementarity of instance segmentation and semantic segmentation is reasonable for the pointly-supervised instance segmentation task, and the designed method corresponds to the analysis.\n\n** The core S2I method is unique and more accurate than BESTIE.\n\n** Experiments demonstrate that both the Semantic to Instance (S2I) and Istance to Semantic (I2S) module is effective and the overall method outperforms previous works."
+            },
+            "weaknesses": {
+                "value": "**  Writing and presentation need improvement. For example, there are some confusing descriptions that are not explained (e.g., Dim-align in Fig. 3, instance adaptive grouping in Sec. 3.1, the green arrow from S2I loss to the mask in Fig. 3).\n\n**  Some key technical details are missing. In Fig. 3, there are multiple MDM stages, but the required number of stages are not specified or experimented. the additional training cost should be discussed.\n\n** The ablation about \u03b2 in Sec. 3.2 are missing, so the effect on \u201csmoothening the distribution to attain the optimal semantic segmentation map\u201d is not clear.\n\n** According to Sec. 3.1, the pseudo labels used in the first stage are obtained by SAM, but SAM is contrary to the setting of weak supervision. Moreover, in Tab. 1 and 2 the authors mark the proposed method as \u201cno extra data\u201d. But in my opinion, the used off-the-shelf segmentation map should be considered as extra data.\n\n**  Will the proposed S2I method be sensitive to the position of the points? Could the author provide some qualitative or quantitative analysis to further illustrate the robustness of the method?"
+            },
+            "questions": {
+                "value": "**  Could the author explain the details described in Weaknesses 1?\n\n**  What impact do the hyperparameter \u03b2 and the number of MDM stages have on performance?\n\n**  Does the use of SAM destroy fair comparisons, and would other pseudo-label generators be useful?\n\n**   Will the proposed S2I method be sensitive to the position of the points?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Reviewer_3EDk"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission688/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698743642389,
+        "cdate": 1698743642389,
+        "tmdate": 1700499469348,
+        "mdate": 1700499469348,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "HFhxhyCUnm",
+        "forum": "B4vzu2aokv",
+        "replyto": "B4vzu2aokv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_ZJkY"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_ZJkY"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a Mutual Distillation Module (MDM) to leverage the complementary strengths of both instance position and semantic information and achieve accurate instance-level object perception. It consists of Semantic to Instance (S2I) and Instance to Semantic (I2S) sepcifically."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This method is novel and new. Training in a multi-stage way, combining the advantages of both semantic segmentation and instance segmentation looks reasonable. The experimental improvement also looks good."
+            },
+            "weaknesses": {
+                "value": "1. Training in a multi-stage way, I feel concerned about the efficiency of the method. The author should provide comparisons about efficiency, like GFLOPS, FPS, inference time and so on, with existing methods, to demonstrate that the improvement does not come from extra computational budget. In addition, will multi-stage training derive into more training iteration numbers? If so, the author should also provide fair comparison with the same iteration numbers.\n2. The ablation study is conducted on VOC, where S2I looks like a 0.4% improvement. The effect of S2I is thus quite limited. I am also curious about the ablation study on the COCO dataset. Will the improvement becomes less? If se, I feel that S2I is unnessary and extra.\n3. What's about the performance of the method on the COCO dataset with ResNet?"
+            },
+            "questions": {
+                "value": "Please refer to the weakness part. I will adjust my rating based on the rebuttal."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Reviewer_ZJkY"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission688/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698757256415,
+        "cdate": 1698757256415,
+        "tmdate": 1699635995865,
+        "mdate": 1699635995865,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "E1N32lxtg2",
+        "forum": "B4vzu2aokv",
+        "replyto": "B4vzu2aokv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_fR5S"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_fR5S"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposed a novel approach \u201cmutual distillation\u201d for Point Supervised Instance Segmentation (PSIS). The method utilizes point-supervised semantic segmentation results as an initialization for guiding instance segmentation, and then use an affinity matrix that represents instance segmentation details to optimize the semantic information This process achieves mutual distillation between instance and semantic information to improve the final result of instance segmentation. They validated the effectiveness of the proposed method on the VOC and COCO datasets."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1.\tThe concept of \"MUTUAL DISTILLATION\" in point instance segmentation is both novel and interesting. In my experimental observations, BESTIE doesn't handle adjacent objects well, possibly because it relies solely on semantic segmentation results without fully utilizing point-represented instance information. The motivation behind this paper aligns with my observations, and therefore, the proposed concept of mutual information exchange between semantic and instance information seems sound to me.\n2.\tThe paper's experimental section is comprehensive, using two datasets, different backbones, segmentation architectures, and conducting essential ablation studies.\n3. It appears that the visualization is effectively presented."
+            },
+            "weaknesses": {
+                "value": "1.\tObservations from Figure 7 and Figure 8 suggest that the proposed mutual distillation method appears to perform well in segmenting adjacent objects and addressing missing object issues. It would greatly enhance the quality of this paper if the authors could provide a quantitative analysis of these cases.\n2.\tMinor issue\nThe writing of introduction should be improved somewhat.\n-  \"Instance segmentation is a critical task in computer vision and is equally important in semantic segmentation estimation and instance discrimination.\"\nto \n\"Instance segmentation is a critical task in computer vision, where semantic segmentation estimation and instance discrimination are equally important .\"\n- \u201cand it aims not only to locate objects accurately but also estimate their boundaries to differentiate\u201d\nto\n\u201cand it aims not only to locate objects accurately but also to estimate their boundaries to differentiate\u201d\nI understand the description in 2nd paragraph of introduction. But the \u672f\u8bed \u201csemantic segmentation\u201d and \u201cinstance segmentation\u201d may not suitbale, it should be \u201csemantic information\u201c and \u201cinstance information\u201d"
+            },
+            "questions": {
+                "value": "Please see the detailed information in the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission688/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698760691731,
+        "cdate": 1698760691731,
+        "tmdate": 1699635995759,
+        "mdate": 1699635995759,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "agjHEojgbp",
+        "forum": "B4vzu2aokv",
+        "replyto": "B4vzu2aokv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_enoR"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission688/Reviewer_enoR"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addresses Point-level Supervised Instance Segmentation (PSIS). The authors argue that the existing PSIS methods usually suffer from the lack of contour annotations, and thereby precisely predicting boundaries is still challenging. As a remedy, this paper introduces the Mutual Distillation Module (MDM), leveraging the complementary benefits of semantic information and instance position. In MDM, Semantic to Instance (S2I) exploits the precise boundary information of semantic maps to enhance the instance contours. Meanwhile, Istance to Semantic (I2S) uses discriminative instances to differentiate the number of objects in the semantic map. Extensive experiments and comparisons are conducted on the PASCAL VOC and MS COCO datasets."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The idea is sounding.\n2. The ablations studies are extensively conducted."
+            },
+            "weaknesses": {
+                "value": "[Major]\n1. Some important and recent WSSS methods are missing. Please refer to the following CVPR 2023 papers.\n* Weakly Supervised Semantic Segmentation via Adversarial Learning of Classifier and Reconstructor\n* Out-of-Candidate Rectification for Weakly Supervised Semantic Segmentation\n* Boundary-Enhanced Co-Training for Weakly Supervised Semantic Segmentation\n* Token Contrast for Weakly-Supervised Semantic Segmentation\n\n2. The performance table is incomplete. First, please show the result of mAP25. Also, there have been several works using the transformer backbone, such as Point2Mask or AttentionShift. Please compare with them. In addition, where is BESTIE (with Res101)? Finally, please include the results of the COCO test set.\n\n3. The segment-anything model (SAM) can be an excellent option for solving PSIS. Please compare the proposed method with the SAM, from the performance perspective.\n\n[Minor]\nThe overall  writing should be enhanced."
+            },
+            "questions": {
+                "value": "Please refer to weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission688/Reviewer_enoR",
+                    "ICLR.cc/2024/Conference/Submission688/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission688/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698800396972,
+        "cdate": 1698800396972,
+        "tmdate": 1700594128766,
+        "mdate": 1700594128766,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

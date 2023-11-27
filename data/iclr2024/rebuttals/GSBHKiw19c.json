@@ -1,0 +1,663 @@
+[
+    {
+        "title": "Reward-Consistent Dynamics Models are Strongly Generalizable for Offline Reinforcement Learning"
+    },
+    {
+        "review": {
+            "id": "Ge0DdzWqkB",
+            "forum": "GSBHKiw19c",
+            "replyto": "GSBHKiw19c",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a method that constructs a discriminator (known as dynamic reward) to distinguish real offline data and generated data from the learned dynamics model. The resulting discriminator acts as a filter for out-of-distribution (or unlikely) transitions. Consequently, the paper claims through experiments that the proposed method achieves out-of-distribution generalization with the dynamic reward, therefore allowing improving existing offline MBRL methods."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The idea is simple and appears to be yield strong results in locomotion tasks.\n- The experimental analyses are thorough, in particular:\n\t- The joint distribution analysis on the learned dynamics rewards\n\t- The ablation on the filtering"
+                },
+                "weaknesses": {
+                    "value": "The following should be addressed:\n- For the dynamics reward learning algorithm, why is GAIL better than GAN? It seems like the offline data set is fixed according to Algorithm 1, thus you can treat the dynamics models $P_t$ as the generative models while the dynamics rewards $D_t$ as the discriminators.\n- Proposition 1 is a result for tabular setting. Furthermore, this discriminator only differentiates properly the in-distribution transitions---how does this discriminator enable OOD generalization?\n\t- On page 27, last paragraph indicates that in the halfcheetah task, the dynamics reward appears to be less robust on OOD samples---is this not contradictory to what the main paper claims? Perhaps this has to do with the coverage of the data set---it appears that both `halfcheetah-medium-expert` and `halfcheetah-medium` are visibly suffering in OOD generalization, but they have less coverage on the state-action space compared to `random` and `replay`.\n- The rate is $1/\\sqrt{T}$, so how big should $T$ really be in practice? Proposition 1 somewhat suggests that $T$ should be almost covering the whole state-action space---seems like in that case we can just directly model the dynamics using a table?\n\t- Experimentally, does this correspond to 5000 as suggested by Table 4 in the appendix?\n- In experimental analysis, it appears the paper focuses mainly on locomotion tasks, and they seem to be mostly overlaps (i.e. NeoRL and D4RL share very similar environments.) I am curious if this applies to other non-trivial environments that are supported by D4RL."
+                },
+                "questions": {
+                    "value": "- Page 2, lines 3-4. It is unclear why the task reward function is known is reasonable given the explanation---it perhaps reinforces that reward function should not be known since it can be considered to be part of the dynamics model?\n- Page 2, last third line of first paragraph. What does it mean by \"static capabilities\"? Does it mean the model is no longer trained after (i) before equation (1)?\n\n**Possible typos**\n- Page 1, paragraph 2, line 3: \"on the models\" instead of \"on models\"\n- Page 1, paragraph 2, line 4, \"the model errors\" instead of \"model errors\"\n- In Algorithm 1, line 3: Is $\\phi$ the same as the policy $\\phi$?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz",
+                        "ICLR.cc/2024/Conference/Submission7694/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7694/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698418762776,
+            "cdate": 1698418762776,
+            "tmdate": 1700528732314,
+            "mdate": 1700528732314,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "uRRlwX9Fo8",
+                "forum": "GSBHKiw19c",
+                "replyto": "Ge0DdzWqkB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer F8oz-1/2"
+                    },
+                    "comment": {
+                        "value": "We sincerely appreciate the time and effort you have invested in reviewing our paper, as well as your insightful and constructive feedback. Your comments have greatly assisted us in improving the quality of our work.\n\n**Comment 1:** For the dynamics reward learning algorithm, why is GAIL better than GAN? It seems like the offline data set is fixed according to Algorithm 1, thus you can treat the dynamics models\u00a0as the generative models while the dynamics rewards\u00a0\u00a0as the discriminators.\n\n**Answer C2:** We would like to clarify that we do not claim that GAIL is better than GAN. Actually, they are for different purposes but with the same learning objective. In GAN, the generator inputs a random variable and outputs a data (e.g., image), meanwhile in GAIL the generator is reinforcement learning. Here, learning the dynamics reward involves a reinforcement learning task in general, and we employ GAIL framework. Although GAN can be applied in the specific setting that horizon=1 in our experiment, we believe GAIL is suitable for general situations.\n\n**Comment 2:** Proposition 1 is a result for tabular setting. Furthermore, this discriminator only differentiates properly the in-distribution transitions---how does this discriminator enable OOD generalization?\n\n- On page 27, last paragraph indicates....\n\n**Answer C2:** To address your first concern, we extend Proposition 1 to the linear function approximation setting [1]. In this setting, the dynamics models and discriminators are represented by linear functions with respect to the features. Compared to the tabular result, the difference is that the state-action space size on error terms is replaced by the feature dimension. We will involve this result in the revised paper.\n\nFor your second question, unfortunately, we do not have a theoretical answer to explain the OOD generalization ability of the dynamics reward. Nevertheless, we can find that the use of the ensemble of discriminators (in Eq.(3)) can be helpful. Specifically, in the following table, we list the average model MAE of the original dynamics model, the dynamics model filtered by the ensemble of discriminators, and the dynamics model filtered by a single discriminator (the last discriminator). It can be observed that the single discriminator performs worse than the ensemble of discriminators. However, we believe this is not the final answer. We will continue to study the theoretical properties of the dynamics reward in the future.\n\n|                                                       | Average Model MAE |\n| ----------------------------------------------------- | ----------------- |\n| original model                                        | 0.226             |\n| model with transition filter (ensemble discriminator) | 0.127             |\n| model with transition filter (single discriminator)   | 0.141             |\n\nFinally, we would like to point out that the experimental results in Figure 12 on page 27 is not contradictory to our main claim. We do not claim that the dynamics reward is always robust to samples from any level of out-of-distribution. Essentially, the dynamics reward is robust to OOD samples within a region but its robustness also has limit. The results in Figure 12 exactly validate this claim. On one hand, for OOD samples with MAE less than 1.0, the dynamics reward exhibits the remarkable robustness. On the other hand, the dynamics reward cannot show unlimited robustness for extremely OOD samples with MAE around 10.0. From the information-theoretic perspective, we believe that no method can achieve unlimited robustness to samples from any level of OOD. It is a promising direction to further expand the robustness boundary of our dynamics reward learning method.\n\nReference:\n\n[1] Chi Jin, et al. \u201cProvably e\ufb03cient reinforcement learning with linear function approximation.\u201d COLT 2020.\n\n**Comment 3:** The rate is $1/\\sqrt{T}$, so how big $T$ should\u00a0really be in practice? Proposition 1 somewhat suggests that\u00a0should be almost covering the whole state-action space---seems like in that case we can just directly model the dynamics using a table?\n\n- Experimentally, does this correspond to 5000 as suggested by Table 4 in the appendix?\n\n**Answer C3:** We appreciate your question. In practice, we choose the number of iterations $T$ such that the losses of the discriminator and dynamics model have converged. In our experiments, this indeed corresponds to 5000 as shown in Table 4.\n\nIn the tabular setting, $T$ should cover the state-action space and the dynamics model is represented by a table. As mentioned in **Answer C1**, we can extend Proposition 1 to the linear function approximation setting. In this setting, the dynamics model is represented by a linear function with respect to the feature, and $T$ does not need to cover the whole state-action space and only depends on the feature dimension."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700145322003,
+                "cdate": 1700145322003,
+                "tmdate": 1700145322003,
+                "mdate": 1700145322003,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Myd2y5A0Qp",
+                "forum": "GSBHKiw19c",
+                "replyto": "Ge0DdzWqkB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank the authors for the detailed response.\n\nRegarding the answers:  \n**Comment 1**: Perhaps this is why I don't completely understand why this setting is GAIL but not GAN. Based on Algorithm 2 the objective appears to be sampling from the offline dataset $\\mathcal{D}$, which is supposedly under the i.i.d. supervised learning setting, so how is this RL since $\\mathcal{D}$ will not be modified based on $D$ nor $P$.\n\n**Comment 2**:\n- Regarding linear MDPs: I agree the referenced paper will likely give you a result that is dependent on $d$, though I would prefer if the paper can specifically mention this.\n- Regarding OOD capability: I believe we agree that the experiment does not indicate that the method generalizes to extremely OOD samples. Consequently, this raises the question of whether the paper has over-claimed the novelty. In the paper title, the phrase \"Strongly Generalizable\" may be misleading---I was expecting this approach to also deal with extremely OOD samples. I suggest the paper to avoid using the word \"strong\" as it appears to be an absolute term, but instead using relative terms (e.g. Better, Stronger, More Generalizable, etc.)\n\n**Comment 3**: This raises the question of scalability. If we start considering image-based tasks (e.g. Atari or robotics), then the number of models required for this approach becomes prohibitively expensive as each models can have millions, if not billions of parameters. I believe the paper should indicate (even better if address) this limitation.\n\nThank you for the other responses, I acknowledge that I have read them. Due to the above questions, I keep my current score."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434055289,
+                "cdate": 1700434055289,
+                "tmdate": 1700434085051,
+                "mdate": 1700434085051,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "2L65Y6FRzl",
+                "forum": "GSBHKiw19c",
+                "replyto": "an8gATbsfF",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_F8oz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the response. With this I am happy to increase the score to 6 as some of the limitations and questions remain."
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700528716443,
+                "cdate": 1700528716443,
+                "tmdate": 1700528716443,
+                "mdate": 1700528716443,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "ReyLuIVNsv",
+            "forum": "GSBHKiw19c",
+            "replyto": "GSBHKiw19c",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_zEZ1"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_zEZ1"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Model-based RL suffers from compounding error as a result of recursive model rollouts. This is especially pronounced in offline model-based RL, where there is no online data to correct model errors. Prior offline MBRL methods typically address this by discouraging the policy from visiting states where the model is uncertain, via some uncertainty quantification. This paper introduces a novel perspective: they learn a \"dynamics reward\" that evaluates the dynamics consistency of transitions and use it to filter model rollouts to only produce trajectories that are plausible under the dynamics. Concretely, they train the dynamics reward model using inverse max margin IRL. Rollout filtering is performed in a beam-search fashion, where at each rollout step they sample a number of transitions from the model and weight them by their dynamics rewards. Applying this method on top of existing offline MBRL methods results in significant improvements over prior state-of-the-art on D4RL and NeoRL benchmarks. Overall, this paper makes a solid contribution to offline model-based RL by introducing a novel perspective for tackling compounding error and distribution shift."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- This paper introduces a novel and credible remedy for a long-standing problem in model-based RL, namely compounding error due to recursive model rollouts resulting in increasingly out-of-distribution inputs. While prior methods mitigate this issue by discouraging the policy from visiting states where the model is uncertain, this paper proposes to filter model rollouts using an adversarially trained \"critic\" function. This approach can be easily combined with existing offline MBRL methods and lead to significant performance gain.\n- The authors provide extensive evaluations of their method on a variety of domains, ranging from analytical toy tasks to standard benchmarks. Their method demonstrates a universal improvement across these tasks."
+                },
+                "weaknesses": {
+                    "value": "- There are limited ablation studies in the paper. This makes it illusive why the method actually works so well, and when it works well. Please refer to Questions for more details."
+                },
+                "questions": {
+                    "value": "- When training the dynamics reward, the (s, a) pair is always sampled from the dataset, whereas the (s') is either from the dataset or from the adversarial dynamics model. This makes the dynamics reward robust to OOD (s') but not (s, a). How does the model generalize to OOD (s, a)? Can you evaluate the dynamics model explicitly on OOD (s, a) pairs and see if the dynamics reward is still higher with valid transitions? \n- How does this method compare to a simple filtering technique like selecting the transition with the lowest bellman error?\n- When filtering, why construct a softmax distribution instead of directly taking the argmax action?\n- How does the reward dynamics relate to energy-based models? It seems quite similar to an energy function on (s, a, s').\n\nSuggestions:\n- Table 1 could use a more detailed caption.\n- It would be nice to use this for model-based offline policy evaluation [1]. I would imagine the reduction in compounding error to benefit OPE a lot.\n\nReferences:\n1. Michael R. Zhang, Tom Le Paine, Ofir Nachum, Cosmin Paduraru, George Tucker, Ziyu Wang, Mohammad Norouzi. Autoregressive Dynamics Models for Offline Policy Evaluation and Optimization. ICLR 2021."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7694/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698738986630,
+            "cdate": 1698738986630,
+            "tmdate": 1699636936646,
+            "mdate": 1699636936646,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "gW6Dfr99OB",
+                "forum": "GSBHKiw19c",
+                "replyto": "ReyLuIVNsv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer zEZ1-1/2"
+                    },
+                    "comment": {
+                        "value": "We appreciate your time to review and provide positive feedback for our work.\n\n**Question 1:** When training the dynamics reward, the (s, a) pair is always sampled from the dataset, whereas the (s') is either from the dataset or from the adversarial dynamics model. This makes the dynamics reward robust to OOD (s') but not (s, a). How does the model generalize to OOD (s, a)? Can you evaluate the dynamics model explicitly on OOD (s, a) pairs and see if the dynamics reward is still higher with valid transitions\n\n**Answer Q1:**  Thanks for your insightful questions!\n\n**How does the model generalize to OOD (s, a).** Unfortunately, we do not have a theoretical answer to explain the OOD generalization ability of the dynamics reward. Nevertheless, we find that the use of the ensemble of discriminators (in Eq.(3)) can be helpful. Specifically, in the following table, we list the average model MAE of the original dynamics model, the dynamics model filtered by an ensemble of discriminators, and the dynamics model filtered by a single discriminator (the last discriminator). It can be observed that the single discriminator performs worse than the ensemble of discriminators. However, we believe this is not the final answer. We will continue to study the theoretical properties of the dynamics reward in the future.\n\n|                                                       | Average Model MAE |\n| ----------------------------------------------------- | ----------------- |\n| original model                                        | 0.226             |\n| model with transition filter (ensemble discriminator) | 0.127             |\n| model with transition filter (single discriminator)   | 0.141             |\n\n**Explicitly OOD evaluation**. The performance of the dynamics reward in OOD region can be evaluated from Figure 2(d) and (e). The scores in Figure 2(e) are higher than Figure 2(d) in almost all the area, indicating that the dynamics reward gives higher scores on valid transitions in OOD region. Besides, the results of the D4RL task are shown in Figure 5. For (s, a) pairs with an extremely large MAE (1.0), we can view them as OOD pairs since the dynamics model has extremely poor predictions on such pairs. Figure 5(c) clearly shows that the dynamics rewards of true transitions are higher than that of model transitions on these OOD pairs.\n\nMoreover, to evaluate the dynamics model explicitly on OOD region, we plot the figures in Figure 1 in the [anonymized link](https://anonymous.4open.science/r/iclr24-paper-7694-response-materials-C836/) to compare the original dynamics model and the dynamics model filtered by the dynamics reward. It can be observed that the low error region has been largely expanded into the OOD region.\n\n**Question 2:** How does this method compare to a simple filtering technique like selecting the transition with the lowest bellman error?\n\n**Answer Q2:** Thanks for raising this interesting point. The bellman error is affected by many factors. Firstly, the error of Q function significantly affects the bellman error. How to learn an accurate Q function is still an open problem. Even if we assume that an accurate Q function is available (in this case offline RL has been solved), the bellman error is still affected by the scale of reward and Q values at state-action pairs. Therefore, bellman error is not a proper metric for filtering transitions.\n\nWe have conducted comparison experiments on the `halfcheetah` task. For a transition $(s, a, r, s^\\prime)$, we calculate the squared Bellman error of $(Q_{\\psi} (s, a) - r - \\gamma Q_{\\psi} (s^\\prime, a^\\prime))^2$, where $Q_{\\psi}$ is the current Q-function, $a^\\prime \\sim \\pi_{\\phi} (\\cdot|s^\\prime)$ and $\\pi_{\\phi}$ is the current policy. The results are shown in the following table. We observe that the performance of this baseline is significantly worse than MOREC. This demonstrates that the bellman error is not a good metric for transition filtering.\n\n|                     | MOREC-MOPO               | MOPO WITH BELLMAN ERROR FILTER |\n| ------------------- | ------------------------ | ------------------------------ |\n| halfcheetah-med-exp | $\\mathbf{112.1 \\pm 1.8}$ | $59.1 \\pm 9.6$                 |\n| halfcheetah-med-rep | $\\mathbf{76.5 \\pm 1.2}$  | $57.7 \\pm 2.5$                 |\n| halfcheetah-med     | $\\mathbf{82.3 \\pm 1.1}$  | $67.6 \\pm 2.7$                 |\n| halfcheetah-rnd     | $\\mathbf{51.6 \\pm 0.5}$  | $41.3 \\pm 2.18$                |\n| average             | $\\mathbf{80.6}$          | $56.4$                         |"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700144703068,
+                "cdate": 1700144703068,
+                "tmdate": 1700144703068,
+                "mdate": 1700144703068,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "xEFOonKHNf",
+                "forum": "GSBHKiw19c",
+                "replyto": "evXKlcIqsH",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_zEZ1"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_zEZ1"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate the detailed response. It seems that despite the empirical evidence, the reason why dynamics reward is able to generalize to OOD transitions remains elusive. That said, this paper proposes a strong empirical method and opens up an interesting direction for future research. Therefore, I keep my current evaluation.\n\nOne thing to clarify is that by \"energy-based model\" I don't mean the energy with respect to the dataset distribution, but with respect to the ground truth dynamics distribution. In other words, (s, a, s') that is likely under the truth dynamics has a low energy, whereas (s, a, s') that is unlikely under the true dynamics has a high energy. It would be interesting to investigate the relationship between dynamics rewards and energy functions in future work."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700458982951,
+                "cdate": 1700458982951,
+                "tmdate": 1700458982951,
+                "mdate": 1700458982951,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "J0qHfneRbt",
+            "forum": "GSBHKiw19c",
+            "replyto": "GSBHKiw19c",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper presents an offline model-based RL method that aims to reduce the prediction error of dynamics model in OOD states. The main idea is to learn a dynamics reward which is assigned a higher value when the input transition is close to ground-truth transition. This reward is utilized when predicting the future states with dynamics models, by weighting the future predicted states with their predicted dynamics rewards. Experiments first provide a supporting experiment and analysis on synthetic task and then evaluate the proposed method in D4RL and NeoRL offline RL benchmarks."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The idea of learning dynamics reward is new to my knowledge.\n- The paper presents helpful analysis and supporting experiments to understand how the proposed method works.\n- The proposed method can consistently improve the performance of offline RL methods in most considered tasks."
+                },
+                "weaknesses": {
+                    "value": "- The interpretation of dynamics model as an agent and introducing the concept of reward adds unnecessary complexity to the method and makes it a bit difficult to easily understand the method. Simply formulating the main idea with adversarial generative training and using the score D as a reward could make the paper be more simple and easy to understand.\n- The paper introduces multiple hyperparameters and did quite extensive hyperparameters search (e.g., temperature, penalty, and threshold, ..). Making sure that the baseline is fully tuned with the similar resource given to the proposed method could be important for a fair comparison.\n- Figure 2 is very difficult to parse and how this leads to the conclusion that dynamics rewards is superior to dynamics model is not clear.\n- The additional complexity of learning dynamics reward and implementation complexity might limit the wide adoption of the proposed method."
+                },
+                "questions": {
+                    "value": "- Could the authors answer & address my concerns & questions in Weaknesses?\n- What does ``Accordingly, the behavior policy $\\pi_{\\beta}$ is regarded as the \u201cdynamics model\u201d` mean? It's difficult to parse and seems out-of-context as the behavior policy is not even defined yet before this line."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7694/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698868349608,
+            "cdate": 1698868349608,
+            "tmdate": 1700729418320,
+            "mdate": 1700729418320,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "8jiohsHFPg",
+                "forum": "GSBHKiw19c",
+                "replyto": "J0qHfneRbt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Gxsz-1/2"
+                    },
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and providing us with your valuable feedback.\n\n**Comment 1:** The interpretation of dynamics model as an agent and introducing the concept of reward adds unnecessary complexity to the method and makes it a bit difficult to easily understand the method. Simply formulating the main idea with adversarial generative training and using the score D as a reward could make the paper be more simple and easy to understand.\n\n**Answer C1:** We would like to clarify that the interpretation of dynamics model as an agent has been proposed in several previous studies, including [1, 2, 3, 4]. Such perspective is widely recognized and can help understand the motivation of learning the dynamics reward by IRL. Meanwhile, the single score $D$ cannot be simply used as the dynamics reward as it is coupled with the (learning) transition behaviors. We use an ensemble of $D$, which is also motivated from the perspective of treating dynamics model as an agent. We will clarify this in the revised paper.\n\nReferences:\n\n[1] Venkatraman Arun, et al. \u201dImproving multistep prediction of learned time series models.\u201d AAAI 2015. \n\n[2] Yueh-Hua Wu, et al. \u201cModel Imitation for Model-Based Reinforcement Learning.\u201d ArXiv: 1909.11821.\n\n[3] Tian Xu, et al. \u201cError bounds of imitating policies and environments.\u201d NeurIPS 2020.\n\n[4] Zifan Wu, et al. \u201cModels as Agents: Optimizing Multi-Step Predictions of Interactive Local Models in Model-Based Multi-Agent Reinforcement Learning.\u201d AAAI 2023. \n\n**Comment 2:** The paper introduces multiple hyperparameters and did quite extensive hyperparameters search (e.g., temperature, penalty, and threshold, ..). Making sure that the baseline is fully tuned with the similar resource given to the proposed method could be important for a fair comparison.\n\n**Answer C2:** Thanks for your suggestion. We would like to point that we did not use significant additional resources for hyperparameters search compared to the main baselines MOPO and MOBILE. Here we list the hyperparameter search spaces of MOPO, MOBILE and MOREC-MOPO/-MOBILE on D4RL tasks.\n\nFor MOPO and MOBILE, we use the implementation in [Sun et al., 2023], which reports the hyperparameter search strategy in Appendix C.2 and C.3 in [Sun et al., 2023].\n\n1. For MOPO, [Sun et al., 2023] performs a grid search on three parameters: penalty coefficient $\\beta$ with 3 choices, rollout horizon $h$ with 2 choices and uncertainty quantifiers with 3 choices. **Therefore, the search space size in MOPO is 18.**\n2. For MOREC-MOPO, it introduces two additional hyperparameters: the temperature $\\kappa$ and threshold $r^D_{\\min}$ in transition filtering. The hyperparameter search strategy is detailed in Appendix D.2. However, we did not tune the hyperparameters $r^D_{\\min}$ and $h$. For $r^{D}_{\\min}$, based on the result shown in Figure 5(a), we choose a fixed value of 0.6 across all tasks. For $h$, we choose a fixed value of 100 across all tasks. Thus we only take a grid search on two parameters: penalty coefficient $\\beta$ with 6 choices, temperature $\\kappa$ with 2 choices. **The total search space size in MOREC-MOPO is 12.**\n3. For MOBILE, [Sun et al., 2023] performs a grid search on two parameters: penalty coefficient $\\beta$ with 4 choices, rollout horizon $h$ with 2 choices. **Therefore, the search space size in MOBILE is 8.**\n4. For MOREC-MOBILE, its hyperparameters and search strategy are the same as MOREC-MOPO. **Thus, the search space size in MOREC-MOBILE is 12.** \n\nIn summary, MOPO and MOBILE are tuned with comparable resources to MOREC-MOPO/MOBILE for a fair comparison."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700144285812,
+                "cdate": 1700144285812,
+                "tmdate": 1700144285812,
+                "mdate": 1700144285812,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "8M22llWgQo",
+                "forum": "GSBHKiw19c",
+                "replyto": "AVEqmqkTTS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the response. Could you explain what `Meanwhile, the single score cannot be simply used as the dynamics reward as it is coupled with the (learning) transition behaviors.` means in a bit more detail?"
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700226332558,
+                "cdate": 1700226332558,
+                "tmdate": 1700226332558,
+                "mdate": 1700226332558,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "s3BDSFg2Yc",
+                "forum": "GSBHKiw19c",
+                "replyto": "KVJqIelJWg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your response. Some parts got much more clear after the rebuttal phase and I don't have major concerns, so I will update my score to be 6. One last question is, have you tried investigating how good model P learned in Eq 2 is, for instance, in terms of accuracy or downstream performance? I'm asking because you're abandoning it in contrast to other adversarial learning frameworks that aim to learn a good generator by this objective."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700598985663,
+                "cdate": 1700598985663,
+                "tmdate": 1700598985663,
+                "mdate": 1700598985663,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ruG4rQ0R4g",
+                "forum": "GSBHKiw19c",
+                "replyto": "k55bkGACHk",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_Gxsz"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you, it could be nice to mention this somewhere in the draft and potentially discuss this."
+                    }
+                },
+                "number": 25,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700729404138,
+                "cdate": 1700729404138,
+                "tmdate": 1700729404138,
+                "mdate": 1700729404138,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "MGtt1LsDfM",
+            "forum": "GSBHKiw19c",
+            "replyto": "GSBHKiw19c",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_HqU2"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7694/Reviewer_HqU2"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Paper describes a new method for offline model-based RL using a new concept of \"dynamics reward\", and present results showing its effectiveness."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "Quality\n- Paper presents a number of experiments showing the effectiveness of the proposed method, including SOTA results on standard offline RL benchmarks\n\nClarity\n- Paper was written clearly, and method and experiment were easy to understand\n\nSignificance\n- Based on the results, I believe this paper will be a nice contribution to the area of offline model-based RL"
+                },
+                "weaknesses": {
+                    "value": "- A major contribution of this paper is the new concept of the \"dynamics reward\", and the algorithm used to learn the dynamics reward model (GAIL). However, it was not clear to me what this dynamics reward should represent. It would be helpful to describe the optimal closed-form solution (if there was one), or include some additional discussion on an intuitive interpretation of it."
+                },
+                "questions": {
+                    "value": "- It seems to me the dynamics reward model kind of serves as a density model of the training data? If it is, then why not just learn a density model? If not, then what is the difference?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7694/Reviewer_HqU2"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7694/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698869471643,
+            "cdate": 1698869471643,
+            "tmdate": 1699636936384,
+            "mdate": 1699636936384,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "5OfdA1OYUr",
+                "forum": "GSBHKiw19c",
+                "replyto": "MGtt1LsDfM",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer HqU2"
+                    },
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper, and for your insightful comments.\n\n**Comment 1:** A major contribution of this paper is the new concept of the \"dynamics reward\", and the algorithm used to learn the dynamics reward model (GAIL). However, it was not clear to me what this dynamics reward should represent. It would be helpful to describe the optimal closed-form solution (if there was one), or include some additional discussion on an intuitive interpretation of it.\n\n**Answer C1:** Thanks for your valuable comment. We have no optimal closed-form solution due to the minimax formulation. But it can be intuitive to understand the dynamics reward as a scoring function for transitions. An ideal dynamics reward assigns higher scores for real transitions than any other ones. That is, given any state-action pair $(s,a)$ and the real next state $s^\\star$, $r^D(s,a,s^\\star) > r^D(s,a,s')$ for any unreal next state $s'$. Once such dynamics reward is obtained, it is straightforward to see that the transition function can be faithfully recovered by maximizing the dynamics reward, which is the motivation of this paper.  We will involve the above discussion into the revised paper.\n\n**Comment 2:** It seems to me the dynamics reward model kind of serves as a density model of the training data? If it is, then why not just learn a density model? If not, then what is the difference?\n\n**Answer C2:** From **Answer C1**, the dynamics reward model has no connection to density. It evaluates a transition pair according to its faithfulness, disregard of its density in the data.\n\nWe notice that a reader may misunderstand the dynamics reward as a density model from Figure 2(d). In this figure, the high scoring region is close to the high density region. This observation is due to that supervised model learning makes less errors in the high density region, and coincidentally the dynamics reward correctly recognizes the errors of the model. It can be found from Figure 2(e) that, when given real transitions, the high scoring region is dissimilar to the high density region. We will include the above discussion into the revised paper.\n\n---\n\nThanks for your valuable feedback. We hope that the above answers can address your concerns satisfactorily and improve the clarity of our major contribution. We are looking forward to your further response."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700143456562,
+                "cdate": 1700143456562,
+                "tmdate": 1700143456562,
+                "mdate": 1700143456562,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "WFO7cNiKaZ",
+                "forum": "GSBHKiw19c",
+                "replyto": "8jiohsHFPg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_HqU2"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7694/Reviewer_HqU2"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to authors"
+                    },
+                    "comment": {
+                        "value": "Thank you for the explanations!"
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7694/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700157079857,
+                "cdate": 1700157079857,
+                "tmdate": 1700157079857,
+                "mdate": 1700157079857,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

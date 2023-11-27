@@ -1,0 +1,274 @@
+[
+    {
+        "id": "h0CC9XNhla",
+        "forum": "dgmcE0RsTi",
+        "replyto": "dgmcE0RsTi",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_pFUP"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_pFUP"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper develops a way to use pre-trained transformers efficiently on long sequences without the need for further pre-training due to architectural changes.\n\nThe method first creates non-overlapping chunks to apply Transformer attention locally only (within chunks). After each layer, it does an elementary form of inter-chunk interaction by updating each bos and eos special tokens (indicating chunk boundaries within each chunk) with the average of newly produced eos and bos tokens (after the earlier local chunk processing layer) respectively. \n\nThe method uses reinforcement learning for token selection for decoding with rewards created to penalize selecting too many tokens and other rewards based on language modeling probabilities. PPO is used in an actor-critic framework."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. While the literature is saturated with efficient transformers for handling long sequences, this work can be applied to pre-trained models like BART directly without additional pre-training. \n\n2. The performance is quite decent compared to baselines."
+            },
+            "weaknesses": {
+                "value": "The method could be counted as a form of dynamic pruning technology. There are already several works in that area. For example, transkimmer [1] already has dynamic token pruning. And there are other works in similar directions [2]. The usability of RL for token pruning is not a particularly surprising method, and chunking + local attention is a very standard policy for efficiency gain. More research can be done in contextualizing the work in the literature review by exploring other related works to [1,2] in the citation network. That said, The inter-chunk communication through average is interesting (although quite simple and could be seen as a hack)  and the overall synthesis seems to work well.\n\n\n[1] Transkimmer: Transformer Learns to Layer-wise Skim - Guan et al. ACL 2022\n\n[2] Learned Token Pruning for Transformers - Kim et al. KDD 2022"
+            },
+            "questions": {
+                "value": "1. Is the chunking method only applied to the encoder? Would there be any problem in applying it to the decoder and decoder-only models (standard LLMs) after appropriate changes (such as causality constraint in averaging for chunk alignment)? \n\n2. Is there a graph for per-iteration speed-up comparisons with baseline?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6271/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698723763237,
+        "cdate": 1698723763237,
+        "tmdate": 1699636686617,
+        "mdate": 1699636686617,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "9rSc2j1oju",
+        "forum": "dgmcE0RsTi",
+        "replyto": "dgmcE0RsTi",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_9Rva"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_9Rva"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduced a Simple learning framework with three typical operations: Chunk, Align, and Select to enable pre-trained encoder-decoder language models to process long-context. The chunking process is a variant of batchfying. The aligning process is the forwarding via BART or other LM encoders. The proposed selector network as well as the RL-based training is novel and interesting. The experiments are very solid, which covers almost all long-context datasets as far as I know."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. The experiments are comprehensive and the results are robust and strong. The evaluation tasks and datasets coverage is excellent.  I appreciate that the authors conduct experiments on NarrativeQA to demonstrate the method's effectiveness and the NarrativeQA is recognized as the hardest benchmark for long-context transformer.\n\n2. The method is intuitive and easy to understand. Even if the chunking and selection/retrieval is not that novel, the introduced PPO-based training for selector network is interesting and brings some insights."
+            },
+            "weaknesses": {
+                "value": "1. The computational timecost brought by retrieval or selection based methods are always a significant issue. I did not find such discussions in main context and appendix about the latency part. The author should discuss and measure it to show the tradeoff between performance gain and latency increase.\n\n2. As the selector FFN is randomly initialized but the backbone is pre-trained well, I think in the first 10k training iterations, the training might be unstable if following the alternative updates on a well-trained model and a newly-initialized model. The author provides limited details about this.\n\n3. The ablation study on the chunk length might be interesting and important. A smaller chunk length brings better granularity and a larger chunk length accelerates the inference. Is the selected 512 length the best length for chunks?"
+            },
+            "questions": {
+                "value": "1. For footnote 1 of Page 3, how you deal with cases that a sentence is longer than a chunk as sometimes the sentence segmentation tool does not work well to split the sentence to desired length?\n\n2. The selector is a small-size 8M FFN. Did you consider to scale up the parameters and also change the FFN to a RoBERTa model with binary classification head? This might be better for the action decision. \n\n3. If I understands the paper well, the selector is not pre-trained and is only randomly initialized FFN. Then you fine-tune the BART and selector together on specific task. Did you try to freeze BART and pre-trained the FFN selector on the same pre-training corpus of BART? Personally, I think if your selector FFN is only 8M parameters, the pre-training might not be helpful. But if the selector size is scaled up, this might be good to the model.\n\n4. Some missing related works: TRIME (Zhong et. al., 2023) and LongMem (Wang et. al., 2023) are related to this method in terms of chunking and memorizing; Landmark Attention (Mohtashami and Jaggi, 2023) is related to this method in terms of S and E tokens."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6271/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6271/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6271/Reviewer_9Rva"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6271/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698792424188,
+        "cdate": 1698792424188,
+        "tmdate": 1699636686429,
+        "mdate": 1699636686429,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "gqDiAoKglO",
+        "forum": "dgmcE0RsTi",
+        "replyto": "dgmcE0RsTi",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_5A1y"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_5A1y"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents an approach concentrated on the refinement of long-sequence modeling. The proposed method divides a sequence into a series of chunks. This technique meticulously aligns the inter-chunk information during the encoding phases, and subsequently, the most pivotal hidden states are discerningly selected from the encoder to facilitate the decoding process. Experiment results show that in long-text abstractive summarization and reading comprehension tasks, the proposed method outperforms strong baselines of long-sequence processing."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The authors propose a simple framework that can directly be used on existing PLMs for processing long sequences.\n2. The authors propose a RL method to facilitate the transformer to concentrate more effectively on the crucial encoded hidden states.\n3. Experiments show better results over strong baselines."
+            },
+            "weaknesses": {
+                "value": "1. Missing related work. Long sequence Transformer is a hot topic, including two main directions: efficient computation or length extrapolation (train-short-test-long). In the realms of long-sequence Transformers, there appears to be a noticeable omission in the exploration of length extrapolation. Here are two related studies:\n   1) A Length-Extrapolatable Transformer\n   2) Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation\n2. The proposed RL objectives lack solid motivation. It is well-known that RL objectives are hard to implement due to the variance of reward scores. There lacks necessary evidence to show how these RL objectives work and whether these RL objectives are necessary (compared to traditional MLE loss). \n3. The authors only conduct experiments on BART models.  It remains unclear whether the proposed method still works on more recent models, like LLAMA."
+            },
+            "questions": {
+                "value": "1. How about the PPL scores on long text modeling? It is a widely-used metric to evaluate the performance of  long-text language modeling.\n2. A minor stylistic observation pertains to the line spacing within the background section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6271/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698851752294,
+        "cdate": 1698851752294,
+        "tmdate": 1699636686307,
+        "mdate": 1699636686307,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "qs65iImqd2",
+        "forum": "dgmcE0RsTi",
+        "replyto": "dgmcE0RsTi",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_mi4g"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6271/Reviewer_mi4g"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper induces attention sparsity by selecting the positions of Key and Value in \\textbf{cross-attention}.  The proposed method first chunks a sequence into blocks, then aligns the bos and eos of each block by using the average of them in every block of the next layer, in the last, it filters the positions of each block according to language modeling likelihood. This paper experiments on many summarization datasets and improves the baseline model Bart by a large margin. The main improvement comes from chunking and selecting."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. This paper shows that sparsification in cross-attention has a surprising potential for performance improvement, the proposed method improves about 20% over baselines."
+            },
+            "weaknesses": {
+                "value": "1. The proposed method depends on cross-attention, and we could not introduce it to the encoder-only or decoder-only Transformer model.   If it can outperform existing LLMs, this would not be a weakness.\n\n2. Experiments on other tasks are limited. This paper mainly experiments on summarization tasks, but does not experiment on CNN/DM or Xsum, which are the most compared data. For other tasks, this paper only does Narrative QA.  More experiments on document translation or classification would be an advantage."
+            },
+            "questions": {
+                "value": "1. Do the baselines sparse self-attention?\n\n2. There is a typo in Figure 3, the blue line should be selected length.\n\n3. Table 4 should add a row of pure baseline, i.e., w/o neither. It is a surprise that we need both chunk and select, or we will lose the baseline.\n\n4. I would like to see a comparison regarding latency."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6271/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699122251784,
+        "cdate": 1699122251784,
+        "tmdate": 1699636686195,
+        "mdate": 1699636686195,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

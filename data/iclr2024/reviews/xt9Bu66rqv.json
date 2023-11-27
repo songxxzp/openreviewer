@@ -1,0 +1,287 @@
+[
+    {
+        "id": "TH5rp7zdRI",
+        "forum": "xt9Bu66rqv",
+        "replyto": "xt9Bu66rqv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_aLZ7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_aLZ7"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper unifies a number of recent methods in offline RL and IL through the lens of regularized policy learning and Lagrange duality. Specifically, the paper views the regularized policy learning problem as a convex optimization problem with equality constraints on the state-action visitation distribution. Then, deriving the dual version of two equivalent primal problems, each named dual-Q and dual-V, the authors show that many recent offline IL and RL methods such as IQLearn and XQL, are specific instance of those problems with a particular choice of the f-divergence as the regularizer. Based on this analysis, the authors propose two algorithms for fixing shortcomings of previous algorithms. For offline IL, ReCOIL is presented as a new dual-Q algorithm that can leverage suboptimal demonstration data and that does not require the coverage assumption needed in prior work. For offline RL, f-DVL is proposed as a new dual-V algorithm as an extension of XQL, which results in more stable training by choosing a different f-divergence. The proposed methods are evaluated on the locomotion and manipulation tasks from the D4RL benchmark, and baseline comparisons show superior performance of ReCOIL and f-DVL on various tasks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "The major novel contribution of the paper is the theory which shows that various existing offline IL and RL methods can be derived from a Lagrange dual formulation of a single regularized policy learning problem. This itself has a huge consequence. For instance, showing that pessimistic value learning such as CQL is essentially a dual RL problem brings about a new insight into analyzing their properties and deficiencies. The self-contained review as well as derivations of key theoretical results in Appendix C has a core value in the paper, where the math is relatively easy to follow with the basic knowledge of convex optimization. This analysis itself paves a new way to developing many practical algorithms for both offline IL and RL, and has a significant potential impact on future research in this domain."
+            },
+            "weaknesses": {
+                "value": "On the other hand, I have found a handful of math errors throughout the paper, especially in Appendix C, which critically degrades the quality of such a theory-driven paper. While many of them can be simple typos, some may actually require careful consideration. I will list them below.\n\n* ~~For the state-action visitation distribution $d(s,a)$ to satisfy the Bellman-flow constraint in the form of equation (2), I think that the definition of $d$ has to involve the $(1 - \\gamma)$ correction term: $d(s, a) = (1 - \\gamma) \\pi(a \\mid s) \\sum_{t=0}^{\\infty} \\gamma^t P(s_t = s \\mid \\pi)$.~~\n\n* ~~In equation (9) on p.6 and p.28, the conjugate of the f-divergence should be just $f^*$, not $f^*_p$ because the positivity constraint on the visitation distribution is not necessary in the dual-Q formulation.~~\n\n* ~~In equation (29) you have the term $\\gamma \\sum_{s'} p(s' \\mid s, a) \\pi(a' \\mid s') Q(s', a')$. I believe that the sum must be taken over both $s'$ and $a'$.~~\n\n * There is a typo in equation (35). The second term inside $f^*$ should be $\\gamma \\sum_{s', a'} p(s' \\mid s, a) \\pi(a' \\mid s') Q(s', a')$, not $\\gamma \\sum_{s'} p(s' \\mid s, a) \\pi(a \\mid s') Q(s', a')$.\n\n~~* There are two typos in equation (38). First, the expectation in the first term needs to be over both $(s, a) \\sim d(s, a)$, not $s \\sim d(s, a)$. Second, I believe that the last term has to be $\\sum_a d(s, a)$, not just $d(s, a)$.~~\n\n* ~~The Lagrangian stationarity condition as stated on p.20 does not seem to be consistent with equation (43). Taking the derivative of the Lagrangian with respect to the primal variables, I suppose that the stationarity is $d^o(s, a) \\delta_V(s, a) -d^o(s, a) f'(w^*(s, a)) + \\lambda^*(s, a) = 0 ~\\forall s \\in S, a \\in A$. Also, there seems to be an implicit assumption that $d^o(s, a)$ is non-zero everywhere, and the degenerate case of $d^o(s, a) = 0$ is not discussed carefully. It seems that the Lagrangian stationarity is not informative enough to uniquely determine the relationship between $f'(w^*(s, a))$ and $\\delta_V(s, a)$ in the degenerate case.~~\n\n* ~~In equation (110), $\\alpha$ should be replaced by $\\beta$.~~\n\n\nRegarding the empirical results in Section 7, the quality of presentation has much room for improvement, as described below.\n* It is unclear what the left-most figure in Figure 1(a) represents and how it is related to the squared distribution gap plot right next to it.\n\n* In Table 2, it is unclear how the authors determined to highlight some of the entries with blue bold texts as an indication of the most-performant policy. For instance, In the hopper task with the medium few-expert dataset, the RCE seems to have the highest mean but not highlighted in blue.\n\n* ~~Similarity in Table 3, it is unclear what rules were applied to highlight entries in blue. For example, IQL on the antmaze-large-diverse-v0 dataset had a larger return than f-DVL, but both IQL and f-DVL are highlighted.~~\n\n* ~~Moreover, I do not see a huge performance gap between f-DVL and prior methods, and it is hard to judge whether the proposed RL methods empirically outperform existing ones (partially because there is no standard deviation information in the table). In fact, a recent study [1] finds that just reporting the mean and the standard deviation of different RL policies is insufficient, and suggests reporting confidence intervals or performance profiles as more reliable performance measures. The authors should consider leveraging some statistical tools like [1] in comparing policies, especially in situations like Table 3 where many methods have similar average returns.~~\n\n[1] Agarwal, Rishabh, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville, and Marc Bellemare. \"Deep reinforcement learning at the edge of the statistical precipice.\" Advances in neural information processing systems 34 (2021): 29304-29320."
+            },
+            "questions": {
+                "value": "* ~~I do not see how one can directly derive equation (14) from equation (5), as a rewriting of dual-V with the temperature parameter $\\lambda$. Can you elaborate on the derivation? I believe that the discount factor $\\gamma$ is determined by the problem specification and is not a hyperparameter that can be tuned arbitrarily.~~\n\n* ~~In equations (32) to (34), can you elaborate on why the interchangeability principle holds in this specific case? In other words, can you explain why $\\max$ and $\\mathbb{E}$ can be exchanged?~~\n\n* ~~All the analysis presented in the paper implicitly assumes discrete state and action spaces (which I think is good for readers in the RL community to follow the math). Do the results naturally extend to continuous spaces? I would be surprised if they did not, but I bet we need more sophisticated tools from real-analysis and probability theory to prove the same results.~~"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Reviewer_aLZ7",
+                    "ICLR.cc/2024/Conference/Submission7641/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7641/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698698061131,
+        "cdate": 1698698061131,
+        "tmdate": 1700505947696,
+        "mdate": 1700505947696,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ay1PjMg1lD",
+        "forum": "xt9Bu66rqv",
+        "replyto": "xt9Bu66rqv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_JKJA"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_JKJA"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a framework called dual RL based on the LP formulation of RL. The author shows dual RL can be used to derive offline RL and offline IL algorithms, providing a unification of existing approaches. Based on this insight, they propose new offline IL and RL algorithms (ReCOIL and f-DVL), which remove existing assumptions. These algorithms are tested in the D4RL benchmarks empirically and achieve competent performance compared with other baselines."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The proposed dual RL framework based on the duality of a regularized RL problem is quite clean. The authors provide good background information and detailed derivations, which makes the paper self-contained and easy to follow. The dual RL framework makes some connections of existing works and suggests potential generalization (which the authors adopt) to design new algorithms. The empirical results are promising. Overall, this is an insightful paper."
+            },
+            "weaknesses": {
+                "value": "There are some technical parts, which I think are not fully correct (see below). If they're indeed wrong, then the contribution of this paper would be compromised. The current writing is also quite dense as well, though the details are provided in the appendix. It would be better if the main paper is more readable. Lastly, in some sense, this paper lacks novelty. The unifying perspective and connection are interesting, but at the end the resulting algorithms can be viewed as minor tweaks from existing ones. Nonetheless, I think this last point on novelty is minor."
+            },
+            "questions": {
+                "value": "1. Proposition 4: The authors write that CQL can be cast as a dual-Q problem with a right choice of f-divergence (Pearson). However, in the proof of Proposition 4 in Appendix D.1, Eq (70) actually corresponds to the objective of ATAC [Cheng et al. 2022], not CQL. See Eq (1) in [Cheng et al. 2022], which is exactly the same Eq (70) here. To my understanding, the main difference between CQL and ATAC is that ATAC takes a maxmin formulation, whereas CQL doesn't, though they have a similar objective for learning Q. The dual-Q formulation here is a maxmin problem. The authors should update Proposition 4 to make the connection to ATAC, which would be more appropriate and precise.\n\n2. Bug in the proof of Theorem 1. There is a minor bug in the proof of Theorem 1. In the block starting \"Imitation from Arbitrary data (dualQ)\" after Eq (108), max_d is moved inside min_Q, whereas max_d is outside min_Q in Eq (108). So Eq (109) is not just a summary, and that \"we summarize the result of the derivation so far\" can be misleading. But this can be easily fixed though, by applying strong duality before moving forward. Another minor suggestion: I think it would be good to write out the proof Eq (112) for completeness.\n\n3. Validity Eq (10). In the proof, the author assume d_0 = d_E. I think that this is a fairly strong assumption, as it implies that the initial state at the test time would be drawn from the same distribution of the expert. This is rarely the case in practice, and in my experience it's not a common assumption in offline or off-policy RL. The authors should highlight this assumption in the main paper, or the authors should present Eq (140) as the main result. A minor bug in the proof is the derivation misses a 1/4 factor in front of the square loss.\n\n4. Bug in Proof of Proposition 3. There're a few issues in the derivation, and one is major. \n    a. f', (f')^-1 are not strictly increasing. it's only non-decreasing. e.g. see f(t) = | t-1|. \n    b. why is f*(x) = -f(0) for x<0? \n    c. why is f(0+)>0?\n    d. You write (f')^{-1}(t) >0 when t>0 and 0 otherwise. What does \"0 otherwise\" mean?\n    e. (Major issue). From Eq (79) to Eq (80), it doesn't use \"(f')^{-1}(t) >0 when t>0\" (though the paper writes so). It uses the other way (f')^{-1}(t) >0  --> t>0 and likewise (f')^{-1}(t) <0  --> t<0. But they are not true. See e.g. f(t) = | t-1| again. This error step prevents me from validating the remaining part. \n\n5. The experiment design of offline IL can be a bit confusing. It says the agent is given 1 expert demonstration. But the suboptimal transition dataset actually contains 200 expert demonstrations, though I understand they're not marked as expert demonstrations to the algorithm. I think a more convincing experiment is to completely remove the expert demonstrations in the suboptimal data. Table 2 writes 1000 expert transitions. Is that the same as one expert trajectory?\n\n6. I don't know how to interpret Fig 1. Can you explain more?\n\nMinor: \n\n1. This sentence is confusing to read. \"Unfortunately, one of the most successful classes of offline RL methods .. has evaded connections to regularized policy optimization. Proposition 2 shows, perhaps surprisingly, that XQL can be cast as a dual of regularized policy learning, concretely as a dual-V problem.\"\n\n2. I don't understand the connection between the sentence \"To prevent extrapolation error in the offline setting, we rely on an implicit maximizer [Garg et al., 2023] that estimates the maximum over the Q-function conservatively with in-distribution samples.\" and Eq (12)\n\nReference: \nCheng, Ching-An, et al. \"Adversarially trained actor critic for offline reinforcement learning.\" International Conference on Machine Learning. PMLR, 2022."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7641/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698820667722,
+        "cdate": 1698820667722,
+        "tmdate": 1699636928855,
+        "mdate": 1699636928855,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "1m8ugE1drc",
+        "forum": "xt9Bu66rqv",
+        "replyto": "xt9Bu66rqv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_7FxJ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_7FxJ"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents a new approach in offline IL, adopting the f-MAX objective function instead of the commonly utilized SMODICE objective. Unlike f-MAX, which employs GAIL for optimization, this work leverages the DICE technique to derive a dual form and subsequently applies an IQL-style algorithm for resolution. Additionally, the framework exhibits versatility, with potential applications in both the online and offline RL settings."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper offers a thorough and insightful analysis of recent developments within the dual-RL paradigm.\n2. The proposed framework demonstrates adaptability across IL, offline RL, and online RL settings.\n3. By eliminating the discriminator in offline IL, the paper potentially enhances stability and reliability in this domain."
+            },
+            "weaknesses": {
+                "value": "1. The paper's structure appears ill-suited for a conference format, dedicating 3.5 pages to prior knowledge while relegating significant analyses and experimental results (pertaining to online and offline RL) to the Appendix.\n2. There are instances of overclaims and problematic expressions that require rectification."
+            },
+            "questions": {
+                "value": "Your work is commendable, but improvements in presentation and accuracy are needed. My specific questions and suggestions are as follows:\n\n1. XQL's instability and heavy reliance on hyperparameters are noticeable, with subpar performance in both online and offline RL under unsuitable conditions. As an alternative example, it might be more suitable to reference a more general and effective implicit policy improvement algorithm, like IQL[1]. I suggest you use a more general and effective implicit policy improvement algorithm, IQL, as an example.\n\n2. In the last paragraph of Section 4.1, it is not suitable to say, \"This insight also allows us to cast IL method OPOLO .....\" as the objective function here originates from SMODICE. Referencing \"this objective function\" or similar expressions would be more appropriate.\n\n3. In the first paragraph of Section 4.2, it is strange to use \"Unfortunately\" just because XQL is not the policy regularization style. \n\n4. Figure 1 (a) is quite hard to follow. Please refine the caption to explain what the floats and the colors mean.\n\n5. The first paragraph of Section 7.1 lacks supportive evidence for this claim. Incorporating illustrative figures and evaluations would substantiate this statement.\n\n6. On page 36, typo in \"We base the implementation of SAC off pytorch_sac ...\"\n\n7. On page 37, I disagree with your claim that \"Our experiments with the popular off-policy method SAC [Haarnoja et al., 2018] reveal its brittleness to off-policy data\". SAC is not brittle to off-policy data. Filling the replay buffer arbitrarily with expert data at the beginning is not fair for an ADP-style algorithm. Please rewrite this paragraph.\n\n8. On page 40, the statement \"f-DVL leads to noticeable improvements even in the online RL benchmarks\" appears overstated:\n\n   * The baselines are too few.\n\n   * The performance improvement is not noticeable in 75% tasks you conducted experiments in.\n\n   If you would like to claim noticeable,  please include more baselines (PPO[2], TD3[3], AlgeaDICE[4], and some other more recent algorithms, e.g., RRS[5], BAC[6], REDQ[7]) and more benchmark tasks. And please broaden the discussion of related works in the online RL setting beyond SAC.\n\n9. Some crucial experimental outcomes, currently in Appendix H, should be integrated into the main paper for better accessibility and coherence, especially those results referenced and analyzed within the main paper.\n\n10. Better not to claim \"New\" in the title directly. Just saying \"A unified framework\" is ok.\n\nBy addressing these points, your work could gain greater clarity and impact. And then, I would like to raise the score.\n\n[1] Kostrikov I, Nair A, Levine S. Offline Reinforcement Learning with Implicit Q-Learning[C]//International Conference on Learning Representations. 2021.\n\n[2] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347, 2017.\n\n[3] S Fujimoto, H van Hoof, and D Meger. Addressing function approximation error in actor-critic methods. Proceedings of Machine Learning Research, 80:1587\u20131596, 2018.\n\n[4] Nachum O, Dai B, Kostrikov I, et al. Algaedice: Policy gradient from arbitrary experience[J]. arXiv preprint arXiv:1912.02074, 2019.\n\n[5] Hao Sun, Lei Han, Rui Yang, Xiaoteng Ma, Jian Guo, and Bolei Zhou. Optimistic curiosity exploration and conservative exploitation with linear reward shaping. In Advances in Neural Information Processing Systems, 2022.\n\n[6] Ji T, Luo Y, Sun F, et al. Seizing Serendipity: Exploiting the Value of Past Success in Off-Policy Actor-Critic[J]. arXiv preprint arXiv:2306.02865, 2023.\n\n[7] Chen X, Wang C, Zhou Z, et al. Randomized Ensembled Double Q-Learning: Learning Fast Without a Model[C]//International Conference on Learning Representations. 2021."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Reviewer_7FxJ",
+                    "ICLR.cc/2024/Conference/Submission7641/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7641/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699616425215,
+        "cdate": 1699616425215,
+        "tmdate": 1700276167070,
+        "mdate": 1700276167070,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xqhzQb8KPW",
+        "forum": "xt9Bu66rqv",
+        "replyto": "xt9Bu66rqv",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_NyfP"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7641/Reviewer_NyfP"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a unified dual RL framework that connects several recent offline RL and IL methods. New algorithms called ReCOIL (for IL) and f-DVL (for RL) are presented that aim to address limitations of prior approaches. Experiments across locomotion, manipulation and navigation tasks generally demonstrate improved or comparable performance to baselines."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The theoretical dual RL formulation provides a common lens to view recent offline RL/IL methods. This is a useful conceptual contribution.\n- The methods are evaluated extensively on a diverse set of tasks using standardized benchmarks. Implementation details are clearly described.\n- For offline IL, ReCOIL relaxes assumptions like coverage and avoids instability of density ratio estimation. The results showcase strong performance on imitation tasks.\n- The modifications in f-DVL seem to improve training stability compared to XQL, a prior state-of-the-art in offline RL."
+            },
+            "weaknesses": {
+                "value": "- While f-DVL outperforms XQL, its gains over other offline RL methods like IQL are marginal. The gains are not as significant as claimed over the full spectrum of baselines.\n- The presentation of empirical results could be improved by using standardized metrics, showing confidence intervals, and increasing clarity around performance highlights.\n- There are open questions around design choices, estimation procedures, and other technical details that warrant clarification."
+            },
+            "questions": {
+                "value": "Overall, I am moderately positive about this submission. The theoretical framework is clean and impactful. The empirical results are reasonably strong but could use tighter presentation and analysis. \n\nI have the following specific questions:\n\n- In Eq. 10, is the reward assumed to be zero in the Bellman consistency term?\n- Can you expand on how ReCOIL estimates the policy visitation and reward for the results in Sec 7.1? Also clarify if Fig 1 and Fig 10 use OPOLO or SMODICE for comparison.\n- What do the distributions D and d^O refer to in Eq. 12 and 13? Are they both d_{mix}^{E,S}?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7641/Reviewer_NyfP"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7641/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1700496224854,
+        "cdate": 1700496224854,
+        "tmdate": 1700496224854,
+        "mdate": 1700496224854,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

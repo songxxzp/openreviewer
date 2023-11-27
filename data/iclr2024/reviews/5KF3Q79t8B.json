@@ -1,0 +1,280 @@
+[
+    {
+        "id": "szmzzTmVPd",
+        "forum": "5KF3Q79t8B",
+        "replyto": "5KF3Q79t8B",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_BHtd"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_BHtd"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a data-driven multigrid solver for Poisson equations and presents a comparative analysis with the state-of-the-art algebraic multigrid solver, AMGCL, implemented in CUDA. However, the reviewer has identified several conceptual errors related to multigrid methods and the discretization of partial differential equations in the presentation. As a result, it is challenging to provide a recommendation for acceptance at this time."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The method proposed utilizes the natural architectural resemblance of an MG V-cycle and the U-Net (thought this is more like a strength of Hsieh et al. ICLR 2019 paper).\n- How to deal with irregular boundaries with unstructured mesh is an important problem in AMG."
+            },
+            "weaknesses": {
+                "value": "- On page 3, the authors wrote \"the ultimate goal of a numerical PDE solver is to seek the optimization of the relative residual\", then on page 6, the authors went on to implement the smoother as parametrized layers to get optimized. There is a huge missing link here. The \"optimal\" smoother should have a desired \"smoothing property\" that damps the \"high frequency\" components on a grid efficiently. While directly throwing everything into a loss makes the optimal smoother more likely to be damping all the frequencies. No studies, either theoretical or experimental, have made toward this.\n- Page 5, \"Jacobi iterator converges for a huge variety of linear PDEs\", there is plainly wrong. If Jacobi is sufficient, why use Gauss Seidel, or more advanced block smoothers ( block Schwarz preconditioner to be precise) for discretization for Maxwell's equations? \n- Page 6 says \"invoke UGrid **recursively**\": notation-wisely, there is no recursion defined in this algorithm at all.\n- Page 6, Theorem 2, what the authors proved is not \"the relative residual ***oscillates***...\" at all. If one ought to prove \"oscillatory\" behavior, the inequality should be actually reversed, for example, use $\\|r\\|_{\\infty}$ greater than something after certain iterations, or use $\\limsup$ as what is shown in Gibbs phenomenon.\n- In all experiment, $u$ is harmonic with right-hand side being zero, and judging from the boundary conditions shown in Figure 4, all the $u$'s are smooth. While it is okay to do this for testing a direct solver, this practice is utterly insufficient for testing the performance of an iterative solver.  \n- On page 9 The authors wrote \"there is no strict mathematical guarantee on how fast our solver will converge, which result in similar difficulties in for legacy numerical methods\". This is so blatantly wrong, in fact, with a known smoother such as Jacobi or GS, MG convergence will be taught in a decent numerical PDE class. There are too many references on this, please check for example, [Hackbusch].\n- Regarding the comments on non-linear PDE solvers, \"as nonlinear PDEs generally have no linear iterative solver\", this is again blatantly wrong that multigrid solvers have been developed for nonlinear equation for a long time, for example, see [Xu1994SISC], and also more recent development in AMG such as [Brandt2012BAMG] by Achi Brandt himself. Even the more advanced FAS can be traced back to the Math. Comp. 1977 paper of Brandt [Brandt1977].\n- References: \n\n[Brandt1977]: A. Brandt. Multi-Level Adaptive Solutions to Boundary-Value Problems. Math. Comp. 1977.\n\n[Xu1994SISC]: J. Xu. A novel two-grid method for semilinear equations, SIAM J. of Sci. Comp. 1994.\n\n[Brandt2012BAMG]: A. Brandt et al. Bootstrap AMG. SIAM J. of Sci. Comp. 2011.\n\n[Hackbusch]  W. Hackbusch. [Multi-Grid Methods and Applications](https://link.springer.com/book/10.1007/978-3-662-02427-0). Springer, 1985."
+            },
+            "questions": {
+                "value": "- On page 4, it says \"$P^{-1}$ is an easily invertible approximation of $A$\", while a few lines below, it says \"$P$ is an easily invertible approximation of $A$\".\n- I cannot understand why the authors make a big deal about the mask matrix $M$, every practitioner in using multigrid to solve equations arising from FEM/FDM eliminates the unknowns associated with boundary degrees of freedom first to apply the solver only on interior unknowns.\n- Is there any nonlinearity (activation) at all in the UGrid submodule? If not, what is the point of using a neural network? \n- Suppose the coarse grid problem is solved exactly by a two-grid scheme of the proposed method, let us say $I - B^{-1}A := S^{\\nu_2} (I - P(P^{\\top}AP)^{-1}P^T A ) S^{\\nu_1}$, where $S= I - RA$ is the smoother, and $P$ and $P^T$ are the projection and prolongation operator, respectively, please write down more clearly that which part is parametrized.\n- In the experiment, no details about how AMGCL is set up is given. If the time of building the MG hierarchy is counted toward the time of AMGCL, then I guess it is better to include the training time in UGrid.\n- In Figure (3) g, the authors used the caption \"sharp feature\", I simply cannot fathom what is \"sharp\" here. Are the region of the two circles included in the computational domain of $-\\Delta u = 0$? Do they have a discontinuous diffusion coeffcient?\n- No information on what the mesh is like, this is important even for designing AMG. If the grid is uniform, then one can learn  prolongation and restriction operators in the geometric multigrid. If it is AMG, the coarsening can be trained. See the references below.\n- Missing references: \n  - Juncai He and Jinchao Xu. Mg-Net: A unified framework of multigrid and convolutional neural network. arXiv:1901.10415\n  - Taghibakhshi et al. Optimization-Based Algebraic Multigrid Coarsening Using Reinforcement Learning. NeurIPS 2021.\n  - Alexandr Katrutsa, Talgat Daulbaev, Ivan Oseledets. Deep Multigrid: learning prolongation and restriction matrices. [ arXiv:1711.03825](https://arxiv.org/abs/1711.03825)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4258/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4258/Reviewer_BHtd",
+                    "ICLR.cc/2024/Conference/Submission4258/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4258/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698722480935,
+        "cdate": 1698722480935,
+        "tmdate": 1700636528812,
+        "mdate": 1700636528812,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "RSLxqEhi6f",
+        "forum": "5KF3Q79t8B",
+        "replyto": "5KF3Q79t8B",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_pjtp"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_pjtp"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a neural network based approach to solve poisson, for different boundaries, boundary conditions, forcings, based on an interpretation of multigrid. The contribution is"
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "I like where this paper is coming from and globally I think that combining NNs and more classical methods interesting and promising direction.\n\nEmphasis has been put on generalising outside of the training distribution, and generalizing to quite a wide range of variables (albeit most of the generalisation comes by construction)."
+            },
+            "weaknesses": {
+                "value": "The paper is not well written; i feel the exposition could be greatly simplified. For example, not all reviewers should have to be familiar with multigrid methods, and this could have been explained in the appendix.\n\nThe related work (although quite thorough) section is meant to contrast your work wrt to the literature, explain differences and similarities. E.g. it would be nice to clearly state the differences wrt Hsieh et al 2019.\n\nNeural is mentioned in the title, Unet is mentioned in the abstract, but from my understanding the learning part consists in learning convolutions, as there are no activation functions? \n\nFrom the best of my understanding, the convergence result does not apply to the multigrid method with learned convolutions. What is the link between eq 8 and your algorithm?\n\nIn section 4.2, in the UGrid Iteration, it would be nice to have a formal algorithm describing what is happening. As far as I understand, the Ugrid function is called recursively on the same grid, whereas in Fig. 2 this is not the case? There are two different types of smoothing? All this is very confusing. \n\nNot enough details regarding the experimental section. \n\nHow is the data generated? How can we evaluate the difficulty of solving the system and assess the usefulness of the method if this information is missing?\n\nI would have been nice to compare with a standard Unet that regresses directly to the solution, as well as learning the whole process with the *legacy loss metric*"
+            },
+            "questions": {
+                "value": "Are you backpropagating the loss through the iterative method? \n\nWhat is the motivation behind learning the convolutions? If the smoothing operation removes the high-frequencies, why not simply have a downsampling operation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4258/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698766251495,
+        "cdate": 1698766251495,
+        "tmdate": 1699636392966,
+        "mdate": 1699636392966,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "yo6qB8wR0r",
+        "forum": "5KF3Q79t8B",
+        "replyto": "5KF3Q79t8B",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_APYK"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_APYK"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a mathematically solid neural PDE solver, which combines iterative solvers and the Multigrid Method with Convolutional Neural Networks (CNNs). The proposed UGrid neural solver leverages an integration of of U-Net and MultiGrid, with a mathematically sound proof of both convergence and correctness. The proposed model demonstrates appealing results on both numerical accuracy and generalization capabilities on complex situations not encountered during training. The model is training in a unsupervised style with a novel loss. The experiments on Poisson's equations can verify the advantages claimed in this paper. The proposed method has the potential to generalize to other linear PDEs supported a mathematically-sound proof."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper provides a novel explainable neural PDE multigrid solver. The explainability of the model make it has a generalization ability, which can be applied to problems with new sizes/boundaries/RHS without re-training. In addition,  the proposed method has the potential to generalize to other types of linear PDEs (e.g., steady-diffusion) (though it seems that there are no quantitative results to support this claim)\n- The proposed masked convolutional iterator is intuitive and supported by a proof of correctness (though I didn't go through the proof in detail, it seems to be sensible to me after looked through )  \n- The results in the experiment part show that the proposed method can outperform or achieve competitive accuracy comparing to SOTA numerical multigrid solvers on both large and small scale problems with less time (may not true on small scale problems)."
+            },
+            "weaknesses": {
+                "value": "- The proposed method can only be applied to linear PDEs currently. It is unclear how the method can be extend to non-linear PDEs as the core proof of the correctness for masked convolutional iterator is not hold for non-linear cases.\n- The model is only validated on 2D Poisson's equations though with variety in sizes, boundaries etc. One key contribution the paper claim is the generalization ability to other types of linear PDEs, however there seems no quantitative experiments to support this claim. \n- The experiments results on small scale problems are somehow diverge between different test cases (see questions part below). And some cases requires even more time to coverage comparing to large scale problems, which looks counter-intuitive as the computational cost of traditional numerical solvers usually decrease when the problem sizes go smaller."
+            },
+            "questions": {
+                "value": "- The proposed model requires a significant long time (2 to 3 times comparing to numerical solvers AMGCL and AmgX) to converge on small-scale 'cat' and 'L-shape' cases. In the paper, the authors claim that it si the price of generalizing to new problems regarding to problem size. I am wondering what are the size differences between the training data (i.e., the Donuts-like case) and the 'cat' and 'L-shape'? \n- Why does it only happens on these two specific cases but other cases with complex geometries such as 'Bag', 'Star' etc? Does it because the size of other test cases are more similar to the training data?\n- It seems that the proposed model perform better (both in accuracy and efficiency) on large scale to small scale problems comparing to the traditional numerical solvers. Do you have any intuitive explanations about this? \n- Just wondering have you tried applied the proposed method on other linear PDEs such as steady-state diffusion equations for generalization ability test?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4258/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698777637628,
+        "cdate": 1698777637628,
+        "tmdate": 1699636392894,
+        "mdate": 1699636392894,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "L2d14XGQQU",
+        "forum": "5KF3Q79t8B",
+        "replyto": "5KF3Q79t8B",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_Ejzh"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4258/Reviewer_Ejzh"
+        ],
+        "content": {
+            "summary": {
+                "value": "- The paper proposes a novel neural PDE solver called UGrid that integrates convolutional neural networks with the iterative multigrid method.\nUGrid is designed to solve linear PDEs and provides mathematical guarantees on convergence and correctness. This sets it apart from many other neural PDE solvers that lack theoretical grounding.\n- The architecture consists of a fixed neural smoother module and a learnable UGrid submodule. The smoother eliminates high-frequency error modes and UGrid mimics a multigrid V-cycle to reduce low-frequency errors.\n- A new residual loss function is proposed that enables training and explores the solution space more freely compared to typical mean squared error losses.\n- Experiments on 2D Poisson equations with complex geometries and topologies unseen during training demonstrate UGrid's efficiency, accuracy, and generalization ability compared to state-of-the-art baselines.\n- The mathematical framework provides a pathway to generalize UGrid to other linear PDEs beyond Poisson's equation.\nLimitations include restriction to linear PDEs only and no strict upper bound on the convergence rate.\n\nIn summary, the key innovation is the integration of mathematical principles into the neural network architecture to create an interpretable and provably correct PDE solver with strong performance. The residual loss and unsupervised training are also notable contributions."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "1. Novel integration of multigrid methods with deep learning - This is an innovative approach that combines mathematical principles with data-driven modeling. The interplay between multigrid components and neural networks is interesting.\n2. Interpretable architecture - The method is more explainable than black-box neural solvers, with modules that mimic identifiable parts of the multigrid pipeline. This interpretability could be further enhanced.\n3. Generalization capabilities - The results demonstrate some ability to generalize to unseen geometries and topologies during training. This is promising and hints at the potential for broader generalization, which can be further explored.\n4. Unstructured mesh support - By operating directly on matrix representations, the approach can handle unstructured grids and complex geometries. This is more flexible than CNNs on Euclidean grids.\n5. Outperforms legacy solvers - The experiments show compute time improvements over non-ML solvers. With tuning, the advantage over-optimized methods could become substantial."
+            },
+            "weaknesses": {
+                "value": "- There are no ablation studies analyzing the effects of key components like the UGrid submodule and the residual loss function. Are these additions really critical? How much do they each improve performance over a baseline?\n- The multigrid interpretation of the UGrid module is hand-wavy. A more rigorous analysis of how it mimics multigrid components like restriction, prolongation and coarse-grid correction would enhance the scientific merit.\n- The generalization claims are overstated. Testing on different geometries is not enough to prove generalization over problem sizes, PDE types and discretization schemes. Much more rigorous experimentation is needed.\n- The computational efficiency gains seem quite modest in practice. Is the added model complexity worth 2-3x speedups? How does training time factor in?"
+            },
+            "questions": {
+                "value": "See the weaknesses. The only way to change my opinion is if I see results in anything other than Poisson (preferably non-self-adjoint equations)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4258/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4258/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4258/Reviewer_Ejzh"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4258/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698841874841,
+        "cdate": 1698841874841,
+        "tmdate": 1699636392826,
+        "mdate": 1699636392826,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

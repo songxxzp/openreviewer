@@ -1,0 +1,271 @@
+[
+    {
+        "id": "bqt3hp6uR7",
+        "forum": "JYu5Flqm9D",
+        "replyto": "JYu5Flqm9D",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_qLTC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_qLTC"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposes a watermarking scheme for encoding multiple bits of information into LLM\u2019s generated text. The scheme is built on a recent LLM watermarking work that encodes only one bit of information [Kirchenbauer, 2023a]. The main contribution of this work is showing a simple way to create balanced \u201cgreen/red lists\u201d using a public proxy LLM. The scheme performs better than the baseline used in Kirchenbauer [2023a] but suffers a large computation overhead."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "### Originality\n\nThe formulation leading up to Eq. (5) and (6) is neat in my opinion. It gives a nice interpretation of the \u201cbias\u201d in the logits as a Lagrangian multiplier from the constraint in Eq. (4). I have my doubts (mentioned later) about relying on perplexity as a metric in practice, but this does not take away the theoretical formulation here.\n\nThe idea of using a proxy LLM to help partition the green/red lists (\u201dBalance-Marking\u201d) is a nice idea and is the main contribution of this work. It seems to improve over the default random partition (\u201dVanilla-Marking\u201d) empirically in all cases.\n\n### Clarity\n\nThe main idea of the scheme and the experimental setup as well as the results are all conveyed clearly and effectively. I had no trouble (as far as I\u2019m aware) following the paper."
+            },
+            "weaknesses": {
+                "value": "Despite the aforementioned strengths, the paper has some weaknesses; I will try to list the ones that, I think, are more minor and easier to fix first.\n\n### Perplexity as a proxy for text quality\n\nIt is well-known that repetitive texts can achieve very low perplexity, especially on older and weaker models [1,2]. I think there are better alternatives. First, I would prefer to see the perplexity computed by larger and better models than OPT-2.7B. I understand that Kirchenbauer [2023a] also uses perplexity as their main metric (also by OPT-2.7B) as well, but they take another alternative to show the text quality which is to simply include a good number of samples in the paper for the readers to judge. To be even more convincing, I like the approach taken by Fernandez et al. [2023] which is to use multiple text generation benchmarks that do not rely on perplexity. Other alternatives include using human evaluation or an oracle model (like GPT-3.5/4) for judging the similarity of watermarked vs non-watermarked texts.\n\n### Theoretical bound on the watermarking efficacy\n\nKirchenbauer [2023a] provides a nice theorem (Theorem 4.2) that allows one to theoretically estimate the $p$-value of the watermark as a function of the spiked entropy (as well as other parameters). I believe that the same type of theorem can be derived for the proposed scheme in the multi-bit watermark as well. I believe that this component will significantly strengthen the paper.\n\n### Metrics\n\nIt is mentioned that \u201csuccess rate\u201d combines both message recovery and watermark detection. First, I would like to confirm that a successful sample only counts if all 20 bits are correctly recovered and the watermark is correctly detected.\n\nMore importantly, I think there are two missing metrics: empirical $p$-value and the notion of FPR or AUC. Since watermarking is a sensitive application and a false positive can be extremely costly, these two metrics are particularly important. The paper briefly mentions a score threshold on $P_w(m|x)$, but it is simply fixed at 1e-5, and I could not find an explanation on how it is computed. This seems to give a \u201cconfidence score\u201d on a particular message $m$ but does not look like an appropriate statistic for determining whether text $x$ is watermarked.\n\n### Comparison to steganography\n\nThe paper briefly mentions steganography and some older watermarking works, but the experiments do not compare the proposed scheme to any. I believe that steganography and watermarking share a very similar concept; steganography is also used to convey multiple bits of information which makes it very relevant to this work. I would suggest that the authors try to compare the proposed scheme to steganography on natural language such as [3] and [4] as well as Yoo et al. [2023].\n\n### Computation cost\n\nBalance vocab partitioning comes with a great computation cost for decoding or verifying the watermark. The authors are aware of the limitation and have devised some mechanisms to reduce the overheads (using the second hash function and using a small proxy LLM). However, there are still two concerns:\n\n1. Balance-marking with GPT-2 is twice as expensive as the baseline which I assume is already quite higher than the non-watermarked generation (it will be good to see this number too). This is a huge practical limitation.\n2. More importantly, the fact that the linearly increased cost only yields diminishing improvement in the success rate is concerning (Figure 2a). The success rate seems still too low for practical use even with the heavy overheads.\n\n**Minors/Typos**\n\n- In Eq. (9), it seems like $v$ is missing. So it should be $P_{LLM}(v|...)$  instead of $P_{LLM}(...)$ .\n- I believe that the variant of the copy-paste attack used in the experiment is fairly weak. A real attacker would interleave multiple parts of the non-watermarked text. This further reduces the effective number of watermarked tokens.\n- Paraphrase attack is a common attack in the watermarking literature at this point. This attack is stronger than both the copy-paste and the synonym substitution used in the experiments. It is also easy to carry out in practice so I think it might be a good idea to include it.\n- Section 5.5: in the first paragraph of this section, \u201c$1 - 10^{-5}$\u201d should be \u201c$1 \\times 10^{-5}$\u201d instead.\n\n**References**\n\n- Kirchenbauer [2023a]: https://arxiv.org/abs/2301.10226\n- Fernandez et al. [2023]: https://arxiv.org/abs/2308.00113\n- Yoo et al. [2023]: https://aclanthology.org/2023.acl-long.117/\n- [1] https://arxiv.org/abs/1904.09751\n- [2] https://openreview.net/forum?id=SJeYe0NtvH\n- [3] https://arxiv.org/abs/1909.01496\n- [4] https://arxiv.org/abs/2210.14889"
+            },
+            "questions": {
+                "value": "- Page 4: When I read the last paragraph about using the *mean* of the log probability instead of the *max* overall messages $m' \\in \\mathcal{M}$, I was a little confused. More precisely, I didn\u2019t see why it addresses the mentioned problem about \u201c\u2026solving $\\hat m$ is infeasible because the true $\\hat m$ can only be solved after the whole output t is determined\u2026\u201d; both options still rely on computing $\\log P_w(t_l|m',\\mathbf t_{:(t-1)})$ for all $m'$. What am I missing here?\n- Is there any result on different hash lengths (i.e., how many of the previous tokens are used to compute hash)? This seems like an important experiment since it can affect both the robustness and the text quality (likelihood of repetition).\n- I wonder how the proposed watermark performs if the proxy LLM is the LLM we want to watermark. Perhaps, the watermark\u2019s efficiency can be improved significantly if this is the case, but it does limit a lot of use cases of the watermark as the authors have pointed out.\n- I find it very interesting that larger models achieve a higher success rate (i.e., LLaMA-13B > LLaMA-7B > OPT-1.3B). This seems counterintuitive because larger and better models usually have lower perplexity/entropy so it should be more difficult to watermark them. I wonder if this is a pleasant side effect of the balance marking, but it seems like the success rate under the vanilla marking also improves. I wonder if the authors have any comment on this observation.\n- What does \u201ccoding rate\u201d exactly refer to? I assume that it means the number of watermarked tokens divided by the message length in bits, but it is mentioned that the text length is fixed to 200 and 20 bits for the message. So I could be misunderstanding this."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3174/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3174/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3174/Reviewer_qLTC"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3174/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698222366051,
+        "cdate": 1698222366051,
+        "tmdate": 1699636265091,
+        "mdate": 1699636265091,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "GhzUUFjd9a",
+        "forum": "JYu5Flqm9D",
+        "replyto": "JYu5Flqm9D",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_CxJT"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_CxJT"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper first theoretically analyses two main limitations of the Codable Text Watermarking for LLMs (CTWL) field: (1) encode limited information (only 1 bit) ;(2) ignore the quality of generated watermarking texts. Then, authors propose a advanced CTWL method named Balance-Marking. The core idea of our method is to use a proxy language model to split the vocabulary into probability-balanced parts, thereby effectively maintaining the quality of the watermarked text. Extensive experimental results show that our method outperforms the baseline under comprehensive evaluation."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper gives a general mathematical presentation for the watermarked text for LLM.\n2. The proposed method comprehensively consider the trade-off between watermarked text quality and embedded capacity."
+            },
+            "weaknesses": {
+                "value": "1. The details of the formulation presentation have some mistakes.\n2. The robustness experiments are not enough."
+            },
+            "questions": {
+                "value": "(1)\tFrom Eq. (16) in Appendix, I cannot get the same formulation as Eq. (5). As we know, the Lagrange multipliers are commonly added to the constraint item.\n(2)\tAuthors use Proxy-LM to approximate the condition defined by Eq. (9), which inevitably decreases the watermarking text quality. The main performance difference between Proxy-LM and the original LLM in Eq. (5) should be comprehensively discussed, including text quality, success rate, robustness, etc. \n(3)\tAuthors just analyze the trade-off between efficiency and watermark success rate in different proxy-LMs, which makes me question that authors subjectively miss the trade-off between text quality and coding rate of payload information in different proxy-LMs. Moreover, the caption of Figure (2)(a) is inconsistent with the corresponding descriptions.\n(4)\tAuthors do not evaluate the robustness of the proposed method to machine paraphrasing attacks which have been considered in some previous works (\u201cKirchen. et al., 2023a\u201d and \u201cKirchen. et al., 2023b\u201d).\n(5)\tIt is analyzed that what are the different experimental results when using different sampling strategies? such as greedy sampling, top-p sampling, etc."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3174/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698738202904,
+        "cdate": 1698738202904,
+        "tmdate": 1699636264977,
+        "mdate": 1699636264977,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wE7TgcDGM9",
+        "forum": "JYu5Flqm9D",
+        "replyto": "JYu5Flqm9D",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_iBFF"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_iBFF"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work fill in the blank of watermark injection on LLM generated text on multi-bits information encoding during LLM generation. Prior work use Vanilla-marking to encode multi-bit information, yet they decrease generation quality. This work proposes a balance marking algorithm, the goal is to improve the generation quality, which can be achieved by making the LLM lose close to the original one. This work guides the vocabulary partitioning with a proxy-LM. Results are demonstrated on OPT, LLaMA-7B, 13B."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Interesting work on multi-bit injection to LLM while considering the text quality."
+            },
+            "weaknesses": {
+                "value": "1. Writing needs improving. There is a lot of math and equation, and less intuition. \n\n2. I do not understand the paper after a few passes, while I am not in the watermarking field, the content should be written so that it can be understood by the general ML audience."
+            },
+            "questions": {
+                "value": "I am new to the field, and I I am still confused after reading twice. Can the author explain this in plain language? \n\nThe goal is to find the prompt that separate watermarked input and non-watermarked input the most right? Not separating machine-generated vs human-generated. As I see Eq 3 is separating both machine-generated text. There is no human written one.\n\nHow does the method encode multibit information? Is the information to be encoded is m? Eq 12 decodes M, yet this formulation is very similar to adversarial attack, why does the method can decode the unique m instead of some adversarial string? Like Zou et al. Universal and Transferable Adversarial Attacks on Aligned Language Models.\n\nDoes Model logit used for guard generation quality?\n\nDoes message logit used to add watermark?\n\nDoes a larger L give better watermark and higher quality?\n\nI understand you want a v which create a large Pw differece for detection, does eq 7,9 simply find the words in a predefined dictionary?\n\nWhat does sigma mean? In plain language, I do not intuitively understand.\n\nHow does Eq 10 encode the quality, Eq 9 inside?\n\nI don't get why you need Eq 11."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3174/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698869868770,
+        "cdate": 1698869868770,
+        "tmdate": 1699636264899,
+        "mdate": 1699636264899,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "1nTWN7EGA6",
+        "forum": "JYu5Flqm9D",
+        "replyto": "JYu5Flqm9D",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_pLxG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3174/Reviewer_pLxG"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, the authors propose a novel approach to inject multi-bit message information into large language models (LLMs). To inject the watermark, their approach enlarges the gap between the probability that the text is generated under the specific message and other messages. They also propose the balance-marking algorithm to maintain the text quality while injecting the watermark. Experiment results show that CTWL outperforms other baseline approaches in different dimensions."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. It is the first work to inject the multi-bit information during the generation process of LLM instead of the postprocessing. The authors propose a novel approach, CTWL, to effectively encode the information while maintaining the text quality. CTWL proposes a Balance-Marking algorithm to consider that some generated tokens should have high model logits and message logits at the same time. Therefore, CTWL can inject the watermark into the generated text with only a slight reduction in the text quality.\n2. Experiment results show that CTWL is robust against the copy-paste attacks and substitution attacks.\n3. CTWL can also work for larger LLM (LLaMA-7/13B)."
+            },
+            "weaknesses": {
+                "value": "1. It is essential to compare the watermarked text with other approaches to evaluate the effectiveness of the proposed method. In the last paragraph of the related work section, the authors stated, \u201cThere are some very concurrent works ... the vocabulary partitions....\u201d Still, there are not any experiments that compare the text quality between CTWL and other approaches. The authors are suggested to compare the BLEU, ROUGE, or other metrics with the previous studies, such as Kirchenbauer et al. (2023a), to show the text quality of CTWL is better than previous work. These experiments can make the results more convincing.\n\n2. It would be better if the author could show some examples of watermarked texts to compare Balance-Marking and Vanilla-Marking. The case study can help the readers know which cases Balance-Marking works but Vanilla-Marking fails. The authors can also compare the encoding time of CTWL with previous studies to show that the encoding time of CTWL is reasonable and practical."
+            },
+            "questions": {
+                "value": "1. How about the text quality of CTWL compared to the previous work, which focuses on injecting information by postprocessing?\n2. Can the authors show some cases to explain how Balance-Marking works but Vanilla-Marking fails?\n3. What is the computation cost of previous studies compared to CTWL?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3174/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698911288667,
+        "cdate": 1698911288667,
+        "tmdate": 1699636264821,
+        "mdate": 1699636264821,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

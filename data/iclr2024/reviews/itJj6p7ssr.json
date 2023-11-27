@@ -1,0 +1,271 @@
+[
+    {
+        "id": "icYIGX93XT",
+        "forum": "itJj6p7ssr",
+        "replyto": "itJj6p7ssr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_LRrq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_LRrq"
+        ],
+        "content": {
+            "summary": {
+                "value": "Observing the distributional discrepancy between the full precision weights and their quantized counterpart, this paper proposes to scale and offset input and output in a per-channel way.  Extensive experiments are conducted to show the effectiveness of their methods, especially in low-bit settings."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper conducts thorough experiments, including analyses of computational complexity and ablation studies, to showcase the effectiveness of their methods. It also provides a detailed comparison with related works.\n2. The proposed methods exhibit significant improvements over previous approaches, such as BRECQ[1], especially in low-bit scenarios.\n\n[1]Yuhang Li, et al. BRECQ: Pushing the Limit of Post-Training Quantization by Block Reconstruction.ICLR 2021"
+            },
+            "weaknesses": {
+                "value": "1. The novelty of the paper raises concerns, as the input-channel scale and shift resemble group-wise quantization have been studied in prior works like Q-BERT. Although the authors emphasize advantages in hardware implementation, the improvement over group-wise quantization appears minor. Can you provide the comparison between group-wise quantization (with or without the power of two scales) in computation complexity and performance?\n\n2. Similar to Weakness.1, shifting and scaling the output per channel is similar to finetune/update the BatchNorm statistics after the quantized convolutions. Does this method still work if we finetune BN after quantization on Conv-BN networks ?(this method is used widely to recover accuracy after quantization)\n\n[2]Sheng Shen,et al. Q-BERT: Hessian Based Ultra Low Precision Quantization of BERT. AAAI 2020"
+            },
+            "questions": {
+                "value": "Is the shift operation expected to introduce more latency than a single integer operation due to non-local memory access at inference?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4312/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698765951861,
+        "cdate": 1698765951861,
+        "tmdate": 1699636399817,
+        "mdate": 1699636399817,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "RVPkMHHlDE",
+        "forum": "itJj6p7ssr",
+        "replyto": "itJj6p7ssr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_Zj2N"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_Zj2N"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper extends AdaRound quantization scheme and introduces a group-based scaling factor along input channel direction. A output-channel-wise, learnable scale and offset are also applied to better reconstruct the low bit cases. To lower the computational cost, author proposed to use bit-wise shifter and only allow scaling factors of 1+- 2^-N. Considering the hardware efficiency of implementing such input channel-wise methods, the author demonstrated the feasibility of setting contraints on the number of the channels per group (to be greater than a certain value) then use retraining to recover the accuracy. Extensive experiments on different CV models and comparisons with other similar PTQ schemes, such as AdaRound, AdaQuant, BRECQ, and QDROP, were provided."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Clear and detailed explanations about the numerical method.\n\n2. Extensive experiments results, especially the author provides statistics, i.e. 5-run mean and standard deviation, instead of best records. This will help readers to get a better idea while comparing the proposed method with different quantization schemes."
+            },
+            "weaknesses": {
+                "value": "1. Lack of real HW results. It's clear that the author thoroughly considered the potential limitations if the proposed method was to be implemented. However, there are still some potential concerns, such as channel permutation's impact on computation efficiency and grouping fragments effect. A few examples on a representative HW would make the paper much stronger and convincing.\n\n2. Marginal improvement compared to previous works. It is understandable that the existing methods may have already done decent jobs and the author has to use extreme low precision settings (W2A4) to demonstrate the benefit of the proposed method. However, considering the complexity of implementation and the uncertainty in compute efficiency trade-off, the author might need to find a few better examples where the use of the proposed method would be better justified."
+            },
+            "questions": {
+                "value": "1. Eq.9 and the explanations in the following paragraph shows that the group scaling factor, gamma_y, is a linear combination of preset gamm_G based on probability. However, that will likely make gamma_y not compatible with bit shifter. In AdaRound, the handling of h(V) is different during calibration/PTQ stage and inference stage. Author might want to clarify/comment on this part or it might cause confusion to the readers. \n\n2. Based on the example in Fig. 6, the 3 scaling factors used are 1 and 1+-2^-N. One may interpret this scheme as some input channels will be up-weighted, some will be down-weighted, and the remaining channels will be unchanged. However, the optimized factor here seems to be very small, implying that simply not applying the scaling factor might work as well? But comparing to Table 4, it seems like the case without input scaling will be close to the case of N=1? Please comment.\n \n3. Instead of using unstructured input channel-wise grouping, another frequently use quantization scheme is structured grouping, such as used by GPTQ and other LLM works. Maybe the author could consider including a few comments on the pros and cons with the proposed method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4312/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4312/Reviewer_Zj2N",
+                    "ICLR.cc/2024/Conference/Submission4312/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4312/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698823270986,
+        "cdate": 1698823270986,
+        "tmdate": 1700595125678,
+        "mdate": 1700595125678,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "uA7Ss3ZqYX",
+        "forum": "itJj6p7ssr",
+        "replyto": "itJj6p7ssr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_J41k"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_J41k"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a quantization method that exploits channel-wise scaling and offset parameters to compensate for the discrepancies in full-precision and quantized distributions. It has been shown that the proposed method outperforms existing works in terms of accuracy."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1) The proposed method is simple and effective in quantizing convolutional networks especially when extreme quantization levels are used.\n\n2) The paper is easy to read and understand."
+            },
+            "weaknesses": {
+                "value": "1) There is no discussion on why the proposed method is considered hardware-friendly. Which hardware is this work referring to? How its efficiency was measured?\n\n2) The number of operations and parameters for each quantization method must be compared along with the accuracy in Table 2 and 3. The accuracy improvement of this work is marginal for most cases. So, it's important to compare other aspects too."
+            },
+            "questions": {
+                "value": "See the questions listed as weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4312/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698937605664,
+        "cdate": 1698937605664,
+        "tmdate": 1699636399627,
+        "mdate": 1699636399627,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "488LeZI7aU",
+        "forum": "itJj6p7ssr",
+        "replyto": "itJj6p7ssr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_yDxC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4312/Reviewer_yDxC"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes an improved post training quantization (PTQ) method called IOSO. The method relies on adjusting the scale and offset in activations (both input and output). The benefits are shown for ImageNet on a diverse set of DNNs."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1) The paper is well-written and easy to understand.\n2) The paper addresses a well-addressed problem and tries to make a contribution.\n3) The improvements in accuracy are non-trivial in some scenarios.\n4) The computational overhead is small < 1.5%.\n5) Error bars are shown for network accuracy."
+            },
+            "weaknesses": {
+                "value": "1. The results in Table 2 are incremental. This is not surprising since post-training quantization has been studied extensively.\n2. The proposed methods minimizes layer-wise reconstruction error. Reconstruction error is a proxy for misclassification error, which is the ultimate metric. Comparison with methods that directly minimize misclassification error is missing."
+            },
+            "questions": {
+                "value": "1. There are PTQ methods, e.g., [1], that minimize the probability of misclassification. How does your method compare with those?\n[1] Sakr et. al. Analytical guarantees on the numerical precision of deep neural networks, ICML'17.\n2. Have you considered fine-tuning your results by doing some limited amount of training, say one epoch? It will be interesting to see if the accuracy improves significantly.\n3. Can your method be extended to cover training?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4312/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698969534832,
+        "cdate": 1698969534832,
+        "tmdate": 1699636399564,
+        "mdate": 1699636399564,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

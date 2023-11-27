@@ -1,0 +1,270 @@
+[
+    {
+        "id": "BrgvAI2OhH",
+        "forum": "Th6NyL07na",
+        "replyto": "Th6NyL07na",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_Cc1D"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_Cc1D"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes to improve the factuality of generative LLM by contrasting the differences in logits of different transformer layers. This is based on the analytic results that when predicting important named entity words, the final layer of LLM tend to be very different from some early layers. Therefore, the authors propose to subtract the logits obtained from early layers from the final layer to reduce hallucination."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. the proposed method seems to be quite effective at improving the factuality QA metrics\n2. the paper presents good analysis that motivates the method\n3. the paper also has good ablations of the experimental results that can be helpful for future work."
+            },
+            "weaknesses": {
+                "value": "1. the proposed method likely decreases the inference speed, but there is little discussion on how much it slows down the decoding."
+            },
+            "questions": {
+                "value": "1. subtracting early layer logits make sense, but this might also be related to residual connection from early layers to final layer. Have you tried just removing the residual connection between the premature layer and final layer? Would that be helpful without too much decrease in inference speed?\n2.  what's the inference speed of your method compared to the baseline?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission825/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698422298509,
+        "cdate": 1698422298509,
+        "tmdate": 1699636009790,
+        "mdate": 1699636009790,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "lfLQuhpDLJ",
+        "forum": "Th6NyL07na",
+        "replyto": "Th6NyL07na",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_VLmJ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_VLmJ"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new decoding scheme for language models that contracts the final layers\u2019 outputs with the middle layers\u2019. At each decoding step, the model produces a distribution over the vocab after every layer; the one that is most different from the final layer is selected, measured by Jensen-Shannon divergence. It then contrasts the final layer\u2019s logits with the selected layer\u2019s, by subtracting the latter from the former before taking a softmax. This method is dubbed DoLA.\n\nDoLA is, in many sense, similar to contrastive decoding [1], but uses the same model\u2019s middle layer instead of a separate smaller model as the \u201cweaker model.\u201d DoLA dynamically selects the middle layer to contrast with at each time step. DoLA has a static variant, where the middle layer is selected based on performance on the validation data and fixed for all instances and time steps. The assumption behind DoLA is that factual knowledge is injected into the model at higher layers, and thus downplaying the lower layers\u2019 decision can help improve factuality. To support this, some empirical (but anecdotal) evidence is presented.\n\nDoLA is evaluated on various downstream tasks, including TruthfulQA, Factor, strQA, and GSM8K. Results show that DoLA, when used with Lllama and MPT, improves the performance on all datasets, and outperforms contrastive decoding on almost all datasets with Llama. Analysis shows that DoLA only incurs minimal overhead in the model\u2019s latency.\n\nOverall, I find this paper an interesting read. I\u2019m leaning negative due to various issues that I raised below. I\u2019m happy to revisit the score if the authors can address my concerns.\n\n[1] https://arxiv.org/abs/2210.15097"
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- DoLA is a simple method and can be used with many open-source models out of the box.\n- Strong and consistent improvements in a variety of tasks\n- The finding that the final layer\u2019s distribution is very similar to many middle layers\u2019 is novel and interesting to me\n- Presentation is very clear"
+            },
+            "weaknesses": {
+                "value": "- The hypothesis behind DoLA that factual knowledge is injected at top layers is not convincing and only weakly supported\n- The evidence in Figure 2 is anecdotal; I wonder whether there are quantitative results to back it up\n- The efficiency results and claims can be further elaborated (see questions below)\n- I don\u2019t see a way to apply DoLA to proprietary models.\n- [Important] I suspect that DoLA will reduce back to contrasting with the 0-th layer in practice (see questions below)\n- It would be great to investigate DoLA\u2019s impact on the language model\u2019s generation quality"
+            },
+            "questions": {
+                "value": "- [Important] In the example in Figure 2, almost all layers selected by DoLA will be the wording embedding layer. In such cases, assuming $q_0(x_t)$ has a substantial amount of mass on $x_t$, DoLA is essentially discouraging the model from generating the same token as the previous one. Maybe I\u2019m missing something obvious, but I am not entirely convinced by the \u201cfactuality happens at higher layers\u201d narrative.\n- [Important] Following the above, have the authors compared to a baseline that always selects the 0-th layer? I won\u2019t be surprised if it achieves strong performance, since it is doing exactly the same thing as DoLA on most generation steps.\n- Figure 2 is nice; I wonder whether the authors have any quantitative results on this.\n- Decoding from every layer seems expensive. I\u2019m surprised by the efficiency results presented in Section 4.4. Can the authors provide more details on, e.g., how is this measured and on what tasks/hardware, and the generation lengths?\n- [Important] Following the above, latency is only one aspect of efficiency and a determining factor of whether DoLA \u201ccan be widely applied with negligible cost.\u201d It would be great if the authors can quantify DoLA\u2019s impact on throughput and memory overhead too."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission825/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission825/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission825/Reviewer_VLmJ"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission825/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698464538808,
+        "cdate": 1698464538808,
+        "tmdate": 1700623703958,
+        "mdate": 1700623703958,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "aDGxhAWbtz",
+        "forum": "Th6NyL07na",
+        "replyto": "Th6NyL07na",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_NRik"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_NRik"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an interesting contractive approach to improve factuality in large language models. In this approach, the next token logits are obtained by projecting the later layers versus earlier layers. Several experiments ( TruthfulQA, FACTOR, and chain-of-thought reasoning tasks ) are done. The authors find that this approach can reduce the generation of incorrect facts."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The idea is interesting. Previously, most people tried constrative decoding with a smaller model as the weaker amateur model. In this work, the earlier layer is used as the premature part. It is good to see the other approach.\n\n2. LLaMA family models with different model sizes show large improvements on different tasks. For example, in Table 1, impressive results are shown. Looks good.\n\n3. Clear analysis with different earlier layers and different task is done."
+            },
+            "weaknesses": {
+                "value": "1. The baseline for contrastive decoding is not well explored enough. In some papers, for example, \"CONTRASTIVE DECODING IMPROVES REASONING IN LARGE LANGUAGE MODELS\", A smaller model  (1.5B parameters) is as the amateur model. The better results are shown in that paper. For example, contrastive decoding performance on GSM8K with Llama-65B is 56.8. It is even better than the proposed method, DoLa (54.0). \n\n\n2. The results are a little inconsistent. In Table 1, for TruthfulQA (MC1) with LLaMa-33B, we can see that the proposed method (DoLa) have  worse performance than the other two baselines (basic decoding and contrastive decoding). It is better to discuss a little about it.\n\n3. After reading the paper and the following reference paper, it is still a little harder for me to conclude that this approach for contrastive decoding is better than the previous one proposed by Li et al. (2022). \n\n\nReference paper: Sean O\u2019Brien, Mike Lewis. CONTRASTIVE DECODING IMPROVES REASONING IN LARGE LANGUAGE MODELS, 2023"
+            },
+            "questions": {
+                "value": "1. In the experimental setup, a bucket is selected first, and then the premature layer is selected later. This approach can save time. However, have you tried the dynamic layer selection with brute force? Is this approach able to achieve better results?\n\n2. For some datasets, e.g, FACTOR-News, the 0-th layer is a good premature layer, as shown in Figure 6. However, for TruthfulQA, the selected layer is closer to the final layer. What do you think the reason is?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission825/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698536700975,
+        "cdate": 1698536700975,
+        "tmdate": 1699636009649,
+        "mdate": 1699636009649,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "pyDWjK2vFs",
+        "forum": "Th6NyL07na",
+        "replyto": "Th6NyL07na",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_uyVJ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission825/Reviewer_uyVJ"
+        ],
+        "content": {
+            "summary": {
+                "value": "The author's introduce the new decoding method DoLa which takes the token sampling distribution to be a modified log-difference between the softmax'ed final hidden layer and that of an earlier hidden layer chosen to maximize JS divergence between the two. The intuition behind the method is that because later layers encode more knowledge, this difference can help to upweight tokens which encode more relevant knowledge as opposed to superficial linguistic pattern-matching. The method improves model performance across multiple factuality and reasoning benchmarks."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The method is straightforward to implement and to understand the intuition behind, while significantly boosting model performance on multiple benchmarks. The authors show the technique to be applicable to different model sizes and architectures. The method illustrates an understanding of the internal representations of transformer models, rather than relying on superficial prompting tricks which have become all-too-common in the field."
+            },
+            "weaknesses": {
+                "value": "The authors do not provide a satisfying explanation of why they restrict the candidate layers considered to only a subset of the non-final layers. As described in Section 4.4, the latency increase is negligible, so it would be easy to compute the JS divergence over all preceding layers for every inference, as opposed to just a subset of 8-10 (i.e. each even-numbered layer within the preselected subset of 16-20 layers). Therefore the authors presumably do this because it allows them to perform a dataset-specific hyperparameter tuning step that improves performance. However because they do not do an ablation to show how the method performs if all previous layers are considered at each sampling step, it is unclear how much of a performance impact this has.\n\n\u201cThe motivation for selecting the layer with the highest distance d(\u00b7, \u00b7) as the premature layer is to maximize the difference between the mature/premature layers.\u201d - explanation is tautological, you're saying you pick the largest difference because it maximizes the difference\n\n\u201cDoLa-static has the drawbacks of 1) large search space in layers\u201d - there are only 10s of layers to consider, in what sense is this a large search space?\n\n\u201cDoLa simplifies hyperparameter search space: it needs only 2-4 bucket tests, almost 10x fewer than the 16-40 tests needed in DoLa-static\u201d - This savings at hyperparameter search time is surely more than negated by the ~10x JS-divergences that need to be computed for every inference to select the optimal layer for non-static DoLa, no?\n\nUnder potential future work, the authors may want to consider using an auxiliary model to detect when the next token is expected to be something factual (names, dates, etc) and only use DoLa decoding in these cases. This might help avoid over-triggering leading to the repetition issue described in section 2.2.\n\nAt the bottom of page 2 you say $j \\in \\\\{0, \u2026, N-1\\\\}$ but later on you say that the subset from which $j$ is selected is only a subset of the layers $0$ through $N-1$, referred to as $J$. Therefore should this line not instead say something like: $j \\in J, \\text{ where } J \\subset \\\\{0, \u2026, N-1\\\\}$ ?\n\nTypos:\n* Bottom of pg 8: multiple instances of left quote marks being flipped. Should be using `` rather than ''.\n* Top of pg 9: \u201chuman feeback\u201d"
+            },
+            "questions": {
+                "value": "The largest limitation of the paper I see is the lack of a suitable ablation to demonstrate the method's performance if all layers are considered at each sampling step, rather than only the subset of 8-10 layers in $J$ preselected via hyperparameter search. If the methods turns out to be highly sensitive to this pre-selection of $J$, then it means that it will be much harder to apply it to many real-world LLM settings where the inputs can be highly diverse, as opposed to coming from a pre-specified benchmark eval set."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission825/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698857998423,
+        "cdate": 1698857998423,
+        "tmdate": 1699636009581,
+        "mdate": 1699636009581,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,197 @@
+[
+    {
+        "id": "ojxJQOw0Ac",
+        "forum": "6PVgHZUepm",
+        "replyto": "6PVgHZUepm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_xJSa"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_xJSa"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposed an adaption tuning method for ConvNets. The learnable parameters of can be re-parameterized to the original conv module to achieve parameter-free adaption. On different pre-trained models, the authors demonstrate the proposed method can achieve good performance."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The proposed method indeed provide some interesting experiments for parameter-free adaption of ConvNets, especially on few-shot setting,"
+            },
+            "weaknesses": {
+                "value": "1. The proposed method has limited novelty. A similar adaption and re-parameterization method has been proposed in earlier methods. [1]\n2. The proven \"layers tuning at any learning rate via Rep-Adapter\" does not make too much sense. Adding scaling factors is equivalent to the adaptive learning rate, and has nothing to do with the proposed Rep-Adapter.\n3. While the proposed method can be re-parameterized after training, the modules equivalent to the original network size still need to be fully tuned during training. I don't see any advantage of this compared to parameter-efficient tuning methods except the performance gain reported in the paper. \n4. The reported results are not verified using different random seeds. No error bar is reported.\n\n\n[1] Sylvestre-Alvise Rebuffi et al. Efficient parametrization of multi-domain deep neural networks. CVPR 2018."
+            },
+            "questions": {
+                "value": "1. Can you explain why Rep-Adapter outperforms the full fine-tuning in Table 3?  The details of the initial learning rate for fine-tuning and rep-adapter are missing. Also, does full fine-tuning conduct the same number of epochs as the Rep-Adapter?  10000 steps seem not enough for fine-tuning, can you justify it?  \n2. For ablation study (e), it would be of more interest to see different initialization of $w_{R}$ rather than $w_0$."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission625/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698765725552,
+        "cdate": 1698765725552,
+        "tmdate": 1699635990219,
+        "mdate": 1699635990219,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eRugQO3MBJ",
+        "forum": "6PVgHZUepm",
+        "replyto": "6PVgHZUepm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_XwS8"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_XwS8"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes to use Structural Re-parameterization for transfer learning. Specifically, an extra branch comprising a learnable conv layer and a BN is added to the original frozen conv layer during training. After training, such a structure is equivalently transformed into a single conv layer for inference. The effectiveness is explained as adaptively adjusting the equivalent learning rate of filters. Reasonable results are reported."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The idea of using Structural Re-param for transfer learning is novel.\n2. The structural design is easy to understand and thoroughly validated.\n3. The results are impressive.\n4. The explanation (the structure is equivalent to adjusting lr for different filters) is impressive."
+            },
+            "weaknesses": {
+                "value": "1. Structural Re-parameterization is not correctly discussed. The authors seem to mistake it with the traditional re-parameterization (e.g., CondConv). Traditional re-parameterization first derives a parameter with some other parameters and uses the derived parameter for computation, for example, a conv layer (y = x conv W) with traditional re-parameterization may compute W = W1 + W2, then y = x conv W. But Structural Re-parameterization uses regular layers during training and converts the structures (i.e., merges some layers) for inference. This work should be categorized into Structural Re-parameterization, but in the paper only \"re-parameterization\" is used to describe the method. And in Section 2, Structural Re-param should be discussed in a subsection (for example, it should at least mention that Structural Re-param is proposed by [RepVGG] ...) and traditional re-param (e.g., DiracNet, CondConv) should be mentioned in another subsection.\n\n2. The proposition is proved in a vectorized form, which seems a bit messy. I would suggest the authors show a simplified version with a specified arbitrary channel (or a single-channel conv). \n\nI also suggest the authors show the proposition from another equivalent perspective. I guess the authors would like to prove that in the following two simplified scenarios\n\nA. the structure is  y = frozen_conv(x) + trainable_conv(x) * alpha, the learning rate is lamda\n\nis equivalent to\n\nB. the structure is  y = trainable_conv(x), the learning rate is alpha ** 2 * lamda\n\nThis may be easier to understand. Then tell the reader what alpha represents (BN.weight / BN.std) so that the reader will understand that the BN realizes adaptive lr. Then naturally discuss the behavior of BN."
+            },
+            "questions": {
+                "value": "1. How is Rep-Adapter used with transformer? Is it used to replace every linear layer? Is BN still used in this case? BatchNorm-1d or 2d? \n\n2. Is the usage of Rep-Adapter with a linear layer (nn.Linear) simply the same as the usage of a 1x1 conv in a CNN? Their inputs are of different shapes so I wonder if there are some differences.\n\nPlease show some code and I will understand it."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission625/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698772105950,
+        "cdate": 1698772105950,
+        "tmdate": 1699635990143,
+        "mdate": 1699635990143,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "hHkuyqCF3v",
+        "forum": "6PVgHZUepm",
+        "replyto": "6PVgHZUepm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_ZcYB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission625/Reviewer_ZcYB"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses the challenges in transfer learning, emphasizing the impact of factors like dataset size and label fraction on different transfer learning protocols. It highlights the efficacy of linear probing and fine-tuning in semi-supervised and fully-supervised scenarios, respectively. The proposed solution, Rep-Adapter, introduces an approach by adding a learnable side branch alongside a frozen pre-trained branch. This strategy aims to strike a harmonious balance between pre-trained and fine-tuned weights. To simplify the process, learnable hyper-parameters for each layer are introduced, eliminating the need for manual tuning. Additionally, a re-parameterization method is employed during inference to merge the two branches while preserving the structure of the pre-trained model."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The combination of learnable and frozen branches to find the balance between pre-trained weights and fine-tuned weights.\n* Learnable hyper-parameters for each layer, reducing the need for manual adjustments.\n* Efficient re-parameterization during inference, ensuring minimal additional computational cost."
+            },
+            "weaknesses": {
+                "value": "* Increased computational cost during training due to the addition of learnable branches and hyper-parameters, especially for heavy-weight models.\n* In theory, the final results of the proposed fintuning can be achieved by the traditional fintuning, i.e. the difference of original weights and the final weights can be achieved by traditional fintuning. Thus, it is arguable this method is significantly different or better than traditional finetuning."
+            },
+            "questions": {
+                "value": "Could it be applied on other architectures, like attention-based ones?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission625/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698781079354,
+        "cdate": 1698781079354,
+        "tmdate": 1699635990062,
+        "mdate": 1699635990062,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

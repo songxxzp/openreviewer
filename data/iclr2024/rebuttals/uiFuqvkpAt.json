@@ -1,0 +1,425 @@
+[
+    {
+        "title": "Vector Quantized Representations for Efficient Hierarchical Delineation of Behavioral Repertoires"
+    },
+    {
+        "review": {
+            "id": "Ab7Uurn3f7",
+            "forum": "uiFuqvkpAt",
+            "replyto": "uiFuqvkpAt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_pCfH"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_pCfH"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents an efficient framework for dissecting animal behavioral data into hierarchically organized, discrete representations using vector quantization (VQ). The authors demonstrate the effectiveness of their proposed method on real animal body movement analysis and cross-species behavioral mapping tasks."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper introduces a novel method for analyzing animal behavior, which leverages vector quantization and hierarchical encoding. And they have run experiments on multiple real datasets to analyze animal behavior and map behavior sequences cross-specices."
+                },
+                "weaknesses": {
+                    "value": "The paper lacks more quantitative comparisons. And there are some unclear parts in the paper. I listed questions in the section below."
+                },
+                "questions": {
+                    "value": "- in equation (3), can you elaborate more on the embedding and commitment terms? intuitively what do they mean and how are they derived? \n\n- How robust is the method to variations in the number and granularity of discrete codes? In practice, how do you determine the number of codes in each level?\n\n- what are the quantitative comparison results aginst the KPMS benchmark?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698509573504,
+            "cdate": 1698509573504,
+            "tmdate": 1699637083511,
+            "mdate": 1699637083511,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "hLauIsAqNE",
+                "forum": "uiFuqvkpAt",
+                "replyto": "Ab7Uurn3f7",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Specific responses to reviewer pCfH"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for appreciating the novelty of our proposed method and applications. For your comments on:\n\n- **in equation (3), can you elaborate more on the embedding and commitment terms? intuitively what do they mean and how are they derived?**\n\nGreat question and we are happy to elaborate on this. Given the non-differentiability of nearest-neighbor lookup operation from the embedding space, the gradient is directly copied from decoder inputs z_q after quantization to the encoder outputs z(x) (straight-through estimate). A pseudo PyTorch code for this process is given by\n`z_q = z + (z_q - z).detach()`\n\nIn this way, the reconstruction loss (first term in equation) can only update the decoder and encoder, not embeddings in the codebook with no gradients passing through. We then included the second term, embedding loss, to optimize the embedding vectors toward the encoder outputs z(x) ia L2 loss. In practice, this loss was replaced by exponential moving average (EMA) to update the codebook embeddings as moving averages of encoder outputs, which provided better performance empirically. \n\nThe last term, commitment loss, can be intuitively understood as strategies constraining the volume of the embedding space and encouraging the encoder outputs to \u2018commit\u2019 to a specific embedding vector rather than growing arbitrarily, as not controlled by the reconstruction term alone. This also ensures that our straight-through gradient estimates remain concrete. \n\nTo summarize, the first reconstruction term optimizes the encoder and decoder; the second embedding term (implemented by EMA) optimizes the embedding vectors in the codebook; the last commitment term optimizes the encoder only. The commitment term is scaled by a hyperparameter alpha in the final objective. \n\n- **How robust is the method to variations in the number and granularity of discrete codes? In practice, how do you determine the number of codes in each level?**\n\nThank you for the thoughtful comments. We have included new experiments in Table. 1 that examines the changes in downstream performance on motion synthesis with different code granularities. Setting the downsampling rate as 16 frames (320 ms) has yielded overall the best synthesis fidelity and diversity, which is consistent with previous works about the average duration of rodent behaviors (Wiltschko et al. 2015, Marshall et al. 2021). In addition, we have included experiments varying the number of top- and bottom- codes in Supp. Table. 4 in the updated manuscript (also in response to all reviewers). \n\nThe number of codes in each level are hyperparameters to tune, but we do deliberately set the number of codes in the top level to be smaller than that in the bottom level, similar to Singh et al. 2019, encouraging disentanglement in the hierarchy. Although it is challenging to form a systematic procedure for tuning the number of codes, as the plausible number of behavioral motifs is more data-driven, we monitored the changes in codebook perplexity (the fraction of inactive codes) during training and examined whether motion sequences derived from the learned motifs are plausible post training. \n\n- **What are the quantitative comparison results against the KPMS benchmark?**\n\nWe agree with this comment and have included additional quantitative analyses that compare our method with KPMS (please refer to the overall response to all reviewers). We did not compare with KPMS on the downstream task of motion synthesis, as their model is not designated for such tasks. \n\nWe would like to point out that comprehensive, quantitative comparison between behavioral analysis methods has been challenging due to lack of consensus over behavior definitions and benchmarks. To the best of our knowledge, there exists no public continuously annotated rodent behavior datasets (notice the CalMS21 Dataset we have used in the paper is a 2D mouse dataset with annotations on dyadic social behaviors alone). Moreover, the inter-labeler behavior annotation agreement remains low even among well-trained human experts (Segalin et al. 2021) and these labels are inherently biased by human limited understanding of rodent behaviors. \n\nReferences:\n- Singh et al (2019). Finegan: Unsupervised hierarchical disentanglement for fine-grained object generation and discovery. \n- Wiltschko et al (2015). Mapping sub-second structure in mouse behavior. \n- Marshall et al. (2021). Continuous whole-body 3D kinematic recordings across the rodent behavioral repertoire. \n- Segalinet al. (2021). The Mouse Action Recognition System (MARS) software pipeline for automated analysis of social behaviors in mice."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700689091523,
+                "cdate": 1700689091523,
+                "tmdate": 1700689091523,
+                "mdate": 1700689091523,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "doW6XxUasi",
+            "forum": "uiFuqvkpAt",
+            "replyto": "uiFuqvkpAt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_sPmp"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_sPmp"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper describes a framework to learn representations of animal behavioural data, using a VQ-VAE with multi-level encoding. This choice of latent representation enables the data to be decomposed into different discrete behavioural motifs, and enables analysis and synthesis of movements. The application is intriguing, and the presentation is relatively clear."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The theoretical development is sound.\n- The presentation is relatively clear.\n- The application to animal behavioural data is interesting and important."
+                },
+                "weaknesses": {
+                    "value": "- Unfortunately, it\u2019s not clear whether there is sufficient technical novelty for the ICLR community. The application of VQ-VAE to animal behavioural data specifically may be novel, but other than the multi-level encoding, it is not clear whether there are architectural/learning improvements that may be relevant to the broader ICLR reader. The listed contributions indicate potential novelty in behavioural neuroscience (ie. that this model simplifies the behavioural pipeline), which could perhaps suggest a different venue might be a better fit.\n- There is quite a lot of work on existing work on learning movement primitives or behavioural decomposition via latent variable models in embodied and robotics domains. The work could better be positioned in this context, and architectural design choices could be better justified.\n- The analysis could be more thorough; as it stands there is only one table of quantitative results, for motion synthesis, and the method is compared mostly to quite weak baselines (fully-connected MLP, GRU)."
+                },
+                "questions": {
+                    "value": "- There is quite a lot of work on learning movement primitives (eg. Paraschos et al, 2013), or behavioural decomposition via latent variable models in embodied and robotics domains.\nMerel et al (2019a); Bohez et al (2022) apply hierarchical latent variable models to motion-capture data from humans and other mammals, and Merel et al (2019b) specifically studies learned representations of simulated rodent behaviour.\nOther works leverage latent variable representations of offline behavioural data in robotics (eg. Singh et al, 2021), including hierarchical discrete representations that can decompose data into discrete motifs that can execute / synthesize meaningful behaviours (Rao et al, 2022).\n- Related to these points, it\u2019s not clear why specific architectural choices were made. For example, encoding entire trajectories into a single latent code scales poorly with dimensionality of the inputs and length of the sequence, and many of the approaches from my previous comment use sequential latent variable models to better model embodied temporal data.\n\nSome minor comments:\n- Broken citation reference in the first paragraph\n- Having the related work as a final section reads a bit awkwardly to me, as it feels like an afterthought. Consider moving it to at least before the final discussion / conclusions, and ideally before the method itself to provide some scaffolding and context for the contributions and claims.\n\nReferences:\n- Paraschos et al (2013), Probabilistic Movement Primitives\n- Merel et al (2019a), Neural Probabilistic Motor Primitives for Humanoid Control\n- Merel et al (2019b), Deep Neuroethology of a Virtual Rodent\n- Singh et al (2021), Parrot: Data-Driven behavioral priors for reinforcement learning\n- Bohez et al (2022), Imitate and Repurpose: Learning Reusable Robot Movement Skills From Human and Animal Behaviors\n- Rao et al (2022), Learning Transferable Motor Skills with Hierarchical Latent Mixture Policies"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698835758845,
+            "cdate": 1698835758845,
+            "tmdate": 1699637083394,
+            "mdate": 1699637083394,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Pv35mfR5x1",
+                "forum": "uiFuqvkpAt",
+                "replyto": "doW6XxUasi",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Specific responses to reviewer sPmp (1/2)"
+                    },
+                    "comment": {
+                        "value": "We appreciate the reviewer\u2019s constructive feedback for better positioning the motivations and contributions of the proposed method, as well as strengthening the paper with more comprehensive quantitative comparisons. Regarding your comments on:\n\n- **Unfortunately, it\u2019s not clear whether there is sufficient technical novelty for the ICLR community ...**\n\nThank you for the constructive criticism, and we agree that it is important to ensure that our work is a good fit for ICLR and we believe it is. To your point about how the novelty for neuroscience suggests that a different venue could be a better fit:\n- ICLR has always been a venue for papers on neuroscience applications (also explicitly listed as a subfield in the ICLR Call for Papers), for example, Eyjolfsdottir et al. (2017) for learning recurrent representations for animal behaviors, Li et al. (2022) for animal pose estimation and Molano-Mazon M et al. (2018) for neural activity synthesis, among many more. Papers specifically targeting improving and benchmarking animal behavioral analyses, as we do, have also appeared in other AI/ML conferences including ICML, for instance, Sun et al. (2023) that introduced a multi-species benchmark for learned animal behavioral representations, and NeurIPS, such as Costacurta et al. (2022), Shi et al. (2021) and Batty et al. (2019), to only mention a few. In particular, the methodology presented in Costacurta et al. is a modification to (Keypoint-)MoSeq, the method we have compared to in the paper. \n- Our approach is broadly relevant to neuroscience, extending beyond the scope of behavioral neuroscience. The ultimate goal of neuroscience is to understand how the brain generates behavior, which is, after all, the brain\u2019s principal output. Until recently, analyzing behavior was just not as tractable as analyzing neural activity, as we lacked methods for rigorously and efficiently quantifying the behavior itself. This has changed, and now behavioral analysis methods, and ultimately computational models that relate neural activity to behavior, are key areas of interest and development in computational neuroscience. \n\nTo your point about whether the architectural/learning improvements are relevant to the broader ICLR reader:\n- First, please see our above points regarding neuroscience applications in ICLR; at a minimum, the neuro community at ICLR will appreciate this work. \n- Second, despite our focus on applications to behavior and computational neuroscience, our approach is novel at learning the inherent hierarchy among motion primitives using multi-level encoding with a relatively simple, computationally economic framework. This approach could be applicable to either type of sequential data. The state-of-the-art performance on motion synthesis relative to recent methods in human motion synthesis also suggest the benefits for deploying such discrete representations in generative tasks. These tasks are not limited to forecasting or generation of animal movements, but also establishing mappings with other behavioral modalities, such as vocal activities in rodents (languages/speech for animals).\n\n- **The analysis could be more thorough; as it stands there is only one table of quantitative results, for motion synthesis, and the method is compared mostly to quite weak baselines (fully-connected MLP, GRU).**\n\nWe appreciate and agree with the constructive feedback and have therefore added quantitative comparisons with Keypoint-MoSeq (please refer to the response to all reviewers). For the task of motion synthesis, we have included experiments with more recent and stronger baselines, for instance MotionDiffuse (Zhang et al. 2022), as well as internal comparisons on our proposed method with different codebook sizes and temporal granularities. We hope that your concerns have been addressed in this revision. We would also like to reiterate that motion synthesis is not the primary focus of this paper, but applications tangential to the analysis of animal behaviors."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700689202426,
+                "cdate": 1700689202426,
+                "tmdate": 1700689202426,
+                "mdate": 1700689202426,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "JNnrqtaYo6",
+            "forum": "uiFuqvkpAt",
+            "replyto": "uiFuqvkpAt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_1QG3"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_1QG3"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose an end-to-end unsupervised behavioral mapping approach that identifies hierarchically organized discrete behavioral motifs from pose time-series data. This is done using a variational encoder to map postural dynamics to a finite-sized discrete embedding with vector quantization."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "Well written and technical details are clear.  The evaluations are clear.  The motivations are mostly clear and the applications are well explained."
+                },
+                "weaknesses": {
+                    "value": "Missing/failed citation in first paragraph\n\nHow is the quantization \"codebook\" initialized and updated?  This is not clear to me.\n\nAn ablation showing the benefit of using the proposed quantization would be helpful.\n\nWere there no other SOTA models to compare against?  The evaluations seem a bit lacking.  Additional applications, comparison models and a detailed ablation would help here as well as more detail on limitations and failure cases."
+                },
+                "questions": {
+                    "value": "How is the quantization \"codebook\" initialized and updated?\n\nWhat is the impact of not using quantization on the proposed applications?  This is not clear to me."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698868008463,
+            "cdate": 1698868008463,
+            "tmdate": 1699637083270,
+            "mdate": 1699637083270,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "6zpvmVYsX1",
+                "forum": "uiFuqvkpAt",
+                "replyto": "JNnrqtaYo6",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Specific responses to reviewer 1QG3 (1/2)"
+                    },
+                    "comment": {
+                        "value": "Thank you very much for the valuable feedback that has helped us to improve the manuscript. Regarding the comments on:\n\n- **Missing/failed citation in first paragraph**\n\nThank you for pointing this out and we apologize for the error. We have fixed it in the latest version.\n\n- **How is the quantization \"codebook\" initialized and updated? This is not clear to me.**\n\nPrior to training, the codebook is initialized with zeros. During training, as we had mentioned on Method page 3 in the first version of manuscript, the codebook is updated with exponential moving average (EMA), where each embedding vector is updated as the moving average of encoder outputs. This protocol was first described in the original Van Den Oord et al. VQ-VAE paper and further investigated by Zhang et al. 2023. \n\n- **An ablation showing the benefit of using the proposed quantization would be helpful.**\n\nWe agree, thank you for the suggestion. While quantization has the clear benefit of directly inferring the discrete behavioral representations currently used by the computational neuroscience field, we agree that it is important to objectively quantify these benefits. Our previous motion synthesis results actually spoke a bit to this \u2013 all external methods we have compared to use a continuous latent representation. But in the revision we include a new comparison to a hierarchical continuous VAE (in the behavioral segmentation tables, see our overall response). We have also attempted a hierarchical, continuous VAE (same architecture but replacing quantization with a standard Gaussian VAE bottleneck, results not shown) but found it challenging to clearly separate different behaviors from post hoc clustering of sample latents, resulting in high perplexity but extremely low average code usage. In this context, quantization plays a role in better structuring the learned latent space to be more interpretable. We elaborate the discussion here in the related question below. \n\n- **Were there no other SOTA models to compare against? The evaluations seem a bit lacking. Additional applications, comparison models and a detailed ablation would help here as well as more detail on limitations and failure cases.**\n\nWe appreciate the thoughtful feedback and agree that it would be helpful to strengthen the results by more quantitative comparisons. For motion synthesis, we have now added comparisons with\n- A diffusion-based framework MotionDiffuse (Zhang et al. 2022).\n- Action2Motion (Guo et al. 2020), in addition to the existing GRU VAE baseline.\n\nand internal comparisons with\n- Reconstructed motion sequences by VQ-VAE.\n- Synthesized motion sequences with different downsampling rates.\n\nPlease refer to the updated manuscript Table. 1 for detailed results."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700688982130,
+                "cdate": 1700688982130,
+                "tmdate": 1700688982130,
+                "mdate": 1700688982130,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "2Z0Xp6xQaz",
+            "forum": "uiFuqvkpAt",
+            "replyto": "uiFuqvkpAt",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_wDjx"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission8649/Reviewer_wDjx"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In this paper, the authors propose an end-to-end behavioral analysis approach that dissects continuous body movements into sequences of discrete latent variables using vector quantization (VQ). The discrete latent space naturally defines an interpretable deep behavioral repertoire composed of hierarchically organized behavioral motifs. Using recordings of freely moving rodents, the authors demonstrate that the proposed framework faithfully supports standard behavioral analysis tasks and enables a series of new applications stemming from the discrete information bottleneck, including realistic synthesis of animal body movements and cross-species behavioral mapping."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The paper is generally well-written and easy to follow.\n2. The experimental results seem to support the authors' claims."
+                },
+                "weaknesses": {
+                    "value": "1. It would be better to compare the proposed method with more advanced baseline approaches to demonstrate its effectiveness. There should also be more ablative analysis the illustrate the effectiveness of each component of the model.\n2. There is a missing citation on the first page.\n3. The major innovations seem not very clear. It would be better to clearly state the major novelty of the proposed method and indicate its advantages over existing methods in the literature. The related work section is suggested to be refined and moved to an earlier place for readers to understand the context of the field."
+                },
+                "questions": {
+                    "value": "Please focus on addressing the issues in the Weaknesses section."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8649/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8649/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission8649/Reviewer_wDjx"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission8649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699253785893,
+            "cdate": 1699253785893,
+            "tmdate": 1699728487298,
+            "mdate": 1699728487298,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "dzqgaLXPJT",
+                "forum": "uiFuqvkpAt",
+                "replyto": "2Z0Xp6xQaz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission8649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Specific responses to reviewer wDjx"
+                    },
+                    "comment": {
+                        "value": "We sincerely thank the reviewer for the thoughtfulness concerning the assessment of the effectiveness of the work. For the questions listed in the weakness section,\n\n- **It would be better to compare the proposed method with more advanced baseline approaches to demonstrate its effectiveness.**\n\nWe appreciate the feedback and have now significantly expanded our comparisons. In addition to new quantitative comparisons for behavioral representations/segmentation, we now compare to a larger set of recent methods for motion synthesis, including ACTOR, Action2Motion and MotionDiffusion (Table 1 in revised text). Notably, our method outperforms even the strong MotionDiffuse baseline, among others. While beyond the scope of this paper, in the future it will be interesting to explore whether these VQ advantages extend to human motion synthesis benchmarks. \n\n- **There should also be more ablative analysis that illustrate the effectiveness of each component of the model.**\n\nAgreed. We have now performed ablative analysis for both behavioral segmentation and motion syntheses, testing the impact of the hierarchical latents, quantization, and codebook size. Details are included in Supp. Table 2 and 3 (same as reported in \u2018response to all reviewers\u2019) and Table 1 in the updated manuscript. Notice that we have also attempted a hierarchical, continuous VAE (same architecture but replacing quantization with a standard Gaussian VAE bottleneck, results not shown) but found it challenging to clearly separate different behaviors from post hoc clustering of sample latents, resulting in high perplexity but extremely low average code usage. In this context, quantization plays a role in better structuring the learned latent space to be more interpretable. \n\n- **There is a missing citation on the first page.**\n\nThank you for pointing this out; have fixed it.\n\n- **The major innovations seem not very clear. It would be better to clearly state the major novelty of the proposed method and indicate its advantages over existing methods in the literature. The related work section is suggested to be refined and moved to an earlier place for readers to understand the context of the field.**\n\nWe agree with the reviewer that the major novelty and advantages of the proposed method would be better conveyed to the target audience if the Related Work section is positioned earlier and modified accordingly. Corresponding changes have been updated in the current manuscript, with additional modifications in the Introduction section for better readability. \n\nOur approach is capable of delineating animal behavioral repertoire from motion capture data, in a more computationally efficient and human-interpretable way than established methods and is novel at finding the inherent type/subtype hierarchy among motion primitives without post hoc manual annotation and grouping. . The hierarchical representations recapitulate the standard behavioral analysis tasks as existing techniques, while quantitatively capturing and grouping finer-scale kinematic details, as well as enabling novel tasks."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission8649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700688886522,
+                "cdate": 1700688886522,
+                "tmdate": 1700688886522,
+                "mdate": 1700688886522,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

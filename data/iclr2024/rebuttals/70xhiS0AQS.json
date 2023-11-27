@@ -1,0 +1,689 @@
+[
+    {
+        "title": "TaskBench: Benchmarking Large Language Models for Task Automation"
+    },
+    {
+        "review": {
+            "id": "RKkZIWHMGC",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+            ],
+            "forum": "70xhiS0AQS",
+            "replyto": "70xhiS0AQS",
+            "content": {
+                "summary": {
+                    "value": "This work introduces a benchmark called TaskBench to evaluate LLMs for task automation. It includes three stages: task decomposition, tool invocation, and parameter prediction. In particular, it considers tools in a graph structure, which could motivate more complicated applications of LLM for task automation. It leverages back-instruct to automatically create the test cases. Extensive evaluation show the utility of this benchmark in evaluting LLMs' capability of task automation."
+                },
+                "soundness": {
+                    "value": "1 poor"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The introduction of an open-source benchmark with tool graph is nice, it fills the blank in the field. And the three scenarios included are interesting and realistic\n2. The back-instruct technique and the idea of sampling a subgraph from the whole task graph to build test cases are intuitive and sound\n3. The experiments cover a wide range of both black-box and open-source models with various metrics"
+                },
+                "weaknesses": {
+                    "value": "1. I like the back-instruct, but LLM-generated queries can be biased and not well-aligned with user behavior. In addition, for the benchmark to be faithful (which is very important given that benchmark is what people would use to assess model in a relatively long period), the query and answer should be matched, I doubt whether the rule-based and LLM-based check could always ensure the correctness of the generated instruction. I do think human verification on all the generated instruction can make the benchmark more faithful.\n\n**I took a close look at the huggingface dataset produced in this paper, a large portion of them are incorrect. For example, one of the data (id: 10949228), the user query  is \"I have an image 'example.jpg' containing some information. I want to convert the image content into text and then answer the question: 'What is the main topic of the image?\", the tool graph is Image-to-text -> VQA. However, once you do image-to-text (assuming captioning), why VQA? it makes no sense. it can just be a textual QA, right? There are many similar cases in the dataset.**\n\n 2. I don't quite understand the goal of evaluating task decomposition as textual descriptions. I do think evaluating task decomposition is important, but as long as it can build the correct tool graph and predict the correct parameter, it is good enough. So I don't think evaluating textual description is necessary, and given how diverse the textual description could be, the current automatic evaluation metric could be misleading."
+                },
+                "questions": {
+                    "value": "See weakness\n\n1. when you build a DAG tool graph, do you consider one graph that contains multiple disconnected DAG?\n2. Are tool graphs with more nodes more challenging? I think analysis of the correlation between the difficulty of the test cases and their numbers of nodes is interesting."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6761/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697227854257,
+            "cdate": 1697227854257,
+            "tmdate": 1699636779185,
+            "mdate": 1699636779185,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "4RFSinTZIb",
+                "forum": "70xhiS0AQS",
+                "replyto": "RKkZIWHMGC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response - 0"
+                    },
+                    "comment": {
+                        "value": "Thanks for your insightful comments. Below are our responses to your concerns:\n\n### **[W1] Human verification on Back-Instruct Dataset**\n\n### **Response:**\n\nRegarding the benchmark's faithfulness and the correctness of generated instructions, we acknowledge your concern. Compared with previous methods, we further employ rule-based and LLM-based checks to filter out low-quality samples. Following your suggestions, we are exploring the integration of human verification to enhance accuracy and reliability. This combined approach will ensure a more robust and faithful benchmark. We conducted a human evaluation of the current version of the dataset and put them in Appendix A.3, please refer to [G1] in General Response.\n\n### **[W2] Error Analysis on Back-Instruct Dataset**\n\n### **Response:**\n\nThank you for pointing this out. We acknowledge the error in the specific instance you highlighted (id: 10949228). This example illustrates a mismatch of parameter types between VQA and the image-to-text tool: the output of image-to-text is incorrectly linked to the image input of VQA. We conducted a human verification on the constructed dataset, and the results are shown in [G2] of the general response. In our examination, we found the proportion of error cases is nearly 12%. After human verification, we found that our dataset could provide a better quality. We will continue to improve it in two ways:\n\n- **Improving the quality of tool graphs.** Our analysis shows that these mismatches arise primarily when parameter types are not explicitly defined within the tool graph, leading to incorrect assumptions by the LLM about resource types. To rectify this, we propose introducing resource-type nodes in our tool graph. This will clearly delineate the types of resources each tool handles, ensuring that tool nodes are connected in a way that makes logical sense for the given query. This should significantly reduce such mismatches.\n- **Perform full human verification.** We recognize the value of human verification in ensuring the accuracy and faithfulness of our benchmark. We are exploring ways to integrate this into our process, alongside our automated checks.\n\n### **[W3] The importance of Evaluating task decomposition as textual descriptions.**\n\n### **Response:**\n\nThank you for your comments and concerns regarding the necessity of evaluating task decomposition. We appreciate your perspective and it is still challenging to determine the most appropriate metric to measure task decomposition. Since no one has explored the evaluation of task decomposition when conducting task automation, we want to explore a new perspective to analyze task decomposition by using textual descriptions. Just as shown in Figure 1 in our paper, the textual descriptions from task decomposition will instruct LLMs to parse tools and predict parameters. Therefore, we think that evaluating textual descriptions can also draw some inspiration to enhance LLMs in the future and reflect the planning capability of LLMs to obtain the decomposed sub-tasks. However, we also acknowledge your concerns that current metrics based on textual descriptions are still not enough to fully reflect the accuracy of task decomposition. We will continue to design better metrics to evaluate task decomposition, including subjective and objective evaluations."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700497607425,
+                "cdate": 1700497607425,
+                "tmdate": 1700497607425,
+                "mdate": 1700497607425,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ROALLquY6i",
+                "forum": "70xhiS0AQS",
+                "replyto": "RKkZIWHMGC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate your response. Is the dataset in the supplementary materials updated? If so, I would do another pass and will consider raising the score based on the updated dataset."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700508585969,
+                "cdate": 1700508585969,
+                "tmdate": 1700545320137,
+                "mdate": 1700545320137,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "O1B3WsPLMz",
+                "forum": "70xhiS0AQS",
+                "replyto": "MYKtYgzidZ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_CSek"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks! I checked the updated dataset very quickly. There are still many errors, and even though they may only take up around 10% of the dataset, it is still unacceptable for a benchmark. (These errors can be detected simply by rule-checking.)\n\nFor example, many arguments are wrong for the huggingface dataset:\n\nImage-to-Image requires 1 args only 2 are provided\nRequired: ['image']\nPredicted: ['example.jpg', 'target.png']\n\nText-to-Video requires 1 args only 2 are provided\nRequired: ['text']\nPredicted: ['The life cycle of a butterfly is truly fascinating. From a tiny egg to a beautiful butterfly, the journey is full of incredible transformations.', 'example.jpg']\n\nText-to-Video requires 1 args only 2 are provided\nRequired: ['text']\nPredicted: ['<node-3>', 'example.mp4']\n\nTranslation requires 1 args only 2 are provided\nRequired: ['text']\nPredicted: ['<node-0>', '<user_question>']\n\nDocument Question Answering requires 2 args only 1 are provided\nRequired: ['image', 'text']\nPredicted: ['<node-2>']"
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700692974380,
+                "cdate": 1700692974380,
+                "tmdate": 1700692974380,
+                "mdate": 1700692974380,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "QGTaVOEPou",
+                "forum": "70xhiS0AQS",
+                "replyto": "RKkZIWHMGC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "Thanks for your suggestions. We have further designed rules to filter samples based on the mismatch in the parameter number you pointed out\uff1a\n\n- On the DailyLife APIs domain, the ratio of error to total samples is: 30 / 4350 = 0.7 %.\n- On the Hugging Face Tools domain, the ratio of error to total samples is: 558 / 8104 = 6.8%.\n- On the Multimedia Tools domain, the ratio of error to total samples is: 303 / 5887 = 5.1%.\n\nWe have updated the dataset in the supplementary material. We appreciate the thorough examination you provided, which has significantly enhanced the quality of our dataset. Your insights are invaluable to us, and we are committed to addressing any remaining issues."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700704133924,
+                "cdate": 1700704133924,
+                "tmdate": 1700704145508,
+                "mdate": 1700704145508,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "fPnJgxNeoN",
+                "forum": "70xhiS0AQS",
+                "replyto": "RKkZIWHMGC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-Up: Seeking Further Feedback"
+                    },
+                    "comment": {
+                        "value": "Thanks for your continuously constructive comments on our paper. We have updated our dataset by further refining our datasets with rule-based and human verification. Since the deadline of the rebuttal is approaching, we are looking forward to your feedback. We are also willing to answer all of your concerns if possible.\n \nThank you again for your time and effort in reviewing."
+                    }
+                },
+                "number": 25,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700732545636,
+                "cdate": 1700732545636,
+                "tmdate": 1700732900422,
+                "mdate": 1700732900422,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "dDWeFOPEAc",
+            "forum": "70xhiS0AQS",
+            "replyto": "70xhiS0AQS",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_peHw"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_peHw"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a new benchmark for evaluating large language models' capabilities in completing user requests by utilizing external tools. The benchmark is constructed by first representing a collection of tools as a graph, sampling subgraphs representing valid tasks, and finally back-instructing GPT-4 in generating corresponding user requests based on the sampled subgraphs. The evaluation shows that current LLMs can still struggle in predicting correct tool-use plans for complex tasks."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The paper introduces a timely benchmark for evaluating LLMs' tool-use capabilities. It's a good effort to make the evaluation more standardized since there is an increasing volume of work in this area.\n- Representing tools as graphs is interesting, since the graph structure allows more diverse and complex tasks. The authors also include 3 sets of tools for different scenarios.\n- Back-instruct is a natural approach to construct the benchmark. However, I have concerns on the resulting data quality (see below)."
+                },
+                "weaknesses": {
+                    "value": "- One of my concern is that depending on the subgraph sampling procedure (which is not clearly described in the paper), the task might be unnatural (deviating from what users would ask in real-world) while being valid. For example, one can always make a complex task by combining many tools \"Tool 1\" --> \"Tool 2\" --> ....\"Tool N\", while the task is rarely encountered in real-world. Does the sampling procedure take \"task naturalness\" into account? Also, I'd suggest to include some actual examples in the paper.\n- While back-instructing to generate user requests is an intuitive approach. This procedure relies on GPT-4 and there is no guarantee that the generated data is correct (e.g., many of the examples are filtered out by simply using rule-based critics as mentioned). Even if more advanced LLM-based critic is used, there may still be wrong examples. Since the dataset is intended for evaluation, the data quality is of most the utmost importance. Without further (potentially manual) verification, it is not very convincing on the reliability of the benchmark.\n- As discussed in related work, there are several parallel efforts in creating benchmarks for LLM tool usage, and perhaps the most related is ToolBench [1]. Can the authors provide more detailed discussion/comparison to the work, and highlight the contribution in this work?\n\n[1] Tool learning with foundation models. Qin et al. 2023."
+                },
+                "questions": {
+                    "value": "- Tool graph construction: is there an example on the constructed tool graph before subsampling?\n- In Figure 3, GPT-4 almost reaches 100% in performance, would the benchmark will be saturated soon, perhaps when the next generation LLMs come out?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6761/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698784647677,
+            "cdate": 1698784647677,
+            "tmdate": 1699636779075,
+            "mdate": 1699636779075,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "L4b69y5OQs",
+                "forum": "70xhiS0AQS",
+                "replyto": "dDWeFOPEAc",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "Thanks for your insightful comments. Below are our responses to your concerns:\n\n### **[W1] \"task naturalness\" in sampling procedure? And add more actual examples in the paper.**\n\n### **Response:**\n\nThanks for your question. Here we mainly consider \"task naturalness\" in the instruction generation stage since currently, it is challenging to consider \"task naturalness\" in sampling without any human supervision. Therefore, to improve the naturalness, we adopt LLM-based and rule-based critics to filter out instances that rarely occur in the real world. We will follow your suggestions to introduce \"task naturalness\" into the sampling stage by using LLM critics. Besides, following your and other reviewers' suggestions, we have conducted human verification on our datasets to detect errors (Please see [G1] & [G2] of General Response) and further improve the quality of our datasets. Besides, we have presented concrete samples in [G1] of General Response and put them in Appendix A.4.1 of the revised version.\n\n### **[W2] Further (manual) verification to verify the reliability of the benchmark.**\n\n### **Response:**\n\nThanks for your suggestions. We admit it will be better with further human verification. We have conducted human verification and analyzed error patterns in our datasets (Please see [G1] and [G2] of General Response). Besides, compared with previous datasets (e.g., ToolBench) which all used instruction methods, we further conducted LLM-based and rule-based critics (Table 1) to filter out low-quality samples and reported the agreement of LLM rankings under human and TaskBench (Table 7). Due to the limited rebuttal period, we will continue to refine the reliability of our benchmark by using subjective and objective evaluations.\n\n### **[W3] More discussions or comparisons to the concurrent work (ToolBench).**\n\n### **Response:**\n\nThanks for the suggestion. Due to the page limitation, we have put some discussions between the concurrent work in the appendix in the initial version. To better understand the differences between TaskBench and other concurrent work, we have conducted in-depth comparisons in Appendix A.2 of our latest version from the perspective of datasets and evaluations. Please see [G3] in General Response to the differences and the advantages of our method.\n\n### **[Q1] Is there an example of the constructed tool graph before subsampling?**\n\n### **Response:**\n\nThanks for your question. In Appendix A.10 of the revised version, we have added a visualization of the constructed tool graph on Multimedia domain for reference, where the nodes denote tools, and directed edges indicate that the output type of the source tool matches the input type of the target tool.\n\n### **[Q2] In Figure 3, GPT-4 almost reaches 100% in performance, Will the benchmark be saturated soon, perhaps when the next generation of LLMs comes out?**\n\n### **Response:**\n\nThanks for your question. We guess this is because our evaluation dataset is also generated by GPT-4, so that its performance will be overestimated when also using GPT-4 for testing. Therefore, we also involve human evaluation to validate its quality. Besides, we believe that when more powerful LLMs come out, the dataset generated by these LLMs will be better and demonstrate better alignments to human preference when compared with GPT-4."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700497530487,
+                "cdate": 1700497530487,
+                "tmdate": 1700497530487,
+                "mdate": 1700497530487,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "2sJjEvBQQD",
+                "forum": "70xhiS0AQS",
+                "replyto": "L4b69y5OQs",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_peHw"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_peHw"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the response"
+                    },
+                    "comment": {
+                        "value": "Thank you to the authors for the response. I appreciate the authors' detailed response and efforts in further verification on the data quality. As data quality is my main concern and the manual verification is still ongoing, I would remain my original score."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700505737816,
+                "cdate": 1700505737816,
+                "tmdate": 1700505737816,
+                "mdate": 1700505737816,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "l7RKX5Iltu",
+                "forum": "70xhiS0AQS",
+                "replyto": "dDWeFOPEAc",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-Up: Seeking Further Feedback"
+                    },
+                    "comment": {
+                        "value": "Thanks for your constructive suggestions on our paper. Following your suggestions and other reviewers\u2019 comments, we have updated our dataset by further refining our datasets with rule-based and human verification. Since the deadline of the rebuttal is approaching, we are looking forward to your feedbacks and examinations on TaskBench. We are also willing to answer all your concerns if possible.\n \nThank you again for your time and effort in reviewing."
+                    }
+                },
+                "number": 26,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700733077653,
+                "cdate": 1700733077653,
+                "tmdate": 1700733103466,
+                "mdate": 1700733103466,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "mbIrkZZOqw",
+            "forum": "70xhiS0AQS",
+            "replyto": "70xhiS0AQS",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_BEYM"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_BEYM"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper generates a tool usage dataset for evaluating LLM-based autonomous agents. They  introduce Tool Graph to represent the decomposed tasks, and adopt a back-instruct method to generate instructions. The evaluation is conducted from task decomposition, tool invocation, and parameter prediction."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "+ The paper is well-written and easy to read.\n\n+ The paper studies an important question, which very interesting under the era of autonomous AI agent."
+                },
+                "weaknesses": {
+                    "value": "- The paper focuses on the evaluation of task solving (agent) capabilities of different LLMs. Although the experiments are enough, the analyses are partial. For instance, which contributes to the performance of different LLMs? What are the intrinsic difference between different existing LLMs in performing agent tasks? Which findings can we derive to better improve the capabilities of current open-source LLMs? Personally,  insights from the evaluation results are somehow shallow.\n\n- For an evaluation paper, I think more diverse LLMs should be evaluated as well, such as Claude-2. I also expect a case study to show the performance gap among different LLMs.\n\n- Missing discussion with a very relevant work ToolLLM [1]. The workflow is quite similar: preparing high quality tools (or APIs), back-generate the instructions that involve these APIs, and annotate how LLMs solve these instructions. The main difference is that this paper involves a concept of Tool Graph when organizing the structure of tools/APIs. Though ToolLLM can be considered as a concurrent work,  I think the authors should discuss their core differences and the unique advantage of this submission (experiments, findings, etc.). \n\n[1] Qin Y, Liang S, Ye Y, et al. Toolllm: Facilitating large language models to master 16000+ real-world apis[J]. arXiv preprint arXiv:2307.16789, 2023."
+                },
+                "questions": {
+                    "value": "Please response to the weaknesses and make more analysis to the experimental results."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6761/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6761/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6761/Reviewer_BEYM"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6761/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698830023453,
+            "cdate": 1698830023453,
+            "tmdate": 1699636778930,
+            "mdate": 1699636778930,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "UuRo5kJhmv",
+                "forum": "70xhiS0AQS",
+                "replyto": "mbIrkZZOqw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response - 0"
+                    },
+                    "comment": {
+                        "value": "Thanks for your insightful comments. Below are our responses to your concerns:\n\n### **[W1] More Analyses of evaluation results.**\n\n### **Response:**\n\nThank you for your feedback. We acknowledge your concerns regarding the perceived partiality in our analyses. To resolve your concerns, we have conducted further analyses of the aspects you highlighted:\n\n**1) Factors Contributing to Task Automation Performance:**\n\n- **Reasoning**: The capacity for complex problem-solving and reasoning varies significantly among LLMs. This ability is crucial for understanding and executing complex tasks. In mathematical and coding tasks, GPT series models show stronger reasoning ability, therefore they also possess corresponding capabilities in task planning and tool utilization.\n- **Instruction Following**: The proficiency in comprehending and adhering to user instructions differs, influencing task execution efficiency. Our analysis reveals that models fine-tuned with instruction-following settings, such as Vicuna-13b, WizardLLM-13b, and Nous-Hermes-13b, outperform the baseline Llama-2-13b model in task automation. Specifically,  we observe that WizardLLM-13b can perform better than Vicuna-13b since it fine-tunes more complex instructions. These results also demonstrate the necessity of instruction following.\n\n**2) Intrinsic Differences of LLMs in Performing Agent Tasks:**\n\n- **Code Pre-training:** We note that the models (Code-Llama) with more code-pretraining outperform other open-source LLMs in task automation. Experimental results show an average improvement of 4.45% in tool prediction (\\textit{n-f1}) and 12.76% in parameter prediction (\\textit{v-f1}) across various domain datasets. We conclude that since task automation usually involves multiple stages and tools, using code-style / structural text as the interface to switch different stages is better.\n- **Alignment Techniques**: Besides, the models (e.g., GPT series models) with human alignments (e.g., RLHF) demonstrate stronger task automation capabilities than open-source LLMs. These results also indicate that RLHF allows large language models to develop more generalized reasoning abilities, reducing overfitting to specific instructions.\n\nBased on our analysis, we propose the following improvements for open-source LLMs:\n\n- **Enhanced Code Pre-training**: Strengthening code pre-training can significantly boost the performance of LLMs in task automation.\n- **Quality of Instructions**: Developing high-quality (complex and diverse) instructions is crucial for crafting more efficient LLMs.\n- **Ongoing Knowledge Acquisition**: Encouraging continuous learning and knowledge updating can make LLMs more adaptable and proficient.\n\nWe have incorporated these additional analyses in Section 3.5 of the revised version to offer a more comprehensive view of the capabilities and development of LLMs in task automation. This should provide a deeper understanding and address the concerns you have raised about the initial shallowness of our insights."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700497130582,
+                "cdate": 1700497130582,
+                "tmdate": 1700497350922,
+                "mdate": 1700497350922,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ECBmoqxTDX",
+                "forum": "70xhiS0AQS",
+                "replyto": "mbIrkZZOqw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response - 1"
+                    },
+                    "comment": {
+                        "value": "### **[W2] Evaluating a Broader Range of LLMs, Including Claude-2.**\n\n### **Response:**\n\nThank you for your valuable suggestion. In response, we have incorporated the evaluation results of Claude-2 into our analysis. From Table 5-9, we observed that Claude-2 exhibited superior performance compared to gpt-3.5-turbo, yet it did not match the capabilities of GPT-4. Due to the limited time of the rebuttal period, we will add more diverse LLMs to our paper in the final version.\n\n|  | R1\u2191  | R2\u2191  | BsF\u2191 |\n| --- | --- | --- | --- |\n| Multimedia | 49.19 | 23.71 | 89.22 |\n| Hugging Face | 44.49 | 21.37 | 88.71 |\n| Daily APIs | 81.28 | 68.06 | 95.65 |\n\n*Table 5. Task Decomposition Performance of Claude-2.*\n\n|  | n-f1\u2191 | t-f1\u2191 | v-f1\u2191 |\n| --- | --- | --- | --- |\n| Multimedia | 66.15 | 53.57 | 23.79 |\n| Hugging Face | 69.77 | 48.29 | 32.33 |\n| Daily APIs | 79.73 | 78.14 | 60.10 |\n\n*Table 6. Tool Invocation and Parameter Prediction Performance of Claude-2 in node-structure Tasks.*\n\n|  | n-f1\u2191 | e-f1\u2191 | t-f1\u2191 | v-f1\u2191 |\n| --- | --- | --- | --- | --- |\n| Multimedia | 82.69 | 60.76 | 75.83 | 59.59 |\n| Hugging Face | 80.07 | 48.61 | 67.10 | 45.81 |\n| Daily APIs | 95.62 | 62.17 | 95.13 | 64.95 |\n\n*Table 7. Tool Invocation and Parameter Prediction Performance of Claude-2 in chain-structure Tasks.*\n\n|  | n-f1\u2191 | e-f1\u2191 | t-f1\u2191 | v-f1\u2191 |\n| --- | --- | --- | --- | --- |\n| Multimedia | 85.47 | 63.42 | 77.70 | 60.61 |\n| Hugging Face | 83.17 | 52.66 | 69.91 | 47.93 |\n| Daily APIs | 93.76 | 55.96 | 92.49 | 64.69 |\n\n*Table 8. Tool Invocation and Parameter Prediction Performance of Claude-2 in DAG-structure Tasks.*\n\n|  | n-f1\u2191 | e-f1\u2191 | t-f1\u2191 | v-f1\u2191 |\n| --- | --- | --- | --- | --- |\n| Multimedia | 81.07 | 56.62 | 73.08 | 54.40 |\n| Hugging Face | 79.15 | 45.19 | 64.52 | 43.87 |\n| Daily APIs | 93.73 | 57.66 | 92.89 | 64.47 |\n\n*Table 9. Tool Invocation and Parameter Prediction Performance of Claude-2 in All Tasks.*\n\n### **[W3] A case study to show the performance gap among different LLMs.**\n\n### **Response:**\n\nThanks for your suggestion. We added a case study to show the performance difference between different LLMs, please refer to General Response [G2] and Appendix A.4.2 in the revised version. \n\n### **[W4] Discussion with ToolLLM.**\n\n### **Response:**\n\nThanks for the suggestion. Due to the page limitation, we have put some discussions between the concurrent work in the appendix in the initial version. To better understand the differences between TaskBench and other concurrent work, we have conducted in-depth comparisons in Appendix A.2 of the latest version from the perspective of datasets and evaluations. Please see [G3] in General Response to the differences and the advantages of our method."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700497439919,
+                "cdate": 1700497439919,
+                "tmdate": 1700497465677,
+                "mdate": 1700497465677,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "vsSBHKr0do",
+                "forum": "70xhiS0AQS",
+                "replyto": "ECBmoqxTDX",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_BEYM"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Reviewer_BEYM"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for providing the additional experiments and analyses. But considering the data quality issues raised by two reviewers, I will maintain my score."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700539903956,
+                "cdate": 1700539903956,
+                "tmdate": 1700539903956,
+                "mdate": 1700539903956,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "6PUpJ469RF",
+            "forum": "70xhiS0AQS",
+            "replyto": "70xhiS0AQS",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_LVvj"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6761/Reviewer_LVvj"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work focuses on creating a benchmark that evaluates the task automation for large language models. A common practice is to formulate it into three critical stages, including task decomposition, tool invocation and parameter prediction.\nThe main contributions of the work are (1) The dataset creation, denoted as TaskBench, based on the aforementioned formulation. (2) Based on the created dataset, the performance of different aspects can be evaluated effectively and quantitatively.\nFor dataset creation, in details, to facilitate the dataset construction, the authors introduced the concept of Tool Graph to represent the connections/dependencies among the decomposed tasks. Three resources are leveraged for collecting tools, including the HuggingFace (e.g. Summarization), Multimedia (e.g. Text-to-Video), and Daily Life APIs (e.g. stock operation). \nWith pre-defined tools, the authors formulate three patterns for tool invocation: Node, Chain, and DAG (directed acyclic graph). With the diverse sampled subgraphs, back-instruct method is used to inversely craft user instructions, task steps, and tool invocation graphs.\nFor task evaluation, different steps are evaluated. Rouge-* and bertScore are used for evaluating textual description in task decomposition. F1 is used for evaluating the tool invocation and tool parameter prediction.\nExperimental results demonstrate the TaskBench can be effectively utilized to evaluate task automation ability of LLMs."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "This work covers more diverse tools than some other related work. For example, ToolQA defined 13 tools, mainly for accessing external knowledge. In this work, the authors consider three tool resources including the huggingface, multimedia and daily life APIs, in total 103 tools. Furthermore, designing LLM-based critic and rule-based critic is great to evaluate the consistency of the generated tool invocation graphs with the sampled tool subgraphs, without too much human effort.\nThe experimental results are also interesting. In terms of zero-shot, the OpenAI model significantly outperforming the open-sourced LLM. But for few-shot setting, code-llama gets closer to the OpenAI models. To my understanding, this may indicate that the OpenAI models did pretty good SFT and RLHF, to make models understand the instructions/task better, which aligns with the finding from \u201cIn-Context Learning Creates Task Vectors\u201d."
+                },
+                "weaknesses": {
+                    "value": "Although there is a section discussing the positive correlation of the proposed evaluation with human assessment and a section about using LLM and rule to check the alignment between the generated data and sampled tool sub-graph, in terms of data quality, it would be more insightful to show the quality measured by human. This will show the quality of the self-critic, either LLM-based critic or rule-based critic.\nIf the authors can provide more examples (predictions and gold answers) in appendix, it would be useful to help readers understand the difficulty of each tasks and some error cases/analysis in main text would be useful. Otherwise, the number itself cannot provide too much information regarding this dataset."
+                },
+                "questions": {
+                    "value": "Comparing to the node prediction, the edge prediction is harder based on the evaluation results. What\u2019s the error types for edge prediction? Does the model make equivalent edge prediction but different connectivity?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6761/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698867706194,
+            "cdate": 1698867706194,
+            "tmdate": 1699636778818,
+            "mdate": 1699636778818,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "dsNJKv3CzH",
+                "forum": "70xhiS0AQS",
+                "replyto": "6PUpJ469RF",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6761/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for your insightful comments. Below are our responses to your concerns:\n\n### **[W1] In terms of data quality, it would be more insightful to show the quality measured by humans.**\n\n### **Response:**\n\nThank you for your suggestion. In the latest version, we have conducted human evaluations on TaskBench to demonstrate its quality in terms of several aspects, including the Naturalness and Complexity of the instructions, and Alignment of the tool invocation graphs. Please see Appendix A.3. The results show that our Back-Instruct strategy produces high-quality user instructions with annotated and executable tool graphs. This approach generates data that is better aligned with human preferences. For more details about the evaluation results, please refer to [G1] in General Response.\n\n### **[W2] More examples (prediction and gold answers) to understand the difficulty of each task and error cases.**\n\n### **Response:**\n\nThanks for your suggestions. To resolve your concerns, we have added more examples in Appendix A.4 to illustrate the difficulty and error cases in conducting task automation based on TaskBench. Please also see our response in [G2] for case studies and error analysis.\n\n### **[Q1] Compared to the node prediction, the edge prediction is harder based on the evaluation results. What are the error types for edge prediction?**\n\n### **Response:**\n\nThanks for your question. Yes, edge prediction is more challenging compared to node prediction because it requires accurate prediction of both the source and target nodes of an edge. Currently, we summarize the main error types in edge prediction as two parts:\n\n- Mismatch of resource types between source node output and target node input.\n- Missing edge prediction between nodes where a resource or temporal dependency exists.\n\nWe analyzed 100 randomly sampled examples of edge prediction failures and statistically 27% and 38% of edge prediction errors belong to the above two types respectively.\n\n### **[Q2] Does the model make equivalent edge prediction but different connectivity?**\n\n### **Response:**\n\nGenerally, if the model has made an equivalent edge prediction, the nodes of this edge will always keep the same connectivity. Besides, in our dataset, such a scenario is rare since we do not involve any repeated calls to a specific tool, leading to unique edge predictions at distinct tool nodes."
+                    },
+                    "title": {
+                        "value": "Response"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6761/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700496993146,
+                "cdate": 1700496993146,
+                "tmdate": 1700497329825,
+                "mdate": 1700497329825,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

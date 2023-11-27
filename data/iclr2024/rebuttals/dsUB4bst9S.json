@@ -1,0 +1,785 @@
+[
+    {
+        "title": "Teaching Arithmetic to Small Transformers"
+    },
+    {
+        "review": {
+            "id": "4HI4xfBi0E",
+            "forum": "dsUB4bst9S",
+            "replyto": "dsUB4bst9S",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper investigates why arithmetic capabilities emerge from next-word prediction. The authors do several experiments with Transformer models between 10.6M and 124M parameters trained from scratch, and GPT-3 fine-tuned. The findings for the models trained from scratch is that for arithmetic they can generalise from relatively few examples (~6k), but generalise better when the output is reversed because this allows learning a simpler algorithm for arithmetic. The authors also find that holding out entire numbers from training doesn't decrease performance. Using scratchpads during training makes the models more sample efficient (even when accounting for the extra tokens this costs). The findings are similar for arithmetic with up to 10 digits and for different functions like subtraction. The authors also mix in text during training, and the produced model gets 100% arithmetic performance with few-shot prompting. In the third part the authors fine-tune GPT-3 and find further improved performance and sample-efficiency."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "The paper is written well, a lot of experiments are done with some interesting findings (e.g. scratchpad training from scratch is more efficient even when accounting for extra tokens, holding out digits doesn't degrade performance)."
+                },
+                "weaknesses": {
+                    "value": "The introduction says that the novelty of this work over prior work is to pinpoint the factors that contribute to the fast emergence of arithmetic capabilities through careful ablations, but I'm not sure how well the findings from this study would transfer to LLMs at scale. Additionally, I feel like some of the findings are not properly backed by the experiments:\n\n- The Transformers in this work are almost exclusively trained on arithmetic data, and it's unclear whether the findings would transfer to models trained primarily on language with some arithmetic data weaved in. Indeed, you show that arithmetic can be learned from next-digit prediction, but that is unsurprising since the setup is simply a cross-entropy loss on the next \"token\"(=digit).\n\n- The finding that reversing the output helps also most likely doesn't explain emergent abilities in LLMs, as this doesn't happen in natural text.\n\n- You show that few-shot prompting can be used to improve performance when text is mixed in, but you don't try few-shot prompting when text is not mixed in, so it's unclear whether the increase in performance is due to text being mixed in, or simply because of few-shot prompting. Few-shot prompting should also work when you train the model without text, or am I missing something?\n\n- The finding that sampling strategy is important is interesting, but on its own it's again unclear whether that transfers to emergent capabilities of larger models. For example, does the distribution of numbers in pretraining dataset follow a similar one as the one produced by your sampling strategy?\n\n- You claim you try to disentangle the factor of pretraining, but compare NanoGPT and GPT-2 from scratch to a fine-tuned GPT-3, which doesn't disentangle pretraining from scale. Why not compare to GPT-2 fine-tuned?\n\nIn summary, I feel like the motivation of the study (to explain emergent arithmetic abilities of LLMs) does not match with the experiments."
+                },
+                "questions": {
+                    "value": "- I don't understand why you would call the learning curve between 1k and 4k examples a phase transition? You're learning a task with a deterministic output, and 100% accuracy is possible and this model happens to learn it between 1 and 4k examples. This doesn't seem to be a fast phase transition when the model is anyway only trained for 6k examples.\n\n- It seems like the main reason for the model to learn arithmetic in this setup is because every example it sees is an entirely new one (new pair of operands), so the only strategy to achieve low training loss is actual arithmetic. It would be interesting to learn whether the generalisation behaviour is different when you train on the same set of examples for multiple epochs, which in turn could in fact explain some of the emergence of arithmetic in LLMs who are often trained for only a single epoch\n\n- I'm not sure I understand the exclusion experiments; For example for 1st (LSD) digit exclusion, do you just exclude 5 in the 1st digit? meaning that something like 543 cannot occur, but 453 can? If yes, how is that exclusion? The numbers are represented as a sequence over absolute embeddings, so 5 is not excluded at all but simply held-out at a particular position in the number no?\n\n- Typo end of page 8 (textand should be text and)"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4078/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698256763353,
+            "cdate": 1698256763353,
+            "tmdate": 1700734207836,
+            "mdate": 1700734207836,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "mLo1dapSMI",
+                "forum": "dsUB4bst9S",
+                "replyto": "4HI4xfBi0E",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer twgj (1/2)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your valuable and overall positive feedback on our paper. We have responded to your concerns below and hope that this will convince you to elevate your score.\n\n> `scalability of the findings` The introduction says that the novelty of this work over prior work is to pinpoint the factors that contribute to the fast emergence of arithmetic capabilities through careful ablations, but I'm not sure how well the findings from this study would transfer to LLMs at scale. Additionally, I feel like some of the findings are not properly backed by the experiments:\n\nWe apologize that this was not clear. We have a full table on scale ranging from NanoGPT, GPT2 and up to GPT3 models in Section 8 and also some additional experiments in Section F showing that most of the findings do indeed carry over when we scale up the models.\n\n> `transferability to language data` The Transformers in this work are almost exclusively trained on arithmetic data, and it's unclear whether the findings would transfer to models trained primarily on language with some arithmetic data weaved in. Indeed, you show that arithmetic can be learned from next-digit prediction, but that is unsurprising since the setup is simply a cross-entropy loss on the next \"token\"(=digit).\n\nWhile we agree that the loss is simple CE loss on next \"token\", it is unclear whether this is sufficient to learn the underlying algorithm that is necessary for performing arithmetic. Note that arithmetic in the token space is not equivalent to arithmetic in the embedding space. Moreover, this does not explain generalization to unseen examples of arithmetic. It is this aspect that is surprising. In fact, what is even more surprising is that without using careful data formatting and sampling, NanoGPT is unable to learn arithmetic with a reasonable number of samples.\n\nFurthermore, we have conducted experiments where arithmetic tasks are intermingled with textual data (refer to Section 7 and Appendix E). Although these experiments are on a small scale, the results suggest that our findings are transferable to a setting with the presence of text, and that few-shot promptining in these scenarios enhances the performance.\n\n> `practicality of reverse format` The finding that reversing the output helps also most likely doesn't explain emergent abilities in LLMs, as this doesn't happen in natural text.\n\nWhile we agree that reversing the output is not something that occurs in natural text, we use it as a mechanism to describe the importance of data formatting in learning compositional functions. Reversing the output is meant as an illustration of how even simple data formatting changes can elicit large improvements in performance.\n\n> `few-shot prompting on no-text model` You show that few-shot prompting can be used to improve performance when text is mixed in, but you don't try few-shot prompting when text is not mixed in, so it's unclear whether the increase in performance is due to text being mixed in, or simply because of few-shot prompting. Few-shot prompting should also work when you train the model without text, or am I missing something?\n\nPlease refer to [Figure 21](https://imgur.com/GysI4fO) where we have results on few-shot prompting on models trained exclusively on text data. As the reviewer expects, few-shot prompting does work even when the model is trained without text.\n\n> `trasnferring the data sampling strategy` The finding that sampling strategy is important is interesting, but on its own it's again unclear whether that transfers to emergent capabilities of larger models. For example, does the distribution of numbers in pretraining dataset follow a similar one as the one produced by your sampling strategy?\n\nIs the reviewer referring to typical pretraining datasets such as C4? If so, then it is difficult to even extract the distribution of numbers from it due to scale. However, we would expect that it does not since the arithmetic performance of most typical LLMs trained on C4 and the Pile is quite poor. We hope that our work will encourage more research in the area of dataset creation and curation. As seen in Gunasekar et al. \"Textbooks are all you need\", high quality tokens are becoming more and more important in order to train models efficiently."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700527141580,
+                "cdate": 1700527141580,
+                "tmdate": 1700586772462,
+                "mdate": 1700586772462,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "9RaubeFRjY",
+                "forum": "dsUB4bst9S",
+                "replyto": "AUj2I2uZcd",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for your response"
+                    },
+                    "comment": {
+                        "value": "Thank you for your responses. Although some of my concerns are adequately addressed (namely that some findings are not backed by experiments), my concern that these findings do not transfer to realistic settings remains. For example, you say yourself that it's unlikely that the datasets used for training models at scale have the right distribution, and your experiments do show that the right distribution is important for generalisation. I will increase my soundness score because the concerns regarding claims are mostly addressed, and with that my rating to a 5, but I still cannot recommend acceptance because of the claim that this paper looks at why arithmetic emerges at scale."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700666899295,
+                "cdate": 1700666899295,
+                "tmdate": 1700666899295,
+                "mdate": 1700666899295,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "mS3wHkZpTD",
+                "forum": "dsUB4bst9S",
+                "replyto": "OR1CO8dWmC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_twgj"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for the response"
+                    },
+                    "comment": {
+                        "value": "I\u2019ve decided to increase my score, also after reading the other reviewers responses and rebuttals, because I agree that if you take the title of the paper at face value, the paper does exactly what it says it does, and additionally has insights about how exactly this can be done. I remain unclear on how much this explains anything related to LLMs, but I leave it to the authors to decide on where and if at all to tone down claims regarding that, or caveat that. I also remain with my point of calling the experiment leaving out a digit at a particular position digit exclusion way too strong. Of course an embedding cannot be learned without the digit entirely, but there are many works that have dealt with OOV problems. I strongly encourage the authors to write down more clearly what this experiment actually does. Because of these remaining (arguably maybe cosmetic or minor) points, I will raise to a 6."
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700734153732,
+                "cdate": 1700734153732,
+                "tmdate": 1700734153732,
+                "mdate": 1700734153732,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "t9S9W60kuA",
+            "forum": "dsUB4bst9S",
+            "replyto": "dsUB4bst9S",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_sewW"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_sewW"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper focuses on an important problem of trying to understand how emergent capabilities like being able to solve arithmetic tasks arise while training transformer-based language models. Since it is difficult to decouple the various factors like compute, data, and model size to understand emergent capabilities, this paper conducts extensive experiments focusing on arithmetic tasks like addition, subtraction, multiplication, and unary operations like sine/sqrt on small models like GPT-2/nanoGPT. The paper presents various key findings:\n\n1. Training data format and sampling is important to make the decoder models learn arithmetic tasks properly. Models can learn addition in reverse better compared to the standard addition (with most significant digit being predicted first auto-regressively). The training data should have a good distribution over the number of carry operations (for addition/subtraction) as random sampling leads to an imbalance and reduced performance.\n2. Chain-of-thought style prompting / scratchpad based training leads to improved performance. Although there's a tradeoff, as the number of tokens to be generated to get the final answer have significantly increased.\n3. Mixing text data with arithmetic task data during training does not lead to performance degradation, just that the number of samples required to achieve emergence for addition becomes higher.\n4. Generalization beyond the digit lengths present during training is hard. If the model is not trained on a specific digit length, the model is not able to perform well even when it is trained on various digit lengths excluding this specific length."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "I really liked reading this paper and going over the various results and ablations presented in the paper. I believe the paper has various strengths as listed below:\n\n - The paper tackles an important problem of understanding emergence in language models wrt arithmetic operations. Data with arithmetic operations is not inherently present in the pre-training corpus, but still the models can do some rudimentary level of arithmetic tasks with few-shot prompting. The paper has some good ideas on adding arithmetic task data to the pre-training, or adapting pre-trained models with supervised fine-tuning on arithmetic data with some caveats (adding spaces to ensure better tokenization).\n- One of the important contributions of the paper is the structured data sampling for making models learn addition - ensuring good distribution over $n - 1$ digit operations for $n$ digit learning, and also ensuring equitable samples of the number of carry operations.\n- The section on the equivalence of learning addition and low-rank matrix completion is insightful, and how transformers have generalization capabilities beyond matrix completion.\n- The paper is well written and builds the story coherently, with lots and lots of ablation studies in the appendix and additional results."
+                },
+                "weaknesses": {
+                    "value": "- I was curious about the \\\\$ symbol bit present here and there in the paper, but it became clear after reading appendix B. In my opinion, the baseline used for making the strong claims of models being able to handle reverse addition better in the paper is wrong. The authors should have either done the reverse methodology without \\\\$ or used \\\\$ for the baseline too. This is a bit concerning as data formatting techniques highlighted in the paper are touted as one of the important contributions, and this finding makes that invalid.\n- Expanding on the previous point, Figure 9 specifically highlights that even plain addition is able to reach almost 100% test accuracy with the addition of the \\\\$ symbol, and reverse without \\\\$ is almost at 90% (only 2/3% difference with the baseline).\n- I believe some parts of the original manuscript is appendix material and some important bits in the appendix should be moved to the main paper. Specifically, the lemmas in section 4 seem a bit irrelevant given that difference of \\\\$ symbol in the baseline and reverse addition. Appendix section B.1 should be present in the main paper.\n- Not a weakness since the paper is fairly well written, but here are some typos in the paper:\n    1. I believe a latex shortcut is used to represent $A_{3}A_{2}A_{1} + B_{3}B_{2}B_{1} = C_{3}C_{2}C_{1}$ in the paper, because all occurrences of $B_{3}B_{2}B_{1}$ are represented as $B_{3}B_{1}B_{1}$.\n    2. Figure 1, in the detailed scratchpad solution, I think a carry ($C = 1$) has been missed after $[1, 2] + [3, 6], A = [5]$.\n    3. Figure 4b, it should be just Number of tokens on the x axis instead of Number of unique tokens?\n    4. Figure 8: Larger model scale instead of sacale.\n    5. No space between $\\textit{text}$ and $\\textit{and}$ in the last line on page 8."
+                },
+                "questions": {
+                    "value": "I have asked most of my questions in the weakness section, but here are a few more:\n\n- Figure 1, $A$ is built incrementally, like $A = [5]$, then $A = [9,5]$, and so on. What is the effect of starting with $A = []$ (empty set) in the prompt, as the first line just starts with a carry.\n- There's a slight confusion on the experiment setting in Figure 2. Is it plain addition with \\\\$ symbol and not the actual baseline? Also it seems that even with structured sampling, the overall performance on 2-digit addition is low when $n = 3$.\n- Do you have an equivalent diagram for Figure 9 for GPT-2 and GPT-3?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Reviewer_sewW"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4078/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698714416028,
+            "cdate": 1698714416028,
+            "tmdate": 1699636372249,
+            "mdate": 1699636372249,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "gndpTkLWhc",
+                "forum": "dsUB4bst9S",
+                "replyto": "t9S9W60kuA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer sewW (1/1)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your feedback on our paper. We appreciate your comments and would like to address your concerns.\n\n> `$-symbol` I was curious about the `$` symbol bit present here and there in the paper, but it became clear after reading appendix B. In my opinion, the baseline used for making the strong claims of models being able to handle reverse addition better in the paper is wrong. The authors should have either done the reverse methodology without `$` or used `$` for the baseline too. This is a bit concerning as data formatting techniques highlighted in the paper are touted as one of the important contributions, and this finding makes that invalid.\n\nWe thank the reviewer for their careful reading of the paper and acknowledge that this is somewhat confusing. In order to simplify the message of the paper, we decided to subsume the `$` delimiter into the reverse data format. However, as the reviewer points out, even in Appendix B, it is clear that reverse does improve the performance significantly both with and without the `$` delimiter. We will modify the wording in the paper to make this more clear.\n\n> `Figure 9. plain reaching almost 100%` Expanding on the previous point, Figure 9 specifically highlights that even plain addition is able to reach almost 100% test accuracy with the addition of the \\$ symbol, and reverse without `$` is almost at 90% (only 2/3% difference with the baseline).\n\nYou are correct in observing that plain addition can approach 100% test accuracy with an adequate number of training examples. We have updated our manuscript to reflect that the plain format does not plateau at 85% as previously stated. We also found that introducing a `\\n` character as a prefix while prompting the model significantly enhances performance for models trained without the `$` delimiter. This result is presented in [Figure 9](https://imgur.com/a/SKCkdPK), which can be viewed here. These results indicate that the inclusion of a delimiter during testing is a critical factor for model accuracy. We will add this result in our revision, and also include experiments on the plain format with this modification.\n\n> `Organization of paper` I believe some parts of the original manuscript is appendix material and some important bits in the appendix should be moved to the main paper. Specifically, the lemmas in section 4 seem a bit irrelevant given that difference of `$` symbol in the baseline and reverse addition. Appendix section B.1 should be present in the main paper.\n\nWe maintain that the benefit of reversing the order of digits is significant even though it is reduced with the removal the `$` delimiter. However, we will include the contents of B.1 into the main paper as it serves to clarify the setting more clearly.\n\n> `Typos`\n\nThank you for pointing these out. We have fixed it in the revised manuscript.\n\n> `scratchpad starting with A=[]` Figure 1, $A$ is built incrementally, like $A=[5]$, then $A=[9,5]$, and so on. What is the effect of starting with $A=[]$ (empty set) in the prompt, as the first line just starts with a carry.\n\nWe apologize for the confusion. The detailed scratchpad example in Figure 1. initially contained a typo in the first intermediate step. All the detailed scratchpad experiments were actually conducted on training examples starting with `A=[]`. We have fixed Figure 1 with the correct example. \n\n\n> `Figure 2. Setting` There's a slight confusion on the experiment setting in Figure 2. Is it plain addition with `$` symbol and not the actual baseline? Also it seems that even with structured sampling, the overall performance on 2-digit addition is low when $n=3$.\n\nYes that is indeed the setting we chose. We chose to use the `$`-wrapped plain as a baseline since we wanted to use a method that reaches nearly 100% accuracy within a reasonable number of samples. The reviewer is indeed correct that 2-digit addition is not as good as one would hope. The balanced digit sampling strategy involves selecting 100 instances of 1-digit, 900 instances of 2-digit (constituting 9% of the total 10,000 instances for this category), and 9,000 instances of 3-digit numbers. While our strategy performs significantly better than random sampling, it perhaps needs to be tweaked to reach 100% accuracy within each category.\n\n> `GPT-2, GPT-3` Do you have an equivalent diagram for Figure 9 for GPT-2 and GPT-3?\n\nWe have added an additional result on GPT-2 in Figure 9 of the revised version, which shows a similar result as the NanoGPT experiments ([Updated Figure 9](https://imgur.com/BFNGBYO))."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526756938,
+                "cdate": 1700526756938,
+                "tmdate": 1700586706837,
+                "mdate": 1700586706837,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "bwbIA6hiVS",
+                "forum": "dsUB4bst9S",
+                "replyto": "t9S9W60kuA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_sewW"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_sewW"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Rebuttal"
+                    },
+                    "comment": {
+                        "value": "I thank the authors for their response to the review and appreciate the updates to the main manuscript. I still believe the authors have not addressed the mismatch in the baseline clearly, the plain should be with \\\\$ symbol too or reverse should not contain the $ symbol. This more fair baseline has very little difference between the plain and reverse. Due to this reason, I maintain my original rating of 5.\n\nAlso, there's a typo in Figure 9 (without instead of wihout)."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700667256120,
+                "cdate": 1700667256120,
+                "tmdate": 1700667333768,
+                "mdate": 1700667333768,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "03bHoimYcA",
+            "forum": "dsUB4bst9S",
+            "replyto": "dsUB4bst9S",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_ofJx"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_ofJx"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors present an analysis of the performance of a small decoder-only transformer (NanoGPT), trained from scratch on arithmetic tasks (2 or 3-digit positive integer addition, mainly). They show that 3 digit addition can be learned to very high accuracy, from less than 5000 training examples, if the output digits are represented in \"reverse order\" (i.e. representing 256 as the sequence [6, 5, 2]), and less than 2000 if the model is provided chain of thought information (intermediary steps in the calculation) during training.\n\nOn two-digit addition, the authors observe that learning addition from a small training set amounts to completion of a low rank matrix (the addition table). They show that NanoGPT has the same data efficiency as classical completion algorithms, both needing about 2000 examples to \"fill the table\", but that NanoGPT overcomes one of the main limitations of classical algorithms: the need to have at least one example on every line and column.\n\nThe authors also present extensions of their approach to longer operands, and other mathematical operations (on integers and decimals). Finally, they present experiments with larger models (pre-trained or not), showing that whereas larger models, like GPT-3, achieve better performance with few-shot learning, their observations on the role of reversed digits in the output, and chain-of-thought prompting, remain valid."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper demonstrates that a basic arithmetic operation, like integer addition, can be learned by small transformers from a limited number of examples. They also show that techniques like chain-of-thought prompting, introduced as a method for finetuning pre-trained models on arithmetic tasks, also benefit small transformers, trained from scratch. This is an important result."
+                },
+                "weaknesses": {
+                    "value": "The submission is a compressed version of a very long paper. As a result, some of the claims in the introduction, e.g. those relative to length generalization and compositionality, are not discussed in the main paper. The results on other operators, and the impact of pre-training on text, are very hard to assess, because the paper provides almost no description of the experimental setting. Finally, some of the figures (e.g. fig. 5) are compressed beyond legibility. This makes the main paper difficult to read, especially starting with section 7 (unless one is ready to read 25 additional pages). \n\nI would recommend that the authors either submit the full version of their paper to a journal, or limit it to their results on addition, which are significant enough, and deserve a longer discussion."
+                },
+                "questions": {
+                    "value": "* To which extent is your finding on reversing digit order in the output specific to the decoder-only architecture you use? I believe output order would be irrelevant in an encoder-only setting (possible here because the output sequence is guaranteed to be shorter than the input sequence), what about an encoder-decoder architecture?\n* In the paragraph on balancing digit, you say : \"For instance, in the case of 3-digit addition, random sampling results in a meager 0.01% probability of selecting a 1-digit number.\" The probability of selecting a 1-digit operand should be 1%, right? \n* What are the performances of the model when operands have different lengths (e.g. 2 + 312, or 546 + 7)?\n* Does the model learn the properties of addition, e.g. commutativity? This could be done by testing whether model predictions for A+B and B+A are the same, even early during training.\n* Can those results generalize to decimal numbers (e.g. 1.21+13.12)? \n* Can those results generalize to signed numbers, by adding a sign token to all three integers?\n* There is a tension between your results from section 3 and 4, which suggest that models are learning the same algorithm as us (quickly memorizing the 10x10 table, then adding successive digits and propagating carries), and the results from section 5, which frame addition as a memorization+interpolation problem (learning to interpolate a large but low rank matrix). Is there a way to decide what algorithm the model is actually learning? \n * Is there a chain-of-thought approach suitable to low-rank matrix completion? If so, it would greatly improve its data efficiency, and perhaps allow it to scale to larger operands."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Reviewer_ofJx"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4078/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698778910518,
+            "cdate": 1698778910518,
+            "tmdate": 1700667439614,
+            "mdate": 1700667439614,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "SYQlQ53PxO",
+                "forum": "dsUB4bst9S",
+                "replyto": "03bHoimYcA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer ofJx (1/3)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your appreciative feedback on our paper. Please find the responses to your concerns inline below.\n\n> `Paper being too compressed` The submission is a compressed version of a very long paper. As a result, some of the claims in the introduction, e.g. those relative to length generalization and compositionality, are not discussed in the main paper. The results on other operators, and the impact of pre-training on text, are very hard to assess because the paper provides almost no description of the experimental setting. Finally, some of the figures (e.g. fig. 5) are compressed beyond legibility. This makes the main paper difficult to read, especially starting with section 7 (unless one is ready to read 25 additional pages). I would recommend that the authors either submit the full version of their paper to a journal, or limit it to their results on addition, which are significant enough, and deserve a longer discussion.\n\nWe appreciate the reviewer's feedback and are encouraged by the recognition of the significance of our results on addition. We understand that the scope of the paper is extensive, and some content might be compressed, making it difficult to read. In light of the reviewer's suggestion, we would be happy to reduce the scope of this submission to focus solely on addition, moving relevant results from the appendix to the main text to provide a clearer and more comprehensive discussion.\n\nWe believe that our work is timely and relevant to the current research landscape, and we believe that presenting our findings at this year's ICLR would be beneficial to the community. We will revise Sections 7 and 8 to limit their reliance on the appendix and improve the overall legibility and coherence of our paper.\n\n> `different architectures` To which extent is your finding on reversing digit order in the output specific to the decoder-only architecture you use? I believe output order would be irrelevant in an encoder-only setting (possible here because the output sequence is guaranteed to be shorter than the input sequence), what about an encoder-decoder architecture?\n\nWe intentionally focus on decoder-only architectures in order to focus on understanding the emergent properties in LLMs which are typically decoder-only transformers. For encoder-only models, is the author referring to BERT style architectures? If so, since the model is producing all the digits \"simultaneously\", the reviewer is right in that the reverse will likely not make any difference. However, in the case of encoder-decoder architectures, since the model is still producing digits from left-to-right, reversing the digit order will give it the opportunity to learn a simpler function (see Lemma 1 and 2). We are currently running experiments on both these architectures and hope to report the results by the end of the rebuttal period.\n\n> In the paragraph on balancing digit, you say : \"For instance, in the case of 3-digit addition, random sampling results in a meager 0.01% probability of selecting a 1-digit number.\" The probability of selecting a 1-digit operand should be 1%, right?\n\nIt is $0.01\\%$ since there are only $100$ samples containing 1-digit numbers among the $10^6$ 3-digit addition samples. The reviewer is right in that the probability of selecting a single 1-digit operand is $1\\%$, but the probability that either operand is 1-digit is significantly lower.\n\n> `different lengths` What are the performances of the model when operands have different lengths (e.g. 2 + 312, or 546 + 7)?\n\nWe report the following result on different digit length combinations. Each row and column represent the number of digits in the first and second operand, respectively. \n\nFor plain, performance is lower for lower-digit combinations. It is also interesting to note that the performance is not necessarily symmetric in the lengths of the operands. We conjecture that this is because despite our balanced sampling approach, the number of samples of $(1, 3)$ digit or $(2,1)$ digit sums are relatively few in our training data.\n\n| Plain   | 1-digit | 2-digit | 3-digit |\n| ----   | ----    | ----    | ----    |\n| 1-digit| 72.8%   | 42.2%   | 77.0%   |\n| 2-digit| 27.8%   | 60.0%   | 91.4%   |\n| 3-digit| 38.6%   | 61.2%   | 97.0%   |\n\nFor reverse, performance is fairly consistent for different digit combinations since the model learns addition almost perfectly.\n\n| Reverse| 1-digit | 2-digit | 3-digit |\n| ----   | ----    | ----    | ----    |\n| 1-digit| 100.0%  | 99.8%   | 99.0%   |\n| 2-digit| 96.4%   | 100.0%  | 100.0%  |\n| 3-digit| 94.0%   | 99.4%   | 100.0%  |"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526617622,
+                "cdate": 1700526617622,
+                "tmdate": 1700616159911,
+                "mdate": 1700616159911,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "imFNInjqpX",
+                "forum": "dsUB4bst9S",
+                "replyto": "03bHoimYcA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer ofJx (2/3)"
+                    },
+                    "comment": {
+                        "value": "> `commutativity` Does the model learn the properties of addition, e.g. commutativity? This could be done by testing whether model predictions for A+B and B+A are the same, even early during training.\n\nThis is an excellent question! We find that while the model doesn't learn commutativity perfectly, it definitely learns it to a large extent, especially after being fully trained. We use NanoGPT fully trained on the plain data format and check if $(A+B) = (B+A)$. Out of 9900 test examples, only 8799 samples commute. While most of these samples are trivially commutative (since the model gets the answer correct), we find that out of the 164 samples where the model gets both $(A+B)$ and $(B+A)$ wrong, it still commutes on 99 of them! We summarize these findings in the table below.\n\n|        | P(A+B=B+A, both are correct answer) | P(A+B and B+A are both incorrect) | P(A+B=B+A \\| both are incorrect) |\n| ----   | ----    | ----      | --- |\n|  | 0.878 (8700 samples)   | 0.016 (164 samples)  | 0.603 (99/164 samples) |\n\nTherefore, the model learns to commute 60.3\\% of the time even when it gets the answers wrong!\n\n> `decimal numbers` Can those results generalize to decimal numbers (e.g. 1.21+13.12)?\n\nWe observe that our results do generalize to addition of two decimal numbers (See [Decimal Results](https://imgur.com/a/uGwqxpl)). We convert each integer number (up to 3-digit) to decimal numbers with 1 digit + 2 floating points (ex. 1-digit number `a -> 0.0a`, 2-digit number `ab -> 0.ab`, 3-digit number `abc -> a.bc`) to train the model on decimal numbers. The obtained results align with our findings on integer addition, where addition is learned more efficiently with the reversed output. Somewhat surprisingly, the overall performance is better than 3-digit integer addition. However, this is likely because the decimal number formatting behaves like zero-padding since we ensure fixed digit length (Appendix B.1). \n\n\n> `signed numbers` Can those results generalize to signed numbers, by adding a sign token to all three integers?\n\nWe suspect that our results can be generalized to signed numbers as well, which is similar to training the model on both addition and subtraction. Our preliminary experiment on training the model with all signed combinations of two 3-digit numbers show the following [results](https://imgur.com/a/2mTeH9m). We find that training with signed numbers is a more difficult task than training on addition or subtraction alone. Interestingly, the accuracy of $(+,+)$ and $(-,-)$ sign combinations is higher than $(+,-)$ or $(-,+)$ sign combination, suggesting that (as expected) learning addition is easier than learning subtraction. \n\n> `learned algorithm` There is a tension between your results from sections 3 and 4, which suggest that models are learning the same algorithm as us (quickly memorizing the 10x10 table, then adding successive digits and propagating carries), and the results from section 5, which frame addition as a memorization+interpolation problem (learning to interpolate a large but low-rank matrix). Is there a way to decide what algorithm the model is actually learning?\n\nThis is a keen observation and an excellent point! In fact, most of our work is aimed at trying to glean some insights into what algorithm the model is actually learning. In fact, the second part of Section 5 suggests that the generalization properties of NanoGPT when certain numbers are excluded from the training data, surpass Matrix Completion and therefore are not simply interpolating the low-rank addition matrix. While the results from Section 3 and 4 do indicate that the model learns our addition algorithm when presented with reversed outputs, the limited length generalization indicates that it does not \"truly\" learn this algorithm. In the end, while we do not precisely characterize the algorithm learned by the model, we do characterize its tendencies and behaviors, particularly in regard to its sensitivity to the input data format."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526710573,
+                "cdate": 1700526710573,
+                "tmdate": 1700616178937,
+                "mdate": 1700616178937,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Om12EGrQum",
+                "forum": "dsUB4bst9S",
+                "replyto": "q7kfQ46OxG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_ofJx"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_ofJx"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you very much for your responses, and for making the main part of paper easier to read.\n\nI am happy to raise my note from 3 to 6."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700644094618,
+                "cdate": 1700644094618,
+                "tmdate": 1700644094618,
+                "mdate": 1700644094618,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "zQ3wvr8Ve4",
+            "forum": "dsUB4bst9S",
+            "replyto": "dsUB4bst9S",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_UmA7"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_UmA7"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In this study, the researchers explore the ability of small transformers, to grasp basic arithmetic tasks using the next-token prediction objective. The research reveals that simple alterations in the format of the training data, such as inverting the results or incorporating step-by-step breakdowns, can markedly enhance model accuracy. Furthermore, the paper delves into the intricate relationship between arithmetic and text data in training, as well as the length generalization challenges encountered by these models. This research underscores the significance of refined and targeted data, keeping in mind the unique traits of the next-token prediction objective, in swiftly fostering arithmetic capabilities."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "Well-written, technically sound paper"
+                },
+                "weaknesses": {
+                    "value": "The study's main shortcoming in terms of novelty stems from its reliance on previously established methods and datasets, particularly the use of reasoning-augmented data, which has been prevalent in enhancing model performance. The authors explicitly acknowledge that their work doesn't break new ground in terms of the types of training data or in achieving peak performance with minimal model parameters. However, the research sets itself apart through its meticulous ablation studies and in-depth exploration of various sampling techniques, training data formats, data source mixing ratios, and model scales. Additionally, while they provide certain novel theoretical explanations for observed phenomena, their primary emphasis on arithmetic isn't for its intrinsic importance but as an easily testable emergent skill to better understand emergent phenomena in models."
+                },
+                "questions": {
+                    "value": "How do the authors envision scaling their methodology beyond GPT-3? Additionally, do they believe their approach is compatible with subquadratic transformer variants?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4078/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698785786941,
+            "cdate": 1698785786941,
+            "tmdate": 1699636372038,
+            "mdate": 1699636372038,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "BsI0Oq2R9b",
+                "forum": "dsUB4bst9S",
+                "replyto": "zQ3wvr8Ve4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer UmA7 (1/1)"
+                    },
+                    "comment": {
+                        "value": "We appreciate the reviewer's thoughtful feedback on our paper. We are glad to hear that you find our paper is well-written, and is technically sound. We respond to your questions inline below.\n\n> `Shortcoming in terms of Novelty` The study's main shortcoming in terms of novelty stems from its reliance on previously established methods and datasets, particularly the use of reasoning-augmented data, which has been prevalent in enhancing model performance. The authors explicitly acknowledge that their work doesn't break new ground in terms of the types of training data or in achieving peak performance with minimal model parameters. However, the research sets itself apart through its meticulous ablation studies and in-depth exploration of various sampling techniques, training data formats, data source mixing ratios, and model scales. Additionally, while they provide certain novel theoretical explanations for observed phenomena, their primary emphasis on arithmetic isn't for its intrinsic importance but as an easily testable emergent skill to better understand emergent phenomena in models.\n\nWe acknowledge the reviewer's concern regarding the novelty of our work. While we agree that our study does not introduce new datasets or techniques, we would like to emphasize that the novelty of our research lies in the extensive ablation studies and the thorough exploration of various factors influencing model performance in a well-specified setting. Our work's contribution is the comprehensive understanding gained through dissecting the emergence of arithmetic in small transformer models, particularly highlighting the importance of data sampling and data formatting, including seemingly simple methods like reversing the outputs. Our findings contribute to a more in-depth study of how transformers develop arithmetic skills, and have a broader implications on synthetic training data generation for LLM training, which we believe is valuable for the research community. This work is particularly timely given the current state of research in this area and will hopefully encourage further exploration and development of more sophisticated techniques to better understand emergent phenomena in models.\n\n\n> `Q1. scaling methodology` How do the authors envision scaling their methodology beyond GPT-3?\n\nWe would like to emphasize that since our approach primarily focuses on data sampling and formatting techniques, it is directly applicable to models of different scales. Our experiments on finetuning GPT-3 (Table 2) show that our findings extend from NanoGPT to GPT-2 and even GPT-3. We see no reason why it should not extend beyond that as well. We are currently running experiments on finetuning GPT-4 and hope to include the results by the end of the rebuttal period.\n\n> `Q2. compatibility with subquadratic variants` Additionally, do they believe their approach is compatible with subquadratic transformer variants?\n\nWe have not yet explored subquadratic Transformer variants such as sparse attention, or linformer.  Since our analysis is primarily focussed on the pre-training data, we expect that it should extend to those variants as well. We are currently running our experiments for these variants and hope to include the results by the end of the rebuttal. We will surely include it in the final manuscript."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526479101,
+                "cdate": 1700526479101,
+                "tmdate": 1700526479101,
+                "mdate": 1700526479101,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "t3rZizGiAd",
+            "forum": "dsUB4bst9S",
+            "replyto": "dsUB4bst9S",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_9wwh"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4078/Reviewer_9wwh"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper investigates the performance of Transformers (small scale) on a set of arithmetic tasks when trained from scratch with next token prediction objective. The study is motivated by the emergent ability of LLMs in solving arithmetic problems even though they are not directly trained on these tasks. The main task is multi digit arithmetic (-,+,*), most of the paper is focused on setting where the task is only multi digit addition. \n\nIn the paper,\n1. They study the impact of input representation (reversing the output digits helps the models learn the task faster).\n   - In the setting where they reverse the output digits, the model learns the task but there is a sharp phase transition as they increase the number of training samples. They try to explain this by the argument that learning a map on `n` digits from random samples is equivalent to completing a low-rank matrix (but they mention that this doesn't explain the generalisation behaviour of the models). \n  - For the multiplication operation, reversing the output does not have a positive effect.\n2. They study the impact of data distribution (balanced vs non-balanced)\n3. They show that using chain of thought during training helps (the more detailed the better).\n  - In this context, they compare the models in terms of sample efficiency and token efficiency, and show that models trained with CoT are more sample efficient but in total they require more number of tokens.\n  - They show that a detailed scratch-pad doesn't help with operations like sine and square-root.\n4. They show that the techniques of reversing and using CoT during training, stay as sample efficient when the complexity of the task grows in terms of the number of digits, where is training the models on the plain format of the task becomes harder (requires more samples) as the number of digits increases.\n5. They investigate the effect of training the model on a mixture of text and arithmetic data. \n6. They investigate the effect of models size (comparing nano-gpt and gpt-2, and pre-trained/fine-tuned GPT-3)."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Lot's of interesting analysis. \n- Maybe a difference with some of the previous work on this topic is that here the objective, similar to language models, is the next token prediction, as opposed to modelling the task as a classification task. This is basically training language models on arithmetic data. The paper aims to reveal the factors that lead to emergence of arithmetic capabilities in a minimal setting."
+                },
+                "weaknesses": {
+                    "value": "While it is very interesting to understand if, how and under which settings language models learn simple arithmatics, It's not clear to me how the findings in the paper can be generalised. \n- For example, even in case of the ability of models to learn arithmetics, as mentioned in the paper, these results are based on using character level tokeniser which simplifies things a lot when it comes to such tasks and is potentially one of the biggest challenges for LLMs to perform well on these tasks. (A parallel work that looks into this: https://openreview.net/forum?id=OinvjdvPjp).\n- Methods like reversing the output seem a bit tacky. I agree it is interesting to see that these types of modification to the input/output impacts the results, making it easier for the model to learn the task, but I am not sure if they can have any value beyond analysis/understanding purposes. \n- While some of the experiments presented in the paper are conceptually very interesting they seem to be exploring the space a bit sparsely which makes it harder to make any firm conclusions."
+                },
+                "questions": {
+                    "value": "1. When chain of thought is applied during training, does the model also generate the chain of thought during inference? Is there any correlation between the validity of the chain of thought (during inference) and the correctness of the answer? \n2. Could the reason for better performance of the detailed chain of thought model simply be its length? \n3. In Table 1, could you report a confidence interval? In the caption, you say in some cases it improves (when some numbers are excluded from the training data)? If the difference here is significant (it actually is a an improvement), what is the intuitive explanation? You mention a regularisation effect, could you elaborate on that?\n4. In Figure 4, are the models with scratch pad also with reversed output?\n5. The paper argues that the sudden jump in accuracy can be explained if addition is formulated as 2-rank matrix completion, but the generalization behaviour of the model can not be explained by this. Could you elaborate how this explanation holds even though it is not fully consistent with the behaviour of the model?\n6. When comparing models with different sizes, is the smaller model trained for longer?\n7. Is there a reason why the number of digits for experiments in Figure 6 are different for different operations?\n8. What is the number of digits for experiments presented in Figures 7 and 8 and Table 2.\n9. Do you have any experiments where the different operations are not split into different tasks (where the task contains the mixture of operation)?\n10. Is there a failure point as you increase the number of digits?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4078/Reviewer_9wwh"
+                    ]
+                }
+            },
+            "number": 5,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4078/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698904057881,
+            "cdate": 1698904057881,
+            "tmdate": 1700682848436,
+            "mdate": 1700682848436,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "j8CIBK2O6H",
+                "forum": "dsUB4bst9S",
+                "replyto": "t3rZizGiAd",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 9wwh (1/3)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their detailed feedback and for acknowledging that our experiments and analyses are extensive and interesting. Please find our responses to each of the concerns you have raised below.\n\n> `Generalizability` These results are based on using character level tokenizer which simplifies things a lot when it comes to such tasks and is potentially one of the biggest challenges for LLMs to perform well on these tasks.\n\nWe agree that the character-level tokenizer simplifies the setting, but the main reason we chose arithmetic, is to find a setting where it is simple enough to ablate all the different factors. Note that for GPT-2, we also ran experiments with BPE tokenization (tiktoken), as shown in [Figure 25](https://imgur.com/xVCWPSl). \nWhile the results may not completely generalize, our experiments on Chain-of-Thought data and sampling on models of varying scales illustrate that most of our findings remain applicable. We hope that this will encourage more research on systematically ablating individual components.\n\n> `Value beyond analysis/understanding purposes` Methods like reversing the output seem a bit tacky. I agree it is interesting to see that these types of modification to the input/output impacts the results, making it easier for the model to learn the task, but I am not sure if they can have any value beyond analysis/understanding purposes.\n\nWe appreciate your perspective on the value of our work and would like to emphasize that our primary objective is to analyze and understand how these models learn arithmetic skills and, if possible, determine more efficient ways to elicit such learning. While reversing may seem somewhat tacky, the importance of coming up with data formatting techniques to accelerate the learning process is more important than ever. We believe that work along this line is especially important now with growing model scales and growing scarcity of tokens. We hope that our work encourages more research along the lines of Gunasekar et al. \"Textbooks are all you need\" and leads to creation of small, well curated datasets for fast LLM training.\n\n\n> `Sparse exploration space` While some of the experiments presented in the paper are conceptually very interesting they seem to be exploring the space a bit sparsely which makes it harder to make any firm conclusions.\n\nWe appreciate the reviewer's observation regarding the sparse exploration space in our study. We acknowledge that it might be challenging to draw firm conclusions, but we argue that this is primarily due to the inherent complexity of studying LLMs. Given the scale and the multitude of variables involved, isolating individual aspects of the problem is a daunting task. This is the reason we focused on a simple problem like arithmetic and conducted extensive ablations to gain insights into data formatting, sampling, and their impact on teaching skills to small transformer models. However, we would like to point out that we have results on GPT-2 and various scales of GPT-3 models in Sections 8. and Appendix F. We are currently running experiments on finetuning GPT-4 and hope to post those by the end of the rebuttal period.\n\nIn our study, we aimed to examine parameters that are commonly used in practice, such as training data formatting, data scale, and few-shot prompting. We understand the reviewer's concern about the scope of our experiments and would be open to reducing it if deemed valuable. However, we believe that each experiment in our study offers useful insights, which we have attempted to summarize in each subsection of the paper. Our work serves as a foundation for future research in understanding the learning process of language models and optimizing their performance using data formatting and other techniques.\n\n> `Q1. CoT generated data` When chain of thought is applied during training, does the model also generate the chain of thought during inference? Is there any correlation between the validity of the chain of thought (during inference) and the correctness of the answer?\n\nWhen we train the model with CoT data from scratch, it does generate output in a chain-of-thought style during inference. As expected, there is indeed a strong correlation between the validity of the chain of thought (during inference) and the correctness of the answer. We evaluate the `scratchpad match score` to be the fraction of intermediate computations that are correct and plot it with the final accuracy. We observe a strong correlation between the two, as can be seen [here](https://imgur.com/a/WLdu5Ln). We observe that errors in intermediate steps propagate to subsequent steps, leading to incorrect answers. However, for some of the less accurate models (say NanoGPT trained on 250 samples), the model chances upon the correct answer even after getting some of the intermediate computations wrong."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526216801,
+                "cdate": 1700526216801,
+                "tmdate": 1700585860384,
+                "mdate": 1700585860384,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "5SmGFcc0O8",
+                "forum": "dsUB4bst9S",
+                "replyto": "t3rZizGiAd",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 9wwh (2/3)"
+                    },
+                    "comment": {
+                        "value": "> `Q2. Length of CoT` Could the reason for better performance of the detailed chain of thought model simply be its length?\n\nThis is a great question! We have several results that demonstrate that the improved performance of the detailed scratchpad format is attributed to the intermediate steps rather than the length of the data format. For instance, in Section B.3. in the Appendix, we highlight the importance of designing intermediate steps by comparing two different versions of the detailed scratchpad format for subtraction. In Section B.4, we examine the effect of recording correct digit-wise sum `(A)` and carry `(C)` information versus randomizing `A` and `C` in the simplified scratchpad format, showing that addition is best learned with accurate `A` and `C` values.\n\nFurthermore, in the revised version of Section B.3., we have included an additional experiment in which we replace the intermediate steps of the detailed scratchpad format with random tokens, keeping the overall data format length constant and find that the performance is significantly worse than using the correct intermediate steps. This indicates that the intermediate steps play a crucial role in the model's performance, rather than the mere length of the data format.\n\n> `Q3. Table 1.` In Table 1, could you report a confidence interval? In the caption, you say in some cases it improves (when some numbers are excluded from the training data)? If the difference here is significant (it actually is a an improvement), what is the intuitive explanation? You mention a regularisation effect, could you elaborate on that?\n\nBy \"some cases\", we refer to the columns where we exclude 100 and 500 numbers for plain and all 3 cases for reverse, since the overall accuracy is higher than in the case when we exclude no numbers. We refer to this as a regularization effect since it can be thought of as analogous to data augmentation with cropped images used while training vision models. However, as the reviewer points out, this is somewhat handwavy.\n\nA more reasonable explanation of this is a generalization of the matrix completion argument that we discuss in Section 5. Note that learning how to add two-digit numbers could be viewed as completing a fourth-order, rank-4 tensor (rank-4 in the CP sense). $ab + cd = 10a + b + 10c + d$, which can then be represented as the sum of fourth order rank-1 tensors (rank-1 in the CP sense): $10* T_1 + T_2 + 10*T_3 + T_4$ where $T_1$ is $\\mathbf{N}\\circ \\mathbf{1} \\circ \\mathbf{1} \\circ \\mathbf{1}$, $T_2$ is $\\mathbf{1}\\circ \\mathbf{N}\\circ \\mathbf{1}\\circ \\mathbf{1}$ and so on. Note that $\\mathbf{N} \\in \\mathbb{R}^{10}$ here denotes the vector $[0, 1, 2, \\dots, 9]$ and $\\mathbf{1} \\in \\mathbb{R}^{10}$ denotes the vector of 1s. While this argument is still informal, it now shows that the sample complexity of learning the \"addition-map\" is $O(\\\\#digits)$ rather than $O(10^{\\\\#digits})$. It also reveals that seeing each digit in each position enough times to learn $T_i$ might be sufficient.\n\nWe have updated [Table 1.](https://imgur.com/a/6zHX9xs) and [Table 4.](https://imgur.com/a/6zHX9xs) to contain the confidence interval on the performance of 5 models trained with different seeds. \n\n> `Q4. Figure 4. scrachpad output` In Figure 4, are the models with scratch pad also with reversed output?\n \nNo. The models with scratchpad do not have reversed output. Only the reverse format is trained with reversed output. \n\n> `Q5. Matrix Completion` The paper argues that the sudden jump in accuracy can be explained if addition is formulated as 2-rank matrix completion, but the generalization behaviour of the model can not be explained by this. Could you elaborate how this explanation holds even though it is not fully consistent with the behaviour of the model?\n\nWe use the phase transition as a hint that matrix completion (MC) could explain part of the behavior of the model learning addition. As the reviewer correctly points out, our discussion in section 5 on generalization shows that NanoGPT is not performing exact matrix completion. We merely remark that the $O(n)$ phase transition of NanoGPT is almost identical to that of the phase transition in MC, and therefore provides some insights into its learning behavior.\n\n> `Q6. Training iterations for smaller model` When comparing models with different sizes, is the smaller model trained for longer?\n\nFor plain and reverse formats, NanoGPT and GPT-2 are both trained for the same number of iterations - sufficient for the training loss to converge. The learning rate is chosen from {1e-3, 5e-4, 1e-4, 5e-5} based on validation loss. For the scratchpad format, NanoGPT is trained longer since the number of tokens per sample is higher and it requires more iterations to converge. For the precise details of hyperparameter choices, we refer the reviewer to Table 13 and 14 in the Appendix."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700526261891,
+                "cdate": 1700526261891,
+                "tmdate": 1700696917562,
+                "mdate": 1700696917562,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Nx1p8PIo1w",
+                "forum": "dsUB4bst9S",
+                "replyto": "7oI2g38wXd",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_9wwh"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4078/Reviewer_9wwh"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you very much for the detailed response and clarifications.\n\nReviewing the responses and all the other reviews. I believe this paper provides interesting insights on learnability of arithmetic tasks with language models as we scale the number of training samples. While not all the findings in this paper might hold anymore for LLMs (trained on larger scale text data with different properties and limitations). They do show that the task is learnable under specific settings in a somewhat generalisable manner (and hint the factors (like scratch pad or specific ways of formatting data) that have a positive contribution in achieving this). \n\n- If I am getting this right, the empirical results provided in this paper show that under specific setting we can learn task such as arithmetics in generalisable manner with only training the models on task specific examples (e.g., we. do not need language data). \n\n- The experiments in Appendix C. are indeed very interesting. It would be more interesting if we could also see the failure point and how the performance compares to LLMs in those cases. \n\n- Thank you for updating Table 1 and 4 to include the confidence intervals.\n\n- That would be really nice if you can include the results also for the GPT-4 model in the next version of the paper (as the authors  mentioned it them-selves). \n\n- Thanks for pointing out to the experiments comparing different formatting of the scratch pad and also including experiments with random CoT. Even though it is intuitive to expect the more informative the chain of thought the better, I find it more convincing to support this with some empirical evidence.\n\n- I do understand that this paper has not aimed to address the length generalisation challenge, but as the authors point out to previous related work that study mechanisms (scratch-pad + few-shot prompting) that helps LLMs better generalise over length, it would have been interesting to see if these finding hold in case where the models are trained purely on the arithmetics data. \n\n\nP.S., apologies for the typo in my review, I meant the reversing technique seems \"hacky\" not \"tacky\" :D"
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4078/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700682726652,
+                "cdate": 1700682726652,
+                "tmdate": 1700682726652,
+                "mdate": 1700682726652,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

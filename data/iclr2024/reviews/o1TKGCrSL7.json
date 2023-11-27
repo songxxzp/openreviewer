@@ -1,0 +1,288 @@
+[
+    {
+        "id": "A8oWmEq18l",
+        "forum": "o1TKGCrSL7",
+        "replyto": "o1TKGCrSL7",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_KXPh"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_KXPh"
+        ],
+        "content": {
+            "summary": {
+                "value": "*Note that this manuscript was previously submitted to NeurIPS 2023, where it was withdrawn following scores that would have likely led to rejection. I was assigned a reviewer for this paper at the time as well, and from what I can tell the paper remains entirely unchanged. Hence, I am going to take the liberty of resubmitting my previous review entirely unchanged as well.*\n\nThis paper addresses the problem of subgroup robustness, i.e., the concern that a model shows markedly worse performance for specific subpopulations. Note that a subpopulation here is defined across both label and input space. Mathematically this translates to $\\min_\\theta \\sup_{Q\\in\\mathcal{Q}}\\mathbb{E}_{Z\\sim Q}[\\ell(\\theta,Z)]$ where $\\mathcal{Q}$ is a set of subpopulations and $\\ell$ is the loss for a given sample, $Z$, and parameters $\\theta$. That is, the goal is to maximize the worst-case performance of the classifier over all subpopulations.\n\nThe suggested approach in this paper relies on a vision-language model: The language model is used to describe the subpopulations in input space. For example, if subpopulations are defined as blond/not blond (label space) men/women (input space), then \"a photo of a man/woman\" (\"debiasing prompt\") is fed and used to generate embeddings $T(\\hat{t}_i)$ (see equation 4). An adapter $A$ is then trained to \"debias\" the vision embeddings, which means that the embeddings lie equally far from all $T(\\hat{y}_i)$ (e.g., it is no longer possible to tell the gender from the image features). At the same time, a consistency loss using the un-adapted features ensures that embeddings don't collapse.\n\nThe idea here is that if the classes are balanced (e.g., there are as many blond as not blond people in the dataset) and the vision features are debiased (e.g., there is no more information in there about gender) then the performance of the classifier must end up being equal across all of the (four) subpopulations (blond/not blond men/women).\n\nExperiments show significant improvements in the worst-case accuracy for all models except ViT-L/14 on the CelebA dataset (subpopulations are blond/not blond men/women) and the Waterbirds dataset (subpopulations are waterfowl/landfowl in the air/on land). Experiments show that several hundred/thousand examples are needed to see improvements over the baseline (i.e., no debiasing).\n\nA few other experiments show that the method can be used in conjunction with other methods (e.g., CVaR-DRO and $\\chi^2$-DRO) and that it is possible to debias multiple attributes at the same time."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The proposed idea is appealing in its simplicity: A vision-language model can be used to describe which attributes should be protected/robust (e.g., male/female) and an adapter is quite directly trained to remove these features entirely from the image features.\n\nThe experimental results are encouraging. Improvements seem reliant on prompt engineering and not all improvements are equally large, but they seem consistent."
+            },
+            "weaknesses": {
+                "value": "The main strength of the method also seems like a weakness: It relies on a multi-modal model to provide the zero-shot learning capability needed to identify subpopulations in the label space. This makes the method pretty specific.\n\nA concern regarding the applicability of this method is that the experiments show that this approach requires significant prompt engineering. But the assumption in this paper seems to be that there are no labels available (e.g., no male/female labels). That means that it wouldn't be possible to compare the performance of prompts like it was done, e.g., in table 1, right?\n\nAll in all, I don't think this is a bad paper. The idea is clean and simple, and the results show that it works. However, I'm wondering if the idea is fleshed out enough, and it leaves me with several practical questions: How does one select a debiasing prompt when there is no ground truth labels? Can I use multiple debiasing prompts? How do I know if I have enough data? I am not sure if all these questions should be left to future work (I think these are more important than questions about how L-DRO interacts with other methods, for example). This is why I am recommending a weak reject."
+            },
+            "questions": {
+                "value": "Some questions:\n\n* Did the authors explore why their model fails on ViT-L/14? This seems like useful information for practitioners. For example, can they only expect this model to work on smaller models?\n* My understanding is that the results in table 6 should be comparable to the 3rd and 7th rows in table 2? There zero-shot learning gets 70.6% worst-case performance. It seems that $\\chi^2$-DRO is the only baseline that gets higher than this (but with huge variance)? It seems odd that all the DRO methods do worse than not doing anything at all?\n* Assuming that it's not possible for a practitioner to select the best prompt based on validation results (since no ground truth labels are available for the subpopulations) it would be useful to know if the method can be extended to support multiple debiasing texts. That is, rather than having to select a single debiasing prompt and hope it is correct, the user could just give many different ones, increasing the chances of having good results (since the spread is quite large, as is evident in table 1).\n* I'm surprised at the results in table 3, which seem to suggest that if the dataset isn't large enough, the proposed method actually harms the results. I would find it useful if the authors could (1) provide insight into why this is the case, and (2) provide some guidance on how a practitioner is supposed to know whether or not they have enough data available for this method to apply.\n\nMinor things:\n\n* It seems odd that all the prompts selected are grammatically incorrect. How does the model perform with correct phrases such as \"a photo of a blond/non-blond person\"/\"person who is blond/not blond\" and \"a photo of a man/woman\"/\"male/female person\"?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8531/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698819748850,
+        "cdate": 1698819748850,
+        "tmdate": 1699637066896,
+        "mdate": 1699637066896,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "9Fzv1TiRTE",
+        "forum": "o1TKGCrSL7",
+        "replyto": "o1TKGCrSL7",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_BEYs"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_BEYs"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposed to utilize the language description of opposite semantics to mitigate the sub-population shifts via CLIP model. This method doesn't require instance-wise label information but instead encourages CLIP's inability to distinguish across sub-populations using the learned features by maximizing the cross-entropy of classifying images into sub-population semantics.  Experimental result demonstrates performance improvement with the proposed method."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Proposed L-DRO doesn't require instance-level labels. It maximizes the cross-entropy loss to discourage image features too close to any biased descriptions. IMO, it's an effective and novel method. \n2. The experiments are very detailed. It studies whether L-DRO can help original CLIP zero-shot inference, how L-DRO is compared with other methods, and whether the L-DRO can help other methods, etc. And the performance of L-DRO is impressive."
+            },
+            "weaknesses": {
+                "value": "1. I think the consistency loss might be a bit contradictory to the debiasing loss since the consistency loss encourages the adapter's output to be similar to original image features while the debiasing loss wants the adapter's output to be different from original image features. How do the authors think of / solve the problem? Is there any ablation on the coefficient of the consistency loss?\n\n2. It's interesting that L-DRO can also improve average loss in Tab 1. Can authors further explain on this phenomenon?"
+            },
+            "questions": {
+                "value": "1. Shouldn't the `y_p` in `{y_p, y_n} := {blond, not blond}` in the second paragraph of Sec4 be `y_b` to be coherent with the notation in the next paragraph?\n\n================\\\nAfter reading other reviews and the authors' responses, I'd like to lower my rating a bit to 5."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Reviewer_BEYs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8531/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699170390774,
+        "cdate": 1699170390774,
+        "tmdate": 1700773236895,
+        "mdate": 1700773236895,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "nLslb1LTLi",
+        "forum": "o1TKGCrSL7",
+        "replyto": "o1TKGCrSL7",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_cXZe"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_cXZe"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper  proposes a method to mitigate subpopulation shifts within one modality (e.g., vision) by leveraging the robustness inherent in another modality (e.g., text). This is achieved by learning a vision feature adaptor, which is trained by minimizing equation (4) with debiasing prompts. This will encourage the inability to distinguish across sub-population while maintaining a representation space consistent with the learned space. Utilizing the debiased vision representation alongside the original task-relevant classification prompt enhances worst-case accuracy and also yields benefits for average accuracy."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper proposes an effective framework for debiasing subgroup information using aligned representations from Vision Transformers (ViT), which improves the subgroup robustness. This work could inspire future research in this domain.\n2. The evaluation is comprehensive and systematic, showcasing effectiveness across multiple datasets and metrics, and providing a comparison with several state-of-the-art baselines. The Table 4 analysis of (dis)alignment within subgroups between the source and target is both innovative and inspiring.\n3. The paper is well-organized and clearly presented."
+            },
+            "weaknesses": {
+                "value": "1. I\u2019m concerned about the innovation w.r.t. proposing a new strategy for subgroup robustness. The concept of gaining robustness from language modality to enhance another is not novel [1], and the idea of learning debiased representations\u2014where domain predictability is removed and task predictability is emphasized\u2014is fairly common. \n2.  While the method is motivated by the general notion that aligned representations from multimodal models can share robustness, the algorithm is restrictive \u2014 It primarily facilitates the use of text prompts to learn the debiased representation adapter for improved classification. Extending the algorithm to incorporate other combinations of modalities may be challenging, particularly for modalities where designing debiasing prompts (e.g., in vision) might be difficult."
+            },
+            "questions": {
+                "value": "1. Can L-DRO be adapted for combinations of modalities other than vision and language, or does the methodology intrinsically require assistance from the language modality?\n2. Table 4 offers interesting insights. In the rows where the source and target are misaligned, the average accuracy is comparable to that of a zero-shot scenario, however, there is a significant divergence in worst-case accuracy. Does this suggest other subgroups are either adversely affected or disproportionately benefited (so that the average scores can remain similar)? Does this imply that the algorithm still works with other influential attributes even if they are not directly related to the target domain?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Reviewer_cXZe"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8531/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699499895397,
+        "cdate": 1699499895397,
+        "tmdate": 1699637066658,
+        "mdate": 1699637066658,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "OXyHxLJw1D",
+        "forum": "o1TKGCrSL7",
+        "replyto": "o1TKGCrSL7",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_FPNj"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8531/Reviewer_FPNj"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addressed the sub-population shift problem, denoting a domain shift within specific sub-groups between training and testing, by proposing distributional robustness via language (L-DRO). To employ a CLIP model as a debiased zero-shot classifier, L-DRO incorporates an extra feature adapter for image embeddings, enhancing the entropy of their predictions on spurious attributions. In experiments, the author demonstrates that L-DRO attains the highest worst-case accuracy on the Waterbirds and CelebA dataset, surpassing $\\mathcal{X}^2-$DRO, CVaR DRO, and JTT."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- L-DRO exhibits efficient applicability even in scenarios with multiple categories of spurious attributes. \n- Unlike other methods, the training procedure of L-DRO maintains stability across epochs, while competitors experience performance fluctuations."
+            },
+            "weaknesses": {
+                "value": "- One significant concern revolves around the limitation of entropy maximization.\n  - As entropy reaches its maximum on a uniform distribution, the analytic solution of $max \\ \\ell_{ent}$ can be obtained through $(A_{\\theta_A} \\odot I(\\mathbf{x}))^T (T(\\hat{t}_1) - T(\\hat{t}_2)) = 0$.\n  - This occurs when $(A_{\\theta_A} \\odot I(\\mathbf{x})) $ is projected onto the null-space of $(T(\\hat{t}_1) - T(\\hat{t}_2))$. However, reducing a single rank is insufficient to eliminate the entire spurious representation.\n  - The empirical evidence of this limitation can be observed in Table 5 that penalizing semantically correlated sources even increases worst-case accuracy in zero-shot classification.\n- Another concern is the relatively modest performance of the proposed method compared to recently published methods. For instance, [1] achieved 92.9% and 88.3% worst-group accuracy on Waterbirds and CelebA, respectively, which is 10% and 30% higher than L-DRO. This underperformance may be attributed to the weak regularization of the entropy regularization  \n- Baseline implementation\n  - The worst-group accuracy of JTT reported in [1] stands at 86.7% and 81.1% on Waterbirds and CelebA, significantly higher than the results presented in this paper. \n\n[1] https://arxiv.org/pdf/2204.02937.pdf"
+            },
+            "questions": {
+                "value": "- Ablation study) Are there any experimental results for the model trained on the loss defined in Eq.(1)?\n- Table 3) Could you compare this experiment with the other methods? The table does not convey how L-DRO maintains stability with varying data sizes. \n- Table 4) In some rows, the same source was utilized as the target, resulting in the highest worst-case accuracy. Could you please elaborate on the intention behind this choice and the corresponding performance gain?\n\n\n- Minor corrections) \n  - Table 1) Would you consider changing one of the parentheses { } in the prompt to [ ] or ( ) so that readers can distinguish?\n  - Eq. and equation are redundantly appeared."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8531/Reviewer_FPNj"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8531/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699619839277,
+        "cdate": 1699619839277,
+        "tmdate": 1699637066513,
+        "mdate": 1699637066513,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,369 @@
+[
+    {
+        "id": "YxrqzpwA9i",
+        "forum": "71mqtQdKB9",
+        "replyto": "71mqtQdKB9",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_4UNx"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_4UNx"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new loss (\"score entropy\") for performing score matching in the discrete diffusion setting, building on the continuous-time discrete diffusion framework of Campbell et al. (2022) and the density-ratio-estimation perspective of Concrete Score Matching (Meng et al. 2022). The authors claim that their new objective has a number of advantages over previously-considered losses, and present a number of variants of the objective for computationally-efficient training ~~(although I don't think their justifications are sound, see weakness [W1])~~. They also discuss some alternative forms of sampling algorithms for fast decoding (similar to Campbell et al. (2022)) and discuss how to apply their technique to infilling tasks.\n\nExperimentally, the authors train non-autoregressive generative models using their objective on the OpenWebText dataset, using the GPT-2-small and GPT-2-medium architectures. They present preliminary results of partially-trained models, and show that their model's perplexity bounds are within around 15% of the perplexity of the standard autoregressive GPT-2-small. *Edit: In the current revision they also have compute-matched comparisons to GPT-2-medium, and comparisons to a number of discrete diffusion baselines, with strong results for both.*  They also assess sample quality by computing the GPT-2-large perplexity of generated samples, and find that their samples outperform vanilla autoregressive sampling for a fixed number of network evaluations (or that they match autoregressive modeling with 16x fewer network evaluations)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "**[S1]** The proposed loss seems intuitively reasonable. The authors motivate it based on limitations of previous score-network-inspired discrete diffusion methods, and argue why their approach should work better. ~~(Although, a lot of this argument seems to rely on unproven theorems; see [W1] below.)~~\n\n**[S2]** The generative perplexity results are quite impressive. It seems that the proposed sampling strategy is Pareto-optimal relative to the fixed GPT-2-small model, when evaluating based on GPT-2-large's perplexity v.s. number of sampling iterations.\n\n**[S3]** The problem of building better non-autoregressive probabilistically-sound generative models is an important one, and the claimed improvements represent an important step in this direction ~~(although due to [W1], [W3], and [W4] below I'm not convinced they've justified their claims sufficiently in this regard)~~\n\n**[S4]** The authors do a good job connecting this work to previous work on diffusion models, and in particular on drawing connections between their score-matching objective and previous work on continuous score-matching diffusion models."
+            },
+            "weaknesses": {
+                "value": "~~**[W1]**~~ *(addressed in current revision)* The central theoretical claims of this work are incomplete and unsupported, and I am not convinced they are correct. In particular, although much of the paper is devoted to statements about the new \"score entropy\" and its properties, the proofs are either omitted, incorrect, or only provided in a sketch form.\n\n- Proposition 3.2, which states that their score entropy loss has the right minimum, is never proven.\n- Proposition 3.3 and Theorem 3.4, which give alternative forms of the score entropy, have \"proofs\" that are very handwavey and informal. And I believe these proofs are also incorrect! The derivations ignore the weights $w_{xy}$ and thus end up proving something different than the intended proposition/theorem.\n- The central result, Theorem 3.6, is justified only with a sketch which says to apply the (likely incorrect) trick from the \"proof\" of 3.3 to some unstated result of Campbell et al. (2022). This is nowhere near enough detail to reconstruct an adequate proof.\n- Theorem 4.2's proof is also a sketch which does not include enough detail for me to verify its correctness.\n\nAdditionally, although the introduction claims that one contribution of the work is a \"Langevin corrector framework\", this never appears in the paper.\n\n*Edit: The authors have corrected some small errors in their theorems and added detailed proofs for all of them. I believe the theoretical claims are justified now, although I'm not familiar enough with stochastic processes to check everything in detail.*\n\n---\n\n**[W2]** The provided experiments appear to be only preliminary results. For their SEDD-small model, they \"emphasize that it is still improving\", and for their SEDD-medium model, they state that it \"has not started converging\". The authors say they will \"update our model results as training progresses\".\n\nMy understanding is that work submitted to ICLR is supposed to be feature-complete at the time of submission. I'm not sure it's appropriate to plan on updating the central results of the submission during the review process.\n\n*Edit: The authors have explained their reasoning below (they meant to pre-emptively reassure reviewers that they could add more comparisons if asked, not to do so unasked). It still seems a bit strange to include comments directed at the reviewers in a paper submission, especially with results that the paper calls \"preliminary\", since presumably these would always be removed in the final version. On the other hand, if these statements had simply not been added in the first place, I think the initial results would have still supported the main empirical claims, so perhaps this isn't a big deal.*\n\n---\n\n~~**[W3]**~~ *(addressed in current revision)* I found the evaluation criteria to be somewhat imprecise, especially in regards to the authors claims that the demonstrate \"for the first time, a non-autoregressive modeling technique that is able to achieve similar perplexity scores as autoregressive modeling\".\n\nThe authors claim performance is \"competitive\" with GPT-2-small, but this seems like a subjective statement; the perplexity of their SEDD-small models seems to be a few points higher for everything except the PTB dataset. They also present results for SEDD-medium, a larger model, which outperform the smaller GPT-2 model. However, it's not clear that comparing perplexity across model sizes is fair without controlling for the amount of training compute.\n\nThe authors additionally reference the Plaid 1B model from Gulrajani & Hashimoto (2023), which had previously shown strong non-autoregressive performance relative to GPT-2-small (albeit with a larger model and more training compute than GPT-2-medium). That seems to contradict the claim that this work is the \"first time\" non-autoregressive modeling has been competitive with autoregressive modeling.\n\nI would have hoped for a more rigorous set of experimental results here. For instance, Gulrajani & Hashimoto (2023) give a thorough study of different model scaling law behavior while controlling for training compute; this kind of thing seems necessary to fairly compare with autoregressive methods. (Perhaps much of the performance of the SEDD models here is due to them being overtrained relative to the GPT-2 models.)\n\n*Edit: The authors have added context for their 10% perplexity gap based on existing continuous diffusion results, added comparisions between their medium model and GPT-2 medium, and clarified that their experimental results are not overtrained with respect to GPT-2. The new baselines also provide additional supporting evidence.*\n\n---\n\n~~**[W4]**~~ *(addressed in current revision)* Although motivated as a way to improve upon previously-proposed discrete diffusion approaches, the experiments do not include any discrete diffusion model baselines. Additionally, the perplexity experiments use different evaluation splits and different evaluation methods from previous works, so the numbers cannot be directly compared to previous works. The GPT-2-small comparisons may also be confounded by differences in the dataset or number of training iterations used for GPT-2-small.\n\nIt is thus difficult to tell how much of the observed gains are due to the new contributions in this work, rather than being due to the training procedure, base model architecture, or evaluation method.\n\n*Edit: Diffusion baselines have been added, using consistent training, architecture, and evaluation setups.*\n\n---\n\n~~**[W5]**~~ *(addressed in current revision)* The generated samples still seem somewhat incoherent in a qualitative sense. In particular, I found the \"infilling\" samples in Table 2 to be unimpressive; none of them appear to be meaningful or consistent with the provided prompt tokens.\n\n*Edit: The newer SEDD-medium samples and long-form samples are much more coherent than those in the initial submission.*"
+            },
+            "questions": {
+                "value": "In the appendix, I strongly suggest that the authors fix the proofs, and write them out formally with much more detail than they are currently written.\n\nIn the experiments, am I correct in understanding that the \"sample quality\" experiments are performed on SEDD-small rather than SEDD-medium? That seems important to clarify.\n\nHow does the proposed method compare to existing diffusion model baselines like concrete score matching, Plaid, or earlier works? And how does it compare to retraining the autoregressive GPT-2 architecture on the same dataset you are using, with a comparable amount of training compute?\n\nMore minor feedback:\n\n- In the intro, what is \"this rather straightforward objective\"?\n- In what sense does the proposed approach induce \"an amenable loss landscape\"? Do you have any evidence of this?\n- In section 2, \"Concrete Score Matching\" actually learns a vector that is shifted by 1 relative to what you state (e.g. it learns $\\frac{p_t(y)}{p_t(x)} - 1$)\n- The statement of Theorem 3.4 has a grammar mistake: what is equivalent to the denoising score entropy?\n- Definition 3.5 has an incomplete sentence fragment starting \"Our parameterized densities ... that satisfy\"\n- The claim \"$Q^{seq}$ is mostly 0\" doesn't appear to be explained; I'd suggest adding a note explaining why this is the case.\n- In section 3.3 I'd suggest citing the previous works that have studied the \"two standard matrices\" you propose (e.g. Austin et al (2021) and Campbell et al (2022), and possibly others)\n- The equations in 4.1 appear in the middle of the text with no explanation.\n- Should equation (21) be conditioned on $x_t$?\n- \"In principle, we can also bound the likelihoods using Theorem 3.6\" appears twice in section 4.2.\n- A few citations appear to use `\\citep` when `\\citet` would be more appropriate (in 5.1 and 6)\n- You might want to use a different GPT-2 sample in Figure 2 (b); the current one appears to touch on a sensitive topic."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Reviewer_4UNx"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6401/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697504680576,
+        "cdate": 1697504680576,
+        "tmdate": 1700354170432,
+        "mdate": 1700354170432,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "hjuengPMYp",
+        "forum": "71mqtQdKB9",
+        "replyto": "71mqtQdKB9",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_DQWg"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_DQWg"
+        ],
+        "content": {
+            "summary": {
+                "value": "This article is about discrete diffusion models.\nIts main contribution is to propose a novel loss function for \"concrete score matching\" (Meng et al. 2022). This loss function penalizes small values and is hence better adapted to the fact that concrete scores (i.e. distribution ratios) are strictly positive values.\nThe second contribution is to experiment this novel score loss (with all state-of-the-art architecture proposals) for diffusion-based text generation.\nAs a third contribution, the authors study extensively this score-matching criterion and its denoising variant and provide an Evidence Lower Bound for likelihood-based training and evaluation."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Discrete diffusion models and especially text-diffusion models are difficult but exiting research topics: as mentioned by the authors much work remains to be done before discrete diffusion models can truly rival state-of-the-art autoregressive models on text generation. The main weakness of text-diffusion models is their extremely slow training time when compared to (equivalent) autoregressive models. However their future potential is huge, especially regarding the ability of control they provide.\n\n- I found the paper easy to follow and interesting\n- I find the idea of trying a better -- numerically more stable -- score-matching criterion as proposed in this article interesting\n- The authors also extend the study of (Meng et al. 2022) and provide an ELBO and a denoising variant of their criterion\n- This article may provides a real step toward an improvement of discrete diffusion models"
+            },
+            "weaknesses": {
+                "value": "- There is undoubtedly a lot of work in this article, but I felt that the scientific impact of this contribution is unclear: the main contribution is to propose a new score-matching loss but I see no theoretical evidence and no experiment, be it on a toy example, showing that a simple \"quadratic score-matching loss\" as in (Meng et al. 2022) would be less efficient than its new \"score entropy loss\" counterpart.\n- The paper lacks of a proper ablation study (be it on small datasets)\n- The experiments are only provided on text generation and seem unfinished at submission time (due, I guess, to the huge amount of compute time required to train a medium-size GPT2-like diffusion model)\n- On Table 1, the SEDD-medium results are provided, but the equivalent results for medium-size GPT2 must be provided as well otherwise it could be misleading (I hope this will be fixed at the rebuttal time).\n\n\nMinor remarks:\n- typo on page 3 equation 7 : \"k\\neq i\" -> \"z \\neq x\"\n- the indices used to write score functions can be confusing to the reader e.g. $s_\\theta(x)_y$, $s_\\theta(x,t)_j$"
+            },
+            "questions": {
+                "value": "- I found too many ArXiv references: please update your bibliography for per-reviewed versions when possible. For instance A. Campbell et al. 2022 was presented at NeurIPS and should be cited as such.\n- On Figure 2 it was unclear to me if the compared models were of SEDD-small or SEDD-medium. I guess it is SEDD-small otherwise it could be misinterpreted as deceiving\n- On figure 2: to my experience, using Large-GPT2 perplexity to evaluate smaller models is a good idea but it can be misleading for really bad models (a trivial sequence with a repeated single token being extremely easy to predict, it will reach a very low GPT2 perplexity). I found no solution to this problem. Maybe adding another criterion ?\n- Are you planning to provide your code as open source ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Reviewer_DQWg"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6401/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698328435718,
+        "cdate": 1698328435718,
+        "tmdate": 1700492425145,
+        "mdate": 1700492425145,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "GrTzVksQGz",
+        "forum": "71mqtQdKB9",
+        "replyto": "71mqtQdKB9",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_LEE7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_LEE7"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper demonstrates a new criterion that can be used to train diffusion models for language modeling.  Building on previous work, the author suggest training a network to estimate p(y)/p(x).  The key original contribution of this paper is a training criterion that is non-negative and reflexive, as MSE would be, but that also imposes a constraint requiring the network output to be non-negative.  Essentially, rather than being symmetric about the optimum in score space, the new criterion is symmetric about the optimum in log score space.  The authors argue that the new criterion is theoretically better justified.  Two simplified versions of the proposed criterion are proposed, and from one of them, a score-matching training update is proposed.  The general diffusion Markov transition matrix is argued to be too memory-expensive for practical use, so simplified transition matrices are proposed, one which tends toward a uniform distribution, one which tends to place all the probability mass into the mask label.  Using these simplifications of the proposed criterion, the authors train and demonstrate diffusion-based text generation that is comparable to GPT-2."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "The proposed criterion is extremely well justified from a theoretical point of view.  The simplified criteria for model scaling are well justified.  The derivations were fun to read and follow.  The experimental results are compelling."
+            },
+            "weaknesses": {
+                "value": "The only weakness is that, while presenting so much detail about the scaling properties of the proposed criterion, the paper omits to explain the unusually complicated form of the criterion itself.  The derivations give wonderful consequences of Eq. (9), but don't really explain where Eq. (9) comes from!  This might be relevant because I think there might be a small typo in Eq. (9).  I am almost able to derive Eq. (9) by making the assumption that it is a Bregman divergence between s(x,y) and p(y)/p(x), using -log as the convex function, which would totally make sense, because it would guarantee that your score divergence is non-negative, reflexive, and convex in s(x,y); these properties are stated in the paper, but are not proven in the paper, perhaps because they follow naturally from the Bregman divergence.  However, if I derive it in that way, I find one typo in the equation: by that derivation, the last term should not be  (p(y)/p(x))\\log(p(y)/p(x)-1), it should be (p(y)/p(x))(log(p(y)/p(x))-1).  Indeed, my correction seems necessary, because log(p(y)/p(x)-1) will often be taking the logarithm of a negative number, which would be avoided if you instead calculated log(p(y)/p(x))-1.  Notably, this last term in Eq. (9) is ignored for most of the rest of the paper, since it does not involve s_\\theta(x); it seems to be necessary only for the purpose of shifting the criterion upward so that it is strictly non-negative."
+            },
+            "questions": {
+                "value": "1. Explain a little about the origin of Eq. (9), and check for a possible typo.\n\n2. \"from considering the fully connected graph structure and the MASK token\" -- say a little more about this.  It seems that Q_uniform is converging toward a noisy distribution in which all tokens are equally likely, which is not the steady-state distribution of all fully-connected Markov processes, so it's not clear to me that \"fully connected\" is a sufficient motivation for this model -- but the uniform distribution maximizes entropy, and that does seem like sufficient motivation.  Qabsorb is converging toward a noisy distribution in which the mask token replaces all other tokens?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Reviewer_LEE7"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6401/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698761489084,
+        "cdate": 1698761489084,
+        "tmdate": 1699636710361,
+        "mdate": 1699636710361,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "NmacgIB5lf",
+        "forum": "71mqtQdKB9",
+        "replyto": "71mqtQdKB9",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_XAVS"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_XAVS"
+        ],
+        "content": {
+            "summary": {
+                "value": "* The authors propose SEDD, a generalization of score-matching to the discrete space, which improves upon existing approaches such as CSM (concrete score-matching).\n* SEDD satisfies certain desirable properties, such as consistency, ELBO/likelihood-based training, and scalability to high dimensions.\n* The authors demonstrate SEDD in the context of language modeling and train a discrete diffusion model that closely matches the performance of an autoregressive baseline (GPT-2).\n* SEDD is also capable of arbitrary infilling and provides an option for tradeoff between quality and speed."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* The paper is well-motivated and addresses an important area of research that is of interest to the larger community.\n* SEDD generalizes score to the discrete domain and improves upon CSM by addressing its limitations (i.e., infinite KL divergence) and satisfies a number of desirable properties that make it suitable for score matching.\n* SEDD models achieve competitive metrics compared to GPT-2 on a variety of standard datasets, which suggests the robustness and generalizability of the method."
+            },
+            "weaknesses": {
+                "value": "* The experiment lacks good baselines. Although the paper claims to improve over concrete score matching, they do not consider CSM in their baseline and only compare the proposed SEDD with an autoregressive model (GPT-2 small). Moreover, SEDD-medium is compared with GPT-2 small.\n* The experiment appears inconclusive or incomplete. The model is still being trained, and the authors claim that it has not converged yet; the experiment on the 1 billion-word dataset is said to have encountered unexpected errors, without elaboration.\n* Certain design choices lack justification. The SEDD model uses rotary embeddings instead of learned positional embeddings, as in the GPT-2 baseline. In the absence of ablations, it is unclear how much this decision impacted obtained results. \n* Not all variables and notations are clearly specified, making the paper difficult to follow at times."
+            },
+            "questions": {
+                "value": "* Could you add a CSM baseline for an accurate and fair comparison between SEDD and CSM and also provide final, updated metrics of converged models for clarity of analysis?\n* How does SEDD-medium compare to GPT-2 medium?\n* Is SEDD comparable with GPT-2 in terms of latency in inference? Although they may have a similar number of network evaluations (as in Fig. 2), AR models can leverage techniques like KV-caching, which probably makes them significantly faster than diffusion models.\n* What does z denote in Eq. (7), and what does Q_t (y, x) mean in Eq. (6) (Q_t is originally introduced as a matrix in Eq. (5))?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Reviewer_XAVS"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6401/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698817128413,
+        "cdate": 1698817128413,
+        "tmdate": 1699636710175,
+        "mdate": 1699636710175,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "WVXpQ1TFFA",
+        "forum": "71mqtQdKB9",
+        "replyto": "71mqtQdKB9",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_dGxc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6401/Reviewer_dGxc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a novel training objective called \"score entropy\" for discrete diffusion models, which is analogous to score matching used in continuous diffusion models. The proposed discrete diffusion model achieves comparable perplexity scores to autoregressive models. It can also generate higher quality samples with fewer function evaluations compared to autoregressive sampling.\nThe contributions include: (1) score entropy training loss, (2) comparable GPT-2 performance to show the potential of diffusion models."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- Thorough theoretical analysis about the diffusion weighted denoising score entropy.\n- Better generation quality than same-scaled GPT-2"
+            },
+            "weaknesses": {
+                "value": "- Evaluation is a little bit weak. Like, lack of comparision between previous discrete or continous diffusion mdoels, including the sampling speed and generation quality. No specific numbers of  sampling speed (only the caption of Fig 2 mentioned once). No quantitative evaluation for infilling tasks, just showing some examples.\n- Some motivations are not clear. Section 4 is not well presented. Why the design of this denoising scheme is needed? If it is designed for speedup, you need to explain two things: (1) no detailed experiments or ablation study about this strategy (2) some discrete diffusion models can sampling within several steps (like~10), and in such condition, discrete diffusion models already have the advantages over generation speed, so what's the difference between theirs and yours?\n- Writing: cictation format (citep and citet) is mixed up."
+            },
+            "questions": {
+                "value": "1. Can we directly compare the perplexity of AR and diffusion models? (In table 1) The definition of perplexity in AR is a little bit different from the NLL in diffusion models.\n2. In Fig 2(a), what is the number of network evaluations? It seems that it does not refer to sampling iterations. GPT-2 is also in this Figure, what is the number of network evaluations or sampling iterations of GPT-2?\n3. It seems that you use $Q_t(i,j)$ (Eq.14) to replace the $w_{xy}$ in Eq.11. However, due to memory limitation, you choose standard matrices Q_uniform and Q_mask, where the value in these matrices is either 0 or 1. Can we assume that the Eq.14 is degenerated and we actually do not have the soft weighted denoising score entropy?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6401/Reviewer_dGxc"
+                ]
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6401/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699262608326,
+        "cdate": 1699262608326,
+        "tmdate": 1700632144536,
+        "mdate": 1700632144536,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

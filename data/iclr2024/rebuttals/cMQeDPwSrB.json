@@ -1,0 +1,615 @@
+[
+    {
+        "title": "Memorization Through the Lens of Curvature of Loss Function Around Samples"
+    },
+    {
+        "review": {
+            "id": "Buoyb5qT3m",
+            "forum": "cMQeDPwSrB",
+            "replyto": "cMQeDPwSrB",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_fwvr"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_fwvr"
+            ],
+            "content": {
+                "summary": {
+                    "value": "- The paper proposes using the curvature of loss function around each training sample, averaged over training epochs, as a scalable method, to measure of memorization of a given sample.  \n- The metric is validated both in the setting of synthetic label noise, as well as against an independent and\ncomprehensively calculated baseline of memorization scores released by Feldman & Zhang (2020)"
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Reduces the time to calculate memorization scores considerably as compared to the baseline of Feldman & Zhang(though a head to head comparison doesn't make sense as they can also calculate influence scores in their technique).\n- Decently high cosine similarity with FZ baseline and high AUROC values for identifying the noisy label samples."
+                },
+                "weaknesses": {
+                    "value": "- Scalability: To capture the curvature of training samples in every epoch, additional backward passes are required(n=10 for these datasets), which requires an additional 10X the training time to capture the metric proposed. It can be partially circumvented by calculating the curvature per sample every few epochs, but can still continue to be computationally expensive.\n- Limited to memorization: The baseline by Feldman & Zhang calculates both the memorization scores for the training examples, and influence scores for test examples. There is no natural extension of curvature as a metric to influence scores.\n- Baseline: No comparison with any baseline is presented. Simple baselines like learning time, second split forgetting time etc. should be compared to.\n- Hyperparameters : No discussion related to how the values of h and n affect the results obtained"
+                },
+                "questions": {
+                    "value": "- Results of comparison with other simple baselines ?\n\n- How does the value of h and n in the curvature calculation affect the results ?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Reviewer_fwvr"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2705/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697642824199,
+            "cdate": 1697642824199,
+            "tmdate": 1699636212422,
+            "mdate": 1699636212422,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "VSoHNNcZ0A",
+                "forum": "cMQeDPwSrB",
+                "replyto": "Buoyb5qT3m",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer: Part 1/2"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their time and consideration, and answer the questions here.\n1. Scalability: To capture the curvature of training samples in every epoch, additional backward passes are required(n=10 for these datasets), which requires an additional 10X the training time to capture the metric proposed. It can be partially circumvented by calculating the curvature per sample every few epochs, but can still continue to be computationally expensive. \n\nAuthors: While it is true that we need upto n=10 extra forward and backward passes to calculate curvature as shown in the paper, it is still far more efficient than the baseline for calculating curvature scores, Feldman&Zhang, that requires training upto 20,000 models (equivalent to n=20,000 for us). Additionally, we show through our hyperparameter runs in the next answer, that we can use a smaller n (upto n=5) to get reliable results. We also show from our ImageNet model, that we can calculate curvature every 4 epochs, resulting in the extra computation reducing to just about 1x (double the standard runtime). Further, we perform analysis in Section 4 to show the earlier epochs give a much higher match with cosine similarity score, and resource constrained users can use this to determine the best subset of epochs to perform curvature calculations on. We believe this allows us to scale our method, as evidenced by our ability to show results for ImageNet dataset without using massive GPUs.      \n\n&nbsp;\n\n2. Limited to memorization: The baseline by Feldman & Zhang calculates both the memorization scores for the training examples, and influence scores for test examples. There is no natural extension of curvature as a metric to influence scores. \n\nAuthors: We thank the reviewer for helping us think in this direction. We feel that using contrastive loss and calculating curvature on this loss might help us get influence scores. We leave this exploration for future work, but thank the reviewer for identifying another application of our method. We want to highlight that if we were to use contrastive loss, most methods mentioned in the prior work section would not be applicable (SSFT [Maini1], CL [NorthCutt1], Inconfidence [Carlini1], FZ [Feldman2], AUM [Pleiss1], Learning Time) since they require logits to work. However, since curvature only requires a loss, we would still be able to capture the scores.      \n\n&nbsp;     \n\nFeldman2 - Vitaly Feldman and Chiyuan Zhang. What neural networks memorize and why: Discovering the long tail via influence estimation. Advances in Neural Information Processing Systems, 33:2881\u20132891, 2020. \n\nMaini1 - Pratyush Maini, Saurabh Garg, Zachary Lipton, and J Zico Kolter. Characterizing datapoints via second-split forgetting. Advances in Neural Information Processing Systems, 35:30044\u201330057, 2022. \n\nNorthCutt1 - Curtis Northcutt, Lu Jiang, and Isaac Chuang. Confident learning: Estimating uncertainty in dataset labels. Journal of Artificial Intelligence Research, 70:1373\u20131411, 2021a. \n\nCarlini1 - Nicholas Carlini, Ulfar Erlingsson, and Nicolas Papernot. Distribution density, tails, and outliers in machine learning: Metrics and applications. arXiv preprint arXiv:1910.13427, 2019a. \n\nPleiss1 - Geoff Pleiss, Tianyi Zhang, Ethan Elenberg, and Kilian Q Weinberger. Identifying mislabeled data using the area under the margin ranking. Advances in Neural Information Processing Systems, 33:17044\u201317056, 2020"
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700727395483,
+                "cdate": 1700727395483,
+                "tmdate": 1700727395483,
+                "mdate": 1700727395483,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "v03IMV53bW",
+            "forum": "cMQeDPwSrB",
+            "replyto": "cMQeDPwSrB",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_a9Na"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_a9Na"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper propose to use a curvature inspired metric (trace of the squared Hessian of the per-example loss with respect to a particular input) to identify memorized examples. The paper show that this metric is consistent with a previous memorization metric (FZ scores) while being less computationally expensive. Moreover, the proposed metric, when trained without weight decay, identify a failure pattern of near identical images with different labels that is not extensively studied before. The metric is also shown to outperform several baselines in corrupted label detection and provide insights to learning dynamics at the presence of label noises from the perspective of curvatures."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "This paper propose a simple curvature inspired metric with an approximation procedure that can be computed efficiently. This metric is shown to be effective at identifying examples memorized by neural networks. The idea is simple and the presentation is easy to follow. The experiment setup are clear and the results are sound."
+                },
+                "weaknesses": {
+                    "value": "1. There are a large body of work on data valuation for deep neural networks that studies similar questions. Those should be discussed in the related work and at least representative methods should be compared in the experiment.\n\n2. This paper could benefit from a stronger demonstration of the utility of the proposed metric, beyond the simple corrupted label prediction experiment. A few hypothetical directions could be\n\n    1. Could the curvature be extended to compute some kind of influence metrics from training to test examples like the FZ scores or other data valuation metrics?\n\n    2. Theoretical analysis of how or why is the proposed metric connected to memorization and generalization.\n\n    3. New algorithms designs, such as curriculum learning based on per-example curvatures, or maybe regularizers motivated by the curvature metric.\n\n3. Unlike other metrics that measures in the output, logits, or weight space, the proposed metric probably depend more on the geometry of the inputs. Therefore, I think it is very valuable if the paper could present studies with different input domains."
+                },
+                "questions": {
+                    "value": "1. Do you observe the same behavior if the input-vs-logit space analysis in Fig. 7 is performed on a real dataset instead of a synthetic one?\n\n2. It is described in the appendix how the two hyperparameters h and n are tuned. Can you show some hyperparameter tuning curves? In particular, I'm interested in not only what values are chosen, but also how robust the proposed metric is to hyperparameter changes."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2705/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697674023025,
+            "cdate": 1697674023025,
+            "tmdate": 1699636212343,
+            "mdate": 1699636212343,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "suuqfQOxJz",
+                "forum": "cMQeDPwSrB",
+                "replyto": "v03IMV53bW",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response Part 1/3: Generic Response"
+                    },
+                    "comment": {
+                        "value": "### Response to Reviewer: Part 1/2 \nWe thank the reviewer for their time and consideration. We would like to address the overall review here, and then go into the details of each question after that.     \n&nbsp;\n\nWe want to emphasize that in this paper we wanted to introduce the idea of measuring memorization with input loss curvature. We believe that extreme memorization and overfitting is one of the most significant insights into deep neural networks, as evidenced by the extensive work done in references [Zhang1, Feldman1, Feldman2].  We establish curvature as a reliable and efficient metric to measure memorization, and show both quantitative and qualitative corroborations of the reliability of curvature as a memorization metric.     \n&nbsp;\n\n\nFor practical applications, we show three in the paper which we believe are quite significant. One is detecting mislabeled samples, and that is an area of significant research [Maini1, Northcutt1, Carlini1]. Secondly, we show an as of yet unobserved failure mode on CIFAR100 and ImageNet, two of the most widely used datasets to test different algorithms for vision algorithms, that of duplicate samples with differing labels. This shows how curvature can be used to find failure modes especially for datasets used in the industry that may not have been vetted by many research works. Thirdly, we also note the outliers in FashionMNIST dataset show a bias towards high contrast clothes, despite them being not more prototypical of clothing in real life. This highlights that our analysis can reveal biases present in the dataset.    \n&nbsp;\n\n\nThere are many downstream applications of being able to measure and study memorization, and the reviewer lists some that we are currently working on as extensions. However, this work forms the bases of all those future explorations, which we and hopefully the community will pursue. We feel that this manuscript is self-contained in its claim, justification and example applications, and hope that the reviewer would reconsider the paper on its own merit, instead of the potential applications that can exist as a result of this manuscript.      \n&nbsp;\n\nReferences:      \nZhang1 - Chiyuan Zhang, Samy Bengio, Moritz Hardt, Benjamin Recht, and Oriol Vinyals. \u201cUnderstanding deep learning requires rethinking generalization\u201d. In ICLR 2017,  \n\nFeldman1 - Vitaly Feldman. Does learning require memorization? a short tale about a long tail. In Proceedings of the 52nd Annual ACM SIGACT Symposium on Theory of Computing, pp. 954\u2013959, 2020. \n\nFeldman2 - Vitaly Feldman and Chiyuan Zhang. What neural networks memorize and why: Discovering the long tail via influence estimation. Advances in Neural Information Processing Systems, 33:2881\u20132891, 2020. \n\nMaini1 - Pratyush Maini, Saurabh Garg, Zachary Lipton, and J Zico Kolter. Characterizing datapoints via second-split forgetting. Advances in Neural Information Processing Systems, 35:30044\u201330057, 2022. \n\nNorthCutt1 - Curtis Northcutt, Lu Jiang, and Isaac Chuang. Confident learning: Estimating uncertainty in dataset labels. Journal of Artificial Intelligence Research, 70:1373\u20131411, 2021a. \n\nCarlini1 - Nicholas Carlini, Ulfar Erlingsson, and Nicolas Papernot. Distribution density, tails, and outliers in machine learning: Metrics and applications. arXiv preprint arXiv:1910.13427, 2019a.       \n&nbsp;      \n&nbsp;      \n&nbsp;"
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700726907130,
+                "cdate": 1700726907130,
+                "tmdate": 1700727135568,
+                "mdate": 1700727135568,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "jxZvuCDDPJ",
+            "forum": "cMQeDPwSrB",
+            "replyto": "cMQeDPwSrB",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_1WGU"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_1WGU"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies memorization in modern neural networks and aims to design a tractable approach to quantify the memorization of different training examples. Specifically, this paper considers loss curvature (averaged across different training epochs) with respect to a given training example as a memorization measure for that particular example. The paper leverages a finite step approximation of the per-example loss Hessian and explores the proposed curvature-based memorization score on MNIST, Fashion-MNIST, CIFAR-10/100, and ImageNet, with ResNet18 as the underlying model architecture. Visualizing the examples with high curvature-based memorization scores, the authors observed that such examples correspond to long-tailed, mislabeled, or conflicting examples (e.g., duplicate examples with different labels). The paper also compared the curvature-based memorization score with Feldman and Zhang\u2019s stability-based memorization score and found a high correlation between the two scores. For a synthetic setup, where label noise is introduced to a fraction of training examples, the paper shows that noisy examples belong to the set of examples that receive the highest curvature-based memorization scores. Finally, the paper studies the average (over the entire dataset) curvature of per-example losses as training evolves. The paper shows that, during the overfitting phase of training, this average curvature shows a decreasing trend while the validation loss keeps increasing. The paper provides an explanation for this seemingly contradictory observation by arguing the decrease in the average curvature corresponds to the phase where training examples are already classified correctly and the model is increasing the margin of these examples. Thus, the paper highlights the importance of averaging the per-example loss curvature across entire training epochs to obtain an informative memorization score."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1) The paper studies an important problem of quantitatively characterizing the memorization behavior of various training examples. The paper proposes the per-example loss curvature (averaged across different training epochs) as such a quantitative measure.\n2) The paper successfully shows that the proposed memorization score can consistently identify a range of overfitting (\u201cmemorization\u201d)-prone examples across multiple image classification benchmarks. This suggests that the proposed score can be utilized for cleaning/denoising a given training dataset.\n3) The computational cost of evaluating the proposed memorization score is smaller than some of the other widely accepted memorization scores in the literature, such as Feldman & Zhang\u2019s score.\n4) The paper carefully studies the behavior of per-example loss curvature as training progresses and highlights the importance of averaging the per-example loss curvature across multiple training epochs."
+                },
+                "weaknesses": {
+                    "value": "1) The main weakness of the paper is that it does not provide a comprehensive discussion on what it means to say that an example is being memorized. For example, the work of Feldman & Zhang calls those points to be memorized where the model only performs well when those points are present in the training set. What is the precise notion of memorization that this paper aims to capture?\n2) It appears that the paper claims that their curvature-based memorization score aligns well with Feldman & Zhang\u2019s memorization score as the two scores have a high correlation (cosine similarity). Such aggregate-level correlations can be misleading, especially while studying memorization behaviors which are very much tied to individual examples (e.g., see Section 3.5 in https://arxiv.org/pdf/2310.05337.pdf).\n3) Most of the experiments in the paper are tied to a single model. It would be interesting to see how the proposed curvature-based memorization score behaves as one changes model architecture and/or size. Are key takeaways from this paper robust to such variations?\n4) The paper claims that their proposed memorization score is significantly cheaper to compute compared to existing scores like Feldman & Zhang\u2019s memorization score (see a question on this below). However, it appears that the *efficient* loss curvature calculation follows from the prior work, limiting the technical novelty of the contributions.\n5) There is significant scope for improvement in the quality of the presentation. For instance\n\n* In Section 3.1, both $d$ and $D$ are used to represent the input dimension. \n* In the line after Eq. (2) $v_i$ represents the $i$-th coordinate of the random Rademacher vector $v$, while in Eq (3), $v_i$ represents $i$ random *vector*. Also, the line after Eq. (3) refers to $v$ as a Rademacher *variable* instead of *vector* (a similar issue in Section 3.2). \n* In Eq. (4), please consider using $\\approx$ instead of $=$. \n* In Eq. (6), please make the dependence of the square norm on indices $i$ (via $v_i$) and $t$ (via $W_t$) explicit.\n* In Section 3.2, O(n) \u2192 O(nT) forward and backward passes?\n\nBesides the issues mentioned above, multiple sentences in the paper require paraphrasing as their meaning is not entirely clear, and thorough proofreading is required to eliminate various typos."
+                },
+                "questions": {
+                    "value": "1) How does a memorizing network behave on duplicate examples with distinct labels? Which label is preferred by the model? Does the model encounter a decreasing loss curvature trend on such examples as training progresses? \n2) In Section 4.2, the authors state ``... These scores are likely to be independent of spurious correlations to curvature that other methods such as confidence of prediction might have, and hence serve as a good baseline.`` Could the authors elaborate on this statement on why Feldman & Zhang\u2019s score is likely to be independent of spurious correlations (while other methods can potentially exhibit such correlations)?\n3) In Section 4.2, the authors claim that computing Feldman & Zhang (FZ) score is ``~3 x more computationally expensive``. Why is it **only** 3x more expensive when computing FZ scores requires training a large number of models?\n4) In Section 4.3, the authors mention ``...We recommend that curvature analysis should be used in conjunction with other checks, for a holistic view of dataset integrity. ``. Could the authors clarify which other checks they refer to?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2705/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698788405041,
+            "cdate": 1698788405041,
+            "tmdate": 1699636212267,
+            "mdate": 1699636212267,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "2LU0glNGss",
+                "forum": "cMQeDPwSrB",
+                "replyto": "jxZvuCDDPJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer: Part 1/4"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for taking the time to write detailed feedback. We answer the questions here:\n&nbsp;     \n\n1. The main weakness of the paper is that it does not provide a comprehensive discussion on what it means to say that an example is being memorized. For example, the work of Feldman & Zhang calls those points to be memorized where the model only performs well when those points are present in the training set. What is the precise notion of memorization that this paper aims to capture?\n\nAuthors: This is a very relevant question, and we attempt to share the way we think of our metric with the reviewer here. The memorization that our manuscript is aiming to capture is conceptually quite similar to what Feldman and Zhang intend to capture with their metric. Specifically, both methods ask how sensitive the model is to a particular input. Feldman & Zhang propose to answer this by looking at probabilities in presence and absence of the sample, and we propose to answer this by measuring the sensitivity of the model to perturbation in the input, calculated via curvature.  \n&nbsp;     \n\n\n A far more intuitive understanding of why we chose curvature arises from correlating the curvature of loss around a sample to the curvature of decision boundary around the sample in the input space. The classical machine learning illustration of overfitting, such as the one found [here](https://media.geeksforgeeks.org/wp-content/cdn-uploads/20190523171258/overfitting_2.png), shows that the network overfits by bending the decision boundary around certain sample points in the input space, indicating that these samples are being memorized by the network. In the example shown, the samples that would be counted as most memorized, would be the ones with the curviest decision boundaries around them, establishing a straightforward link between memorization score and curvature of decision boundary around the sample.  \n&nbsp;     \n\n\nPrevious work such as [Dong1, Srinivas1] has shown the link between curvature of decision boundary and curvature of loss, in that regularizing loss curvature results in a flatter decision boundary. This link means that our metric estimates the curvature of the decision boundary around a sample in the input space, which makes intuitive sense as a measure of memorization.       \n&nbsp;         \n\n\n\nIf the reviewer feel  that this would add clarity and intuitive visualization of our metric to the readers, we are happy to add this to the manuscript.      \n\n&nbsp;         \nReferences:       \nDong1 - Bin Dong, Haocheng Ju, Yiping Lu, and Zuoqiang Shi. \"CURE: Curvature regularization for missing data recovery.\" SIAM Journal on Imaging Sciences 13, no. 4 (2020): 2169-2188.       \n\nSrinivas1 Suraj Srinivas, Kyle Matoba, Himabindu Lakkaraju, and Francois Fleuret. \"Efficient training of low-curvature neural networks.\" Advances in Neural Information Processing Systems 35 (2022): 25951-25964.        \n\n&nbsp;      \n\n2. It appears that the paper claims that their curvature-based memorization score aligns well with Feldman & Zhang\u2019s memorization score as the two scores have a high correlation (cosine similarity). Such aggregate-level correlations can be misleading, especially while studying memorization behaviors which are very much tied to individual examples (e.g., see Section 3.5 in [https://arxiv.org/pdf/2310.05337.pdf](https://arxiv.org/pdf/2310.05337.pdf)). \n\nAuthors: We agree with the reviewer, and this is a justified question. In order to inform the readers, we have added a qualifying line to state the limitations of cosine similarity in the paper. However, we list two points in support of why we used cosine similarity below:  \n* First, we show in Table 4 in the Appendix D, curvature scores calculated only at the end of training do not show a high cosine similarity match with FZ scores, with the cosine similarity being only 0.18 compared to our match of 0.82 when averaged over all epochs. We know that the curvature scores calculated at the end of training do not capture the duplicated samples, and are therefore not reliable. The fact that we get visually more reliable results by averaging over epochs, and our cosine similarity match rises significantly (from 0.18 to 0.82), leads us to believe that the cosine similarity metric still captures meaningful correlations.      \n* Additionally, we show an independent link between FZ scores and curvature that does not rely on cosine similarity in Figure 8: We plot the curvature of the 5000 most memorized samples as per FZ scores and show that the curvature of FZ score identified memorized samples is considerably higher at all epochs.       \n&nbsp;          \nThese two reasons were why we decided to proceed with the cosine similarity score in the paper."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700724412466,
+                "cdate": 1700724412466,
+                "tmdate": 1700724412466,
+                "mdate": 1700724412466,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "jsMxLQsvuf",
+            "forum": "cMQeDPwSrB",
+            "replyto": "cMQeDPwSrB",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_spXg"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_spXg"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes to use the per-instance curvature metric to calculate the memorization of the sample by a neural network. The curvature is approximated by the trace of the hessian matrix, which is approximated by using Hutchinson\u2019s method. The curvature scores obtained from the proposed method, are shown to correlate well with the scores obtained by Zhang and Feldman. Furthermore, the scores have been shown to be able to detect the samples which have presence of label noise in a synthetic setup."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper is clearly written and is easy to read.\n\nThe proposed curvature score is easier to compute in comparison with Zhang and Feldman, and can be practically used."
+                },
+                "weaknesses": {
+                    "value": "Novelty: The proposed method has a high degree of overlap with Garg and Roy 2023 [R2], where the similar per-instance score is used for determining the curvature. Further, the score in their paper is able to find long-tailed and rare samples, which is the application demonstrated in this paper. It would be great if authors can please clarify the novelty of this work in comparison with Garg and Roy 2023 [R2].\n\nMissing Baselines: The authors don\u2019t compare the proposed method to the Maini et al. 2022 [R1] for identification of the noisy labelled samples, however the setup followed is similar to that of the Maini et al. 2022 paper. I request the authors to please provide the comparison or the reason for the omission of the comparison.\n\nMissing Concrete Application: The section on curvature dynamics for training provides interesting insights. However I couldn\u2019t find any specific experiments which demonstrate its practical applicability.\n\n[R1] Maini, Pratyush, et al. \"Characterizing datapoints via second-split forgetting.\" Advances in Neural Information Processing Systems 35 (2022): 30044-30057.\n\n[R2] Garg, Isha, and Kaushik Roy. \"Samples With Low Loss Curvature Improve Data Efficiency.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2023."
+                },
+                "questions": {
+                    "value": "I am curious if can the above method be used to identify the samples which have inconsistent captions for the Vision Language Based Methods?\n\nFurther, it\u2019s claimed in the paper that FZ scores can\u2019t be used to find samples that are duplicate images with different samples. Can you please provide a concrete reason for this?\n\nIs it possible to provide any theoretical results regarding the correctness of the curvature scores for finding the noisy labeled samples etc?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Reviewer_spXg",
+                        "ICLR.cc/2024/Conference/Submission2705/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2705/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698831334304,
+            "cdate": 1698831334304,
+            "tmdate": 1700654307721,
+            "mdate": 1700654307721,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "6bQhV2TGhy",
+                "forum": "cMQeDPwSrB",
+                "replyto": "jsMxLQsvuf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Part 1/3"
+                    },
+                    "comment": {
+                        "value": "### Response to Reviewer Part 1/3\n\nWe thank the reviewer for their time and consideration, and answer the questions here:\n&nbsp;     \n\n\n1. Novelty: The proposed method has a high degree of overlap with Garg and Roy 2023 [R2], where the similar per instance score is used for determining the curvature. Further, the score in their paper is able to and long-tailed and rare samples, which is the application demonstrated in this paper. It would be great if authors can please clarify the novelty of this work in comparison with Garg and Roy 2023 [R2]. \n\n    Authors: Thank you for your question. Garg and Roy [R2] indeed was a source of inspiration for this work. We found their analysis of curvature for creating coresets interesting, and were inspired to see if we could use it as a measure of memorization. We found that their method did not work out of the box, and we had to make significant changes to establish a good metric, in essence reverting back to Hutchinson\u2019s trace estimator form for calculating curvature [Hutchinson1]. Their scores also failed to capture the failure mode of duplicated samples with differing labels. We would like to highlight the following differences: \n\n    * In this manuscript, we focus on using curvature as a method for measuring memorization of  samples, and focus on the high curvature samples. In contrast, Garg and Roy 2023 [R2] focus on low curvature samples, and their application to data efficiency for coreset creation.  \n\n    * We note that their method of calculating curvature does not give reliable results: \n        *   They used the adversarial direction to estimate curvature. We removed the adversarial direction assumption and returned to traditional Hutchinson\u2019s trace estimator form, and used random Rademacher vectors instead for more reliable results. The cosine similarity with FZ scores on CIFAR100 for Garg and Roy [R2] is 0.17, while our method achieves 0.82. \n\n        * To further improve estimation, we average our results over 10 different random Rademacher variables while [R2] use a single direction. We get a good match for n=5,10,20 with FZ scores as seen in the hyperparameter tuning results from Table 3 in Appendix B. \n\n        * Their method only calculates curvature at the end of training, and the following table shows that that gives unreliable scores. For instance, the match with FZ scores for curvature calculated at the end of training, as shown in the table below, is only 0.18.  We average curvature during training to get reliable results, in order to allow for different decision boundaries that have been learned at different epochs as training progresses. This is the result of studying curvature dynamics during training in Section 4.4 and is quite evident if we form a GIF of the decision boundary in the input space. We have added that to the supplementary material, also found [here](https://imgur.com/a/IGDqwo0). We can see from the first few epochs in the GIF, that the network is trying out different hypotheses in the form of different decision boundaries, on the way to the final one. Averaging over all these hypotheses allows us to be robust to any particular one and shows much more reliable results. \n\n        * We show the results for using Garg and Roy\u2019s method, our method limited to calculating curvature at end of training, and our method as outlined in the paper and show that we get considerably better matches (better cosine similarity CS) with FZ scores for both the most memorized samples, and for the entire dataset, both with (wd1) and without (wd0) weight decay. \n\n\n            |       Method            |      Top 5K FZ CS (wd0)      |   Top 5K FZ CS (wd1)        |      CS with FZ for all data (wd0) |     CS with FZ for all data (wd1)      |\n            |-------------------------|------------------------------|-----------------------------|------------------------------------|----------------------------------------|\n            |      Garg and Roy [R2]  |     0.07                     |     0.24                    |     0.10                           |     0.17                               |\n            |      Ours n=10 EOT      |     0.06                     |     0.28                    |     0.12                           |     0.18                               |\n            |      Ours               |     0.82                     |     0.90                    |     0.73                           |     0.82                               |\n    \n        * We provide insights and strong empirical evidence for the use of high curvature samples in studying memorization of deep neural nets, and utilize it to identify a new failure mode that all other methods, including [R2], fails to capture, as shown in Figure 19 in the Appendix. \n\n    We thank the reviewer for helping us consolidate the differences, and have summarized this discussion in the section in Appendix D4."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700723720939,
+                "cdate": 1700723720939,
+                "tmdate": 1700724040154,
+                "mdate": 1700724040154,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "xRyTF9vN14",
+                "forum": "cMQeDPwSrB",
+                "replyto": "jsMxLQsvuf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Continued Reponse Part 3/3"
+                    },
+                    "comment": {
+                        "value": "3. Missing Concrete Application: The section on curvature dynamics for training provides interesting insights. However I couldn\u2019t find any specific experiments which demonstrate its practical applicability. \n\n    Authors: Thank you for pointing out the insights in Section 4.4. The major reason for writing section 4.4 was to help the readers to understand why we need to average our scores every epoch as opposed to say, calculating curvature at the end of training. In that way, it serves as the base that informs our design of metric for measuring memorization. We realize that this was not coming across from our writing, and thank the reviewer for identifying the need for a better explanation. We have cleaned up Section 4.4 considerably, and believe it reads a lot better now. We have reduced the content to highlight the following key takeaway, and believe that it is now a lot easier for the reader to follow. \n\n     \n    &nbsp;      \n    Takeaway: At the early epochs of training, the boundary changes very rapidly and significantly. In fact, every epoch, the boundary can curve around a different subset of samples. This means that measuring the curvature at 1 epoch only will be unstable. Averaging the curvature over all of training helps us iron out this effect and get reliable curvature results. This is quite evident if we form a GIF of the decision boundary in the input space, and we have added that to the supplementary material, also found [here](https://imgur.com/a/IGDqwo0). We can see from the first few epochs in the GIF, that the network is trying out different hypotheses in the form of different decision boundaries, on the way to the final one. Averaging over all these hypotheses allows us to be robust to any particular one and shows much more reliable results. \n\n\n&nbsp;      \n     \n4. I am curious if can the above method be used to identify the samples which have inconsistent captions for the Vision Language Based Methods? \n\n    Authors: We believe this is possibly a very good application of our method we have not yet tried. We focused on vision datasets in this paper, and hope that this would encourage others to try our method in different domains. \n&nbsp;      \n     \n5. Further, it\u2019s claimed in the paper that FZ scores can\u2019t be used to find samples that are duplicate images with different samples. Can you please provide a concrete reason for this? \n\n    Authors: We wish to clarify that we did not mean that FZ scores cannot calculate this, just that the FZ scores that have been released do fail to catch duplicate samples with different labels. We have edited the paper to make this clear. We cannot recreate FZ scores to try and improve their methodology to catch this failure mode since it requires training 20,000 models. However, we can think of some reasons why they may have failed to capture it. FZ scores are calculated by looking at the change in expected probability of correct prediction when the sample is removed from the training set. To make this computationally easier, the models perform subsampling of the dataset, and it is possible that the considered subsets missed the duplicate samples. It is also possible that each of the 20,000 models was not trained to full convergence for efficiency reasons.  \n&nbsp;      \n     \n6. Is it possible to provide any theoretical results regarding the correctness of the curvature scores for finding the noisy labeled samples etc? \n\n    Authors: In this manuscript, we use qualitative and quantitative results to show that curvature is a good measure of memorization. We are working on more theoretical findings as part of future work.\n\n&nbsp;      \n\nReferences\n\nHutchinson1 - Michael F Hutchinson. A stochastic estimator of the trace of the influence matrix for Laplacian smoothing splines. Communications in Statistics-Simulation and Computation, 19(2):433\u2013450, 1990.\n\nR2 - Isha Garg and Kaushik Roy. Samples with low loss curvature improve data efficiency. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 20290\u201320300, 2023."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700724017894,
+                "cdate": 1700724017894,
+                "tmdate": 1700724089963,
+                "mdate": 1700724089963,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "qRiIJ7kpcK",
+            "forum": "cMQeDPwSrB",
+            "replyto": "cMQeDPwSrB",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_hiPb"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2705/Reviewer_hiPb"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a metric to identify memorized points. The proposed method utilizes the average curvature of the loss function with respect to the input and argues that memorized points have a higher curvature score. They demonstrate this by adding label noise to the training dataset and training until overfitting, showing a higher curvature score for these points during training. They also illustrate quite a high cosine similarity between their score and the previous method by Feldman & Zhang (2020), which they call the FZ score in the paper. However, the advantage of their method is that they don't have to train as many models as required by the FZ method, demonstrating computational benefits."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper has an acceptable visualization of the experiments; however, more work can be done to make them more accurate and understandable. They have tried to justify their observations and conclusions by designing experiments. Different kinds of datasets are used in this paper, each of which helps to better understand the paper.\n\nIn general, I am leaning towards accepting the paper, and I am even open to reconsider my initial score upon improving the quality of the paper regarding the presentation and clarification of questions and points mentioned in the following."
+                },
+                "weaknesses": {
+                    "value": "1. Toy example in section 4.4: The number of training points is far less than in the test set, which is not a similar case to your image datasets. The training data does not have enough points to accurately represent the underlying distribution. Additionally, adding noise to it makes it more challenging for the model to learn the decision boundary correctly.\n2. Section 4.4: It is a lengthy section and difficult to follow the main points of it; the presentation format can be improved.\n3. Figure 4: It would be better to display mislabeled examples side by side.\n4. Figure 5: The labels on the axes of the figure are not clear, and I can't interpret the results. Having a distribution over the corrupted samples would be more informative.\n5. Tables: MEAN+STD missing in the tables. \n6. Appendix F: It does not explain any correlation between memorized sampel by FZ and your method."
+                },
+                "questions": {
+                    "value": "1. Introduction (Regarding \u201cweakly labeled or have noisy annotations\u201d): Can you apply your method in unsupervised settings?\n3. Table 2: Did you use weight decay for other methods as well? Can you show the result of FZ method?\n4. Section 4.3: Can you elaborate on why ROC curves are more reliable?\n5. How is the threshold for the curvature of loss selected?\n6. Does averaging the curvature over epochs remove the specific epoch signals? Isn't it better to study the difference between curvature evolution during time than taking an average?\n7. Figure 8: Which type of sample triggers the peak in curvature, and do memorized points contribute more to that?\n8. Figure 8: Why is the curvature of test points much higher than memorized points in CIFAR-100? And why don't we see that in ImageNet?\n9. End of page 8: What does the sensitivity of test samples to perturbation mean?\n10. Have any studies explored using the curvature of samples for inference attacks?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2705/Reviewer_hiPb"
+                    ]
+                }
+            },
+            "number": 5,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2705/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699470328120,
+            "cdate": 1699470328120,
+            "tmdate": 1699636212130,
+            "mdate": 1699636212130,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "hI7C7JqGvl",
+                "forum": "cMQeDPwSrB",
+                "replyto": "qRiIJ7kpcK",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response Part 1/3"
+                    },
+                    "comment": {
+                        "value": "### Response to Reviewer, Part 1/3\nThank you for your encouragement, and for mentioning your willingness to reconsider your review. We address each of the questions below:\n\n&nbsp;\n1. Regarding the toy example formulation, and the clarity of section 4.4:      \n    Question: Toy example in section 4.4: The number of training points is far less than in the test set, which is not a similar case to your image datasets. The training data does not have enough points to accurately represent the underlying distribution. Additionally, adding noise to it makes it more challenging for the model to learn the decision boundary correctly.\n\n    Authors: The imbalance in the design of this toy example is intentional. Our goal was to evaluate what the decision boundary looks like when networks memorize the data. The few, noisy training data encourages the network to memorize the training data. But, having clean abundant test data allows us to also measure generalization of the underlying true data distribution under extreme memorization and noisy samples. This setup allowed us to understand how curvature behaves with extreme memorization, with the following key takeaway: \n\n    At the early epochs of training, the boundary changes very rapidly and significantly. In fact, every epoch, the boundary can curve around a different subset of samples. This means that measuring the curvature at 1 epoch only will be unstable. Averaging the curvature over all of training helps us iron out this effect and get reliable curvature results. This is quite evident if we form a GIF of the decision boundary in the input space, and we have added that to the supplementary material, also found [here](https://imgur.com/a/IGDqwo0). Please look at the early epochs from the GIF, we can see that the neural network is trying out different decision boundaries to try to minimize the loss, since multiple different boundaries give good results. Averaging over these different hypotheses was necessary to not rely too much on one particuaar hypothesis.\n\n    We thank the reviewer for identifying the need for a better explanation, and we have cleaned up Section 4.4 considerably, and believe it reads a lot better now. We have reduced the content to highlight this key takeaway, and believe that it is now a lot easier for the reader to follow. \n&nbsp;    \n          \n\n2. Figure 4: It would be better to display mislabeled examples side by side. \n\n    Authors: Thank you for the suggestion, we have made this change to Figure 4. \n&nbsp;     \n\n3. Figure 5: The labels on the axes of the figure are not clear, and I can't interpret the results. \n\n    Authors: Thank you for identifying this readability issue, we have increased the font size and improved the readability of graphs in Figure 5\n&nbsp;    \n\n4. Having a distribution over the corrupted samples would be more informative. \n\n    Authors: We have added a density plot visualizing the distribution of input loss curvature for clean and mislabeled samples in the appendix (See Figure 19).  \n&nbsp;    \n\n5. Appendix F: It does not explain any correlation between memorized sample by FZ and your method. \n\n    Authors: We show the quantitative comparison of our score with FZ scores using a cosine similarity metric in Table 1. However, we use Appendix F to emphasize a different point. We display the most memorized samples as per FZ scores, in order to highlight that despite being 3 orders of magnitude more computationally expensive than our method, they do not find the failure case of duplicated samples with differing labels that we found with our analysis. This is significant since the duplicate samples are most definitely memorized by a model if the model gets close to a 100% training accuracy. We highlighted this better in the text in Appendix F. \n&nbsp;     \n\n6. Introduction (Regarding \u201cweakly labeled or have noisy annotations\u201d): Can you apply your method in unsupervised settings? \n\n    Authors: One advantage of our method is that computing curvature of sample only requires a loss, as opposed to other methods that require logits. This renders our method scalable towards unsupervised settings, unlike SSFT or FZ scores. Thank you for highlighting an advantage of our method. \n&nbsp;     \n\n7. Table 2: Did you use weight decay for other methods as well? Can you show the result of FZ method? \n\n    Authors: Yes, all results in Table 2 are using weight decay. For FZ scores however, we were limited to using the results the posted on their GitHub repository as it is not possible to recreate their experiments as they calculated their scores by training 20,000 models per dataset. For this reason, it is also not possible to add that as a baseline to the mislabeled sample detection in Table 2."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700723149058,
+                "cdate": 1700723149058,
+                "tmdate": 1700723224694,
+                "mdate": 1700723224694,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "KYBYPjZHu7",
+                "forum": "cMQeDPwSrB",
+                "replyto": "qRiIJ7kpcK",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2705/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Continued Response Part 2/3"
+                    },
+                    "comment": {
+                        "value": "8. Section 4.3: Can you elaborate on why ROC curves are more reliable? \n\n    Authors: Metrics such as accuracy are very brittle to imbalance in datasets. For instance, if we had a dataset with very few samples of the positive class, such as in our case with mislabeled samples, predicting all negative would give us a hundred percent accuracy, despite nothing having been learnt. This can be avoided by using AUROC curves. We preferred AUROC curves over PR curves as PR curves over represent the smaller class, in our case the mislabeled class. There can be memorized samples in the dataset that were not synthetically mislabeled as well, and we wanted to give a more holistic comparison. However, we realize that this may be more application and user dependent than we estimated, and upon looking closer, we think that giving a generic recommendation is likely not the best. We have removed this line from the text, and thank the reviewer for taking the time to check the minutiae of our paper. \n&nbsp;    \n\n\n9. How is the threshold for the curvature of loss selected? \n\n    Authors: In the paper we do not specifically calculate a threshold, we report the AUROC (Area Under ROC curve), as is commonly practiced in literature. AUROC/AUC is obtained by varying the threshold. The Area under the ROC curve gives a more holistic view than the ROC metric at some threshold. However, given an ROC plot there are several ways in literature to select a suitable threshold. For example, one method is to choose a threshold that maximizes the true positive rate (TPR) while minimizing false positive rate (FPR) i.e. the threshold that results in the top left point of the ROC curve. Another method chooses a threshold such that FPR is below a certain value or TPR is above a certain value. There are other works that inject known label-altered data and track their metric to identify the threshold. Any of these methods could be used if the user wants a threshold for their use case. However, it is common practice to just report AUROC numbers to show good separability between two classes.\n&nbsp;    \n\n10. Does averaging the curvature over epochs remove the specific epoch signals? Isn't it better to study the difference between curvature evolution during time than taking an average? \n\n    Authors: Thank you for your question, this is exactly what we were hoping to answer with the analysis done in Section 4.4. Different examples are memorized at each epoch as the model makes different boundaries in order to learn the data since there can be many correct boundaries. For instance, the boundaries at epochs, 20, 30 and 40 are different in Figure 7. There is inherent noise in how the network reaches the minima during learning as it samples different minibatches stochastically, which results in different curvature scores for samples at each epoch. Averaging over epochs allows us to average over all the decision boundaries the model looked at during its training and make aggregate decisions, which is more reliable. To support our claim, we can show that curvature scores calculated at the end of training are not good enough, and we revamp Section 4.4 to make this point clearer. We provide a link to a [GIF](https://imgur.com/a/IGDqwo0) to illustrate the development of input space curvature. From the early epochs in this GIF, we can note the different hypotheses tried out by the network, evidenced by changing decision boundaries.\n&nbsp;    \n\n11. Figure 8: Which type of sample triggers the peak in curvature, and do memorized points contribute more to that? \n\n    Authors: Figure 8 plots the average curvature of the training set across epochs. The curvature of all samples peak around the overfitting epoch, as explained in Section 4.4. However, from the same figure,  we can see that the curvature of the 5000 most memorized samples according to an independent measure (FZ scores) remains higher than the average curvature across the dataset. Hence, we can indeed conclude that the peak is contributed to more by the memorized samples than the rest of the dataset.  \n&nbsp;    \n\n12. Figure 8: Why is the curvature of test points much higher than memorized points in CIFAR-100? And why don't we see that in ImageNet? \n\n    Authors: We believe this is due to ReNet18 being significantly overparameterized for CIFAR100 compared to ImageNet. Thus, with CIFAR100 the model is able to overfit to the training dataset a lot more than on ImageNet, thus widening the gap between train and test examples."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2705/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700723342380,
+                "cdate": 1700723342380,
+                "tmdate": 1700723367123,
+                "mdate": 1700723367123,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

@@ -1,0 +1,683 @@
+[
+    {
+        "title": "T-Stitch: Accelerating Sampling in Pre-Trained Diffusion Models with Trajectory Stitching"
+    },
+    {
+        "review": {
+            "id": "RlTEQbXIp0",
+            "forum": "rnHqwPH4TZ",
+            "replyto": "rnHqwPH4TZ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_UhCD"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_UhCD"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a technique called trajectory stitching (T-Stich) to reduce the overall inference time of DPMs while maintaining the generation quality. The method is mainly designed based on two insights. First, differently-sized models trained on the same data distribution share similar encodings thus one can switch between these models during the denoising steps. Second, although the smaller models have lower generation quality than larger models, they are sufficient in earlier denoising steps which generate image global structures. Thus, the proposed T-Stich method reduces the inference time by utilizing a smaller and faster model in the earlier steps and switches to the more capable but more expensive larger model in later steps and controls the trade-off between quality and speed by adjusting the fraction of steps using the large model. Experiments on different pre-trained DPM models show the proposed method can reduce the latency while maintaining generation quality. In addition, it shows using a general model in the early steps and a stylized model in later steps can provide better prompt alignment than completely using the stylized model."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "S1. The proposed method is intuitive and simple. It is very easy to incorporate this method for any diffusion model as long as there are model variants of different sizes and inference costs that are trained on the same data distribution.\n\nS2. The writing is easy to follow and the presentation is mostly clear.\n\nS3. There is a good amount of experiments on different diffusion models and example images showing the proposed method can reduce the inference cost while maintaining comparable image quality when compared to the single model for all timesteps vanilla approach."
+                },
+                "weaknesses": {
+                    "value": "W1. This paper uses a too simple and strict design of using a weaker model in earlier steps and switching to a stronger model in later steps. However, there is not enough justification or comparison to other baseline approaches. How does it compare to more flexible baselines, e.g. interleaving strong model steps and weaker model steps throughout the whole process, or gradually reducing the probability p of using the weaker model e.g. from p=1 at t=T to and p=0 at t=0?\n\nW2. Lack of comparison to other related works on multi-expert DPM approaches like [1] and [2]. Under the same inference time budget, how does the proposed approach compare to [1]? Does using a larger pre-trained model in the earlier steps and using a smaller model in later steps have better or worse generation quality compared to [1] which adopts differently designed architectures tailored toward the low-frequency features for the earlier steps or the high-frequency information for later denoising steps?\n\nW3. In Figure 15, even the simple baseline of directly reducing the sampling steps outperforms the proposed method at the 10-50 steps range for s=1.5 and 10-20 steps range at s=2.0. This means the T-stitch approach could achieve better generation quality and latency tradeoff if combined with reducing steps and this was not investigated. More importantly, this result shows the proposed t-stitch approach does not have a strong performance even compared to this simple baseline and more comparisons to other approaches in the literature like [1] and [2] are needed.\n\nReferences:\n[1] Y. Lee, J.-Y. Kim, H. Go, M. Jeong, S. Oh, and S. Choi, \u2018Multi-Architecture Multi-Expert Diffusion Models\u2019,\n[2] Y. Balaji et al., \u2018ediffi: Text-to-image diffusion models with an ensemble of expert denoisers\u2019"
+                },
+                "questions": {
+                    "value": "Q1. Have you considered and compared to more flexible baselines, e.g. interleaving strong model steps and weaker model steps throughout the whole process, or gradually reducing the probability p of using the weaker model e.g. from p=1 at t=T to and p=0 at t=0?\n\nQ2. Under the same inference time budget, how does the proposed approach compare to [1]? Does using a larger pre-trained model in the earlier steps and using a smaller model in later steps have better or worse generation quality compared to [1] which adopts differently designed architectures tailored toward the low-frequency features for the earlier steps or the high-frequency information for later denoising steps?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission901/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698732901901,
+            "cdate": 1698732901901,
+            "tmdate": 1699636016895,
+            "mdate": 1699636016895,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "zKRwjDyQ1T",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "RlTEQbXIp0",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Author Response to Reviewer UhCD"
+                    },
+                    "comment": {
+                        "value": "Thanks for your valuable feedback. We would like to address your concerns as below.\n\n**Q1. Design is too simple, compared to other baselines.**\n\nWe agree T-Stitch is a simple technique. However, it is also a generalizable and effective approach as highly recognized by other reviewers, i.e., \u201cthe insight \u2026is clever\u2026.a simple yet novel idea\u2026broadly applicable\u2026highly practical\u201d (Reviewer 9mJB ), \u201cbuilt upon the dynamics of diffusion models\u2026clearly distinguishing it from model-wise stitching..\u201d (Reviewer tbyv).\n\nFurthermore, in our initial experiments, we have explored various allocation strategies, such as interleaving and large-to-small, but found that our default design can achieve the best speed-quality trade-off. In the following, we demonstrate the detailed comparison with the mentioned baselines:\n\n1. **Interleaving**. During denoising sampling, we interleave the small and large models along the trajectory, ie., DiT-S -> DiT-XL -> \u2026 -> DiT-S -> DiT-XL. Eventually, DiT-S takes 50% steps and DiT-XL takes another 50% steps.\n2. **Decreasing Prob.** Linearly decreasing the probability of using DiT-S from 1 to 0 during the denoising sampling steps.\n3. **Large-to-Small.** Adopting the large model at the early 50% steps and the small model at the last 50% steps.\n4. **Small-to-Large (Ours).** The default strategy of T-Stitch by adopting DiT-S at the early 50% steps and using DiT-XL at the last 50% steps.\n\nAll experiments are based on DiT-S and DiT-XL, with DDIM 100 steps and a guidance scale of 1.5. FID is calculated based on 5K images. As shown in the table below, under the similar time cost, our design achieves a superior advantage in FID and Inception Score compared to the other baselines. Nevertheless, we agree they are meaningful baselines, and we have included these comparisons in Section A.13 of the revised Appendix.\n\n| **Method**            | **FID\u2193**   | **Inception Score\u2191** | **Time Cost (s)** |\n| --------------------- | --------- | ------------------- | ----------------- |\n| Interleave            | 19.02     | 120.04              | 10.1              |\n| Decreasing Prob       | 12.94     | 163.45              | 9.8               |\n| Large-to-Small        | 27.61     | 72.60               | 10.0              |\n| Small-to-Large (Ours) | **10.06** | **200.81**          | 9.9               |\n\n> The time cost is measured by generating 8 images on one RTX 3090 in seconds (s).\n\n**Q2. Compared with MEME [1] and eDiff-I [2].**\n\nIt is important to note that we are significantly different from MEME and eDiff-I:\n\n1. T-Stitch accelerates **off-the-shelf pretrained** large diffusion models in a **training-free** manner, which is a general technique and enables \u201cbroad applicability\u201d, as recognized by Reviewer 9mJB.\n2. Existing multi-experts DPMs **design new models** and **train them from scratch** using expensive computing resources to either reduce the time cost per step with multiple smaller DPMs (MEME) or achieve better performance with multiple large DPMs without considering efficiency (eDiff-I). \n\nEssentially, as already discussed in the Remark of Section 3, we target the research problem of computing budget allocation across different steps while benefiting from **training-free**, while being directly applicable to SDs, Stylized SDs, SDXL (Figure 25) and ControlNet (Figure 26). Therefore, we are not directly comparable. Furthermore, at this time, MEME is an Arxiv preprint paper that does not release code/weights, thus might be inappropriate for us to compare the speed under the same hardware.\n\n**Q3. Comparing T-Stitch with reducing sampling steps, combining T-Stitch with fewer steps was not investigated.**\n\nIn fact, T-Stitch allocates different compute budgets at different steps, which is a **complementary** technique with reducing sampling steps, **not competing with it.** Figure 15 additionally provides an ablation study of the direct comparison for comprehensive reference. \n\nMore importantly, we think we **have already provided the experiments of combining T-Stitch with fewer steps** in Figure 8, Figure 9 and Figure 17. For example, under 10/20/50 steps, T-Stitch can maintain low FID (Figure 8 left) and high image quality (Figure 17) by replacing the early 40% steps with a small DiT-S to accelerate DiT-XL sampling, which clearly demonstrated that T-Stitch can achieve better speed-quality trade-offs if combined with reducing steps."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700214417762,
+                "cdate": 1700214417762,
+                "tmdate": 1700214945991,
+                "mdate": 1700214945991,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Xgnfi2upgr",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "RlTEQbXIp0",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up Discussion"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer UhCD,\n\nWe sincerely thank you again for your great efforts in reviewing our paper. We have provided responses to address your major concerns about the comparison with other trajectory stitching baselines, more discussion with related multi-expert DPMs [1] and [2], as well as the compatibility with reducing the sampling steps. Please don\u2019t hesitate to let us know if you have any further questions. \n\nBest,\n\nAuthors of Submission 901"
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700524233570,
+                "cdate": 1700524233570,
+                "tmdate": 1700524233570,
+                "mdate": 1700524233570,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "4GVGOWEU5B",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "Xgnfi2upgr",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_UhCD"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_UhCD"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the additional results on comparison with other trajectory stitching baselines and clarification on compatibility with reducing the sampling steps. After reading the other reviews and the authors' responses, I believe that a comprehensive comparison with existing methods is needed and this concern is also raised by the AC and other reviewers."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700636037794,
+                "cdate": 1700636037794,
+                "tmdate": 1700636037794,
+                "mdate": 1700636037794,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VbMIN8UcZn",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "RlTEQbXIp0",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up Discussion"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer UhCD,\n\nThank you for raising your additional concern during the discussion. We have provided follow-up response to AC which briefly summarizes the relation between T-Stitch and existing acceleration methods. Please feel free to ask any further questions and we sincerely appreciate the opportunity to discuss with you.\n\nBest regards,\n\nAuthors of Submission 901"
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700690812754,
+                "cdate": 1700690812754,
+                "tmdate": 1700720825715,
+                "mdate": 1700720825715,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "kJ1Fj6BlSA",
+            "forum": "rnHqwPH4TZ",
+            "replyto": "rnHqwPH4TZ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_omxW"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_omxW"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a accelerating sampling method of diffusion model. Based on the phenomenon that different diffusion models learn similar encodings under the same training data distribution, this paper proposes to use a small model in the early sampling period to learn the global structures, while a larger model being adopted in the later sampling period to learn high-frequency details."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1.\tThe proposed method can conveniently adopt the existing pretrained diffusion models without finetuning, to accelerate the sampling speed.\n2.\tThe proposed method which using a small general expert at the beginning sampling stage of stable diffusion results in better prompt alignment.\n3.\tWhile a two-stage sampling is used in this paper, the proposed method can also be expanded to multi-stage."
+                },
+                "weaknesses": {
+                    "value": "1. Two models mean more storage consume, or if they are sent into the GPU in order, they will be in and out for every batch, which is not convenient.\n2. The authors are recommended to compare the speed of their proposed method with the other accelerating methods mentioned in the second paragraph of Introduction."
+                },
+                "questions": {
+                    "value": "Please refer to my comments on weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission901/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698853750627,
+            "cdate": 1698853750627,
+            "tmdate": 1699636016815,
+            "mdate": 1699636016815,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "nUAS8WXhsU",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "kJ1Fj6BlSA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Author Response to Reviewer omxW"
+                    },
+                    "comment": {
+                        "value": "Thanks for your efforts for reviewing our paper. We would like to address your concerns as below.\n\n**Q1. Two models mean more storage consumption, and it is not convenient on GPUs.**\n\nIt is worth noting that compared to the large model, a small model only **slightly increases** the memory (x1.04) and local disk storage (x1.1), as shown in our general response Part-2. \n\nBesides, **T-Stitch is actually very efficient on GPUs** **since both models are pre-loaded into GPU memory before inference.** During the denoising sampling, model switching is equivalent to choosing a different computational graph immediately, thus resulting in a minor overhead.\n\nFor example, as shown in our response to Reviewer UhCD Q1, based on DiT-S/XL, even interleaving DiT-S and DiT-XL during the sampling trajectory takes the similar time cost (10.1s) as our default strategy (9.9s) of adopting DiT-S for the early 50% steps then switch into DiT-XL for the last 50% steps, which is still clearly faster than only using DiT-XL for sampling (16.5s).\n\n**Q2. Compared to other acceleration techniques**\n\nIn fact, we are not competing with single models/samplers/reducing steps. Instead, T-Stitch efficiently adopts pretrained small DPMs as cheap drop-in-replacements for large DPMs during sampling. Thus, we are **complementary to other sampling acceleration techniques,** which has been extensively discussed in the related works, as also recognized by both Reviewer 9mJB (*\u201c...complements existing techniques.\u201d*) and Reviewer tbyv (*\u201c...complementary to advanced diffusion samplers based on better ODE discretization.\u201d*). More importantly, we have already demonstrated this compatibility with comprehensive experiments on different number of sampling steps, samplers and architectures in Figure 8, Figure 9 and Table 1, respectively."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700214327474,
+                "cdate": 1700214327474,
+                "tmdate": 1700214327474,
+                "mdate": 1700214327474,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "XSzsY2Btbp",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "kJ1Fj6BlSA",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up Discussion"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer omxW,\n\nWe sincerely thank you again for your considerable efforts in reviewing our paper. We have provided responses to address your major concerns about the storage overhead, the efficiency on GPUs, as well as the compatibility with other acceleration techniques.  Please feel free to reach out if you have any further questions.\n\nBest,\n\nAuthors of Submission 901"
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700524053023,
+                "cdate": 1700524053023,
+                "tmdate": 1700524053023,
+                "mdate": 1700524053023,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ABkt91BcjM",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "XSzsY2Btbp",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_omxW"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_omxW"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for your rebuttal. As for an accelerating technique, I think giving an comprehensive comparsion with existing methos is necessary for evaluating a new method."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700535511709,
+                "cdate": 1700535511709,
+                "tmdate": 1700535511709,
+                "mdate": 1700535511709,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "x9r4SWzmmZ",
+            "forum": "rnHqwPH4TZ",
+            "replyto": "rnHqwPH4TZ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_tbyv"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_tbyv"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduced trajectory stitching (T-Stitch), a simple approach to accelerate the sampling process of diffusion models by dynamically allocating computations to the sampling trajectory. The motivation for this work was the observation from prior works that different DPMs trained in the same data distribution learn similar score estimation regardless of model sizes and architectures. Further investigations show the frequency bias of diffusion models at varying noise levels. Altogether, this motivates this work to stitch the early sampling trajectory from smaller models with ones of larger models, where smaller models and larger models correspond to global shape and local textures, respectively.\n\nThe proposed technique accelerates the sampling speed by 40% w/o quality degradation or retraining. It is also complementary to advanced diffusion samplers based on better ODE discretization. Surprisingly, T-Stitch improves the prompt alignment of stylized latent diffusion models (LDMs)."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "This work has clear merits in its motivation and easy-to-understand simple technique. I enjoy the clarity of writing. It is also reminiscent of speculative decoding for language models. Importantly, this stitching is built upon the dynamics of diffusion models, clearly distinguishing it from model-wise stitching and being off-the-shelf for pretrained models. The experiments show the Pareto frontier produced by T-stitch and its advantage over the baseline setup."
+                },
+                "weaknesses": {
+                    "value": "However, the drawbacks of this work are also apparent. Despite improving the prompt alignment of stylized Stable Diffusion (SD) models, there needs to be a clear investigation into why this could happen. It demonstrated clever empirical usage of prior observations but still failed to dig into the phenomena to offer better depth and insights.\n\nThe technique drawback, although preventing it from reaching more elevated quality, is not a barrier to accepting this work. I'd agree that the current scope has met the bar of ICLR. Good work!"
+                },
+                "questions": {
+                    "value": "Please see above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission901/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699145611486,
+            "cdate": 1699145611486,
+            "tmdate": 1699636016745,
+            "mdate": 1699636016745,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "aWEzJuK9pC",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "x9r4SWzmmZ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Author Response to Reviewer tbyv"
+                    },
+                    "comment": {
+                        "value": "Thanks for your very positive comments! In addition to the initial discussion in Section 4.3, we would like to provide further analysis as below,\n\n1. **Dreambooth finetuning is easy to overfit.** Stylized SD models are usually finetuned on a very limited number of images, which is easy to result in overfitting and catastrophic forgetting [A, B]. For example, the Ghibili/Inkpunk Diffusion models in Figure 2 are finetuned with DreamBooth. However, according to the official documentation on Huggingface, \u201cDreamBooth finetuning is very sensitive to hyperparameters and easy to overfit \u201d [C], which may inevitably result in a loss in terms of the pretrained general knowledge [D].\n2. **General SD may complement the knowledge.** The small SD (BK-SDM Tiny) is a pruned and distilled version of the original SD v1.4, which could preserve the majority of the generality. Therefore, by adopting the small SD at the early steps, it may provide some general priors at the beginning [E], thus complementing the missing concepts in the prompts for the overfitted stylized SD models.\n\nWe agree that more in-depth analysis can be helpful to understand the prompt alignment for stylized SD models, but as our main aim is to achieve acceleration, we will leave such exploration for future work.\n\n[A] Zhang, Lvmin, Anyi Rao, and Maneesh Agrawala. \"Adding conditional control to text-to-image diffusion models.\" *ICCV*. 2023.\n\n[B] Ruiz, Nataniel, et al. \"Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generation.\" *CVPR*. 2023.\n\n[C] https://huggingface.co/docs/diffusers/training/dreambooth#finetuning\n\n[D] Lin, Yong, et al. \"Speciality vs generality: An empirical study on catastrophic forgetting in fine-tuning foundation models.\" *arXiv* (2023).\n\n[E] Graikos, Alexandros, et al. \"Diffusion models as plug-and-play priors.\" *NeurIPS* (2022)."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700214250751,
+                "cdate": 1700214250751,
+                "tmdate": 1700214250751,
+                "mdate": 1700214250751,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7mLWHz0HCW",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "aWEzJuK9pC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_tbyv"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Reviewer_tbyv"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the response. I am glad to see these as helpful additions to the manuscript. :)"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700466948678,
+                "cdate": 1700466948678,
+                "tmdate": 1700466948678,
+                "mdate": 1700466948678,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "GXfeIQu6pU",
+            "forum": "rnHqwPH4TZ",
+            "replyto": "rnHqwPH4TZ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_9mJB"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission901/Reviewer_9mJB"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In summary, T-Stitch is a simple yet effective way to accelerate sampling in large diffusion models by strategically combining them with smaller models, with little or no drop in sample quality. The results demonstrate it is broadly applicable across model architectures.\n\n- It proposes a method called \"Trajectory Stitching\" (T-Stitch) to accelerate sampling in pretrained diffusion models without loss of quality. The key idea is to use a smaller, faster diffusion model for the initial sampling steps and switch to a larger, higher quality model later in the process.\n- It is based on the observation that different diffusion models trained on the same data distribution learn similar latent representations, especially in early sampling steps. So the small model can handle the initial coarse sampling while the large model refines details later.\nExperiments show T-Stitch can accelerate sampling in various diffusion architectures like DALL-E, Stable Diffusion, etc without quality loss. For example, with DiT models it allows replacing 40% of steps with a 10x faster model without performance drop on ImageNet.\nT-Stitch also improves prompt alignment in finetuned diffusion models like stable diffusion. This is because finetuning can hurt prompt alignment which the small general model can complement.\n- The method is complementary to other sampling acceleration techniques like model compression, distillation etc. Those can be applied to the part handled by the large model.\n- T-Stitch achieves better speed vs quality tradeoffs compared to model stitching techniques like SN-Net which permanently stitch model components. T-Stitch stitches sampling trajectories."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "Overall, T-Stitch demonstrates a simple, generalizable, and effective approach for diffusion sampling acceleration that complements existing techniques. The strong experimental results and ablation analysis make a compelling case for the method.\n- Novel Idea: Trajectory stitching is a simple yet novel idea of accelerating diffusion sampling by combining models of different sizes. Prior work mostly focused on using a single model. The insight of leveraging similarity in early sampling latents is clever.\n- Broad Applicability: The method is shown to be broadly applicable across various diffusion model architectures like DALL-E, Stable Diffusion, U-Nets etc. It also improves finetuned models like stylized Stable Diffusion. This demonstrates the generality of the approach.\n- Pareto Optimality: T-Stitch provides better speed vs quality tradeoffs compared to techniques like model stitching and even some training based methods. The Pareto frontier is improved.\n- Realistic Setting: The method is evaluated in realistic settings using widely adopted models like Stable Diffusion. Showing acceleration and prompt alignment improvement makes it highly practical."
+                },
+                "weaknesses": {
+                    "value": "- Memory Overhead: Adopting additional smaller models during sampling increases memory usage, which could be a concern for very large models.\n- Finicky Tuning: Getting the right model stitching fractions to optimize the speed-quality tradeoffs may require finicky tuning based on the models and datasets. More principled guidelines could help.\n- Theoretical Analysis: While FID evaluates sample quality well, measuring sample diversity could be helpful to ensure stitching does not negatively impact it. The paper lacks theoretical analysis and justification on why stitching trajectories preserves sample quality, beyond empirical evidence."
+                },
+                "questions": {
+                    "value": "1. For finetuning experiments, can you elaborate on the exact finetuning procedure? Was it only on stitched intervals?  How do fully finetuned models compare?\n2. The prompts used for stable diffusion examples are quite simple. Have you tried more complex prompts and datasets? How robust is the method?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission901/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699500777001,
+            "cdate": 1699500777001,
+            "tmdate": 1699636016683,
+            "mdate": 1699636016683,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "SjN5wVjZWi",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "GXfeIQu6pU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Author Response to Reviewer 9mJB - Part-1"
+                    },
+                    "comment": {
+                        "value": "Thanks for your constructive and positive comments! We would like to address your additional concerns as follows.\n\n**Q1. Memory Overhead of T-Stitch.**\n\nWe agree T-Stitch slightly increases memory usage by adopting a smaller model, as already stated in the limitations. However, in practice, this overhead can be very minor since the main bottleneck still lies in the large models. Please refer to our general response Part-2 for more details.\n\n**Q2. Finicky tuning of getting the right T-Stitch fractions to optimize the speed-quality trade-offs.** \n\nIn practice, T-Stitch naturally interpolates a smooth speed-quality curve between a small and large DPM under different fractions of the small DPM. As this curve generally exists under different samplers (Figure 9), numbers of steps (Figure 8), and architectures (Tables 1,2,5), the speed under a given fraction can be roughly estimated based on the almost linearly interpolated time cost curve between the two DPMs (Figure 8 Right), while the more accurate quality measurement can be obtained by querying a pre-computed look-up table, as discussed in Section A.1 of the initial submission. We also agree with the reviewer that more principled guidelines would be helpful and will leave it for future work.\n\n**Q3. Diversity measurement of T-Stitch.**\n\nFollowing common practice [A], we adopt Precision to measure fidelity, and Recall to measure diversity or distribution coverage. In the table below, we report the results based on DiT-S/XL, 100 DDIM steps, and a guidance scale of 1.5. As it shows, T-Stitch maintains high Precision and Recall at the early 40-50% steps, which is consistent with FID evaluations. We agree diversity measurement is also important thus we have included this result in Section A.15 of the revised Appendix.\n\n| Fraction of DiT-S | 0%   | 10%  | 20%  | 30%  | 40%  | 50%  | 60%  | 70%  | 80%  | 90%  | 100% |\n| ----------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |\n| Precision \u2191       | 0.81 | 0.81 | 0.81 | 0.81 | 0.80 | 0.76 | 0.72 | 0.67 | 0.62 | 0.59 | 0.58 |\n| Recall \u2191          | 0.74 | 0.74 | 0.74 | 0.74 | 0.75 | 0.75 | 0.74 | 0.73 | 0.69 | 0.65 | 0.63 |\n\n[A] Dhariwal, Prafulla, and Alexander Nichol. \"Diffusion models beat gans on image synthesis.\" *NeurIPS* (2021): 8780-8794.\n\n**Q4. Theoretical analysis and justification on why stitching trajectories preserves sample quality.**\n\nThanks for pointing this out. We agree that more in-depth theoretical proof is missing at this stage. In addition to our initial justifications in the first paragraph of Section 3.2, we would like to provide further analysis as follows,\n\nTheoretically, under the same dataset, score-based models trained with the same denoising score matching loss aim to learn a consistent score function [B], which guides the probability flow at the reverse time to produce the overall ODE trajectory. If they learn the same ground-truth score, they will have the same reverse trajectory. This is evidenced by our Figure 3 where different DiTs learn similar intermediate latent embeddings, thus indicating a similar trajectory. Essentially, T-Stitch forwards the latent codes from the last timestep of a small model into the current timestep for the large model, which provides roughly similar scores, thus the stitched trajectory may interpolate a similar ODE trajectory and produce similar images, as shown in Figure 17.\n\nDue to the current scope, we will leave more comprehensive analysis for future work.\n\n[B] Song, Yang, et al. \"Score-based generative modeling through stochastic differential equations.\" *ICLR* (2021)."
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700214128812,
+                "cdate": 1700214128812,
+                "tmdate": 1700214128812,
+                "mdate": 1700214128812,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "xYldBYJNp7",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "GXfeIQu6pU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Author Response to Reviewer 9mJB - Part-2"
+                    },
+                    "comment": {
+                        "value": "**Q5: Finetuning experiments**\n\nIn Section A.12, we separately finetune the pretrained DiT-B and DiT-XL **at their stitched intervals**. Concretely,\n\n1. During finetuning DiT-B, at each training iteration, we limit the timesteps to be only sampled from the intermediate 30% steps. \n2. Similarly, during finetuning DiT-XL, we only sample the timesteps from the last 20% steps.\n3. After both models are finetuned with 250K iterations, we directly apply T-Stitch based on the denoising intervals of DiT-S/B/XL with 50% : 30% : 20%.\n\nTo compare with finetuning at all intervals, we finetuned the pretrained DiT-B/XL for **all timesteps** with the same additional 250K iterations. The table below evaluates the same T-Stitch allocation (50% : 30% : 20%) and demonstrates that this strategy does not yield superior performance, suggesting that finetuning at stitched intervals is more effective.\n\n| **Method**                     | **FID \u2193** | **Inception Score \u2191** |\n| ------------------------------ | --------- | --------------------- |\n| Pretrained                     | 16.49     | 123.11                |\n| Finetuned at all timesteps     | 16.04     | 125.81                |\n| Finetuned at stitched interval | 13.35     | 155.35                |\n\n**Q6: More complex prompts and datasets for stable diffusion examples.**\n\nThanks for the suggestion! We have included more examples by using more complex prompts in the Appendix Figure 24 and Figure 25, where T-Stitch performs favorably with long and complex prompts, and can be **easily applied into SDXL and ControlNet (Figure 26)**. Moreover, we write a for-loop script for generating image samples with **8 consecutive runs** under the same prompts but different latent noises. As shown in Figure 27, the output images by adopting different fractions of the small SD show great image quality for all runs. Thus it indicates T-Stitch is robust in practice."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700214186649,
+                "cdate": 1700214186649,
+                "tmdate": 1700214186649,
+                "mdate": 1700214186649,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "t9qB3xGsj0",
+                "forum": "rnHqwPH4TZ",
+                "replyto": "GXfeIQu6pU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission901/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up Discussion"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer 9mJB,\n\nWe sincerely thank you again for your great efforts in reviewing our paper. We have provided responses to address your major concerns about the memory overhead, tuning guidelines and additional analysis on T-Stitch. Beside that, we have also enriched the section for the finetuning experiment and shown more stable diffusion examples under complex prompts. Please don\u2019t hesitate to let us know if you have any further questions. \n\nBest,\n\nAuthors of Submission 901"
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission901/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700523868336,
+                "cdate": 1700523868336,
+                "tmdate": 1700523868336,
+                "mdate": 1700523868336,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

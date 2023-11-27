@@ -1,0 +1,224 @@
+[
+    {
+        "id": "ttcI3v8VFY",
+        "forum": "oa758mIOcP",
+        "replyto": "oa758mIOcP",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_7coN"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_7coN"
+        ],
+        "content": {
+            "summary": {
+                "value": "This manuscript proposes that when building Fourier Neural Operators (FNOs) that have unequally spaced sample points and relatively few \"modes,\" it is faster to simply evaluate the exponential sums directly rather than use a fast transform. The efficacy of such a method is supported by several numerical experiments."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "The manuscript considers experiments with a relatively broad range of models and does show that if few modes are considered then evaluating the exponential sums directly is likely faster. An implementation is provided."
+            },
+            "weaknesses": {
+                "value": "The primary weakness of this manuscript is in its framed contribution and presentation around the \"structured matrix method\" (with a secondary issue being the baselines used and some details of the numerical experiments).\n\nFor the so-called Type 1 NUFFTs the authors consider, the fact that direct evaluation of the exponential sums is more efficient if only a small number of modes are needed is well known; in fact the same comment applies to the equispaced transform as well (albeit with a different crossover point with respect to the number of modes). In fact, standard NUFFT libraries make this clear, see, e.g., the \"Do I even need a NUFFT?\" section of https://finufft.readthedocs.io/en/latest/. Therefore, it is not clear what the contribution is here. Moreover, the presentation of the method in Section 2 is not even particularly clear (especially when moving to general point clouds since the notation seems to reduce to the case with only 2 sampling points? There are much nicer ways to write the transform). \n\nThe section titled \"Inverse Transformations\" is misleading. The manuscript seems to imply the adjoint transform is what is meant\u2014these are not the same thing. (This is used incorrectly throughout the text.) On this point, the discussion in the related work section talking about the lack of a \"direct\" inverse NUFFT is also misleading. In particular Type 1 and Type 2 NUFFTs are not inverses of each other (unlike in the equispaced case) and the \"inverse\" refereed to is in, e.g., the least squares sense for things like imaging problems; this is not something the authors provide. \n\nCompounding this issue, the discussion of the computational complexity is lacking. The complexity should always be written in terms of the number of modes and the number of sample points (e.g., $\\mathcal{O}(mn)$ with $n$ sample points and $m$ modes)\u2014the claim could then be made that $m$ is often \"constant\" as $n$ grows and in that situation the complexity is linear. (Though, this is likely a bit disingenuous since if the underlying problem got more complicated, rather than simply oversampling a simple problem, both $m$ and $n$ would likely have to grow.) Given the stress placed on the number of modes it is also somewhat surprising that, unless I missed it, the experiments do not talk about how many modes are used in each case (that seems easy to add and informative).\n\nFor the experiments it is also not clear why something like https://finufft.readthedocs.io/en/latest/ is not used as a comparison point (rather than cubic interpolation). Moreover, the \"full grid\" comparisons seem misleading as well; if I am understanding this point correctly the \"Full Grid\" baseline is using more modes rather than the reduced number. If so, shouldn't it be done with the reduced number and, if that number is small enough, directly evaluate the sums? Also, \n\nLastly, some rather relevant references are missing \n\nRelated to the software references above:\n\nA parallel non-uniform fast Fourier transform library based on an \u201cexponential of semicircle\u201d kernel. A. H. Barnett, J. F. Magland, and L. af Klinteberg. SIAM J. Sci. Comput. 41(5), C479-C504 (2019).  \n\nThese two are some of the first formalizations of NUFFTs, so they seem relevant (certainly more so than many of the other included references):\n\nDutt, Alok, and Vladimir Rokhlin. \"Fast Fourier transforms for nonequispaced data.\" SIAM Journal on Scientific computing 14.6 (1993): 1368-1393.\n\nBeylkin, Gregory. \"On the fast Fourier transform of functions with singularities.\" Applied and Computational Harmonic Analysis 2.4 (1995): 363-381.\n\n**update after author response**\n\nI would like to thank the authors for their thoughtful responses to my concerns and those of the other reviewers.\n\nIn brief, I completely agree with the authors (and other reviewers) that the main contribution of this work is, in some sense, a comprehensive experimental illustration that for certain FNO problems a small enough number of non-equispaced modes are needed that direct evaluation of exponential sums is sufficiently efficient. (I should have been clear that anytime I say/said \u201cevaluation of sum\u201d I am implicitly implying as matrix/tensor products\u2014as would be standard for anyone working on these fast transforms given that the matrix forms are well known/understood). \n\nHowever, the initial framing of the manuscript (and the current version in some respects\u2014look at the title and framing \u201cquestion\u201d for the contributions) strongly suggests that the contribution is in the evaluation of spectral transforms. And, as noted in my initial review, I don\u2019t see any \u201calgorithmic\u201d contribution in that regard (though, I agree that an implementation is nice). For example, the statement in one of the replies about the \u201cfull grid\u201d: \n\n\t\u201cThe number of modes is indeed low enough for the sum to be directly evaluated, specifically through a PyTorch matrix multiplication function, and this is one of our primary contributions in this paper.\u201d \n\nIs not something I see as a contribution\u2014given how small $m$ is that is how it would/should have always been done.\n\nFrom my perspective the paper as written is a bit of a red-herring with regards to its contribution. It seems that a more appropriate framing would actually be \u201ca realization of FNOs on non-uniform grids\u201d and when the transforms are discussed there would just be a simple/short section noting that the number of needed modes is small enough that the transforms can be evaluated efficiently using matrix/tensor constructions. As structured the manuscript still suggests a contribution in \u201cstructured matrix methods\u201d that is useful for FNOs. Similarly, given how small $m$ is the NUFFT comparisons are somewhat superfluous/uninteresting (see the FAQ linked to in my original review) as is the long \u201crelated work\u201d section (given the contribution isn\u2019t the relevant related work FNOs that use full grids?). Nevertheless, I do think they are nice to see and fine to include.\n\nUltimately, I think that my difference of opinion with the other reviewers may be partially explained by (primary) background/area. From the FNO perspective there are interesting results here. However, from the \u201cstructured transforms\u201d perspective it is completely unclear why there was a gap between the promise and delivery of using arbitrary grids given that direct evaluation was/is always an option that is likely the best choice given the context (this also holds for the other transforms mentioned, again this makes saying the method has \u201cbroader scope\u201d a bit odd). Again, see the link in my initial review\u2014the pursuit of NUFFTs or even the use of FFTs was in some ways a red-herring given the size of $m.$\n\nAll those thoughts aside, I have slightly updated my score. I still think that the manuscript is presented as the contribution somewhat being the transforms and I just don\u2019t see one there beyond the implementation. I will leave it to the area chair to determine if they feel the current version of the manuscript is a suitable match for the agreed upon contribution."
+            },
+            "questions": {
+                "value": "For the \"Full Grid\" baseline, is the model using more modes rather than the reduced number. If so, shouldn't it be done with the reduced number and, if that number is small enough, directly evaluate the sums?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Reviewer_7coN",
+                    "ICLR.cc/2024/Conference/Submission5379/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5379/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698635385604,
+        "cdate": 1698635385604,
+        "tmdate": 1700669811671,
+        "mdate": 1700669811671,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "kIQWcQD4hq",
+        "forum": "oa758mIOcP",
+        "replyto": "oa758mIOcP",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_R5Ja"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_R5Ja"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a method to widen the applicability of current efficient neural operator learning methods. Current Fourier neural operator learning method works efficiently by frequency domain transformation via Fourier transform. However, this requires that data is sampled at equispaced intervals. The authors propose a structured matrix method using Vandermonde-structured matrices, which can be used on data sampled at arbitrary locations. Through experiments, the authors show that the proposed method shows high accuracy in solving partial differential equations and can be trained efficiently."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper is very well written, the motivation is very clear. The experiments are comprehensive."
+            },
+            "weaknesses": {
+                "value": "The authors could start their method discussion by introducing Fourier neural operator first, its mathematical formulation, and then pointing out where the structured matrix method is fitted in. At present, Figure-1 shows their workflow, however it's hard to visualize the change the proposed method is bringing about in the whole neural operator learning workflow."
+            },
+            "questions": {
+                "value": "See weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Reviewer_R5Ja"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5379/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698789934621,
+        "cdate": 1698789934621,
+        "tmdate": 1699636543616,
+        "mdate": 1699636543616,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "9NZUQByOEo",
+        "forum": "oa758mIOcP",
+        "replyto": "oa758mIOcP",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_6FVk"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5379/Reviewer_6FVk"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a generalisation of the Fourier and Spherical Fourier Neural Operators to arbitrary point clouds. The paper is fairly well-written, and generalises these methods to arbitrary grids via the utilisation of Vandermonde matrices and quadrature on unstructured grids. The authors apply this approach to a range of examples and provide good empirical evidence for the effectiveness of the method. I wish that the authors had stressed more that this is essentially the realisation of FNO/SFNO on arbitrary grids, something that the literature has promised but never delivered so far. As such, I believe that this paper is valuable to the community."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The paper is well-written and well-motivated. The literature review is sufficient and mostly achieves to put the method into perspective (See my remarks in the Questions section)\n* The authors address an interesting gap in the literature: the formulation of FNOs on arbitrary grids. To the best of my knowledge, this has been discussed in the literature, but has not been applied in practice.\n* Ample benchmarks are provided"
+            },
+            "weaknesses": {
+                "value": "* The experimental results and the result tables would benefit from additional information (See my remarks)\n* The text in the results section is a bit misleading and makes it sound as if the proposed method outperforms FNO and SFNO on the regular grid. If I understand correctly, this is the method on the irregular grid, which requires an interpolation step.\n* It would have been better if the provided metrics were put into context by showing the approximation results of the vanilla FNO/SFNO methods on their respective grids. This would provide a good baseline both for timing and performance results.\n* The given setting would allow to test operators tested on another grid to be evaluated on this unstructured grids. As I imagine this to be one of the main applications of this method, I would have like to see such results."
+            },
+            "questions": {
+                "value": "* (Question) Classical methods typically can not perform arbitrarily well on unstructured grids. I expect the same to be true here as the projection will have quadrature errors and you won't be able to evaluate the integrals to high accuracy on arbitrary grids. Have you performed any analysis on how sensitive results are to the choice of collocation points? It would be good to mention this in the paper.\n* (Remark) Related to the above question. it would be great to have both timings and L2/L1 errors of the FNO/SFNO on their respective grids to quantify the error of the method and put it into perspective. I expect these results to be better, but I would still welcome this to show the grid-dependence and avoid wrong conclusions for cases where the data is readily available on structured grids.\n* (Remark) In both of the original FNO/SFNO papers, it is mentioned that the generalization to arbitrary grids is straightforward by formulating the DFT/SHT on the respective domain. I wish that the authors had stressed this aspect more in the theoretical introduction, as the presented method is essentially a realization of the FNO/SFNO, just on an unstructured grid. This is one of the significant advantages of FNOs, and it is great to see this done in practice.\n* (Question) In line with what I wrote above, one of the advantages of Neural Operators is that they can be trained on one grid and evaluated on another. Have you experimented with such settings. I would be especially curious in the presented FNO/SFNO case how such an operator would perform compared to one trained on the unstructured grid"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5379/Reviewer_6FVk",
+                    "ICLR.cc/2024/Conference/Submission5379/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5379/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698792606710,
+        "cdate": 1698792606710,
+        "tmdate": 1700475381693,
+        "mdate": 1700475381693,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

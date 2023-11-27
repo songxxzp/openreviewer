@@ -1,0 +1,616 @@
+[
+    {
+        "title": "PICL: Incorporating Coarse-Grained Data and Physics Information for Superior Physical Systems Modeling"
+    },
+    {
+        "review": {
+            "id": "7qKAa8nbc3",
+            "forum": "Dw6y6bEtXm",
+            "replyto": "Dw6y6bEtXm",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_fJtB"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_fJtB"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors introduced a framework to model coarse-grained data incorporating physics information in the form of partial differential equations (PDEs). The proposed framework learns to map coarse-grained data to fine-grained space and a dynamic operator that advances fine-grained states forward in time. The authors test the framework in a few exemplary PDEs and present some ablation studies on hyperparameters, data efficiency and quality."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "* The authors explain the training routine thoroughly, which benefits reproducibility. Source code is also provided\n* The writing is generally easy to follow, although held back by the lack of equations to explain key terms and concepts"
+                },
+                "weaknesses": {
+                    "value": "* It is not very clear what the proposed framework is trying to achieve. The authors quotes \"predictive ability\" constantly but the prediction task is nowhere explicitly defined. I am inferring two tasks: (a) given coarse-grained state at time $t$, predict coarse-grained state at time $t+1$ and (b) given coarse-grained state, predict the corresponding fine-grained state. Task (a) inevitably involves incomplete information, which is not talked about and task (b) seems to be for a single step? (see questions below)\n* The reason why the transition module is needed in the first place is unclear when there is already a closed expression for it from physics? It does not seem to provide benefits in terms of computational cost. If it represents approximate knowledge, the experiments do not demonstrate the value and limitations (compare against no physics knowledge at all and study how much error causes the framework to break down).\n* The loss terms and metrics do not come with formulas and instead explained in dense text, making it difficult to follow"
+                },
+                "questions": {
+                    "value": "* When the observations are extremely coarse-grained, they represent partial state and the map to fine-grained state is not one-to-one. How is this uncertainty accounted, especially given that the modules in the proposed framework are all deterministic in nature?\n* Does evaluation involve only a single step prediction forward in time? Have you studied the performance over multiple steps?\n* Broken sentence in section 4.1 below equation (3) - \"the sequentially used transition module roles the prediction process...\""
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Reviewer_fJtB"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission76/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698535916663,
+            "cdate": 1698535916663,
+            "tmdate": 1699635932075,
+            "mdate": 1699635932075,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ueBgG8o4X0",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "7qKAa8nbc3",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer fJtB [Part 1]"
+                    },
+                    "comment": {
+                        "value": "Thank you for your valuable comments. We have conducted several additional experiments and comprehensively revised our paper to address your valuable questions and suggestions. Below are our detailed responses to each of your questions and concerns:\n\n> **Question about what does the prediction task mean and solution for incomplete information.**\n\n**A:** Thank you for your question.  \n\n- Your inference 'a' is correct. In our paper, \"predictive ability\" refers to the capacity to predict the subsequent coarse-grained observations from the current coarse-grained observation. In light of your question, we have now included a clear definition and explanation of \"predictive ability\" in both the Abstract and the concluding paragraph of the Introduction. \n- For your mentioned incomplete information, we use coarse-grained observations from previous steps to estimate the current fine-grained state inspired by the finite difference method, to compensate incomplete information caused by coarse-grained observed data. We added the description discussion of our method in Section 4.2.1.\n-  Furthermore, for the impact of historical data length, we already did the ablation study and analyzed it in the third paragraph of Section 5.5.\n\n> **Question about why the transition module is required.**\n\n**A:** Thank you for your question. We also considered this aspect at the inception of our method's design, primarily for three reasons: \n\n- Firstly, numerous related studies, such as FNO [1], MAgNet [2], DINo [3], NeuralStagger [4], and others, focus on approximating numerical solvers using neural networks. Consequently, we decided to follow the ideas of these works, opting for neural network approximations rather than directly implementing numerical solvers.\n- Secondly, in response to your question, we have conducted an additional experiment to compare the computational costs of the neural network in the transition module versus a numerical solver, which demonstrates the value of the transition module. This comparative study is detailed in the Appendix G. The findings are as follows: The time taken for a single computation using a numerical solver is more than five times that of a step inference with a neural network. Furthermore, as the resolution increases, the computational cost of using a neural network does not significantly change, as only the input and output layers are affected, with small changes in the hidden layers. These results indicate that, in terms of computational cost, whether in training or inference, employing a neural network in the transition module offers considerable advantages.\n- Thirdly, employing a differentiable neural network is important for the future expansion of our proposed method. This approach may be beneficial for addressing control problems and inverse problems in subsequent research.\n\n[1] Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A. and Anandkumar, A., 2020. Fourier neural operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895.\n\n[2] Boussif, O., Bengio, Y., Benabbou, L. and Assouline, D., 2022. MAgnet: Mesh agnostic neural PDE solver. Advances in Neural Information Processing Systems, 35, pp.31972-31985.\n\n[3] Yin, Y., Kirchmeyer, M., Franceschi, J.Y., Rakotomamonjy, A. and Gallinari, P., 2022. Continuous pde dynamics forecasting with implicit neural representations. arXiv preprint arXiv:2209.14855.\n\n[4] Huang, X., Shi, W., Meng, Q., Wang, Y., Gao, X., Zhang, J. and Liu, T.Y., 2023. NeuralStagger: accelerating physics-constrained neural PDE solver with spatial-temporal decomposition. arXiv preprint arXiv:2302.10255.\n\n> **Suggestion in formulas of loss terms and metrics.**\n\n**A:** Thank you for your insightful suggestions. We have made revisions accordingly. \n\n- In Section 4.2.2, we have added more clearly definition each component of the loss function, including data loss and physics loss, using precise mathematical formulations. \n- Furthermore, in the first paragraph of Section 5, we have introduced a formal definition for the reconstruction error $\\epsilon$ using a mathematical equation, replacing the previous textual description."
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700410553871,
+                "cdate": 1700410553871,
+                "tmdate": 1700410593985,
+                "mdate": 1700410593985,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "KHWa0CtwME",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "7qKAa8nbc3",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer fJtB [Part 2]"
+                    },
+                    "comment": {
+                        "value": "> **Question about handling non-one-to-one mapping.** \n\n**A:** Thank you for your comments. I have clarified a few points regarding the non one-to-one mapping issue:\n\n- Due to the partially observed nature of the problem, we do not assume a one-to-one mapping between the current state $u_t$ and the next state $u_{t+1}$.\n- Instead, as described in Section 4.2.1, we use coarse-grained observations from previous steps to estimate the current fine-grained state. There are two interpretations of this: First, similar to PDEs, we can use the temporal derivative estimated from historical data to approximate the spatial derivative and reconstruct the current fine-grained state. Second, we assume a one-to-one mapping exists between a sequence of historical coarse-grained observations and the current fine-grained state.\n- We performed an ablation study (third paragraph, Section 5.5) analyzing the impact of the length of historical data used. This provides some empirical analysis of the mapping between observations and states.\n- As you pointed out, uncertainty-aware models like Bayesian neural networks and variational autoencoders are promising approaches for handling partial observations. I have added a discussion of these methods in Section 4.2.1.\n\n> **Question about multi-step performance.** \n\n**A:** Thank you for your question. Please note we have already show the multi-step prediction tests and compared them with baselines in our main paper. Please refer to Sections 5.2, 5.3, and 5.4, with results illustrated in Figure 2. To avoid confusion, we have revised the first paragraph of Section 5 by following your suggestion.\n\n> **Suggestion about sentence expression.** \n\n**A:** Thank you for your valuable suggestion. We have revised Section 4.2.1 to more accurately describe the transition module's role in the prediction phase. To be more clear, this sentence means the transition module can achieve the forecasting function. We design a neural network that inputs the current fine-grained state  $\\hat{u}\\_{t}$  to forecast the subsequent fine-grained state  $\\hat{u}\\_{t+1}$."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700410653555,
+                "cdate": 1700410653555,
+                "tmdate": 1700410782093,
+                "mdate": 1700410782093,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Hz9glGo54S",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "7qKAa8nbc3",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer fJtB"
+                    },
+                    "comment": {
+                        "value": "Thank you again for your comments and suggestions to significantly improve the quality of our paper. We have read your comments carefully and understood your concerns. To address your concerns, we have revised several sections of our paper and conducted the additional experiments. Do you have any other concerns or suggestions?"
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700733058101,
+                "cdate": 1700733058101,
+                "tmdate": 1700733058101,
+                "mdate": 1700733058101,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "60yIfSJJ6F",
+            "forum": "Dw6y6bEtXm",
+            "replyto": "Dw6y6bEtXm",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_iagL"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_iagL"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a physics guided deep learning solution for modeling under data paucity and coarse-grained data. Essentially, the paper employs a super-resolution approach to generate fine-grained data from coarse-grained data employing supervised losses at the coarse-grained scale while employing physics losses (conservation conditions) between successive time-steps at the predicted fine-grained scale. Specifically, the proposed architecture comprises a sort of self-supervised task wherein the low-dimensional data is input into an encoder module which produces the corresponding high-dimensional output (predicted). This predicted high-dimensional output is passed into a transition module which predicts the high-dimensional output at the next time step. This high-dimensional output at the successive time-step is downsampled (by a deterministic function) and compared with the ground-truth low-dimensional data using a data-driven loss."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The proposed solution is (somewhat) novel and is a creative way to effectively employ coarse-grained data and physics to perform super-resolution. \n \n\n- The results are extensive (although not entirely convincing) and have been performed on multiple important PDE contexts."
+                },
+                "weaknesses": {
+                    "value": "1. Overall, the novelty in the paper is somewhat limited and analyses of the drawbacks of the proposed finite-difference based physics encoding method have not been fully carried out. Specifically, discussions regarding where the proposed method might lack, how fine-grained data can be incorporated (when available) will be helpful additions to the narrative. \n \n\n2. Some results indicate that baselines outperform the proposed method. E.g., Table 1 NSWE indicate that PINO* has lower re-construction errors. Why is this? \n \n\n3. The paper methodology is hard to understand and needs to be significantly improved. The reviewer feels the entire methodology can be explained in 1 \u2013 2 paragraphs (half a page) but is needlessly convoluted and interspersed with details making it hard to get a high-level idea.  \n \n\n4.There are many ambiguous phrases/ design decisions that have been made without explanation. \n\n    a. Why has the U-Net architecture been employed for the encoder while UNet++ [1] , Transformer [2] and many newer image encoding / SR architectures superior to UNet have been proposed more than 2 \u2013 3 years ago? \n \n\n    b. What does \u201chard encoding\u201d $\\tilde{o}$ into the corresponding $\\hat{u}_t$ mean? \n\n        i. Does it mean that assuming the low-res data was n/2 X h/2 and high-res data was n x h , that every 4th pixel in  the high-res data would have the corresponding $\\tilde{o}$ value? Or does it mean something else? \n\n        ii. If it means the same as <4.b.i>, would this design decision not overtly couple the high-res and low-res solutions? How might the high-res solution significantly improve upon the low-res solution with this constraint? \n \n\n5. Results don't seem practically usable. It is important to comment on this owing to the context (i.e., mapping from low-res to high-res with predominantly low-res training data). In most real-world scientific simulations, physical consistency / errors are assumed to in the range `1e^-5 \u2013 1e^-7` . A discussion about the practicality of the obtained results and the usability of the proposed method is required but missing. \n\n \n\nReferences: \n\n1. Zhou, Zongwei, et al. \"Unet++: A nested u-net architecture for medical image segmentation.\" Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support: 4th International Workshop, DLMIA 2018, and 8th International Workshop, ML-CDS 2018, Held in Conjunction with MICCAI 2018, Granada, Spain, September 20, 2018, Proceedings 4. Springer International Publishing, 2018. \n \n\n2. Dosovitskiy, Alexey, et al. \"An image is worth 16x16 words: Transformers for image recognition at scale.\" arXiv preprint arXiv:2010.11929 (2020)."
+                },
+                "questions": {
+                    "value": "1. Why has the U-Net architecture been employed for the encoder while UNet++ [1] , Transformer [2] and many newer image encoding / SR architectures superior to UNet have been proposed more than 2 \u2013 3 years ago? \n \n\n2. What does \u201chard encoding\u201d $\\tilde{o}$ into the corresponding $\\hat{u}_t$ mean? \n\n    a. Does it mean that assuming the low-res data was n/2 X h/2 and high-res data was n x h , that every 4th pixel in  the high-res data would have the corresponding $\\tilde{o}$ value? Or does it mean something else? \n\n    b. If it means the same as <2.a>, would this design decision not overtly couple the high-res and low-res solutions? How might the high-res solution significantly improve upon the low-res solution with this constraint? \n \n\n3. Additionally, the function of $f_\\theta$ in equation (1) is described as \u201cimitating the implementation of higher-order finite difference to leverage abundant temporal feature of $\\{ \\tilde{o}_{t-i}\\}_{i=0}^n$. \u201d \n\n    a. What exactly does \u201cimitating the implementation of higher-order FD\u201d mean? Is there a FD operator that has been embedded into $f_\\theta$? Or is there something special (I.e., some special input transformation) that has been applied to the inputs of $f_\\theta$ that makes it \u201cimmitate\u201d an FD operator?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Reviewer_iagL",
+                        "ICLR.cc/2024/Conference/Submission76/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission76/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698648129859,
+            "cdate": 1698648129859,
+            "tmdate": 1700594975754,
+            "mdate": 1700594975754,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "itIzHrvDAz",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "60yIfSJJ6F",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer iagL [Part 1]"
+                    },
+                    "comment": {
+                        "value": "Thanks for your reply and suggestions to improve our work. We have conducted several additional experiments and comprehensively revised our paper to address your valuable questions and suggestions. Below are our detailed responses to each of your questions and concerns:\n\n> **Concern about limitations.**\n\n**A:** Thanks for your question.\n\n- For the limitation of our proposed method: In Appendix D of our paper, we discuss the limitations of our work.\n- The first one is the compatibility of our proposed framework and the specific neural network architecture. We have conducted addtional experiments and made a detailed discussion in the 11st paragraph of Appendix B.6.\n- The second one is how to incropreate the avalable fine-grained data. We have conducted addtional experments and made a detailed discussion in the last paragraph of Appendix B.6. You may also check the following Question and Answer.\n\n\n> **Questions about the usage of fine-grained data.**\n\n**A:** Thanks for your question.\n\n- For aspect of how fine-grained data can be incorporated into our framework:\n  - Our current work is primarily focused on scenarios where only coarse-grained data is available, aligning with a significant portion of both simulation or real-world applications. \n  - We conjecture that if we assume the fine-grained data is available, the predictive performance will be better.\n  - To verify the above conjecture, we conducted an additional experiment incorporating fine-grained data. We detailed the experiment and its results in last paragraph of Appendix B.6. In this experiment, fine-grained data was used as the label for the encoding module, aiming to train the module to reconstruct a more accurate learnable fine-grained state. Our findings show that both the baseline FNO* (without physics loss) and our proposed PICL benefit significantly from the inclusion of fine-grained data, with improvements of over 38% and 12% respectively.\n  - Moreover, these results also highlight an important aspect of our framework: the ability to use the known physics information as a substitute for fine-grained data in training the encoding module, especially in scenarios where such data is unavailable. The smaller improvement observed in PICL compared to the FNO*, when fine-grained data is available, suggests that PICL can effectively compensate for the absence of fine-grained data to learn the state. Such discussion is also placed in Appendix B.6.\n\n> **Question about why some results of baselines outperform our method.**\n\n**A:** Thank you for pointing this issue. \n\n- For $\\epsilon$ of PINO* outperforms PICL in Table 1, based on our experimental log data, we realized that there is a typo. The value should be 3.18E-1 instead of 3.18E-3. We have re-run the experiment multiple times, confirming that the magnitude is indeed in the E-1 range. We have fixed it in the table and extend our gratitude for your attention to this clerical error in our paper.\n- To avoid you from being confused. In Table 1, the PIDL's $\\epsilon$ for LSWE performs better than PICL. We have explained it in Section 5.3, before. Even though the $\\epsilon$ value in PIDL is slightly lower, this approach concentrates on training using only the physics loss, overlooking the importance of data constraints in predictions. Consequently, PICL has been developed to trade off between data and physics constraints, thereby improving the model's predictive ability. We consider this current observation to be normal, as our method aims to enhance the model's predictive ability using physical information in coarse-grained data, which is reflected in the $\\mathcal{L}_{d}$ in our paper. The $\\epsilon$ is only a metric to show the accuracy of the reconstructed fine-grained state, a step in our process, but not the end goal of our work.\n\n> **Suggestion about the lengthy introduction of methodology.**\n\n**A:** Thank you for your valuable suggestion, which has significantly contributed to the clarity and readability of our paper. We have revised Section 4 accordingly :\n\n- Firstly, we have succinctly introduced our concept and methodology in Section 4.1, using clear and easily understandable language to provide an overall view. This approach ensures that readers can quickly grasp the essence of our work.\n- Secondly, for those readers interested in the technical specifics, we delve deeper into the details of our method in the subsequent Section 4.2."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700412221285,
+                "cdate": 1700412221285,
+                "tmdate": 1700412221285,
+                "mdate": 1700412221285,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "nOuehj7h9G",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "KFmosWz2nU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Reviewer_iagL"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Reviewer_iagL"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Authors"
+                    },
+                    "comment": {
+                        "value": "Thank you to the authors for their detailed response. Although some of the questions have been answered and despite some improvement in the clarity of the proposed method, the reviewer still feels (i) the main paper cannot stand on its own without frequent references to the appendix even for description of the proposed model (e.g., details about two-stage fine-tuning, details about discretization function etc.) (ii) the motivation for a solution employing coarse-grained modeling (with intermediate \"fine-grained\" predictions only controlled by physics losses) is unclear to the reviewer i.e., how could the quality of the \"super-resolved\" intermediate predictions in the proposed model be any better than enabled by the low-res data (i.e., the upper-limit of resolution is controlled by low-res data so the \"fine-grained\" estimates are just larger \"coarse-grained\" estimates) especially when there is no fine-grained data (even a few instances) included during model training? This question is still unclear to the reviewer (bringing into question the motivation of the formulation) and a lack of detailed discussion about limitations from this perspective is still a direction that requires major improvement in the paper. \n\nThe reviewer understands that the authors did execute an updated experiment with fine-grained data but the motivation for the original problem formulation (i.e. ,the entire reason for the current model design is assuming only availability of coarse-grained data) is unclear and the reasoning behind the improved performance just using intermediate physics losses of this design is unclear. Specifically, what is preventing the model from learning a simple interpolation in the \"fine-grained\" space of the coarse-grained inputs. Often the fine-grained simulations (if the resolution is 4x or more than the coarse-grained simulations) have different local signatures not present in the coarse-grained case. How can the model learn to represent these signatures (in the fine-grained space), when it has never seen them, solely by learning from the  coarse-grained inputs and the physics losses?\n\nOwing to (i), (ii) the reviewer shall retain the score at 5 for this paper."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700624376360,
+                "cdate": 1700624376360,
+                "tmdate": 1700624376360,
+                "mdate": 1700624376360,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "e7p1P6Nap1",
+            "forum": "Dw6y6bEtXm",
+            "replyto": "Dw6y6bEtXm",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_vB1V"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_vB1V"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In this paper, the author proposes a new physics-informed framework for achieving finer-grained data reconstruction in spatial and temporal fields from coarser-grained data through super-resolution and neural operators. The framework comprises two components: an encoder module and a transition module, and it utilizes a three-stage training process (base training followed by a two-stage fine-tuning process). The results show the effectiveness of the proposed method in different PDE-governed systems. However, it lacks some important comparisons with non-FNO-based approaches and also some discussion about details of incorporating physics."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1.\tThe paper studies an important problem. The authors well introduce the background and define the problem while providing a clear overview of the proposed framework.\n2.\tThe authors justifies the effectiveness of the proposed method in various aspects through a series of experiments over multiple PDE-governed systems."
+                },
+                "weaknesses": {
+                    "value": "1.\tThe method section lacks a clear explanation of how the physics loss is defined and how the 4th-order Runge-Kutta (RK) method is incorporated into the design.\n2.\tThe experimental section only compares the method with Fourier Neural Operator (FNO)-based methods, omitting comparisons with other state-of-the-art neural operator methods, such as similar mesh-based methods like Magnet.\n3.\tThe original FNO paper tested model performance on different Partial Differential Equations (PDEs), including 1D cases (decay flow) and 2D cases (Navier-Stokes equations). It would be beneficial if the author also compared their method against these PDEs.\n4.\tThe performance in zero-shot super-resolution (SR) cases is not addressed."
+                },
+                "questions": {
+                    "value": "See weaknesses points above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission76/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698694194681,
+            "cdate": 1698694194681,
+            "tmdate": 1699635931918,
+            "mdate": 1699635931918,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "CGF4mKGFgc",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "e7p1P6Nap1",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer vB1V [Part 1]"
+                    },
+                    "comment": {
+                        "value": "Thanks for your recognition of our definition of the problem. We have conducted several additional experiments and comprehensively revised our paper to address your valuable questions and suggestions. Below are our detailed responses to each of your questions and concerns:\n\n> **Question about how physics loss is defined.**\n\n**A:** Thank you for your valuable feedback regarding our experiments.\n\n- According to your question, we have added a more detailed explanation immediately following Eqn. 5 in Section 4.2.2. The enhancement includes an in-depth description of the physics loss and the introduction of the RK4 method are placed in Appendix B.2. \n- We first present the process of RK4, which can be considered as a function $F(u_t,u_{t+1})=0$. By using $F$, we can design two physics losses $\\mathcal{L}\\_{ep}(\\theta)=F(u_t(\\theta), u_{t+1}(\\theta))^2$  for the encoding module and $ \\mathcal{L}\\_{tp}(\\omega) = F(u_t, u_{t+1}(\\omega))^2$ for the transition module. By minimizing the $\\mathcal{L}\\_{ep}$ and $\\mathcal{L}\\_{tp}$, the $u_t$ and $u\\_{t+1}$ can be found, which means that the $u\\_t$ and $u\\_{t+1}$ can satisfy the RK4 time differentiation.\n\n> **Suggestion of adding baseline.**\n\n**A:** Thank you for your suggestion. \n\n- Because FNO and PINO are common methods that many works about neural operator used as baselines, we previously compared our method with them.\n- Thank you for mentioning MAgNet. We have done further literature review and found the work of three state-of-the-art neural operators, including MAgNet [1], DINo [2], and LatentNeuralPDEs [3], and cited them in the Related Work. Considering the limitations of computing resources, we selected the method LatentNeuralPDEs with the best performance as our baseline. \n- We have compared our proposed method with the official implementation of LatentNeuralPDEs. The details about LatentNeuralPDEs are described in Appendix C, and the comparative results are presented in Appendix E and Table 9. The findings indicate that the loss ($\\mathcal{L}_{d}$) of LatentNeuralPDEs is larger than that of PICL w/o fine-tune and PICL with fine-tune by more than 81% and 91%, respectively.\n\n[1] Boussif, O., Bengio, Y., Benabbou, L. and Assouline, D., 2022. MAgnet: Mesh agnostic neural PDE solver. Advances in Neural Information Processing Systems, 35, pp.31972-31985.\n\n[2] Yin, Y., Kirchmeyer, M., Franceschi, J.Y., Rakotomamonjy, A. and Gallinari, P., 2022. Continuous pde dynamics forecasting with implicit neural representations. arXiv preprint arXiv:2209.14855.\n\n[3] Iakovlev, V., Heinonen, M. and L\u00e4hdesm\u00e4ki, H., 2023, November. Learning Space-Time Continuous Latent Neural PDEs from Partially Observed States. In Thirty-seventh Conference on Neural Information Processing Systems.\n\n> **Suggestion of more PDEs experiments.**\n\n**A:** Thank for your suggestion. We agree that additional experiments involving PDEs used in FNO are essential. Regarding your question about the 1D case decay flow, you might mean the Burgers flow experiment in FNO, as decay is a characteristic feature of the viscous Burgers equation? If not, please tell me what you mean.\n\n- Based on your suggestion, we have conducted experiments on the Burgers Equation and the Navier-Stokes Equation following the settings in original FNO paper, and compared the results with FNO. The detailed experimental setup and results are presented in the Appendix F of our paper. \n- We summarize the results as follows: In the Burgers Equation experiments, the data loss ($\\mathcal{L}_{d}$) of PICL with fine-tuning is marginally lower than that of FNO* and FNO. In the Navier-Stokes Equation experiment, which involves a more complex PDE, PICL with fine-tuning demonstrates significant improvement over both FNO* and FNO. These results are detailed in Table 10. This enhancement in performance shows the efficacy of our approach and its potential in handling intricate fluid dynamics problems."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700413404788,
+                "cdate": 1700413404788,
+                "tmdate": 1700472990706,
+                "mdate": 1700472990706,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "tNizZ3RgRt",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "e7p1P6Nap1",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer vB1V"
+                    },
+                    "comment": {
+                        "value": "Thank you again for your comments and suggestions to significantly improve the quality of our paper. We have read your comments carefully and understood your concerns. To address your concerns, we have revised several sections of our paper, and conducted numerous experiments on the additional baseline, different PDEs, and zero-shot super-resolution cases. Do you have any other concerns or suggestions."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700733167403,
+                "cdate": 1700733167403,
+                "tmdate": 1700733167403,
+                "mdate": 1700733167403,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "VghbhcO3SS",
+            "forum": "Dw6y6bEtXm",
+            "replyto": "Dw6y6bEtXm",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_vvjE"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission76/Reviewer_vvjE"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper addresses an issue typically seen in real world problems, where only coarse-grained measurements are available. The authors propose a surrogate model that works over data with finer resolution reconstructed from observed data with low resolutions. The model comprises U-Net and Fourier neural network models and the proposed training framework incorporates physical losses that ensure consistency between reconstructed solutions."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper is motivated by real world applications, to which few surrogate physics models have been applied so far. The authors propose a novel framework that incorporates losses stemmed from physical systems. The authors also propose two training phases, where the first phase is responsible for training models in a supervise manner and the second phase is based on fine-tuning aimed for enhancing the prediction capability. The experiments show that the proposed method outperforms a couple of baselines. Some ablation studies are also conducted."
+                },
+                "weaknesses": {
+                    "value": "I do not quite understand the problem setting in the paper yet. What problems does the paper aim to tackle? To my knowledge, the prediction of coarse-grained observation is not a keen requirement for real world applications since simulation in real applications is mostly performed with high resolution data.\n\u00a0\n\nWhat is the difference between PICL and FNO* reported in the experiments? Are the loss functions used in training different? It is also unclear how much each term of the loss function has an impact to the performance of the proposed forward model.\n\n\nWhen the output resolution of $f_{\\theta}$ increases, how much does it have an impact to the computational cost? How does it compare to the baselines?\n\u00a0\n\nThe paper does not seem to be well-organized and hard to follow. The followings are some of the examples that made the paper difficult to understand:\n* Definition in Section 3 is ambiguous. For instance, differential operator $P$ is not well-defined since Banach spaces $(A, U, V)$ is not mentioned to have differential structure.\n* Between equations (3) and (4), \u00a0\"Then, the sequentially used transition module roles the prediction process with the input $u^{t}$ to predict $u^{t+1}$\".\n* I could not find the implementation detail of down-sampling operator $\\Phi$.\n* Figure 1 is very confusing since arrows corresponding to data flow in training and test phases are mixed up. Are physics loss $L_{ep}$ and $ L_{tp}$ used in the unrolling phase?"
+                },
+                "questions": {
+                    "value": "The proposed method relies on physics loss defined by\u00a0fourth-order central-difference scheme and Runge-Kutta time discretization, which can be performed when one knows PDEs of the problems. Do the authors have any observation or insight on what range of real world problems the proposed method work for?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "I don't have any concerns."
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission76/Reviewer_vvjE"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission76/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698700412546,
+            "cdate": 1698700412546,
+            "tmdate": 1700582352532,
+            "mdate": 1700582352532,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ZqhUKnRxNW",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "VghbhcO3SS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "To Reviewer vvjE [Part 1]"
+                    },
+                    "comment": {
+                        "value": "Thank you for your valuable reply. We have conducted several additional experiments and comprehensively revised our paper to address your valuable questions and suggestions. Below are our detailed responses to each of your questions and concerns:\n\n> **Question about the problem setting and its importance.**\n\n**A:** Thank you for your question. To make our paper clearer and easier to follow, we have made the following adjustment to the paper:\n\n- For the problem setting, the scientific problem we solved is how to apply physics information on coarse-grained data to improve predictive ability, whether in numerical simulations or real-world applications when we only have coarse-grained data. We revised the Abstract and the 2nd paragraph of the Introduction to make it clear.\n- For its importance: \n  - In real-world scenarios, only coarse-grained data measured by sensors is available that is the importance of the problem setting.\n  - Generally, this framework can be applied to any problem seeking to enhance model predictions using physics information on coarse-grained data, offering insights and potential solutions.\n\n> **Differences between PICL, FNO\\*, and impacts of each term in loss.**\n\n**A:** Thank you for your question.\n\n- We have made revisions to Section 5.1, first paragraph, to provide a more detailed description to each baseline for better understanding. Here to clarify: To control variables, PICL and the FNO* baseline are very similar in terms of network structure. Specifically, the primary difference between PICL and FNO* is that FNO* omits the physics loss components from the PICL\u2019s loss function, retaining only the data loss.\n- Regarding the impact of each term in loss functions, our paper already discussed this in Section 5.5 Ablation Studies, specifically in the second paragraph. Our experimental findings indicate that including a physics loss in the loss function leads to better results compared to method such as FNO* without it. The model performs optimally when the physics loss coefficient, $\\gamma$ = 1E-1. This is because a very low weight for physics loss makes it ineffective in the optimization process, while a very high weight causes the model to overly prioritize satisfying physical constraints at the expense of predictive accuracy. We appreciate you highlighting this issue, and we have made revisions to this section for greater clarity in describing the ablation study.\n\n> **Concern about computational cost.**\n\n**A:** Thank you for raising this intriguing question.\n\n- In response, we have added a group of experiment to Appendix B.6, specifically in the 9th paragraph, titled \"When the output resolution of the encoder module increases, how much does it impact the computational cost?\" \n- Our findings are as follows: During inference, as the resolution of the encoder module's output increases from $32\\times32$ to $48\\times48$, and then to $64\\times64$, the computational time (s) for the baseline without physics loss increased by approximately 92% and 65%, respectively. In comparison, PICL saw an increase of about 83% and 69%. The growth in computational cost for both methods is quite similar. During training, the baseline without physics loss increased by about 277% and 79%, while PICL increased by approximately 238% and 48%. Although PICL's training time increased, its computational cost grew less than the baseline with the rise in resolution. In summary, when using PICL for inference, the computational cost considers only the time for inference. Hence, the efficiency of PICL is essentially comparable to the baseline without physics loss, as PICL does not require computation of physics loss during inference."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700413183728,
+                "cdate": 1700413183728,
+                "tmdate": 1700472819054,
+                "mdate": 1700472819054,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "GpXYrhc5zV",
+                "forum": "Dw6y6bEtXm",
+                "replyto": "VghbhcO3SS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission76/Reviewer_vvjE"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission76/Reviewer_vvjE"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you very much for the reply."
+                    },
+                    "comment": {
+                        "value": "Thank you for your answers. Given the contributions of the paper as well as the willingness of the authors' to provide explanations and a considerable amount of additional experimental results, I raised my score to 5. While most of my concerns were addressed, it is still unclear the necessity that we learn surrogate models able to perform low-resolution simulation. The authors' assumption that only coarse-grained data is available in real-world applications is reasonable, but I still doubt that this assumption also motivates one to have low-resolution surrogate models, because in real applications high-fidelity simulation are much in demand."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission76/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700578945313,
+                "cdate": 1700578945313,
+                "tmdate": 1700578945313,
+                "mdate": 1700578945313,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

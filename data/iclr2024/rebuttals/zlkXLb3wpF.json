@@ -1,0 +1,585 @@
+[
+    {
+        "title": "Fast and unified path gradient estimators for normalizing flows"
+    },
+    {
+        "review": {
+            "id": "iIIUU7nYOB",
+            "forum": "zlkXLb3wpF",
+            "replyto": "zlkXLb3wpF",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper concerns path gradient estimators for normalizing flows, a reduced variance estimator for the KL divergence gradient in normalizing flows. They come at the cost of additional forward and backward passes through the normalizing flow at hand. The present paper reduces this computational overhead to compute path gradient of reverse KL, while being analytically equal to previous work. It then provides a new path gradient estimator for the forward KL. Experiments demonstrate that the resulting path gradient estimators work both in the forward and reverse KL setting on physical sciences data sets (where the unnormalized $p(x)$ is known)."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "*Originality*\n\n- The iterative procedure for computing the path gradient has no memory overhead over non-path gradients and is potentially faster (see Weakness 3).\n- Path gradients are applied to the forward KL with reduced variance by applying the same algorithm to .\n- The approach has the potential to be generically applied to abitrary coupling blocks, if clarified.\n\n\n*Quality*\n\nThe theoretical results might be correct, but I cannot judge at this point (see below). I have some doubts on the baseline experiments (see below).\n\n\n*Clarity*\n\nThe motivation and main chain of reasoning are clear, but several parts of the manuscript lack clarity and detailed explanations (see below).\n\n\n*Significance*\n\nMaking use of path gradients in order to regularize for the known unnormalized density of training data has the potential to greatly reduce compute over classical methods, so this chain of work is relevant to the machine learning + natural sciences community. Allowing the forward KL to make use of the unnormalized density is attractive, as the forward KL may have better properties than reverse KL (mode covering instead of mode seeking)."
+                },
+                "weaknesses": {
+                    "value": "Generally, the presentation interpretation of the results can be greatly improved. I also have concerns on some of the results.\n\nIn detail:\n\n1. The notation of Proposition 3.2 and its proof in the appendix are sloppy and I cannot determine the correctness: what is the inverse of the rectangular matrix $\\frac{\\partial f_\\theta(x_l^t, x_l^c)}{\\partial x_l^t}$? Is it a pseudo-inverse, or is it a part of the network Jacobian? I suggest to greatly rewrite this proposition as a Theorem that outlines the general idea of the recursion (that the path gradient can be constructed iteratively by vector-Jacobian products with the inverse of each block, if I am right). Then proceed to derive concrete realizations for coupling blocks and affine couplings in particular if they allow for unique results.\n2. What is the cost of computing Proposition 3.2? As I mentioned in the first point, by rewriting the recursion more generally, this could easily be showcased.\n3. What is the intuition behind Proposition 4.1? What is the regularization obtained from including the unnormalized density (probably something like the corrected relative weight of each sample according to the ground truth density)?\nWhat derivative vanishes in expectation? How large is the variance of the removed gradient term? Is your result an improvement in this metric? What is the regularizing effect? Vaitl et al. 2022b have useful visualizations and explanations in this regard.\n4. The baseline Algorithm 2 should not be used to measure baseline times. The second forward pass through the network is unneccessary, as one can simply store the result from the first forward pass, once with stop_gradient and once without. Please report Table 2 again with this change.\n5. I have strong doubts on the validity of the experiment on the multimodal gaussian model. It is hard to believe that a standard RealNVP network cannot be trained effectively on this data, with an ESS_p of 0.0(!). I see several warning signs that a bad performing network has been selected in order to have a badly performing baseline:\n\t- the network is huge, with a number of parameters bounded from below by six coupling blocks $\\times$ five hidden subnetworks $\\times$ (1000 $\\times$ 1000 entries in each weigh matrix) amounting to more than 30 million parameters;\n\t- the batch size of 4,000 given 10,000 samples makes the network see almost the entire data set in every update.\n  This indicates that the training is set up in a way that training from samples only must fail. Given that training yields useful models in only five minutes, it is reasonable to expect hyperparameter tuning of the baseline model from the authors.\n6. In this light, how much parameter tuning was involved in the other experiments $\\phi^4$ and $U(1)$? Please compare your numbers to the state of the art results on these benchmarks.\n\n\nGiven that the theoretical results need improved presentation and explanation, and given the doubts on the numerical experiments, the manuscript does not reach the quality ICLR in the current form. Many of the proposed changes can be achieved with additional explanations and better notation. I am looking forward to the author's rebuttal, happy to be corrected on my understanding.\n\n\n\n## Minor comments:\n\n- Eq. (13) is missing a logarithm.\n- The caption for Figure 1 is on page 21 in the appendix, took me some time.\n- The statement that building up the computation graph takes measurable time is false, as this simply means storing already  computed activations in a dictionary (right before section 3.1).\n- Eq. (25) is missing that $p_{\\theta, 0}$ can be computed from the unnormalized density.\n- If a reader is not familiar with the terms forward and reverse KL, it is hard to understand the introduction. Point the reader to Section 2 or drop it here, leaving space for more explanations on theoretical results."
+                },
+                "questions": {
+                    "value": "see Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2506/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698429566869,
+            "cdate": 1698429566869,
+            "tmdate": 1700674277586,
+            "mdate": 1700674277586,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "b7AbdeZk9R",
+                "forum": "zlkXLb3wpF",
+                "replyto": "iIIUU7nYOB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "### Strengths\n\n***Originality***\n\n- **The iterative procedure for computing the path gradient has no memory overhead over non-path gradients and is potentially faster (see Weakness 3).**\n- **Path gradients are applied to the forward KL with reduced variance by applying the same algorithm to .**\n- **The approach has the potential to be generically applied to abitrary coupling blocks, if clarified.**\n\n***Quality***\n\n**The theoretical results might be correct, but I cannot judge at this point (see below). I have some doubts on the baseline experiments (see below).**\n\n***Clarity***\n\n**The motivation and main chain of reasoning are clear, but several parts of the manuscript lack clarity and detailed explanations (see below).**\n\n***Significance***\n\n**Making use of path gradients in order to regularize for the known unnormalized density of training data has the potential to greatly reduce compute over classical methods, so this chain of work is relevant to the machine learning + natural sciences community. Allowing the forward KL to make use of the unnormalized density is attractive, as the forward KL may have better properties than reverse KL (mode covering instead of mode seeking).**\n\nWe thank the reviewer for the positive feedback. We agree that our method is generically applicable to coupling-based flows and is of relevance to natural sciences applications. \n\n### Weaknesses\n\n **1. *The notation of Proposition 3.2 and its proof in the appendix are sloppy and I cannot determine the correctness: what is the inverse of the rectangular matrix  \n $\\partial f_{\\theta}(x_{l}^{trans}, x_{l}^{cond})/\\partial x_{l}^{trans}$\u00a0\n ? Is it a pseudo-inverse, or is it a part of the network Jacobian? I suggest to greatly rewrite this proposition as a Theorem that outlines the general idea of the recursion (that the path gradient can be constructed iteratively by vector-Jacobian products with the inverse of each block, if I am right). Then proceed to derive concrete realizations for coupling blocks and affine couplings in particular if they allow for unique results.***\n\nThe Jacobian matrix  $\\frac{\\partial f_\\theta(x_l^{trans}, x_l^{cond})}{\\partial x_l^{trans}}$ is square and invertible and there is thus no subtlety in defining its inverse. In more detail, we define a coupling block in Eq 6 as \n\n $$x_{l+1}^{trans} = f_{\\theta}\u00a0(x_{l}^{trans}, x_{l}^{cond})$$\n\n $$x_{l+1}^{cond} = x_{l}^{cond}$$\n\nwhere $f_\\theta(\\bullet \\,, x_l^{cond})$ is an invertible function for any choice of $x_l^{cond}$.\nBy bijectivity, the Jacobian matrix from above is not only square but also invertible.\nWe have added a remark after Proposition 3.3 to emphasize this and we have rewritten the proof, so that this becomes more clear.\n\nWe have revised the manuscript implementing your suggestions. \nSpecifically, we have added Proposition 3.2, where we first state the recursion for a general flow, i.e., not necessarily a coupling flow:\n\n$\\frac{\\partial \\log q_{\\theta,  l+1}(x_{l+1})}{\\partial  x_{l+1}} = \\frac{\\partial \\log q_{\\theta, l}(x_l)}{\\partial  x_{l}} \\left( \\frac{\\partial T_{l,  \\theta_l}(x_l)}{\\partial x_l} \\right)^{-1} + \\frac{\\partial \\log |\\det \\frac{\\partial T_{l, \\theta_l}(x_l)}{\\partial x_l}|}{\\partial x_l}\\left( \\frac{\\partial T_{l, \\theta_l}(x_l)}{\\partial x_l} \\right)^{-1}$\n\nAs we also remark in the modified manuscript, the evaluation of this expression however involves inversion of the Jacobian and is therefore prohibitively expensive for generic flow architectures (see answer immediately below for more details)."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700571159043,
+                "cdate": 1700571159043,
+                "tmdate": 1700571159043,
+                "mdate": 1700571159043,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "NoShXSljHj",
+                "forum": "zlkXLb3wpF",
+                "replyto": "mGNJb5IssY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I thank the authors for the significant improvements to the paper. In the following, I come back to the points that I still have questions about. Please consider all other points as adequately addressed by your answers and updated manuscript.\n\n### 3. Forward path gradient\n\nThank you for giving more details on the gradient estimate and deriving the sticking-the-landing property, I think this already makes a compelling argument for the use of path gradients for the forward KL. I am confused by Appendix B.3.2 as its title promises beneficial regularization, but really, the equation only motivates a conjecture. Please only promise what you can hold.\n\n### 5. Experimental validity\n\nThanks for trying more hyper parameters. This verifies that the original hyper parameters are particular beneficial for the path gradient setting and particularly bad for standard gradients (Figure 1 seems to show the worst setup in the ablation!).\n\nThe following concerns remain for me:\n\n1. Standard gradients are only applied to a minimal batch size of 500, but decreasing batch size seems to improve results. Can you add additional runs with batch sizes 50, 100, and 200? The current data looks promising, but I think that additional data points are missing. In particular, this could prevent overfitting.\n2. Figure 1 is not updated and shows a spuriously bad baseline in the light of the new data. This may be a mistake since the authors state that they want to update the figure caption, but the caption still does not explain the figure.\n3. Why is early stopping difficult? Isn't the ESS a metric that can be evaluated any time during training?\n\n### 6. $\\phi^4$ experiments\n\nI think that the choice of this experiment is not optimal given that there are other Boltzmann generator datasets with published ESSs to compare to.\n\nI again thank the authors for their thorough answers. When the above points are addressed, I will reevaluate my score."
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700646401366,
+                "cdate": 1700646401366,
+                "tmdate": 1700646401366,
+                "mdate": 1700646401366,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "SgiaSmOMXF",
+                "forum": "zlkXLb3wpF",
+                "replyto": "7zsjnuKP1O",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_ZWTi"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks to the authors for the updates, the experiments are convincing now. The explanation on the details of the effective sample size has also been very illustrative to me.\n\nI now think that the paper is a valuable contribution to the community and recommend acceptance."
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700674195427,
+                "cdate": 1700674195427,
+                "tmdate": 1700674195427,
+                "mdate": 1700674195427,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "R6DWZzxh4A",
+            "forum": "zlkXLb3wpF",
+            "replyto": "zlkXLb3wpF",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose a technique for improving the efficiency of the calculation of path-gradients for both the forwards and reverse KL loss. \nTypically, the path gradient is lower variance but has a significantly higher computational cost, preventing scalability to large problems. Their method avoids having to evaluate the flow in both the forwards and reverse directions by recursively calculating the gradient during the forward pass using JVPs. \nThe speedup is especially significant for flows that require implicit differentiation for inversion. The main contributions are (1) efficient calculation of the path gradient based losses and (2) path gradient version of the forwards KL loss."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The method obtains significant improvement in speed in practice, especially for the case of flows that require implicit differentiation for inversion. \n- The method obtains improved generalization for the forward KL training relative to \n- Incoporating the energy function of the target in the forward KL training is novel. And having a loss with the \u201csticking the landing\u201d property for the forward KL is useful."
+                },
+                "weaknesses": {
+                    "value": "- The speedup for explicitly invertible flows (which are more common) is relatively minor. \n- The authors emphasise that an advantage of their method relative to those from Vaitl et al. for the estimation of the forward KL is that their method does not require reweighting. However, their method uses samples from the target, while the method from Vaitl et al. uses samples from the flow - hence the two methods are not directly comparable as they are for different situations. I think this is somewhat misleadingly presented in the text (it is presented as an improvement relative to the forward KL objective from Vaitl)."
+                },
+                "questions": {
+                    "value": "- How come the flow trained via the standard maximum likelihood objective achieves such poor performance on the MGM problem (Table 1)?. It seems possible that poor hyper-parameters have been used as training by maximum likelihood should be able to obtain reasonable results.\n\n- In the case of forwards KL with flows that require implicit differentiation for inversion, is it not more efficient to set the forwards direction of the flow to map from the target to the flow\u2019s base (rather than base to target), such that implicit differentiation is required for sampling, but not density evaluation)?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2506/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698740228858,
+            "cdate": 1698740228858,
+            "tmdate": 1700667524188,
+            "mdate": 1700667524188,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "M2ho1sVIsT",
+                "forum": "zlkXLb3wpF",
+                "replyto": "R6DWZzxh4A",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "### Strengths\n\n- **The method obtains significant improvement in speed in practice, especially for the case of flows that require implicit differentiation for inversion.**\n- **The method obtains improved generalization for the forward KL training relative to**\n- **Incoporating the energy function of the target in the forward KL training is novel. And having a loss with the \u201csticking the landing\u201d property for the forward KL is useful.**\n\nWe thank the reviewer for recognizing these strengths. We fully agree that regularization of maximum likelihood training with the ground-truth energy function is an important contribution of our manuscript. We also appreciate that the reviewer rightly pointed out the significance of path gradients for implicitly invertible normalizing flows in the context of Boltzmann generators. \n\n### Weaknesses\n\n**The speedup for explicitly invertible flows (which are more common) is relatively minor.**\n\nOur estimators for explicitly invertible flows have about 60 percent the runtime of the previous state-of-the-art. Thus the speed-up is significant. We however agree that proposing path gradient estimators for implicitly invertible normalizing flows is probably the more important contribution of our manuscript since many state-of-the-art architectures in the Boltzmann generator context are of this form. Particular examples are Smooth Flows [1] for Quantum Chemistry as well as the gauge invariant coupling flows [2-4]. To the best of our knowledge, we are the first to propose fast path gradient estimators for this model class of high practical relevance. A further important contribution of our manuscript is that we provide the first path-gradient estimators for sample-based training (see discussion below).\n\n[1] Smooth Normalizing Flows, Jonas Koehler et al, NeurIPS 2021, [https://arxiv.org/abs/2110.0035](https://arxiv.org/abs/2110.00351)\n\n[2] Equivariant Flow-Based Sampling for Lattice Gauge Theory, Kanwar et al, Physics Review Letters 2020, [https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.121601](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.121601)\n\n[3] Sampling using SU(N) gauge equivariant flows, Boyda et al, Physical Review D, [https://journals.aps.org/prd/abstract/10.1103/PhysRevD.103.074504](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.103.074504)\n\n[4] Flow-based sampling in the lattice Schwinger model at criticality, Albergo et al, 2022, Physical Review D [https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.014514](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.014514)\n\n**The authors emphasise that an advantage of their method relative to those from Vaitl et al. for the estimation of the forward KL is that their method does not require reweighting. However, their method uses samples from the target, while the method from Vaitl et al. uses samples from the flow - hence the two methods are not directly comparable as they are for different situations. I think this is somewhat misleadingly presented in the text (it is presented as an improvement relative to the forward KL objective from Vaitl).**\n\nWe agree that this is an important difference between our method and the one proposed by Vaitl et al. We have revised the manuscript to make this clearer.\nWe stress however that their reweighting method comes with an important downside: it fails as the system size grows because the probability mass of the target density becomes increasingly concentrated, see for example Figure 4 right in Vaitl et al. As a result, the importance weights suffers from large variance. \nFuthermore, their reweighting-based approach does not allow to incorporate samples from MD or MCMC into the training. This is unfortunate as Boltzmann generators are often trained using such samples. We discussed extensively with the authors of Vaitl et al. and they agree with this assesment.\nEven if the bulk of the training is energy-based, samples are essential as a pretraining setp because the self-sampling nature of the energy-based training will fail to find any modes when the flow is randomly initialized and the target distribution is high-dimensional. \nOnly our approach allows for path-gradients of sample-based maximum likelihood training. It is therefore a substantial improvement upon the method of Vaitl et al. and of great interest to the Boltzmann generator community."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700570997313,
+                "cdate": 1700570997313,
+                "tmdate": 1700570997313,
+                "mdate": 1700570997313,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "XmWKXTwdWw",
+                "forum": "zlkXLb3wpF",
+                "replyto": "tjwS80IRa9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for providing the further experiments. \n\nI think reviewer ZWTi correctly pointed out that the paper's original hyper-parameters on the MGM problem were chosen to accentuate the authors method above the baseline. I think this is quite a big red flag. \n\nWith a smaller batch size and network size indeed the proposed method is no longer better than the alternative. \nAs the MGM problem is relatively simple, a batch size of 500 and network width of 100 does not seem to be particularly small. It seems like the baseline forward KL method may do better with an even lower batch size. \n\nI believe that in Figure 1, if a better batch size/early stopping were used for the forward KL baseline that the difference between the curves would be much less dramatic? \n\nDue to concerns with the accuracy of the presentation and fairness of the experiments I am downgrading my score. Overall, I feel that this paper has significant contributions and would be worth acceptance if the experiments/presentation were more balanced."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700581062756,
+                "cdate": 1700581062756,
+                "tmdate": 1700581062756,
+                "mdate": 1700581062756,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "P8EBr5Nzzl",
+                "forum": "zlkXLb3wpF",
+                "replyto": "moEO0M24Iw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_UvVP"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for providing these further experiments - indeed these do ease my concerns over the validity of the results and I have increased my score. Additionally, I am interested as to whether the authors will be making their code publicly available upon publication?"
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700667469949,
+                "cdate": 1700667469949,
+                "tmdate": 1700667469949,
+                "mdate": 1700667469949,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "3pNuEvd8Ey",
+            "forum": "zlkXLb3wpF",
+            "replyto": "zlkXLb3wpF",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_vn2u"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_vn2u"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper considers the problem of learning a distribution $p$ given an oracle\nfor log probabilities plus a constant (i.e., $\\log p(x) + c$ at sample $x$). It\nproposes a method for estimating the gradients of forward and reverse KL\ndivergence that dispenses with a term known to have zero expectation value, thus\nallowing lower variance estimators of the gradient, with less computational\ncomplexity than prior work. In particular, this method deployed beyond previous\nresults for continuous flows to include coupling flows."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper technically precise and, to my knowledge, presents valuable original\nwork with immediate applications. The experiments were generally informative.\nIts major contribution is reducing the computational complexity for calculating\npath gradients of both forward and reverse KL when $\\log p(x) + c$ is queriable.\n\nThe theoretical results appear sound after some inspection.\n\nI believe the overall contribution is valuable enough to share with the broader\nICLR community, though I was surprised that the proposed \"fast\" gradient\nestimator was not already established. Perhaps like many key results, it seems\nobvious in hindsight. The suggestion that removal of the $\\frac{\\partial}{\\partial \\theta} \\log q$\nterm from the gradient estimate makes learning empirically robust to overfitting\nis quite interesting and provocative, but unexplored in detail."
+                },
+                "weaknesses": {
+                    "value": "I had some difficulty reading this work, despite some prior exposure to the\nsubject matter. It took me several passes to make sense of what the key\ncontribution was, and I wished for additional clarity.  The key idea behind\n\"path gradients\" (dropping a term that has zero expectation value) from the\nempirical estimation of the gradient is easy enough to understand, but took some\ntime to distill from the intro [1].\n\nRegarding the experiments, at least one sentence introducing effective sample\nsize would also have been appreciated.\n\n[1] It took me far too long to realize that the expectation value in Equation\n(10) was for $x_0 \\sim q_0$, not $x \\sim q_{\\theta}$. This might have been\nmore clear if different symbols were used for inputs $x_0 \\to x$ and outputs\n$x \\to y$ of the transformation, since layer indexing was only used in the\ncontext of coupling flows."
+                },
+                "questions": {
+                    "value": "No questions."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2506/Reviewer_vn2u"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2506/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698778069930,
+            "cdate": 1698778069930,
+            "tmdate": 1699636186957,
+            "mdate": 1699636186957,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "AvV656aOul",
+                "forum": "zlkXLb3wpF",
+                "replyto": "3pNuEvd8Ey",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "### Strengths\n\n**The paper technically precise and, to my knowledge, presents valuable original work with immediate applications. The experiments were generally informative. Its major contribution is reducing the computational complexity for calculating path gradients of both forward and reverse KL when\u00a0log\u2061p(x)+c\u00a0is queriable.**\n\n**The theoretical results appear sound after some inspection.**\n\n**I believe the overall contribution is valuable enough to share with the broader ICLR community, though I was surprised that the proposed \"fast\" gradient estimator was not already established. Perhaps like many key results, it seems obvious in hindsight. The suggestion that removal of the $\\frac{\\partial}{\\partial \\theta}  log(\u2061 q )$\u00a0term from the gradient estimate makes learning empirically robust to overfitting is quite interesting and provocative, but unexplored in detail.**\n\nWe thank the reviewer for the positive feedback. We agree that path gradients lead to more robust training for normalizing flows in the context of tractable ground-truth energy function $\\log \u2061p(x)+c$. \n\n### Weaknesses\n\n**I had some difficulty reading this work, despite some prior exposure to the subject matter. It took me several passes to make sense of what the key contribution was, and I wished for additional clarity. The key idea behind \"path gradients\" (dropping a term that has zero expectation value) from the empirical estimation of the gradient is easy enough to understand, but took some time to distill from the intro [1].**\n\nWe have rephrased the introduction to make this point and our key contributions clearer. \n\n**Regarding the experiments, at least one sentence introducing effective sample size would also have been appreciated.**\n\nWe have expanded the discussion of the Effective Sampling Size in appendix E.\n\n**It took me far too long to realize that the expectation value in Equation (10) was for $x_0 \\sim q_0$, not $x \\sim q_\\theta$ This might have been more clear if different symbols were used for inputs**\n\n**$x_0 \\to x$ and outputs $x \\to y$ of the transformation, since layer indexing was only used in the context of coupling flows.**\n\nWe will update the draft following your suggestions for the camera-ready version. We however prefer to use $z=x_0$ as it is more standard notation."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700571497054,
+                "cdate": 1700571497054,
+                "tmdate": 1700571497054,
+                "mdate": 1700571497054,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "S0GjQTr3qO",
+            "forum": "zlkXLb3wpF",
+            "replyto": "zlkXLb3wpF",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_yXNA"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2506/Reviewer_yXNA"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work deals with improving the pathwise gradient\nestimator in the context of variational inference\nusing normalizing flow based models (i.e., they\nwant a fast method for computing the \"sticking the landing\"\nestimator by Roeder).\nIn particular, they are looking at deriving pathwise gradients\nfor the log probability term of the normalizing flow.\nComputing this efficiently is non-trivial due to the\nmodification to the probability caused by a change of coordinates\nthat requires computing the determinant of the Jacobian.\n\nThey derive a faster method for computing the pathwise gradient in\nthis setting for coupling flows (the most widely used normalizing\nflow). The improvement in computational speed ranges between 1.3 times\nto 8 times (takes 1.4 - 2.3 times the standard estimator that has a\nhigher variance, so doesn't work as well). The improvement is\nespecially large for implicitly invertible coupling flows, but more\nmodest for explicitly invertible coupling flows.\n\nTheir formulation allows computing the pathwise gradient for\nboth the forward and reverse KL, allowing to also perform\nmaximum likelihood training.\n\nExperiments were performed on a multimodal Gaussian distribution as\nwell as physics settings: U(1) gauge theory and $\\phi^4$ lattice\nmodel."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "+Fast pathwise gradients are certainly necessary for normalizing flows,\nand the current work provides this with a large improvement over the\nprior work in terms of computational speed.\n\n+The method improves in both walltime and efficiency.\n\n+The method allows both forward and reverse KL training."
+                },
+                "weaknesses": {
+                    "value": "-The literature review is a bit misleading, as pathwise\ngradients have been around for a long time, e.g., see [L'Ecuyer,\nP. (1991). An overview of derivative estimation] where it is\nreferred to as \"infinitesimal perturbation analysis\". Moreover,\nreparameterization gradients are a type of pathwise gradient, and\nthere are other works discussing it, e.g., [Jankowiak & Obermeyer, 2018]\nor [Parmas & Sugiyama, 2021]. The current work is mainly referring\nto pathwise gradients in the context of normalizing flows and\nvariational modeling, but the broader picture of pathwise gradients\nshould be briefly mentioned, and probably the terminology should\nbe clarified because the current paper refers to \"pathwise\" gradients\nas the narrow application of it to normalizing flows, whereas there\nare many other estimators that have been around for decades that are\nalso referred to as pathwise estimators.\n\n-The experiments are a bit toy, or at least their significance\nwas not explained. \n\nJankowiak, M., & Obermeyer, F. (2018, July). Pathwise derivatives\nbeyond the reparameterization trick. In International conference on\nmachine learning (pp. 2235-2244). PMLR.\n\nParmas, P., & Sugiyama, M. (2021, March). A unified view of likelihood\nratio and reparameterization gradients. In International Conference on\nArtificial Intelligence and Statistics (pp. 4078-4086). PMLR."
+                },
+                "questions": {
+                    "value": "I have a naive question about computing the pathwise gradient of the\nreverse KL. In equation (2), it seems to me that we could rewrite the\nequation by using the Jacobian of the forward transform based on the\ninverse function theorem, so that the $+\\log |\\textup{det} ~ dT^{-1}/dx|$ term\nbecomes $- \\log |\\textup{det}~dT/dx_0|$. Then we could compute the quantity and\nuse backprop to get the pathwise gradient. Am I misunderstanding, or\nwhy would this not work? Is the computation of the Jacobian too\ncostly?\n\n\"Path gradients have the appealing property that they are unbiased and\nhave lower variance compared to standard estimators, thereby promising\naccelerated convergence (Roeder et al., 2017; Agrawal et al., 2020;\nVaitl et al., 2022a;b).\"  -> Other estimators are also unbiased. The\nsentence makes it seem like they aren't. Also, the \"have lower\nvariance\" is not always true. I suggest revising to make the sentence\ncorrect, e.g., making it \"tend to have lower variance\"."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2506/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699059394482,
+            "cdate": 1699059394482,
+            "tmdate": 1699636186875,
+            "mdate": 1699636186875,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "NlcmXcAmJQ",
+                "forum": "zlkXLb3wpF",
+                "replyto": "S0GjQTr3qO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "### Strengths\n\n\n- **Fast pathwise gradients are certainly necessary for normalizing flows, and the current work provides this with a large improvement over the prior work in terms of computational speed.**\n- **The method improves in both walltime and efficiency.**\n- **The method allows both forward and reverse KL training.**\n\nWe thank the reviewer for pointing out these strenghts. We agree that that path gradients are an important tool in successfully training normalizing flows.\n\n### Weaknesses\n\n**The literature review is a bit misleading, as pathwise gradients have been around for a long time, e.g., see [L'Ecuyer, P. (1991)]. An overview of derivative estimation] where it is referred to as \"infinitesimal perturbation analysis\". Moreover, reparameterization gradients are a type of pathwise gradient, and there are other works discussing it, e.g., [Jankowiak & Obermeyer, 2018] or [Parmas & Sugiyama, 2021]. The current work is mainly referring to pathwise gradients in the context of normalizing flows and variational modeling, but the broader picture of pathwise gradients should be briefly mentioned, and probably the terminology should be clarified because the current paper refers to \"pathwise\" gradients as the narrow application of it to normalizing flows, whereas there are many other estimators that have been around for decades that are also referred to as pathwise estimators.**\n\nWe thank the reviewer for pointing this out. We indeed focused narrowly on normalizing flow applications in the literature review. In light of the reviewers comments, we have extended the discussion with the suggested references providing a broader perspective on the field.\n\n**The experiments are a bit toy, or at least their significance was not explained.**\n\nWe politely disagree with this statement. Lattice field theory provides the mathematical framework underlying many parts of modern theoretical physics, in particular, high-energy physics, gravitational physics, condensed matter and statistical physics. Indeed all known fundamental forces of nature can be described by quantum field theory (gravity only in an effective field theory sense). Applications of normalizing flows to lattice field theory is an emerging and highly promising field, see, for example, this recent review ([https://www.nature.com/articles/s42254-023-00616-w](https://www.nature.com/articles/s42254-023-00616-w)). In fact, a significant part of the global supercomputing resources are spent on lattice field theory simulations.\n\nFrom a machine-learning point of view, this problem setting is extremely challenging because of the extremely large symmetry of the target distribution. Specifically, the energy (or, more precisely, action) of many lattice field theories is invariant under local symmetry groups, i.e., the field at each lattice site can be rotated with a separate symmetry operation. As such the size of the symmetry group scales with the number of lattice sites. Without making the model architecture manifestly invariant under this symmetry, the generative model would not be able to learn. Furthermore, lattice field theories have to be extrapolated to the continuum limit. In other words, they have to be considered at a second order phase transition for which it is well known that the correlation length of the system diverges. Therefore, the generative model has to learn long-ranged interactions.\n\nWe also emphasize that our experiments considered state-of-the-art architectures for both $\\phi^4$ and U(1) gauge theory. Thus, our manuscript demonstrates improvements of models that are at the forefront of this exciting and highly dynamic field of research."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700570353168,
+                "cdate": 1700570353168,
+                "tmdate": 1700570353168,
+                "mdate": 1700570353168,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ElUjEKTL4f",
+                "forum": "zlkXLb3wpF",
+                "replyto": "IiE9aNE3II",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_yXNA"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2506/Reviewer_yXNA"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks a lot for the comment and the clarification regarding physical significance.\nI also looked at the discussion with other reviewers, and I remain positive about the paper.\nI think it's a strong paper and should be accepted.\n\nJust one more clarifying question regarding the gradient computation to test my understanding.\nIt seems to me that you do not need the Jacobian in the target-to-base direction (as you claimed), but only the Jacobian-vector product.\nOne could create the computation graph from the target-to-base, then set the output gradients to the gradient w.r.t. $x_0$, and compute the required quantity using backprop. Is there some reason why this is not promising/does it correspond to any of the baselines? Actually, looking at the paper again, this seems to be the method of Vaitl that you have detailed in Section 3. Please correct me if I misunderstood something.\n\nAnyhow, I think this is a strong paper. Thank you for the clarifications."
+                    }
+                },
+                "number": 24,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2506/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700708543019,
+                "cdate": 1700708543019,
+                "tmdate": 1700708543019,
+                "mdate": 1700708543019,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

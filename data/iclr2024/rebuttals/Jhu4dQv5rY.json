@@ -1,0 +1,390 @@
+[
+    {
+        "title": "Contextual Biasing with the Knuth-Morris-Pratt Matching Algorithm"
+    },
+    {
+        "review": {
+            "id": "pOE3XMqTmC",
+            "forum": "Jhu4dQv5rY",
+            "replyto": "Jhu4dQv5rY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_ZLRq"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_ZLRq"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new method for contextual biasing of speech recognition (ASR) at decode time. The usual practice is to build a WFST for the biasing phrases and use this in a kind of shallow fusion strategy during decoding. The authors posit that such a method is inefficient on TPUs, and hence propose an equivalent string matching technique based on Knuth-Morris-Pratt (KMP) algorithm. They show that this method provides significant improvements in WERs for utterances containing biasing phrases, without causing large degradations when they are not present."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. Contextual biasing in ASR is an important application. As mentioned by the authors (Section 3), biasing can be done at the decoding level or at the model level \u2014 the proposed KMP algorithm operates at the former, showing good WER improvements. It is also shown to be complementary to model-based biasing (using NAM).\n\n2. The authors have discussed the parallelized time and space complexities of the proposed methods wherever applicable.\n\n3. On the Contact-Tag data, the WER is improved from 14.7% to 7.7% (for KMP) and 3.0% (for NAM + KMP), which is quite a large improvement. At the same time, the WER for \u201canti-biasing\u201d only degrades from 1.7% to 2.3% and 2.5%, respectively."
+                },
+                "weaknesses": {
+                    "value": "### Motivations misaligned with application and results\n\nThe main objective of the paper is to build a contextual biasing system that is efficient to decode on large-scale parallelizable infrastructure such as TPUs. However, in the introduction and the experiments, the application of the method is for recognizing contact names for voice assistants. In my understanding, such voice assistants are commonly placed on the edge device, which does not usually have built-in TPUs. As such, it is hard to see what would be the impact of the proposed method from a decoding efficiency perspective.\n\nEven if we ignore the above, it is hard to buy into the \u201cefficiency\u201d argument, since the authors do not provide any RTF results to back their claims. \u201cMemory footprint\u201d and \u201cefficiency on TPUs\u201d are essential motivating factors behind the proposed method, but the evaluation is only conducted for quality (WERs). In fact, it appears that the stated TPU-based vectorization is essentially just parallelization of a loop over all biasing phrases \u2014 it is hard to see why such parallelization would be TPU-specific.\n\nThroughout the paper, the authors have mentioned that FST-based biasing poses challenges for efficient TPU-based implementation. Recently, FSTs have been efficiently represented and manipulated on GPUs using specialized kernels (see the GTN and k2 projects). In fact, the Aho-Korasick algorithm has recently been used for contextual biasing on GPUs and released in the \u201cicefall\u201d library. Why are these methods not applicable for TPUs? \n\n\n### Problems with evaluation design\n\nI am concerned about the lack of public benchmarks or baselines in the experiments. The authors use in-house voice-assistant data from a previous work (which is not publicly available AFAIK) to conduct their evaluations, and do not release code for their method. This would make it impossible to replicate or verify the reported improvements. There are also no comparisons with any other decoding-based contextual biasing methods, although the authors seem to be quite aware of their existence (Section 3). Granted, the proposed KMP algorithm should be equivalent to the WFST-based shallow biasing approach proposed earlier, but it would be good to show this as a sanity check. It would also be useful to show how the memory requirement of the WFST-based implementation versus KMP change with increase in the size of the biasing list; the latter is absolutely essential, since this is the main motivation for using this algorithm.\n\n### Presentation\n\nThe description of the proposed method is very dense, and may benefit from some abstraction. Contextual biasing is formulated into two stages: (i) pattern matching, and (ii) boosting matched patterns. The authors should consider presenting the two parts independently (instead of the current presentation where (ii) builds on (i)). This would also be useful to think about other algorithms for (i) and (ii) without disturbing the other.\n\nSecond, the authors rely too much on Algorithm blocks to present their method (there are 5 in total including the appendices), which breaks the flow of reading and makes the paper hard to parse. It may be beneficial to release open-source code for the details of the algorithm and use more of the space to discuss the algorithms themselves, their connections with other contextual biasing methods, and their advantages/limitations."
+                },
+                "questions": {
+                    "value": "1. In Section 1 (under \u201cOur contributions\u201d), the authors state that their method \u201ccan be potentially useful for other sequence transduction tasks.\u201d Can the authors describe what other tasks may benefit from sequence matching?\n\n2. There are several linear-time algorithms for pattern matching such as Rabin-Karp, Boyer-Moore, etc. It would be useful to include a discussion about why KMP is most appropriate for the task."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6488/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698672810498,
+            "cdate": 1698672810498,
+            "tmdate": 1699636727027,
+            "mdate": 1699636727027,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "MIJ4xOJo5x",
+                "forum": "Jhu4dQv5rY",
+                "replyto": "pOE3XMqTmC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "We will incorporate your suggestions on paper presentation in a later version, especially the connection with other contextual biasing methods, and a discussion on the currently available specialized libraries.\n\nYour other questions have been addressed in \"Rebuttal to common concerns\".\n\n## **Practicality of biasing on TPU/GPU (or in general high-performance parallel computing devices)**\n\nOn-TPU/GPU biasing is practical for voice assistants, because server ASR models can be run on them to enjoy high throughput via batching. And while not all on-device ASR models have access to TPU/GPUs, modern devices like pixel phones are equipped with high performance chips, and such devices will become increasingly popular and available as their cost goes down.\n\n\n## **Other pattern matching algorithms**\n\nThank you for pointing out the other pattern matching algorithms (Rabin-Karp and Boyer-Moore). KMP is a classical algorithm covered in standard textbooks, and has the best worst-case complexity (for a single search pattern). It is possible that other methods offer better trade-offs in certain scenarios and may be investigated in future work."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6488/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700530094247,
+                "cdate": 1700530094247,
+                "tmdate": 1700530250606,
+                "mdate": 1700530250606,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "COZmVtHasA",
+                "forum": "Jhu4dQv5rY",
+                "replyto": "MIJ4xOJo5x",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6488/Reviewer_ZLRq"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6488/Reviewer_ZLRq"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for your reply. I have read this and the common response, and submitted my recommendation to the area chair."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6488/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700687076916,
+                "cdate": 1700687076916,
+                "tmdate": 1700687076916,
+                "mdate": 1700687076916,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "dtwrGJ7GRE",
+            "forum": "Jhu4dQv5rY",
+            "replyto": "Jhu4dQv5rY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_8igc"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_8igc"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper is about contextual biasing for automatic speech recognition (ASR).\n\nContextual biasing means: Consider Google Home or Alexa, where it is common to play songs, or maybe call someone from the contact list. So when the user speaks, the probability for such words of recently played songs or from person names from the contact list are higher than for other users, and contextual biasing will use that knowledge and boost the scores in the beam search recognition for such words or phrases.\n\nContextual biasing is not new, and many previous solutions to this exist. In this paper, a new method is proposed, to improve the beam search specifically. The ASR model is not changed. More specifically, the authors propose to use the Knuth-Morris-Pratt algorithm as an efficient way to find biasing phrases in the hypotheses and then boost them.\n\nThe Knuth-Morris-Pratt (KMP) algorithm is an algorithm to search for a substring in a given string in an efficient manner. The naive implementation would take O(n * m), n being the long string length, m being the substring length, while KMP can do it in O(n + m).\n\nThis provides an alternative formulation to the weighted finite state transducer framework, which conceptually does the same. However, they also use an efficient TPU-friendly implementation of this specific algorithm.\n\nThe experiments show that the KMP method on its own performs slightly worse than another model-based biasing method, namely the neural associative memory (NAM). However, KMP and NAM combined give improvements over NAM alone."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "They show how to apply the KMP algorithm inside beam search to boost the biasing phrases.\n\nThe experiments show that the proposed KMP-based algorithm gives nice improvements when used together with NAM in the setting biasing."
+                },
+                "weaknesses": {
+                    "value": "The topic is very ASR specific. I'm not sure if the broader ICLR community is interested in this, and some conference like Interspeech or ICASSP would be a better fit?\n\nIn principle, the method could be applied for other tasks, for example for machine translation. However, this is not investigated here. I think this would make it a better fit for ICLR.\n\nIt is explained that the proposed method is conceptually similar (or the same?) as WFST-based approaches. However, in the experiments, it is not compared.\n\nThe argument is about KPM being TPU friendly. However, if WFST is conceptually equivalent, how can it be different? It's just a matter of implementation then. This is either stated confusingly, that it is in fact different. Or it is stated confusingly that they are the same, and you can also use the WFST formulation to describe exactly the same algorithm. In any case, it's a bit confusing. So then using the WFST-based formulation, you could just use the equivalent algorithm, and it would also be TPU friendly. In any case, this should be clarified.\n\nThe argument about being TPU friendly again: Actual speed performance is not really compared. How much worse does the WFST-based approach perform?\n\nCode is not released?"
+                },
+                "questions": {
+                    "value": "Abstract:\n\n> Our method simulates the classical approaches often implemented in the weighted finite state transducer (WFST) framework, but avoids the FST lan- guage altogether, ...\n\nI'm not sure what this means. Does this mean, it is actually equivalent to what is being done with the WFST framework, and only a reformulation/reinterpretation? So the novelty here is no new method, but just a new interpretation of the existing algorithm? Or is this really different? Why is it relevant to avoid the FST language? What is the actual difference when you don't avoid the FST language, i.e. when you look away from just rephrasing things.\n\nAlso, why would you want to avoid the FST language? The FST language is very simple, while the presented algorithms actually look more complicated? Maybe it would actually be helpful to not avoid the FST language, but to present the proposed method within the FST language, so that it is easier to see the actual differences, and also easier to understand.\n\n\nSection 3 (but same thing also said in intro and elsewhere):\n\n> While they [FSTs] can be represented as graph with sparse adjacency matrices, in general FSTs are not efficient to use on TPUs which are optimized for dense operations. Our work is one step towards incorporating FST functionalities into a TPU-friendly implementation.\n\nI'm not sure if this is really about FST or not. Couldn't you reformulate the presented work also as an FST, and then this statement would be false?\n\n\nI'm not sure if the paper is a bit too ASR specific? What about applying this also to machine translation or other tasks?\n\n\nRuntime differences between OTF Rescoring, Fusion F = 10, Fusion F = 50, Fusion F = 4096? And the same also with NAM?\n\n\nIs the code released? If not, this would be a major weakness of the work.\n\n\nWith increased B (number of biasing phrases), the result gets worse. First to clarify: The test dataset is designed such that the word from reference transcription is always in the biasing phrases? Or otherwise, why would it get worse with increased B? And then: in practice, how big would B be? And how to update the set of biasing phrases? Wouldn't a test make more sense which is more close to how this is actually used in production?\n\nOn TPU, what is actually parallelized? I assume, in Algorithm 2, the loop over B is parallelized? Ok, yes, you write that in the text (end of Section 2.2). It would be nice to specifically mark this in the algorithms, e.g. write \"vectorized-for\" or so. E.g. also in Algorithm 3, the loop over the hypotheses and also over the k=1...F would also not really be a loop but run in parallel (I assume).\n\nComparison to WFST-based biasing?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "None"
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6488/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698768231177,
+            "cdate": 1698768231177,
+            "tmdate": 1699636726907,
+            "mdate": 1699636726907,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "gsOSYXXjuQ",
+                "forum": "Jhu4dQv5rY",
+                "replyto": "dtwrGJ7GRE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for constructive feedback. Your concerns are shared by other reviewers and addressed in \"Rebuttal to common concerns\"."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6488/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700530195639,
+                "cdate": 1700530195639,
+                "tmdate": 1700530195639,
+                "mdate": 1700530195639,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "cSpqKv1J4g",
+                "forum": "Jhu4dQv5rY",
+                "replyto": "dtwrGJ7GRE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Number of biasing phrases"
+                    },
+                    "comment": {
+                        "value": "(Just realized that we have not addressed your question on B.)\n\nThe test dataset is designed such that the word from reference transcription is in the biasing phrases, except for *anti-biasing* where all provided biasing phrases are distractors. In general, we want to improve WER when ground truth is provided, and not to degrade WER when it is not. The larger the B, the worse the WER is because there are more possibilities to bias towards, and therefore more chances to confuse the ASR model.\n\nThe actual number of B depends on the specific application scenario. In the case of on-device call contact biasing, the number of biasing phrases is the number of contacts in phone book, which is typically few hundreds (as in our Contact-Tag test set). In the case of biasing for geographical locations, the number of biasing phrases could be quite a few thousands or more."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6488/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700689124329,
+                "cdate": 1700689124329,
+                "tmdate": 1700689156544,
+                "mdate": 1700689156544,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "YaAk7tuT0Q",
+            "forum": "Jhu4dQv5rY",
+            "replyto": "Jhu4dQv5rY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_kxsf"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6488/Reviewer_kxsf"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper addresses the problem of contextual biasing for speech recognition. The paper proposes to use very popular and efficient KMP algorithm used for pattern searching to bias the ASR decodes with the contextual terms. \n\nExperimental results on the enterprise model and real/TTS audio show usefulness of this approach."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper clearly demonstrates the applicability of KMP's efficiency on the biasing task.  \n\nThe paper reads well and is easy to follow."
+                },
+                "weaknesses": {
+                    "value": "1. The paper lacks adequate references to the related work in the area of the contextual biasing for ASR Models. I have added some relevant citations. \n\n2. Lack of comparison on publicly available data and models limiting reproducibility. Le at al 2021a [2] provides an open protocol for evaluating on librispeech corpus (https://github.com/facebookresearch/fbai-speech/tree/main/is21_deep_bias). \n\n3. Lack of comparison with baselines, how well does this model compare against a simple shallow fusion with an external n-gram trained on the dictionary items for the cases with prefixes? Comparison against the Neural baselines such as NAM and other relevant works from the literature are missing.\n\nReferences:\n\n[1] Gourav et al. 2021. Personalization strategies for end-to-end speech recognition systems. ICASSP 2021\n\n[2] Le et al. 2021a. Contextualized streaming end-to-end speech recognition with trie-based deep biasing and shallow fusion.\n\n[3] Le et al. 2021b. Deep shallow fusion for rnn-t personalization. IEEE Spoken Language Technology Workshop (SLT),\n\n[4] Guangzhi Sun, Chao Zhang, and Philip C Woodland. 2021. Tree-constrained pointer generator for end-to-end contextual speech recognition.\n\n[5] Huber et al. 2021. Instant one-shot word learning for context-specific neural sequence-to-sequence speech recognition.\n\n[6] Guangzhi Sun, Chao Zhang, and Phil Woodland. 2023a. Graph neural networks for contextual asr with the tree-constrained pointer generator.\n\n[7] Naowarat, Burin, et al. 2023, Effective training of attention-based contextual biasing adapters with synthetic audio for personalised ASR."
+                },
+                "questions": {
+                    "value": "1. In this work, the bonus score is added each time the match happens, how do you address the scenario where prefix has matched but suffix won't match and the hypothesis are still carrying extra weight provided during the biasing?\nE.g, if the dictionary item is TWIN and the actual audio has TWENTE, but the hypothesis is preferring TWIN (and/or its continuations) due to additional biasing. \n\n2. What are the RTF scores for this method?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6488/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6488/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6488/Reviewer_kxsf"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6488/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698816730146,
+            "cdate": 1698816730146,
+            "tmdate": 1699694929353,
+            "mdate": 1699694929353,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "16HyvHOfVe",
+                "forum": "Jhu4dQv5rY",
+                "replyto": "YaAk7tuT0Q",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6488/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for pointing out the references and we will incorporate them into a later version. Your other questions have been addressed in \"Rebuttal to common concerns\".\n\n## **Regarding your question 1**\n\nAssume the dictionary contains only one item \u201ctwin\u201d. And assume that the model uses beam_size=1, and has already output \u201c_tw\u201d, and thus a bonus for \u201c_tw\u201d was added to the hyp.\n\nIn the next step, the ASR model considers two possible expansions \u201cen\u201d and \u201cin\u201d.\n\n- \u201cin\u201d leads to longer matching of the dictionary item \u201ctwin\u201d, so the proposal \u201cin\u201d receives a bonus.\n\n- \u201cen\u201d leads to non-matching of any dictionary item, and therefore it also has to cancel the bonus received by \u201c_tw\u201d. The canceling part is implied by our potential function, dependent on the longest partial matching length (which is 0 after accepting \"en\"), and the bonus being the difference between potentials before and after accepting the token; see Section 2.2.\n\nTherefore it boils down to which is higher, score(\u201cin\u201d) + bonus(\u201cin\u201d) versus score(\u201cen\u201d) - bonus(\u201c_tw\u201d), and the token with higher final score will be accepted and the other is pruned. \n\nIt may be the case that the ASR score for \u201cen\u201d is much higher than that of \u201cin\u201d, and \u201ctwen\u201d becomes the top hypothesis, and search continues with a total biasing bonus of 0 (due to the canceling of bonus)."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6488/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700529985283,
+                "cdate": 1700529985283,
+                "tmdate": 1700530937244,
+                "mdate": 1700530937244,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

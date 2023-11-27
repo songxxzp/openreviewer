@@ -1,0 +1,280 @@
+[
+    {
+        "id": "1GqVHv9i19",
+        "forum": "kC5i5X9xrn",
+        "replyto": "kC5i5X9xrn",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_xpDg"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_xpDg"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce LightSeq, a distributed training approach for long-context LLMs.\nLightSeq uses sequence parallelism over multiple GPUs, i.e. splitting query, key and value along the sequence dimension. Their approach DistAttn then computes the attention matrix chunk wise. \nTheir approach improve performance for large context lengths compared to parallelization over attention heads such as Megatron-LM as the degree of parallelization is not limited by the number of heads. \nBy overlapping communication and computation, improving load-balancing for unidirectional models, and adjusting checkpointing for flash-attention, LightSeq achieves a speedup between 0.77 and 2.01 over Megatron-LM when training Llama-7B based models."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The research topic is of importance and the presented approach appears useful. Parallelization is essential in training LLMs and parallelization over the sequence length can be important with the ever-increasing context lengths, as is also demonstrated by the experiments in this paper.\n- The paper is well written and easy to follow. It clearly communicates the motivation and contributions and gives an easy-to-understand explanation of the introduced approaches.\n- The approach seems overall well-grounded and optimized, employing several techniques to increase performance and reduce idle time.\n- The experimental results demonstrate a significant speedup over Megatron-LM, a widely used parallelization strategy for transformer training.\n- The authors provide source-code, thereby supporting reproducibility of their approach"
+            },
+            "weaknesses": {
+                "value": "One issue is the assumption of causal learning tasks and thus the limitation of the approach to uni-directional Transformer architectures. The approach does not translate to bi-directional models, such as BERT, where long sequences are becoming a problem just as well. \n\nMy main concern however is the limited experimental evaluation, which focusses solely on comparing to Megatron-LM and only on Llama model variants, even though the authors mention other sequence-parallel approaches . \nFor one giving only the speedup over a single other parallel approach (Table 1) limits the general comparability:\n- For one including the speedup over sequential BP would be helpful to judge how well both of these approaches scale.\n- A comparison to Li et al., which the authors mention, would be highly necessary. The authors state that this approach is not optimized for unidirectional, long-context training, so the benefit of LightSeq over this approach for models such as Llama would be valuable.\n- And while the authors argue that pipeline parallelism is limited by its unbalanced memory consumption, it would be good to back this up with experimental results. A comparison to TeraPipe [1], which employs token-level pipelining, would also be interesting.\n\nFurthermore, the evaluated model architectures seem highly tailored to the specific aspects of LightSeq, which again does not demonstrate any generalization.\n- The 33H case seems rather constructed and unlikely in practice (why would you chose such a number specifically?). It is a valid limitation of parallelization over the heads but should not be that big a problem in actual use, reducing the realistic speedup to ~1.5x (which is still substantial). Also, the title of the paragraph does not really fit the content as it never gives any support why one would want to use an arbitrary numbers of heads.\n- In that regard the suggestion of \"scaling\" Megatron by adding dummy heads seems unnecessary, the authors even discuss how inefficient this would be. I don't believe it is necessary to discuss this first \"option\" at all.\n\n\nFurther issues\n- Quite a lot of detail on the algorithmic implementation of DistAttention, e.g. the communication scheme, is lacking. One has to dig through the source code to get a glimps of what is going on\n- In contrast to the other sections, section 4 seems unpolished and is often hard to understand \n- no links between different sections, some Figures are never referred to, inconsistent punctuation when referring to figures and tables. This could all be solved by using a package like cleverref or autoref.\n- the difference between the different models in the model setup is not described clearly enough, GQA should be cited and explained a bit better, the 33H model is only clear from context, and it is not clear how exactly the 16H-2H models are scaled \"properly\"\n- The example analysis comparing MHA and GQA in Section 4.1 is a bit hard to follow and it would probably help to give the actual runtimes and a table or figure.\n- in Section 4.3 when discussing the effect of load balancing, a diagram illustrating the work assigned to each time step would help visualizing the difference between the schedules. It would also help to remind the reader again, that the balanced schedule completes the 36 work units in 5 time steps, thus resulting in a maximum speedup of 7.2, instead of having the reader backtrack to understand where the 7.2 came from.\n- Section 4.4 seems a bit odd, it is titled \"Discussion\" but contains a mix of future work, introducing a very brief comparison to DeepSpeed Ulysses which is never mentioned before or after, and reiterating on the drawbacks of pipeline parallelism without given much new information that had not already been stated in Section 4.2."
+            },
+            "questions": {
+                "value": "- Your approach for DistAttn seems to me very similar to what FlashAttention2 does to parallelise on a single GPU. Can you please elaborate a bit more on the algorithmic differences between the two?\n- LightSeq is especially advantageous when the sequences are long and there are few heads or the number of heads is not well divisible by the number of GPUs. Would it be possible/make sense to use tensor-parallelism (in addition to the sequence-parallelism) in the DistAttn to retain the advantages of Megatron-LM and also scale well in scenarios with shorter sequences and many heads?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698833017418,
+        "cdate": 1698833017418,
+        "tmdate": 1699636048035,
+        "mdate": 1699636048035,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "bMw9e88ja7",
+        "forum": "kC5i5X9xrn",
+        "replyto": "kC5i5X9xrn",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_AsB4"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_AsB4"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work, LIGHTSEQ, proposes a sequence parallelism prototype for long-context transformer\ntraining. Three key elements are introduced: 1) distributed attention with load balancing for causal language\nmodelings, 2) distributed attention with overlapped communication with computation, and 3) a re-materialization-aware checkpointing strategy. This work's experiments on 16 A100s show decent speedup over Megatron-LM on Llama models as well as enabled longer sequences."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "+. Proposed a new loading balancing schedule dedicated to distributed attention by shifting busy workers' q/k/v compute to idle workers.\n\n+. Developed a system optimization of overlapping remote q/k/v with local compute by using two CUDA streams.\n\n+. Improved huggingface's gradient checkpointing by leveraging FlashAttention's recompute feature in backward compute.\n\n+. Has open-source code implementation\n\n+. Evaluation on real clusters"
+            },
+            "weaknesses": {
+                "value": "-. **Overstatement**: \n\n> \"we propose partitioning solely the input tokens (i.e., sequence parallelism)\" \n\nwhy sequence parallelism is proposed in this work, instead of enhanced by this work?\n\n> \"We present a solution that is agnostic to the model architecture\"\n\nwhy sequence parallelism by default is NOT agnostic to model architecture (i.e., like data parallel, just replicate the layer across devices)?\n\n> Figure 4\n\nBy default, FlashAttention uses recompute during backward pass. How does this become a contribution of this work?\n\n> Figure 1 (left)\n\nBy default, using sequence parallelism for the attention layer should be like this: replicate FFN and projection, and communication (k, v) for attention op. why did this scheme become a proposal for this work?\n\n-. **Unclear load-balanced scheduling**: \n\n> Figure 1 (right)\n\nBesides shifting worker 6,7,8's compute on (kv1, kv2, kv3) to worker 1,2,3, can we also shift worker 6,7,8's compute on (kv6, kv7, kv8)?\n\nIs there a way to optimally find the best compute workload to shift?\n\nHow does the DistAttn & load balancing work for attention op with sliding local windows?\n\nHow does the DistAttn & load balancing work for global windows (i.e., each token attends to all tokens)?\n\nHow does the DistAtten & load balancing work for MQA models?\n\n-. **Unclear Evaluation Setup**: \n\n> Figure 3\n\nIs it measured in a distributed setting or on a single GPU?\n\n-. **Intertwined with Other Work**\n\n> LIGHTSEQ + FSDP\n\nFSDP replies a large batch/sequence size to amortize the weight AllGather overhead; how will an enlarged sequence length affect LIGHTSEQ's performance?\n\nDoes this work use FSDP for cross-node and LIGHTSEQ for intra-node communication?\n\nHow about we use only LIGHTSEQ for cross-node and intra-node communication?\n\nCan LIGHTSEQ scale up to more nodes, without leveraging FSDP?\n\n-. **Limited improvement**: \n\nFor sequence length < 8K, LightSEQ is slower than DeepSpeed-Ulysses by up to 0.5x.\n\nIt seems that this work is only evaluated on Llama models.\n\nWhy sequence length at 128K show 1.44x overlapped cased vs 1.x no communication in Figure 5?"
+            },
+            "questions": {
+                "value": "*. See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1216/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1216/Reviewer_AsB4",
+                    "ICLR.cc/2024/Conference/Submission1216/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698915905353,
+        "cdate": 1698915905353,
+        "tmdate": 1700704959234,
+        "mdate": 1700704959234,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "90KXpsebOi",
+        "forum": "kC5i5X9xrn",
+        "replyto": "kC5i5X9xrn",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_ZAxH"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_ZAxH"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a technique, DISTATTN, to speed up training of causal transformer models on clusters of GPUs and embodies them in a framework called LightSeq.  The LightSeq framework, based upon FlashAttention-2, shows $2\\times$ speedup over an updated Megatron-LM (MLSys 2023).    \n\nDISTATTN addresses the load imbalance that occurs when splitting up the input sequence among worker GPUs while training a causal language model.  Naively, splitting up the input sequence across GPUs causes later worker GPUs to perform more computation as they need to attend to more of the input sequence so perform more computations.  The idea in DISTATTN is to have some of the earlier workers perform computations that would normally be performed by later workers.   An additional optimization applied is to shift the point of checkpointing to avoid some recompilations in the backward pass.\n\nAnalytical analysis shows a reduction from $10dN$ to $3dN$ in total communication volume versus Megatron-LM (2023) making the approach a bit more suitable for clusters without high bandwidth (and expensive) interconnects."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The results show a significant reduction in training time.\n\nThe general ideas are clear -- use load balancing and overlap communication and computation. \n\nReducing communication volume should enable model parallel training on cheaper hardware."
+            },
+            "weaknesses": {
+                "value": "The concept of load balancing and overlapping communication and computation in parallel systems is not novel on their own even if the details here might be.  \n\nDetails of the specific load balancing technique could be explained more clearly.\n\nWhile the paper shows longer sequence lengths can be supported there were no accuracy or quality results demonstrating how much improvement the longer sequence length translated to."
+            },
+            "questions": {
+                "value": "For right side of Figure 1, are all circles independent computations?  Otherwise it would be unclear why bubble size is only 4 after balancing.  For the rightmost figure it is unclear which computation have been moved to worker 1-3  for the upper triangle versus before balancing.   Perhaps the color scheme could be used to indicate this.   \n\nI found it unclear the relationship between Figure 1 and 2 unclear.  In Figure 1 it looks like worker 7 should be computing attn(q7,k1v1) in the first timestep, but in Figure 2 in the first timestep what is shown is attn(q7,k7v7).  Similarly, the communication pattern in Figure 2 is a bit unclear.  Is there a simple formula for what attn query/key/value combination is computed on a worker in a given timestep and what values are  communicated from/to a given worker on a given timestep? \n\nOn Page 5 it is mentioned that the evaluation uses variously 2 A100 DGXs and an 2x8xA100 in house platform without infiniband.  However, as both of these have 2x8 GPUs, it is unclear which system the measurements are for in Table 1.   I would expect given the reduction in communication volume that a \"cheaper\" cluster without NVLINK might give decent results and was interested to see results for a comparison vs. DGX, but it seems like they are missing from the paper and supplemental.\n\nWhat is the speedup versus FlashAttention-2?  If I understood correctly for LightSeq you started with the FlashAttention-2 framework, so I would expect to see speedups with respect to that system too.  \n\nThe longer sequence lengths explored in Table 2 and 3 should yield better accuracy / quality on the tasks the networks are applied to, but  there appeared to be no results demonstrating this."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1216/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1216/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1216/Reviewer_ZAxH"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699133880311,
+        "cdate": 1699133880311,
+        "tmdate": 1699636047882,
+        "mdate": 1699636047882,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0rD5pOYqHD",
+        "forum": "kC5i5X9xrn",
+        "replyto": "kC5i5X9xrn",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_Fg9E"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1216/Reviewer_Fg9E"
+        ],
+        "content": {
+            "summary": {
+                "value": "LightSeq introduces a novel approach for training large language models (LLMs) with extended context lengths, overcoming the limitations of previous model-parallel systems like Megatron-LM. Unlike Megatron-LM, which is limited by the number of attention heads and incurs high communication volumes, LightSeq efficiently partitions over the sequence dimension. This makes it adaptable to various model architectures and significantly reduces communication needs by up to 4.7\u00d7, while also overlapping communication with computation. In comprehensive experiments, including on the Llama-7B model, LightSeq demonstrates up to 2.01\u00d7 speedup in end-to-end training and supports up to 8\u00d7 longer sequence lengths for models with fewer heads compared to Megatron-LM."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* Efficient training of long-sequence models is an important goal.\n* Demonstrates runtime speedup over Megatron-LM for long sequence lengths."
+            },
+            "weaknesses": {
+                "value": "* Leveraging sequence-level parallelism in transformer training (Section 3.1) is not novel (e.g., https://arxiv.org/abs/2105.13120).\n* Overlapping computation and communication (Section 3.2) appears to be a fairly standard technique and may not be as effective on more recent GPUs like the H100, which have significantly higher compute capabilities than the A100, not to mention optimizations such as transformer engine, tensor memory accelerator, etc.\n* The configurations for parallelism are questionable."
+            },
+            "questions": {
+                "value": "Thank you for submitting to ICLR 2024. Leveraging sequence-level parallelism is an interesting direction to scale both sequence length and training efficiency. However, I have the following questions:\n\n* This is not the first work to leverage sequence-level parallelism for training transformer models. For example, how does the proposed work compare, both qualitatively and quantitatively, to [this 4D sequence parallelism work](https://arxiv.org/abs/2105.13120)?\n* The parallelism configurations are unclear. What is the batch size used for training? If the batch size is high enough, wouldn't a combination of tensor/data/pipeline parallelism provide sufficient parallelism to achieve high utilization of GPUs, even without utilizing sequence parallelism?\n* It is somewhat odd to take results from different clusters for different experiments (e.g., the results in Table 2 were drawn from a small memory configuration without InfiniBand). Is there a convincing reason for this?\n* In Table 3, the authors used a batch size of 1, which does not seem to be a reasonable configuration for training. Can you elaborate on this choice?\n* Regarding the explanation of pipeline parallelism, the authors attribute the low performance to \u201chigh memory pressure in the first stage.\u201d Couldn't this be due to poor partitioning between stages?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699627999689,
+        "cdate": 1699627999689,
+        "tmdate": 1699636047805,
+        "mdate": 1699636047805,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,271 @@
+[
+    {
+        "id": "G60KV4BZMF",
+        "forum": "EPfGHb9Y68",
+        "replyto": "EPfGHb9Y68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_R6pv"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_R6pv"
+        ],
+        "content": {
+            "summary": {
+                "value": "The submission presents a new method for continual offline RL (CORL) that relies on three components: a Q-function to assess the quality of each action, with multiple heads to account for the multiple tasks the agent faces; a diffusion behavior model, to both generate actions to execute in the environment and generate replay data for past tasks to avoid forgetting; and a state diffusion model to generate states to match the distribution observed in the dataset for each past task, again to avoid forgetting. In a strict setting where the agent is not allowed to observe data for any previous task, this enables continual training without forgetting. The authors evaluate their method on four sequences of 4 MuJoCo tasks each, with varying dynamics."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "######## Strengths ########\n\n- The use of diffusion models both for generating behaviors and replay data is promising\n- The overall algorithm carefully leverages the three components above to continually learn new tasks\n- The problem of CORL itself is understudied, so it's good to see contributions in this area"
+            },
+            "weaknesses": {
+                "value": "######## Weaknesses ########\n- Section 2 (preliminaries) is largely unclear and not stand-alone\n- Section 3 (approach) is also not sufficiently clear or precise, and seems to introduce both math and text that are not related to the submission\n- The experimental evaluation is not sufficient to assess the benefits of the proposed method\n \n######## Recommendation ########\n\nUnfortunately, I recommend that this manuscript is not accepted in its current form. The main concern I have is the limited experimental evaluation. The authors propose an approach that is a combination of existing ideas (which is fine!), but unfortunately there is not sufficient evidence to support the choice of this combination. Moreover, the draft (especially sections 2 and 3) would need to undergo major revisions to make the text clear and (most importantly) precise.\n\n######## Arguments ########\n- Experimental setting -- The place with the most room for improvement in this submission is the empirical evaluation. In particular, I have three main concerns:\n    - The evaluation uses very simple MuJoCo tasks to evaluate methods. The authors should evaluate their approach on much more complex tasks, such as those from the Meta-World [1], CausalWorld [2], RLBench [3], or CompoSuite [4,5]. This is particularly true because the authors' motivation stems from the need for diffusion models to represent complex behaviors.\n    - The continual setting uses sequences of only 4 tasks. Given that the curves in Figure 2 for CuGRO get progressively worse as more tasks are trained, it would be important to study how this detriment scales with the number of tasks. Can we expect CuGRO to handle a really long stream of tasks? We need empirical evidence to answer that question\n    - The evaluation considers no external baselines. There are a number of existing continual learning and offline RL methods (which the authors themselves cite in their manuscript). Yet the evaluation is limited to variations of the authors' proposed method (oracle, noise, and none). Would other continual learning methods be as effective? Would other offline RL methods work well in this setting (especially considering that the tasks are quite simple). \n- Clarity of preliminaries\n    - The description of advantage-weighted regression misses a key piece: the Q function is w.r.t. \\mu, which is the piece that makes Eq. 4 solve the _costrained_ optimization of Eq. 2. This should be explicitly stated and explained, as otherwise the reader might think Q_\\theta is the standard Q^\\pi --- this is what I thought initially when reading 2.1\n    - It's unclear if Eq. 5 corresponds to Eq. 3. I believe that it does, and if so, my understanding is that Q_\\theta in Eq. 5 is not the same as Q_\\theta in Eq. 4---the former is w.r.t. \\pi and the latter is w.r.t. \\mu. Please clarify.\n    - The description of the diffusion models in Sec 2.2 misses mentioning the existence of a forward diffusion process that adds noise to an (observed) action. This makes it difficult to parse the last sentence before Eq. 6 where the diffusion model is predicting some un-defined noise. \n    - The description prior to Eq. 7 is still unclear to me: is Q estimating the value of the actions w.r.t. \\mu or \\pi? The authors mention that the actions are sampled from \\mu, but is the long-term value measured for \\pi or \\mu? It seems that the middle part of Eq. 7 entails that it's from \\pi, but this isn't stated in text. \n    - What does re-sampling mean toward the end of Sec 2.1? What was the first \"sampling\"?\n \n- Clarity/precision of approach\n    - Sec 3.1\n        - The description of CORL is mostly clear, but I do have a couple of questions:\n            - What aspects of the MDP are allowed to change from task to task? If all of them, then which ones do the authors consider in their approach/evaluation?\n            - Is the distribution over MDPs P(M) stationary or is it allowed to change over time? Is there any implication of that for the learning process or evaluation setting in the experiments?\n    - Sec 3.2\n        - While I agree that diffusion models (or generally expressive generative models) are useful for expressing RL policies, the authors seem to conflate two things in their description of why that is the case: 1) some tasks require multimodal behaviors (like in footnote 1) and 2) the overall behavior expressed by the diffusion model should capture a breadth of tasks. The latter is hinted at in both the intro and here, but never actually explained or exemplified. \n        - The argument of footnote 2 is somewhat weak. What if two visual classification tasks are \"detect if dog is in image\" and \"detect if cat is in image\" and they're both given the same image of a dog? Tasks would require opposite predictions given the same image, just like the RL model would. Plus, the conclusion would be that diffusion models are better because they could capture both the opposite actions, but how is that useful if they can't differentiate when to execute each? The only way to solve a problem like this is to let the model take as input a task indicator (or something to differentiate the tasks), and it's unclear that a Gaussian conditioned on this information would fail. \n        - This section is very odd. The first paragraph is all motivation and no technical details. Then second paragraph contains some details about how the diffusion model for state generation works (the equivalent for actions was in the perliminaries). Then the final paragraph is all about doing classifier or classifier-free guidance, but it's unclear what for or why 6 lines of this show up in the middle of a technical section when the authors don't even actually try it. I guess the idea is that the classifier-based/free guidance could ensure that the generated states actually correspond to the conditioning task?\n    - Sec 3.3\n        - \"the desired importance of the new task...\" seems to suggest that Eq. 8 should be a weighted sum. But the authors more likely mean that there needs to be some weighting to ensure that the current task is learned sufficiently well while avoiding forgetting. It isn't really about the importance but about being able to optimize properly. \n        - It's unclear why there's a test loss (Eq. 11 and 14) for specific models. Isn't performance measured as the obtained reward of the agent on the tasks?\n        - It's also unclear what the authors mean by \"reconstruct the cumulative state space\". Doesn't the task conditioning imply that the agent is learning separate state spaces, one for each task?\n        - Are the generated states for behavior replay drawn after updating the state generator? Before? Or are they both updated together? How was this choice made and what are the implications of it? My intuition would be that it's better to first train the behavior model on the fixed state generator and then train the state generator, because updates to the behavior model have no effect on the state generator but the converse is not true.\n            - This seems to be clarified in Algorithm 1, but the authors should state it explicitly in text and not rely exclusively on the Appendix to transmit that point. \n    - Sec 3.4\n        - It's quite unclear after reading this section why the authors use the term behavior cloning, which has a very specific connotation in the context of off-line RL -- replicating the behavior that generates the data.\n        - Instead, I think this approach is better described as a form of _functional regularization_, which is a method broadly studied in supervised continual learning research.\n\n[1] Yu et al., \"Meta-World: A benchmark and evaluation for multi-task and meta reinforcement learning.\" CoRL, 2020\n\n[2] Ahmed et al., \"CausalWorld: A Robotic Manipulation Benchmark for Causal Structure and Transfer Learning.\" ICLR, 2021\n\n[3] James et al., \"Rlbench: The robot learning benchmark & learning environment.\" RAL, 2020\n\n[4] Mendez et al., \"CompoSuite: A Compositional reinforcement learning benchmark.\" CoLLAs, 2022\n\n[5] Hussing et al., \"Robotic Manipulation Datasets for Offline Compositional Reinforcement Learning.\" arXiv, 2023"
+            },
+            "questions": {
+                "value": "######## Additional feedback ########\n\nThe following points are provided as feedback to hopefully help better shape the submitted manuscript, but did not impact my recommendation in a major way.\n\nAbstract\n- The abstract is very clear. It lays out very well how the approach works and the results they obtain \n\nIntro\n- It's unclear what \"new tasks emerge overwhelmingly\" means or why van de Ven et al. is cited to support that claim. \n- The motivation for why CORL is special seems to be all about RL in general, and not specifically about offline RL. This seems to undermine the need to develop specialized approaches.\n- There's always the question of whether the size of the model might surpass the size of replay buffers. In visual settings that tends to happen. It's unclear if it does here\n- The idea of using generative models to express state and action distributions (which isn't novel) is good, especially in the offline setting where we can't make assumptions about the form of the distribution\n- What does \"behavior cloning matter\" mean in the context of a critic, which is not a behavior model?\n\nSec 2\n- I appreciate the notation clarification right before Sec 3! The authors could consider moving it to the beginning of Sec. 2 so the reader knows this ahead of time. \n- I thought we were missing a description of CORL, but that's in Sec. 3. Is the formalization of CORL a contribution of this work? If not, maybe it's worth also including it in Sec 2.\n\nSec 3.1\n- It does seem like the problem setting should be moved to Sec 2, and then the overview be placed in Sec 3 before introducing Sec 3.2 (which would be 3.1) below\n- Fig. 1 is useful. Why are there two (s,a,r,s') boxes in b and c? It seems like they are the same tuple, just that the first down arrow takes s and the second down arrow takes a. \n\nSec 4\n- \"the generator is the only constraint on task performance\" -- how is this an improvement over other continual learning methods?\n- \"When the generative model is optimal, training the networks with generative replay is equivalent to joint training on the entire dataset.\" \n    - Sure, an optimal replay method would achieve that... but can we actually train an optimal generator over a long sequence of tasks? Also, it is only equivalent to joint training if we actually do full joint training (from scratch), but not if we start from the previously trained models. Starting from previously trained models might be better or worse, but certainly not equivalent.\n- What is the (final) performance of SAC/TD3 on the collected datasets?\n- What is the \"oracle\" for the behavior model? And what is the \"noisy\" replay for the behavior model?\n- More than baselines, these seem to be ablations of CuGRO. While oracle is roughly a performance upper bound, it's unclear how other existing continual learning algorithms would perform compared to CuGRO/oracle. It's also unclear if non-diffusion approaches (given \"oracle\" or some other forgetting avoidance method) would work well.\n- I like the analysis of why Hopper-Vel fails\n- In Figure 3 we don't get to see past task performance. Or is this average performance including current and past tasks? Does Table 1 measure the final performance of all past tasks after training on the final task, or upon finishing training on each individual task?\n- The hyperparamter sensitivity analysis is good and useful.\n\nTypos/style/grammar\n- Footnotes in 3.2 should go before periods, not after the period and a space (e.g., \"...keep emerging\\footnote{text}.\")\n- Sec 3.2, paragraph 1 -- do datasets really \"emerge\"? Maybe they are \"constructed\" instead\n- Sec 3.2, paragraph 2 -- scored-based --> score-based\n- Sec 3.3, first line -- technically, the models are \\mu_\\phi and \\epsilon_\\psi, and \\phi eand \\psi are the parameters\n- I find the use of \"replayed\" samples (throughout the text) a bit odd, since they aren't real samples. I'd suggest using \"generated\" samples instead to consistently clarify that these are not real."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1109/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698337236787,
+        "cdate": 1698337236787,
+        "tmdate": 1699636037231,
+        "mdate": 1699636037231,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "6WPyKmN0T6",
+        "forum": "EPfGHb9Y68",
+        "replyto": "EPfGHb9Y68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_t1vB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_t1vB"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors in the paper propose a dual generative reply framework to address the challenges in continual RL, where the practical algorithms are required to adapt to new environments and simultaneously leverage the previous knowledge. In particular, they use two diffusion models to generate both the state and behavior generative reply on the offline data and update in a sequential way. Using the behavior cloning technique, the multi-head critic is updated effectively, and the resulting algorithm CuGRO suggests competitive performance in the considered Mujoco benchmark."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* The paper is well-organized and easy to follow.\n* The proposed method is technically sound, including the incorporation of diffusion models to mimic the generative buffer reply.\n* The empirical performance seems significant compared with considered baselines."
+            },
+            "weaknesses": {
+                "value": "* Incorporating diffusion models in offline RL for generative reply is straightforward, and the computation cost should be rigorously discussed.\n* The loss function in Eq.10, 11, 13, 14, and 15 is easy to figure out, but it is hard to guarantee the convergence. For instance, in Eq.10, it is not clear whether training a diffusion model via using the data from the last diffusion model has any convergence guarantee. This issue could be severe especially when we only have access to offline data with a limited size or large state and action space.\n* Missing other continual RL baselines or benchmarks. In continual RL, the benchmark \u2018continual world\u2019 is commonly used to evaluate the continual control algorithms, but the proposal algorithm is only evaluated in small-scaled benchmarks in Mujuco games. It is not clear whether this approach is effective in the commonly-used continual RL environments. Also, some typical continual RL baselines are missing, such as [1].\n\n[1] Gaya et al. Building a subspace of policies for scalable continual learning (ICLR 2023)"
+            },
+            "questions": {
+                "value": "Please refer to Weakness.\n\nOverall, as far as I can tell, the proposed method is technically sound and achieves competitive performance. However, the computation cost would be large, and it also lacks discussion about the convergence guarantee and training details. Some typical benchmarks and baselines should be considered as well."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1109/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1109/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1109/Reviewer_t1vB"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1109/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698635796931,
+        "cdate": 1698635796931,
+        "tmdate": 1699636037135,
+        "mdate": 1699636037135,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "criohIzI65",
+        "forum": "EPfGHb9Y68",
+        "replyto": "EPfGHb9Y68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_RUFG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_RUFG"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses the continual offline reinforcement learning (CORL) problem, focusing on the challenge of catastrophic forgetting as models encounter new tasks. To combat this, the study introduces CuGRO, a method that decouples the learning policy into a generative behavior model and an action evaluation model, ensuring diverse behaviors are captured. A state generative model is also employed to mimic past task distributions. By leveraging diffusion probabilistic models, CuGRO achieves high-fidelity sample reproduction. Empirical tests reveal CuGRO's superiority in reducing forgetting and enhancing forward transfer, closely matching results using original data."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. Innovative idea: The paper introduces CuGRO, a novel framework of CORL, which is one of the first to leverage expressive diffusion models for this challenge. \n2. Practical memory solutions: Instead of relying on large buffers to store real samples from prior tasks, CuGRO synthesizes high-quality pseudo-samples, addressing the challenges of memory constraint and potential privacy issues. \n3. Empirical validation: The paper provides empirical evidence from various tasks that demonstrates CuGRO's effectiveness in mitigating forgetting."
+            },
+            "weaknesses": {
+                "value": "1. Motivation. There is no sufficient support for the necessity of using diffusion models to learn the behaviors from prior tasks. Though the general knowledge is that diffusion models can work better in terms of generation and generalization, there is no explicit reason against the utilization of other modes such as behavior cloning, GAN, VAE, etc. \n2. Efficiency trade-off: Though storing models for prior tasks might work well, training diffusion models for each different task might not be sample-efficient nor computation-efficient. Therefore, the authors might want to provide more information on the feasibility of this approach and the computation resource usage for implementing the experiments. \n3. Experiment: The experiment did not show how diffusion models contribute to the continual learning of the model. The authors might want to show the performance of the diffusion models to demonstrate that diffusion models are contributing to the performance. In addition, it is unclear in the paper regarding the training data of the diffusion models. Will noisy data degrade the performance of the diffusion models and the CuGRO model as a whole?"
+            },
+            "questions": {
+                "value": "1. I was wondering if applying other types of generative models to replace the diffusion model will yield similar performance. \n2. I am curious to know the computation resources used and how long to train the model.\n3. I was wondering about the scalability of the model. If having more tasks degrade the model's performance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1109/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698708021719,
+        "cdate": 1698708021719,
+        "tmdate": 1699636037052,
+        "mdate": 1699636037052,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eKGZKiv9Tj",
+        "forum": "EPfGHb9Y68",
+        "replyto": "EPfGHb9Y68",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_msqf"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1109/Reviewer_msqf"
+        ],
+        "content": {
+            "summary": {
+                "value": "Motivated by the limitations of unimodal Gaussian policy models and the memory constraints of storing data from previous tasks, the authors propose a novel dual generator system to facilitate continual learning in reinforcement learning. This system features a behavior generative model that diffuses over actions given states, and a state generative model that diffuses over states from past tasks without needing to store all previous data. When encountering a new task, this dual approach leverages the state generator to generate synthetic state samples reflective of all former tasks, and the behavior generator produces corresponding actions, forming pseudo state-action pairs. \nThan, a multi-head critic network, with separate heads dedicated to individual tasks, is trained on real samples from new datasets and annoate the pseudo pairs to create synthetic samples for behavior cloning."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Pros:\n1. First attempt to incorporate diffusion model for continual offline RL. Novel idea to utilizing diffusion-model\u2019s expressiveness to generate high-fidelity replay of the previous tasks to prevent the need of storing all previous tasks samples.\n2. Shows effectiveness in generating new samples to represent prior tasks when comparing CuGRO with the Oracle in Table 1 and figure 2. \n3. Achieves strong experimental results across the 4 simulated environments. The proposed CuGRO algorithm closely matches the Oracle, outperforming baselines.\n4. Ablation studies conducted to analyze the hyper parameters lambda which controls how much emphasis to put on the previously replayed dataset."
+            },
+            "weaknesses": {
+                "value": "Cons:\n1. Requires training two separate diffusion models, which can be computationally expensive for sampling at test time since parallel sampling is not possible. Exploring concatenating {s,a} and diffuse with one model could improve efficiency.\n2. This methods alleviates the memory capacity concern by condensing the previous task\u2019s knowledge into two diffusion models. How does the continual training cost of updating diffusion models for each new task and sampling from them trade off with the memory savings of condensing previous tasks?\n3. Limited baselines: Is comparison only made within the diffusion-based model generator pipeline? Why there is no comparison to previous continual RL algorithms provided?"
+            },
+            "questions": {
+                "value": "please see weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1109/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698910484981,
+        "cdate": 1698910484981,
+        "tmdate": 1699636036993,
+        "mdate": 1699636036993,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,886 @@
+[
+    {
+        "title": "$\\mathbb{D}^2$ Pruning: Message Passing for Balancing Diversity & Difficulty in Data Pruning"
+    },
+    {
+        "review": {
+            "id": "6cFWqIygqX",
+            "forum": "thbtoAkCe9",
+            "replyto": "thbtoAkCe9",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_3E93"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_3E93"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduces a novel coreset selection algorithm called D2 pruning (Diversity-Difficulty pruning), which leverages undirected graphs and message passing to calculate difficulty score. The algorithm's primary goal is to tackle two important aspects: example difficulty and diversity within the selected subset of data points. D2 pruning works in the following way: 1. Graph Initialization: Nodes in graph G represent dataset examples and are connected to their k-closest neighbors in the embedding space. 2. Update difficulty score: Use message passing on the graph to update difficulty scores based on neighbor distance and difficulty.  3. Coreset Selection: Iteratively select balanced samples from high-density low-difficulty and low-density high-difficulty regions. Down-weight neighbors of selected samples to promote coreset diversity."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The authors proposed a novel coreset selection algorithm that aims to unify the benefits of data diversity and data difficulty. The proposed method is intuitive.\n\n2. The proposed method is also evaluated on NLP datasets - lacked in prior work. \n\n3. The evaluation compares $D^2$ with various baselines and shows that $D^2$ achieves better or comparable performance than SOTA methods.\n\n4. The writing is good and easy to follow."
+                },
+                "weaknesses": {
+                    "value": "1. The performance improvement seems marginal. In most cases, the improvement is less than $1\\%$. \n\n2. With such performance differences, repeated evaluation can be suggested to mitigate the variance in the model training.\n\n3. $D^2$ introduces some additional hyper-parameter, which may increase the coreset selection cost."
+                },
+                "questions": {
+                    "value": "1. How many iterations will the forward message passing phase have?\n\n2. What is the importance score in fig 2 (what metrics used)? \n\n3. It seems that $D^2$ can be combined with other metrics. Do you run an ablation study to see how $D^2$ performs with other importance scores?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6731/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698783340874,
+            "cdate": 1698783340874,
+            "tmdate": 1699636774051,
+            "mdate": 1699636774051,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "pd9kdgit10",
+                "forum": "thbtoAkCe9",
+                "replyto": "6cFWqIygqX",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer 3E93, \n\nWe thank you for your time, effort, and insightful comments. Please see our response below:\n\n* **Marginal improvements**: We see relatively small gains for easy datasets like CIFAR10 and redundant NLP datasets for the finetuning task because the performance of random selection on these datasets is already quite high. However, we see larger gains for difficult datasets like CIFAR100, ImageNet-1K, and DataComp. Importantly, we think that $\\mathbf{D}^2$ Pruning will be a useful framework for future research into *self-supervised* and *unsupervised data selection* approaches, which are crucial topics in contemporary research for training foundation models. due to its plug-and-play nature, *where most existing work in coreset selection is no longer applicable*. It will benefit from any work that investigates better importance scores or meaningful representation embeddings. Moreover, it is not only flexible but also more scalable for large datasets than many coreset selection methods that rely on sub-modular functions, as we discuss in the General Response.\n\n* **Statistical analysis**: We have included a discussion of the significance of the scores in the revised pdf in **Sec. 5.1**. Our improvements on ImageNet-1K, DataComp, and CIFAR100 are significant (p<0.05, computed using a bootstrap of 100K samples [1, 2]). The improvement margins on CIFAR10 and NLP datasets are smaller due to random selection already doing so well on such datasets and the p-value is sometimes not significant for those improvements.\n\n* **Additional Hyperparameters**:  Coreset selection methods that do not operate solely on the ranking of an importance score need a hyperparameter, especially when combining the influence of two different functions, as we do in $\\mathbf{D}^2$ Pruning. [3] combine facility location function for diversity with entropy score and use a weight parameter to balance them out. [4] perform a sweep over the number of bins and a cut-off ratio to remove bad examples. [5] perform bi-level optimization that occurs over multiple rounds of training and testing models. [6] tune the number of clusters used to get difficulty scores. It is definitely better to have a method without hyperparameters, but much further research is needed to get to that point.\n\n* **Iterations in message passing**: We use a single iteration of message passing in our main results. We conducted ablation experiments where ran multiple rounds of message passing and found that it does not benefit data selection due to aggressive smoothing of importance scores over the spatial dimension. Please see results in **Table 8 and Figure 5 in Appendix** of the revised pdf, and the General Response for a discussion.\n\n* **Importance Score in Fig. 2**: We use the forgetting score in Fig. 2, we have fixed the caption in the revised pdf to answer this question.\n\n* **Other importance scores**: Yes, we ran experiments with scores other than forgetting scores and we report those results in **Table 8 in the Appendix**. Please see General Response for the discussion.\n\n[1] Computer-intensive methods for testing hypotheses\n\n[2] An introduction to the bootstrap\n\n[3] Accelerating batch active learning using continual learning techniques.\n\n[4] Coverage-centric coreset selection for high pruning rates.\n\n[5] Glister: Generalization based data subset selection for efficient and robust learning.\n\n[6] Beyond neural scaling laws: beating power law scaling via data pruning."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700339598302,
+                "cdate": 1700339598302,
+                "tmdate": 1700339664187,
+                "mdate": 1700339664187,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "14xNZCDSUk",
+                "forum": "thbtoAkCe9",
+                "replyto": "pd9kdgit10",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_3E93"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_3E93"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for the response"
+                    },
+                    "comment": {
+                        "value": "Thank the authors for the further clarification and additional experiments. The clarification and additional evaluation address most of my concerns.\n\nOverall, I think the paper proposes a novel coreset selection, which explores how to jointly consider diversity and difficulty in coreset selection. The discussion on self-supervised/unsupervised coreset selection and NLP coreset selection also contributes to the community. However, I feel that the insignificant performance improvement can hurt the contribution of the paper, so I decided to keep my rating (6) unchanged."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700588235938,
+                "cdate": 1700588235938,
+                "tmdate": 1700588235938,
+                "mdate": 1700588235938,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "i1nhXrPT4p",
+            "forum": "thbtoAkCe9",
+            "replyto": "thbtoAkCe9",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_niHR"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_niHR"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes to balance both difficulty and diversity in the data sampling process. The authors argue that difficulty and diversity have been independently optimized but should be optimized together. To this end, this work proposes a graph-based method, D^2 pruning, which builds the graph based on data diversity and uses message passing to get information difficulty."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The authors perform extensive experiments, on both vision and NLP datasets, and compare to a well-covered set of baseline. Empirical results appear to be promising.  The methodology itself also appears to be interesting and novel, to the best of my knowledge."
+                },
+                "weaknesses": {
+                    "value": "The authors use distance in embedding space to construct the near-neighbor graph. However, there is a lack of support for why distance in embedding space is a good indicator of diversity. For example, what if we use another model to generate the embedding? What\u2019s the influence between feature level embedding versus final layer embedding? Similarly, the authors use the forgetting score as the difficulty indicator. There is no discussion on why the author choose forgetting score? What would be the influence of choosing another score, such as a consistency score or loss of an approximate model?"
+                },
+                "questions": {
+                    "value": "See weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Reviewer_niHR"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6731/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698812463064,
+            "cdate": 1698812463064,
+            "tmdate": 1700719723932,
+            "mdate": 1700719723932,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "4iVmvUDnKu",
+                "forum": "thbtoAkCe9",
+                "replyto": "i1nhXrPT4p",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer niHR, \n\n\nWe thank you for your time, effort, and insightful comments. Please see our response below:\n\n* **Distance in embedding space as an indicator of diversity**:  Embeddings from pre-trained models have been widely used as representations of the semantic content of a sample within a high-dimensional sample for vision and text modalities. Distance or similarity computations between such embeddings have been successfully used for performing semantic similarity tasks like k-nearest neighbor selection [1], sentence similarity [2], etc. In our work, we refer to diversity in a data subset as the diversity of semantic content of the data samples in the subset. Hence, we use cosine similarity between embeddings as a mark of semantic similarity of two data samples and aim to select samples with maximum diversity based on this definition. We perform ablation experiments using different sources of embeddings and find that the embedding from the last layer of the ResNet18 (polling layer before classifier) works better than features from the deeper layer for vision models, and the [CLS] token embedding in RoBERTa works better than non-[CLS] token embeddings for NLP datasets. See general response and **Sec. D.2,  Table 8 in Appendix** in the revised pdf.\n\n* **Importance Score**: Similarly, we also perform ablation experiments for different importance scores, and find that the entropy score benefits selection from CIFAR10 while the EL2N score improves performance on the Adversarial NLI dataset. See general response.\n\n[1] Beating power law scaling via data pruning\n\n[2] Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700311867767,
+                "cdate": 1700311867767,
+                "tmdate": 1700311867767,
+                "mdate": 1700311867767,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7ErA4O6Vmp",
+                "forum": "thbtoAkCe9",
+                "replyto": "99beJjP4am",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_niHR"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_niHR"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to the authors"
+                    },
+                    "comment": {
+                        "value": "Thanks for the response. I appreciate the ablation experiments, which provide empirical evidence on some of the choices. I would increase the score."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700719702730,
+                "cdate": 1700719702730,
+                "tmdate": 1700719702730,
+                "mdate": 1700719702730,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "9ZGMHT5Gn8",
+            "forum": "thbtoAkCe9",
+            "replyto": "thbtoAkCe9",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work proposes a new data pruning model called D^2 pruning that balances diversity and difficulty via a message-passing algorithm.\nThey show the performance superiority of the proposed method on vision and NLP datasets with supervised and self-supervised variants."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Clear presentation and easy-to-follow writing.\n- The algorithm is straightforward and easy-to-implement.\n- The evaluation is extensive, with many datasets in multiple tasks, and solid."
+                },
+                "weaknesses": {
+                    "value": "- No time complexity analysis. The proposed algorithm based on message-passing seems to take quite a lot of time. The author should provide the time-complexity analysis with the exact GPU time taken because a data pruning method that takes too long time is less practical.\n- No theoretical analysis. How this message-passing algorithm can guarantee better generalization than other baselines? Although the author provides some intuition (data pruning should consider both diversity and difficulty), why it should be achieved by the message-passing and how it can reduce the generalization error in Eq.(1) is missing."
+                },
+                "questions": {
+                    "value": "I think this work is also related but missed in discussion/comparison.\n\n[a] Active learning is a strong baseline for data subset selection. NeurIPS workshop, 2022"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6731/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698821437549,
+            "cdate": 1698821437549,
+            "tmdate": 1700709169229,
+            "mdate": 1700709169229,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "k1eTUeA8MT",
+                "forum": "thbtoAkCe9",
+                "replyto": "9ZGMHT5Gn8",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer 2S5F, \n\nWe thank you for your time, effort, and insightful comments. Please see our response below:\n* **Time Complexity Analysis**: We have revised the pdf to include a time complexity analysis in **Sec. 4**, to complement the GPU time estimates that we had already provided in **Table 6 in the Appendix in original pdf**. D2 Pruning runs in mere minutes for CIFAR10, CIFAR100 datasets and takes ~23 minutes for ImageNet-1K when we use exact $k$-NN computation for initializing the graph. However, this time estimate is significantly improved when we use approximate $k$-NN using faiss to prune the DataComp dataset consisting of 12.8 million samples, i.e., $\\mathbf{D}^2$ Pruning takes ~1 hour to prune the DataComp dataset. This time overhead is negligible compared to the training time of the models on such datasets and is a good investment if it yields improvements in downstream task performances. $\\mathbf{D}^2$ Pruning is a scalable method that can be used for even larger datasets with modest memory requirements ($\\mathcal{O}(nk)$). In comparison, most existing coreset selection methods are not scalable to large datasets or applicable to self-supervised approaches. Many contemporary self-supervised approaches for pruning datasets also involve similarly time-intensive preprocessing steps [1, 2, 3].\n\n* **Theoretical Analysis**: Our method design is motivated by the intuition that difficulty as well as diversity are needed to ensure the most representative data subset. While we do not have a theoretical analysis for this method, we provide a solid analysis of how this method works and why it is better than other methods through **Figures 2,3,5**, which provide insights for further research into the use of graphs for data subset selection.\n\n* **Additional reference**: Thank you for the reference, we have added this to the discussion in the related work section. The CCS method that we use as one of our baselines in the paper is as good or better than the method suggested in this work.\n\n\n[1] SemDeDup: Data-Efficient Learning at Web-scale through semantic deduplication\n\n[2] T-mars: Improving Visual Representations by Circumventing Text Feature Learning\n\n[3] Multimodal Dataset Pruning Using Image Captioning Models"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700341734293,
+                "cdate": 1700341734293,
+                "tmdate": 1700341745737,
+                "mdate": 1700341745737,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "IycMhmrrNb",
+                "forum": "thbtoAkCe9",
+                "replyto": "9ZGMHT5Gn8",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to the rebuttal"
+                    },
+                    "comment": {
+                        "value": "Thanks to the author's comprehensive rebuttal. I've read all the responses, revised paper, and other reviewer's comments.\nAlthough I'm satisfied with the abundant content, I still have a few questions.\n\n**1. Time complexity**\n\n1.1 **Why does the graph initialization take O(kn)?** Could you provide a more detailed analysis of this? As far as I know, the time complexity of the KNN algorithm for a single query point is O(nd), where n is the number of training examples and d is the number of features. Thus, to find the kNN of all data examples, it would take O(d*n^2). Similarly, In Table 6, 'Graph Creation' takes longer time than 'Iterative Selection', which also takes O(kn) according to authors, for all datasets. Please convince me if I misunderstood anything.\n\n1.2 In Table 6, it would be better to **provide the training time** on the full dataset, and that with D^2 pruning for further clarification. \n\n**2. Theoretical analysis**\n\n2.1 In my thought, only Figure 2 can be related to my question. D^2 pruning achieved better diversity and uncertainty than Facility Location, Graph Cut, and Moderate, while they are not a hybrid approach considering both diversity & uncertainty. Then, **why D^2 pruning is better than BADGE in terms of generalization?** An intuitive explanation or analysis for this would increase the novelty of this paper compared to the existing hybrid approaches like BADGE.\n\nThanks!"
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700448643274,
+                "cdate": 1700448643274,
+                "tmdate": 1700448743684,
+                "mdate": 1700448743684,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VJLjGcbby4",
+                "forum": "thbtoAkCe9",
+                "replyto": "XIfPXINFNF",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_2S5F"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to the rebuttal"
+                    },
+                    "comment": {
+                        "value": "Thanks for the additional response and the abundant rebuttal!\n\nOverall, I think the paper has **strength in empirical performance**, setting up state-of-the-art results in many benchmarks,  **applicability** to self-supervised/unsupervised coreset selection in vision and NLP tasks, and its **scalability** to large-scale datasets like ImageNet-1k and Datacomp. The paper also provides comprehensive ablation studies. Please include our discussion about the novelty in the final version. I decided to increase my rating to (6). \n\nThanks."
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700709145905,
+                "cdate": 1700709145905,
+                "tmdate": 1700709145905,
+                "mdate": 1700709145905,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "P813VS8hhv",
+            "forum": "thbtoAkCe9",
+            "replyto": "thbtoAkCe9",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper starts by emphasizing the significance of maintaining a balance between the diversity and difficulty of samples used in data subset selection, for speeding up the training process. To this end, the authors initially illustrate instances in which diversity sampling can result in an excessive over-sampling (attributable to over-representation) from regions characterized by relatively low complexity. Following this, as shown in Figure~2, the authors introduce a graph-based algorithm designed to select training examples that maintain a balance between diversity and difficulty. The algorithm is based on message parsing on the constructed graph where each datapoint is a node. Subsequently, the paper provides experimental evidence in support of their proposed method, conducted across a range of datasets encompassing both vision and language domains, as well as their joint modality. The experimentation includes scenarios involving both supervised and self-supervised learning. The paper also addresses the interesting datacomp setting and evaluates its performance against the corresponding benchmarks, including VTAB and retrieval."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "A wide range of data modalities is considered which I particularly appreciate, unlike other papers in the community. Ablation is also done on the hyperparameters mentioned in the proposed algorithm, which include $\\gamma_r$, $\\gamma_f$ (kernel width), and the sparsity of the graph. The paper was pretty much straightforward and they mentioned that $D^2$ provides boosts under a low to medium \"pruning\" regime. Overall, I like the simplicity of writing."
+                },
+                "weaknesses": {
+                    "value": "I feel that the prime weakness of this work is from the angle of related works, and baselines. Highlighting the importance of balancing diversity and difficulty is not new, and indeed if one is using not well-tuned diversity selection methods, then they won't be able to give a full representation of the dataset (minor modes which are not outliers but are difficult). That being said, I need an explanation, and if possible, results on the following baselines --\n\nFor general supervised cases \n\n- CRAIG [1]\n- GLISTER (this paper has the same motivation as mentioned in Eq1) [2]\n- GradMatch [3]\n- Top-k method [4]: Another graph-based sampling that downweighs the contribution based on neighbors.\n- CREST (an extension of CRAIG) [5]\n\nA combination of submodularity with difficulty has been explored in the following -- \n\n- FASS (two-stage procedure for active learning, but a similar two-stage procedure can be considered here) [6]\n- A combination of submodularity and difficulty has been considered in CAL-SDS2 [7]\n- MCL (Combination of hardness and diversity for curriculum learning) [8]\n- DIHCL (another combination of hardness and diversity for curriculum learning) [9]\n\nMore recent works on diversity-based selection (for NLP) --\n- MILO [10]\n- INGENIOUS [11]  \n\nOn SSL: \n- See SAS [12] \n\nOn multimodality see T-MARS [13]\n\nConcluding thoughts: \nI believe the paper should discuss these works and should include some of them as baseline.  \n\nReferences\n- [1] Data-efficient Training of Machine Learning Models (ICML'20) \n- [2] GLISTER: Generalization-based Data Subset Selection for Efficient and Robust Learning (AAAI'21) \n- [3] GRAD-MATCH: Gradient Matching based Data Subset Selection for Efficient Deep Model Training (ICML'21)\n- [4] SELECTIVE ANNOTATION MAKES LANGUAGE MODELS BETTER FEW-SHOT LEARNERS (ICLR'23)\n- [5] Towards Sustainable Learning: Coresets for Data-efficient Deep Learning (ICML'23)\n- [6] Submodularity in Data Subset Selection and Active Learning (ICML'15)\n- [7] Accelerating Batch Active Learning Using Continual Learning Techniques (TMLR/DMLR@ICML'23)\n- [8] Minimax Curriculum Learning: Machine Teaching with Desirable Difficulties and Scheduled Diversity (ICLR'18)\n- [9] Curriculum Learning by Dynamic Instance Hardness (NeurIPS'19) \n- [10] MILO: Model-Agnostic Subset Selection Framework for Efficient Model Training and Tuning \n- [11] INGENIOUS: Using Informative Data Subsets for Efficient Pre-Training of Language Models\n- [12] Data-Efficient Contrastive Self-supervised Learning: Most Beneficial Examples for Supervised Learning Contribute the Least (ICML'23)\n-  [13] T-MARS: Improving Visual Representations by Circumventing Text Feature Learning"
+                },
+                "questions": {
+                    "value": "- For the difficulty-based methods, in supervised settings, methods such as forgetting-event are clear that they use the learning dynamics. However, methods such as -- entropy, EL2N (which is similar to the norm of the gradient concerning bias term), and area under margin score, can be computed during any step of training. Therefore, does the paper consider the moving average of the dynamics (of some pre-trained models, for which they've assumed the access), or is it taken at the end of the training? In case it is moving average, I am okay with it, but if it is taken at the end of the training, then the training set methods like entropy/margin/EL2N can be very wrong in judging the hardness. \n\n\n- Can authors provide standard deviation or statistical analysis in cases where the second-best technique is very close? \n- For BADGE does the author use true labels instead of pseudo labels? BADGE was proposed in Active learning and hence it is important to make sure it doesn't have a disadvantage in supervised setting comparisons. \n- k and s_k are overloaded as expressions in the paragraph above equation 6. \n- What happens when one runs message parsing for more than one round? Can authors provide an experiment on that or justification? \n- Eq. 1 theta should rather me $\\theta^*(S')$ to show that it is a solution to the optimization."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6731/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699067905686,
+            "cdate": 1699067905686,
+            "tmdate": 1700699459835,
+            "mdate": 1700699459835,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "qyiCX0WHvw",
+                "forum": "thbtoAkCe9",
+                "replyto": "P813VS8hhv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer 4iU9, \n\nWe thank you for your time, effort, and insightful comments. Please see our response below:\n\n* **Baselines**: We would like to thank the reviewer for putting together a detailed list of the works relevant to ours and outlining the methods for our convenience. We agree that these methods are relevant to our work. So, we picked four additional baselines for experiments (see general response).\n\n* **Discussion on suggested baselines**: We have added discussion on new baselines and other suggested references in **Sec. 5.1, Sec. 5.3 and Sec. 6**, as much as possible in the limited space. Additionally, we have updated Figure 2 to show results from data selection using diversity-only approaches using facility location (FL) and graph-cut (GC) sub-modular functions [1]. As we discuss in Sec. 5.1, the main drawback of using FL or GC submodular functions in any form is the need for access to the complete similarity matrix that causes a memory requirement of $\\mathcal{O}(n^2)$ [2], which is not scalable for larger datasets.\n\n* **Moving Averages**: Yes, we consider the moving average of El2N, AUM scores, etc.\n* **Statistical analysis**: We have included a discussion of the significance of the scores in the revised pdf in **Sec. 5.1**. Our improvements on ImageNet-1K, DataComp, and CIFAR100 are significant (p<0.05, computed using bootstrap of 100K samples [3, 4]). The improvement margins on CIFAR10 and NLP datasets are smaller due to random selection already doing so well on such datasets and the p-value is sometimes not significant for those improvements.\n* **BADGE**: We use the true labels in our implementation of BADGE to make a fair comparison.\n* **$x_k$, $s_k$**: Thank you for catching this error, we have fixed this in the revised version.\n* **Message passing for more than one round**: Please see general response.\n* **Eq 1**. Theta: Thank you for pointing this out, we have fixed this in the revised pdf.\n\n\n[1] Submodular combinatorial information measures with applications in machine learning\n\n[2] https://apricot-select.readthedocs.io/en/latest/index.html\n\n[3] Computer-intensive methods for testing hypotheses\n\n[4] An introduction to the bootstrap"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700311235353,
+                "cdate": 1700311235353,
+                "tmdate": 1700341823695,
+                "mdate": 1700341823695,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "oQ3phYijQB",
+                "forum": "thbtoAkCe9",
+                "replyto": "P813VS8hhv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for adding the baselines"
+                    },
+                    "comment": {
+                        "value": "I have a few questions: \n\n1. For the Facility location function it is possible to use sparse matrices (in fact as long as entries are non-negative function is submodular). Therefore, did the experiments use the sparse kernels (the sparse similarity matrix that was used in the graph for D^2)? Therefore, I think it is not okay to write FL always needs $\\mathcal{O}(n^2)$ space. \n \n2. CAL-SDS2 can be used with any hardness metric, and in general - $F(A) = FL(A) + \\lambda \\operatorname{log}(1 + m(A))$ where $m(A)$ is a function for hardness --  entropy, margin, EL2N, etc. So I still feel that additional exploration on that front can be done."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700436205050,
+                "cdate": 1700436205050,
+                "tmdate": 1700436232258,
+                "mdate": 1700436232258,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "OLd7nEE6nc",
+                "forum": "thbtoAkCe9",
+                "replyto": "GQCnODFIfE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "1. I unfortunately don't know any implementation that takes care of a sparse (CSR/COO) matrix for the mixture of FL and hardness. That being said [1] does offer support for sparse matrices. When I meant sparsification using k-nn like the proposed graph-based approach, one can emulate the effect of a sparse matrix by having float 0s in a dense (n,n) matrix. I would like the authors to clarify in the paper that FL can be used with sparse matrix, and it is not correct to say that it always uses $\\mathcal{O}(n^2)$ space. (The reason I am mentioning this is because in the paper the way it is written implies that FL cannot be done in less than quadratic memory) \n\n2. I agree that CAL was proposed in the AL regime. However, AL has been used in the past for data subset selection. That said, I strongly recommend performing a search on hyperparameters of the baseline, as I feel that the current mentioned results may be unfair (as entropy might not be the right metric). Methods like submodularity + hardness are very intuitive compared to the proposed technique. \n\nAdditional Comment:\n\nI don't see any discussion other than one line in related works for [2]. I recommend adding a detailed discussion for this graph-based technique, as this work is quite similar, although done in in-context learning (which doesn't mean it cannot be used for regular data subset selection). \n\n[1] https://submodlib.readthedocs.io/en/latest/functions/facilityLocation.html\n[2] SELECTIVE ANNOTATION MAKES LANGUAGE MODELS BETTER FEW-SHOT LEARNERS"
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700593048889,
+                "cdate": 1700593048889,
+                "tmdate": 1700593048889,
+                "mdate": 1700593048889,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "m5WDWDveSP",
+                "forum": "thbtoAkCe9",
+                "replyto": "P813VS8hhv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "Thank you for the follow-up comments!\n\n1) Thanks for the suggestion, we are running experiments using the sparse similarity matrix where only k-nearest neighbor distances are non-zero and everything else is 0. We have also revised our paper to remove the lines that say that FL always needs $\\mathcal{O(n^2)}$ space. We have also expanded our discussion of the Top-$k$ Voting method in the Related Work section. Top-$k$ voting is similar to the reverse message passing step in our method and only ensures diversity in selection. $\\mathbf{D}^2$ Pruning first combines the influence of importance scores and local neighborhood in the forward message passing step and then imposes diversity in the reverse message passing step. \n \n\n2) We also agree that CAL-SDS2 warrants a proper search for hyper-parameters as well as experiments with various importance scores to get the best result. In our current experiments, we are performing a grid search over $\\lambda$ = $\\[1, 2, ... 10]$ and $\\sigma$ = $[0.1, 0.2, 0.3, ... 1.0]$ for entropy, forgetting and EL2N scores. The best results so far for CIFAR10 are as follows:\n\n| Method | 30% | 50% | 70% | 80% | 90% |\n| ----------- | ----------- | ----------- |  ----------- |  ----------- |  ----------- |\n| Random |   94.3  | 93.4 | 90.9 | 88.0 | 79.0 |\n| $\\mathbf{D}^2$ Pruning  |  95.7 | 94.9 | 93.3 | 91.4 | 87.1 |\n| CAL-SDS2 [Entropy] |  95.0 | 93.8 | 91.6 | 87.1 | 81.5 |\n| CAL-SDS2 [Forgetting]  |  95.7 | 94.4 | 92.1 | 88.9 | 84.6 |\n| CAL-SDS2 [EL2N]  |  94.8 | 94.1 | 92.2 | 87.8 | 83.5 |\n\nWe see improved performance from CAL-SDS2 with Forgetting score at all pruning rates and CAL-SDS2 performs quite well as low pruning rates, but it still struggles at high pruning rates, even with Forgetting score as the difficulty metric. We will continue tuning our results with CAL-SDS2 and definitely add the improved results to our paper when the experiments end.\n\nWe would like to reiterate the intuition behind $\\mathbf{D}^2$ Pruning:\n\nImportance score distributions tend to be skewed towards low scores, an example of the distribution of forgetting scores can be seen in Fig. 5(a) in the Appendix. However, an easy sample surrounded by many other easy samples in the embedding space is less important than an easy sample that is surrounded by many difficult samples in the embedding space. This is because the area containing many easy samples is easy to learn for the model whereas the area containing difficult samples is hard to learn for the model. Intuitively, we want to include many samples from the hard-to-learn areas (even the easy samples) while sufficiently representing the easy-to-learn areas to prevent drops in accuracy for samples lying in that area [1]. Existing methods like BADGE and CAL-SDS2 select the most important sample that is also representative of the complete set of samples; they do not make a distinction between easy-to-learn and hard-to-learn areas in the data representation space. Whereas, the forward message passing step in $\\mathbf{D}^2$ Pruning increases the importance of a sample by an amount that is proportional to the importance scores of the samples surrounding it, thus ranking an easy sample in a hard-to-learn area higher than that in an easy-to-learn area. Effectively, the forward message passing step recalibrates the importance scores by taking the difficulty of the sample's local neighborhood into account and results in a less skewed distribution as we demonstrate in Fig. 5(b). The samples are ranked by this recalibrated importance score (represented by the updated node features in the graph) for the reverse message passing step.\n\nAdditionally, in the reverse message passing step, after the selection of each data sample, only its nearest neighbor samples are updated. This allows us to maintain a constant selection time for the same data subset size, with increasing size of the original dataset, and makes $\\mathbf{D}^2$ Pruning relatively more scalable for large-scale datasets, as we demonstrate with the DataComp dataset.\n\nTo summarize, $\\mathbf{D}^2$ Pruning is a scalable data selection algorithm that effectively re-ranks samples based on easy-to-learn and hard-to-learn areas in the embedding space via forward message passing and then imposes diversity in data selection via reverse message passing."
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700696224140,
+                "cdate": 1700696224140,
+                "tmdate": 1700696383106,
+                "mdate": 1700696383106,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "5IZzT1efie",
+                "forum": "thbtoAkCe9",
+                "replyto": "m5WDWDveSP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Quick Clarification"
+                    },
+                    "comment": {
+                        "value": "Thanks for providing the additional results! \n\nIn the results above, does the FL in CAL-SDS2 use a sparse matrix (where sparsity is just zeroed-out entries and not a CSR/COO matrix)??"
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700698884442,
+                "cdate": 1700698884442,
+                "tmdate": 1700698884442,
+                "mdate": 1700698884442,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VmtOcXXItz",
+                "forum": "thbtoAkCe9",
+                "replyto": "R1jkH8N5Th",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_4iU9"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Increasing the rating."
+                    },
+                    "comment": {
+                        "value": "Thank you for the response and additional results. I do hope that the authors include the results with sparse FL-based CAL-SDS2, and in the final paper include a discussion on ablations with different hardness metrics. That being said, I am increasing my rating but won't be able to increase it any further, given that sparse matrix-based indeed are important.\n\n\nThanks!"
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700699438929,
+                "cdate": 1700699438929,
+                "tmdate": 1700699438929,
+                "mdate": 1700699438929,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "2P1l83oTdv",
+            "forum": "thbtoAkCe9",
+            "replyto": "thbtoAkCe9",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_DbMJ"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6731/Reviewer_DbMJ"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The $\\mathbb{D}^2$ PRUNING method presented in this paper demonstrates a novel approach for selecting the most useful data from large training sets (coresets) for deep learning model training. \n\nIt combines two key factors: data diversity and sample difficulty. The method represents the training dataset as a graph and uses a message-passing algorithm to update each data point's difficulty score by considering its neighbors. This process ensures a balance of diverse and challenging data in the selected coreset. \n\n$\\mathbb{D}^2$ PRUNING has shown to be effective in improving model performance, particularly for image classification and natural language processing tasks, and is especially useful at low-to-medium data pruning rates."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The paper presents a novel approach - $\\mathbb{D}^2$-PRUNING, which balances both data diversity and difficulty, along with its applicability to both supervised and self-supervised learning contexts. This positions it as a valuable tool in the ongoing evolution of corset selection techniques for data efficient learning.\n2. The experiments are clear and the authors provide ablation experiments to support the theory and newly introduced hyper-parameters in the paper.\n3. It is commendable that the paper divulges into the NLP domain and demonstrates improved performance over existing methods in coreset selection."
+                },
+                "weaknesses": {
+                    "value": "1. The paper demonstrates very incremental gains in performance over State-of-the-Art method (like Ash et al., 2019).\n2. The experiments in section 5.1 do not compare $\\mathbb{D}^2$-PRUNING State-of-the-Art methods discussed in (Guo et al., 2021) such as GLISTER (Killamsetty et al., 2021), CRAIG (Mirzasoleiman et al., 2020), GRAD-MATCH (Killamsetty et al., 2021) etc."
+                },
+                "questions": {
+                    "value": "1. The paper uses inconsistent numberings (A and then 2, 3) in section 1 which should be rectified.\n2. An important investigation aspect for this paper would be to demonstrate performance on very small values of selection ratios $k$ as discussed in (Guo et al, 2021) and perform more than 1 message passing (K-shot setting).\n3. The paper refers to additional information in the appendix section. It would greatly improve the readability of the paper if the authors point to exact section numbers in the appendix.\n4. It is unclear if the parameter $\\gamma$ mentioned in section 5.1 refers to $\\gamma_f$ or $\\gamma_r$. \n5. Although optional, including an algorithmic view of the proposed approach would be interesting to clarify how $\\mathbb{D}^2$-PRUNING fits into the training and evaluation process of deep-learning models."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6731/Reviewer_DbMJ"
+                    ]
+                }
+            },
+            "number": 5,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6731/-/Official_Review"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699639421683,
+            "cdate": 1699639421683,
+            "tmdate": 1699639421683,
+            "mdate": 1699639421683,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Naz8456NuJ",
+                "forum": "thbtoAkCe9",
+                "replyto": "2P1l83oTdv",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer DbMJ, \n\nWe thank you for your time, effort, and insightful comments. Please our response below:\n* **Additional baselines**: Please see general response.\n* **K-shot setting**: Please see general response, under *Ablation Experiments*.\n* **Very small selection ratios**: Thank you for the suggestion, we ran experiments along these lines and report our results in **Table 7, Sec. D.1 in the Appendix**. We see large improvements using $\\mathbf{D}^2$ Pruning in some cases, such as 3% over CCS at 99.5% pruning of CIFAR10. However, the improvements are not consistent, either from CCS or from our method, suggesting that diversity isn't the important factor at extremely low data budgets.\n* **Inconsistent numberings**: Thank you for catching this error, we have fixed it in the revised version.\n* **References to sections in Appendix**: Thank you for the suggestion, we have fixed this in the revised version.\n* **Section 5.1 Parameter**: The parameter $\\gamma$ refers to $\\gamma_{r}$. We have fixed this in the revised version.\n* **Algorithm**: Thank you for the suggestion, we have included a pseudo-code of $\\mathbf{D}^2$ Pruning for data selection in **Algorithm 1 in the Appendix**. Please let us know if it doesn't answer your question correctly, we will be happy to provide a different answer according to your suggestion.\n* **Incremental gains**: We see relatively small gains for easy datasets like CIFAR10 and redundant NLP datasets for the finetuning task because the performance of random selection on these datasets is already quite high. However, we see larger gains for difficult datasets like CIFAR100, ImageNet-1K, and DataComp. Importantly, we think that D2 Pruning will be a useful framework for future research into *self-supervised* and *unsupervised data selection* approaches, which are crucial topics in contemporary research for training foundation models. due to its plug-and-play nature, *where most existing work in coreset selection is no longer applicable*. It will benefit from any work that investigates better importance scores or meaningful representation embeddings. Moreover, it is not only flexible but also more scalable for large datasets than many coreset selection methods that rely on sub-modular functions, as we discuss in the General Response."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700311027727,
+                "cdate": 1700311027727,
+                "tmdate": 1700368898115,
+                "mdate": 1700368898115,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "gBrWLo2ZK5",
+                "forum": "thbtoAkCe9",
+                "replyto": "Naz8456NuJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_DbMJ"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6731/Reviewer_DbMJ"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I would like to thank the authors for addressing some of the questions and weaknesses in the paper.\nUnfortunately, the provided clarifications still do not address my concerns about incremental gains. The observed results that, $\\mathbb{D}^2$-Pruning produces \"larger gains on difficult datasets\" is not backed by theoretical evidence in the method nor in previous work. Thus I have decided to keep my rating (5) unchanged."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6731/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700638972102,
+                "cdate": 1700638972102,
+                "tmdate": 1700638972102,
+                "mdate": 1700638972102,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

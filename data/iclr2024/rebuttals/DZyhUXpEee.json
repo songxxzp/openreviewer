@@ -1,0 +1,578 @@
+[
+    {
+        "title": "SpaFL: Communication-Efficient Federated Learning with Sparse Models and Low Computational Overhead"
+    },
+    {
+        "review": {
+            "id": "APQaNjJnP7",
+            "forum": "DZyhUXpEee",
+            "replyto": "DZyhUXpEee",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The large communication overhead of FL is one of the main challenges. This work proposes SpaFL to optimize both personalized model parameters and sparse model structures. SpaFL defines a trainable threshold for each neuron/filter for pruning. Both model parameters and thresholds are jointly optimized, thus those prematurely pruned parameters during training can be recovered. Only thresholds are communicated between a server and clients instead of parameters, thereby enabling the clients to learn how to prune and reducing communication costs. Global thresholds are used to update model parameters by extracting aggregated parameter importance."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. Only communicating thresholds is novel, and reducing communication costs of both up-link and down-link a lot.\n2. Equation (8) provides a good connection between the importance and the thresholds.\n3. There is convergence analysis of the SpaFL.\n4. Experiment results show significant improvements of SpaFL."
+                },
+                "weaknesses": {
+                    "value": "1. Section 3.2.2 needs to be written more clear. During local training with e < E, does the thresholds not be updated? Equation (5) and (6) only work for the e=E? And how the equation (6) is derived?\n2. Comparing equation (10) and (11), authors concludes the relationship between the gradient direction and the $\\Delta \\tau$ when $w >0$ or $w < 0$. However, Equation (9) is about the global $\\tau$, while equation (10) is talking about local $\\tau$. Could authos explain this in more details?\n3. Experiment settings are not clear enough. The training dataset is split using Dirichlet samplg. For personalized FL, how are test datasets split and how the models are tested? Why all methods use the same learning rates? Maybe different methods have different best learning rates.\n4. The theoretical proof does not consider the data heterogeneity. Will the thresholds still converge under the data heterogeneity?"
+                },
+                "questions": {
+                    "value": "1. See weakness 1, During local training with e < E, does the thresholds not be updated? Equation (5) and (6) only work for the e=E? And how the equation (6) is derived?\n2. See weakness 2.\n3. See weakness 3.\n4. See weakness 4.\n5. In experiments, E = 3 means local iterations = 3, or local epochs = 3? local iteration = 3 seems to be too small. Could you find other references to support this setting? Because many FL works set this as epochs [1]. \n\n\n[1] Communication-Efficient Learning of Deep Networks from Decentralized Data.\n[2] SCAFFOLD: Stochastic Controlled Averaging for Federated Learning.\n[3] Adaptive Federated Optimization."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6217/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698511992030,
+            "cdate": 1698511992030,
+            "tmdate": 1700654055036,
+            "mdate": 1700654055036,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "7eybzMhKRn",
+                "forum": "DZyhUXpEee",
+                "replyto": "APQaNjJnP7",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We appreciate the constructive comments. We provide our response to each comment below. \n\n>Q1 See weakness 1, During local training with e < E, does the thresholds not be updated? Equation (5) and (6) only work for the e=E? And how the equation (6) is derived?\n\n**A1**: Yes, when $e < E$, only model parameters are updated while thresholds are frozen. In the last epoch, i.e., $e = E$, we freeze model parameters and update thresholds using eq. (5) and (6). Hence, during $E-1$ epochs, model parameters can adapt to newly generated masks by recovering from pruning-induce noise. Then, in the last epoch, we give the thresholds performance feedback on the current sparse model. We believe that the explanation of the algorithm was not clear enough in the manuscript, and we will clarify it in the revised version. \n\nFor the derivation of eq. (6), we define $S(\\cdot)$ as a unit step function and $Q\\_{k, ij}^{E-1, l} (t)) = |w\\_{k, ij}^{E-1, l} (t)|  -  \\tau_i^l(t)$. Then, we can derive eq. (6) as follows:\n\n$$ \\frac{\\partial F\\_k (\\tilde{w}\\_k^{E-1}(t),  \\tau(t) )}{\\partial \\tau_i^l(t)} = \\sum\\_{j=1}^{n} \\frac{ \\partial \\tilde{w}\\_{k, ij}^{E-1} (t) } { \\partial \\tau\\_i^l (t) }   \\frac{\\partial F\\_k (\\tilde{w}\\_k^{E-1} (t),  \\tau(t)) }{\\partial \\tilde{w}\\_{k, ij}^{E-1} (t) } =  \\sum\\_{j=1}^{n\\_{in}^l}  \\frac{ \\partial \\tilde{w}\\_{k, ij}^{E-1} (t) } { \\partial Q\\_{k, ij}^{E-1, l} (t) } \\frac{ \\partial Q\\_{k, ij}^{E-1, l} (t) } { \\partial \\tau\\_i^l (t) } g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l $$\n$$= \\sum\\_{j=1}^{n\\_{in}^l} w\\_{k, ij}^{E-1, l} (t) \\frac{ \\partial S(Q\\_{k, ij}^{E-1, l} (t)) } { \\partial Q\\_{k, ij}^{E-1, l} (t) } (-1) g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l  = -\\sum\\_{j=1}^{n\\_{in}^l} w\\_{k, ij}^{E-1, l} (t) g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l ,$$\nwhere the last equation results from the fact that we used the identity straight-through estimator for $\\frac{ \\partial S(Q\\_{k, ij}^{E-1, l} (t)) } { \\partial Q\\_{k, ij}^{E-1, l} (t) }$ and $w$ and $\\tau$ are constrained to be within\n$[\u22121, 1]$ and $[0, 1]$ as described in Section. 3.2.1.\n\n>Q2. Comparing equation (10) and (11), authors concludes the relationship between the gradient direction and $\\Delta \\tau$\n when  $w >0$ or $w<0$. However, Equation (9) is about the global $\\tau$, while equation (10) is talking about local $\\tau$. Could authors explain this in more details?\n\n**A2:** We would like to note that the thresholds in eq. (9) and (10) are both global thresholds. Specifically, in eq. (9) $\\tau(t+1) = \\sum\\_{k \\in S\\_t} \\tau\\_k(t)$, $\\tau(t+1)$ represents global thresholds and $\\tau\\_k(t)$ represents local thresholds updated by client $k$ at the last epoch. Eq. (10) is about the gradients of the loss with respect to the current global thresholds $\\tau(t)$ as shown in eq. (5). Hence, the clients can obtain $\\tau\\_k(t)$ by updating $\\tau(t)$ using eq. (10).  \n\nThe main purpose of Section 3.2.4 is to identify how to update model parameters for given $\\Delta \\tau(t) = \\tau(t+1) - \\tau(t)$. The update in Section 3.2.4 occurs after receiving the global thresholds $\\tau(t+1)$, which is generated from eq. (9). If $\\Delta \\tau\\_i^l < 0$, then the parameters connected to threshold $ \\tau\\_i^l $ are globally important. Otherwise, those parameters are less globally important. Hence, a client can deduce how to update its parameters for given $\\Delta \\tau(t)$. To this end, we used eq. (10) and (11) to explain the relationship between the sign of parameters, the sign of $\\Delta \\tau(t)$, and the gradient direction of the parameters."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700101044932,
+                "cdate": 1700101044932,
+                "tmdate": 1700101044932,
+                "mdate": 1700101044932,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BVxPGoQaSp",
+                "forum": "DZyhUXpEee",
+                "replyto": "y7XvNLnNhE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for your responses"
+                    },
+                    "comment": {
+                        "value": "I enjoy reading the responses. Followed by previous questions and your responses, I have following questions:\n1. How does Equation (8) lead to the conclusion \"Therefore, if connected parameters were important, the corresponding threshold will decrease. Otherwise, the threshold will be increased to enforce sparsity.\" I didn't see the obvious connection between the Taylor expansion and the corresponding threshold.\n2. the relationship between the gradient direction and  $\\Delta\\tau$ is not interpreted in responses. The $\\tau$ can represent the parameter importance, and the gradient represents the updating direction of the weights. Would you explicitly elaborate more on how the gradient direction influences the parameter importance?\n3. I disagree with that the data heterogeneity is implicitly considered. The bounded sum of gradients shows final convergence, but does not incorporate the influences of the data heterogeneity."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700449939909,
+                "cdate": 1700449939909,
+                "tmdate": 1700449939909,
+                "mdate": 1700449939909,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "YOiS8EqM7X",
+                "forum": "DZyhUXpEee",
+                "replyto": "lR71gJNzAO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Kuri"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for your further responses"
+                    },
+                    "comment": {
+                        "value": "Thanks for your clarification about the questions. I'd like to raise my score as 6 based on the insights and new convergence analysis."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700654029223,
+                "cdate": 1700654029223,
+                "tmdate": 1700654029223,
+                "mdate": 1700654029223,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "qybGQI9cNG",
+            "forum": "DZyhUXpEee",
+            "replyto": "DZyhUXpEee",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_R775"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_R775"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduces a method to mitigate the communication and computation overhead in FL. It employs a threshold-based approach to simultaneously optimize sparse masks and model parameters, resulting in reduced communication costs and the attainment of better personalized models. The paper offers a theoretical analysis regarding the convergence of the proposed method, while empirical results further confirm its efficacy."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The proposed approach employs a straightforward method based on transmitting threshold to effectively reduce communication bandwidth while surpassing the accuracy of personalized models over baseline methods.\n\n2. The paper substantiates the effectiveness of the proposed method through comprehensive empirical evaluations and theoretical analysis.\n\n3. The paper is well-written and easy to read."
+                },
+                "weaknesses": {
+                    "value": "1. Some implementation details need further clarification. (Q1)\n\n2. The intuition from the theory needs more elaboration. (Q2)\n\n3. This study primarily concentrates on personalized federated learning, where no global model is trained. It would enhance clarity if the authors could differentiate between personalized federated learning (pFL) and federated learning (FL), as the paper references FL multiple times, which typically involves a global model."
+                },
+                "questions": {
+                    "value": "1. During the local training for parameters and thresholds, if the gradients are calculated for every weight and applied with the binary mask, then how does it help save the computation overhead? Or if the gradients are calculated w.r.t. the sparse weights, how is it achieved in practice?\n\n2. The interpretation of the third term in Theorem 1 is not straightforward. The loss function $F_k$ is not bounded in the paper, and it can potentially assume arbitrarily large values, rendering the third term of Theorem 1 indeterminate. How to understand Theorem 1 as a valid convergence bound?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Reviewer_R775"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6217/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698725987701,
+            "cdate": 1698725987701,
+            "tmdate": 1699636678375,
+            "mdate": 1699636678375,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "50j6rwInmy",
+                "forum": "DZyhUXpEee",
+                "replyto": "qybGQI9cNG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We appreciate the reviewer for the constructive feedback. We provide our response to each comment below.\n\n>Q1. During the local training for parameters and thresholds, if the gradients are calculated for every weight and applied with the binary mask, then how does it help save the computation overhead? Or if the gradients are calculated w.r.t. the sparse weights, how is it achieved in practice?\n\n**A1:** During the backpropagation, for each layer, we calculate the gradients for the input activations and the gradients for the weights. In SpaFL, we are able to reduce the number of FLOPs to calculate the gradients for input activations by convolving sparse weight tensors with the gradients of the output activations. In particular, we sparsified the weight tensors before performing convolutions by detaching them from the computation graph. Below, we provide a detailed explanation about how we reduce the computation overhead of the backpropagation.\n\nConsider a convolutional layer with an input tensor $\ud835\udc4b \u2208 R^{\ud835\udc41\u00d7\ud835\udc36\u00d7\ud835\udc4b\u00d7\ud835\udc4c},$ parameter tensor $\ud835\udc4a \u2208 R^{\ud835\udc39 \u00d7\ud835\udc36\u00d7\ud835\udc45\u00d7\ud835\udc46}$, and output tensor $\ud835\udc42 \u2208 R^{\ud835\udc41\u00d7\ud835\udc39 \u00d7\ud835\udc3b\u00d7\ud835\udc4a}$. Here, the input tensor $X$ consists of $N$ number of samples, each of which has $X\u00d7Y$ dimension. The parameter tensor $W$ has $F$ filters of $C$ channels with kernel size $R \u00d7 S$. Assume that $\ud835\udc4a$ is pruned, and $\ud835\udf0c$% of the parameters are active. The output tensor $O$ will have $F$ output channels with dimension $H \u00d7 W$ for $N$ samples. We can calculate the number of FLOPs for the gradients of input activations by convolving the gradient of output activations with the parameter matrix $W$. Hence, it can be approximated to $\ud835\udf0c \u00d7 \ud835\udc41 \u00d7 (\ud835\udc39 \u00d7 \ud835\udc45 \u00d7 \ud835\udc46) \u00d7 \ud835\udc36 \u00d7 \ud835\udc4b \u00d7 \ud835\udc4c$. Since we used a sparse tensor $\ud835\udc4a$ during the forward propagation, we can reduce the number of FLOPs for calculating the gradients of input activations by $\ud835\udf0c$. Then, we can calculate the gradients of the weights by convolving the input activation with the output gradient. This can be approximately given by $(N \u00d7 X \u00d7 Y ) \u00d7 F \u00d7 C\u00d7 R \u00d7 S$. Since we did not sparsify the activations, there is no reduction of FLOPs in this calculation. Therefore, the total number of FLOPs for the backpropagation in SpaFL can be given by $(1 + \ud835\udf0c) \u00d7 \ud835\udc41 \u00d7 \ud835\udc39 \u00d7 \ud835\udc45 \u00d7 \ud835\udc46 \u00d7 \ud835\udc36 \u00d7 \ud835\udc4b \u00d7 \ud835\udc4c$. Meanwhile, without sparsity, the number of FLOPs for the backpropagation will be $2 \u00d7 \ud835\udc41 \u00d7 \ud835\udc39 \u00d7 \ud835\udc45 \u00d7 \ud835\udc46 \u00d7 \ud835\udc36 \u00d7 \ud835\udc4b \u00d7 \ud835\udc4c$. Hence, we can reduce the computing overhead by $\\frac{1+\ud835\udf0c}{2}$ in the backpropagation compared to a baseline that does not use sparse weights. As shown in Fig. 2 in the manuscript, model densities in SpaFL usually go below $10$% after 200 rounds. Hence, we can reduce the computation overhead in the backpropagation around $30$% compared to dense baselines during the training."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700158613686,
+                "cdate": 1700158613686,
+                "tmdate": 1700158613686,
+                "mdate": 1700158613686,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "uxn2QIRu24",
+            "forum": "DZyhUXpEee",
+            "replyto": "DZyhUXpEee",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_HLPa"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_HLPa"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes SpaFL to tackle the communication cost problem in federated learning. To find the sparse mask for the model, authors introduce a new parameter called threshold ($\\tau$). This parameter indicates if a weight in the model is active or nonactive, hence can reduce the density of the model. In each round, the clients find the current mask based on $\\tau$, then update their local weight, and finally update the local $\\tau$. After the local step, the server aggregates the client's $\\tau$ and transmits the new value to all the clients. Then, all the clients update their weights accordingly."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "* The problem is well-motivated.\n* Authors provides theoretical proof for the convergence of their method.\n* The method is novel and saves uplink communication costs for the clients.\n* The solution is novel."
+                },
+                "weaknesses": {
+                    "value": "* What happens if clients do not receive the server update due to unavailability? It is specifically important as the solutions is designed  for resource-constrained cross-device FL, where clients are only sometimes available. \n* How do non-participant clients update their model?\n* Is there any global model available?\n* The author should include a comparison with prior works that adapt sparse learning in FL, such as [8,9,22,24,25,26] (references are from this paper). Some of these methods can reach high sparsities comparable to the 1% communication cost of SpaFL.\n* How does the server or clients control the density of the models.\n* How does SpaFL perform when the global model is denser (for example ResNet18)?"
+                },
+                "questions": {
+                    "value": "* The questions can be found in weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Reviewer_HLPa",
+                        "ICLR.cc/2024/Conference/Submission6217/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6217/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698726560728,
+            "cdate": 1698726560728,
+            "tmdate": 1700649170234,
+            "mdate": 1700649170234,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "xwqPYavPbK",
+                "forum": "DZyhUXpEee",
+                "replyto": "uxn2QIRu24",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We appreciate the reviewer for the constructive comments. We provide our response to each comment below.\n\n>Q1: What happens if clients do not receive the server update due to unavailability? It is specifically important as the solutions is designed for resource-constrained cross-device FL, where clients are only sometimes available.\n\n**A1:** We agree with the reviewer that clients may not always be able to receive global thresholds due to their constrained resources. To demonstrate that SpaFL is also compatible with intermittent availability, we did comparison between SpaFL and a baseline where only a small subset of clients can receive the server update. This baseline can capture the unavailability of some clients who cannot participate in the training at a given time. Below, we provide an empirical comparison between SpaFL and the baseline with the scheduling size of 10. \n\n| Algorithms | FMNIST | CIFAR-10 | CIFAR-100|\n|:------:|:--------:|:-------:|:--------:|\n|SpaFL|$90.31\\pm0.35$ | $73.85\\pm2.80$| $38.80\\pm1.10$|\n|SpaFL + unavailability|$90.24\\pm0.08$| $73.45\\pm3.19$| $38.65 \\pm 0.43$|\n\nFor SpaFL, the communications costs are $1.0208$ Gbit, $2.4956$ Gbit, and  $0.7674$ Gbit, for FMNIST, CIFAR-10, and CIFAR-100, respectively. For the baseline, the communications costs are $0.1856$ Gbit, $0.4537$ Gbit, and  $0.1395$ Gbit, for FMNIST, CIFAR-10, and CIFAR-100, respectively. We can see that the performance loss of the baseline is very small. Moreover, the baseline used only $20$% of the communication costs used by SpaFL. Therefore, this result demonstrates the compatibility of SpaFL with a scenario where only a subset of clients is available and receives the server update. \n\n>Q2. How do non-participant clients update their model?\n\n**A2:** As demonstrated by response **A1**, intermittently non-participating clients can update their model when they become available and receive server update. If a client is not participating in the training at a given time, then we can proceed with the SpaFL algorithm with a subset of participating clients. However, if some clients do not participate in the training permanently, then they cannot update their model in SpaFL. However, we believe this is the case for most of FL algorithms and not unique to SpaFL.\n\n>Q3: Is there any global model available?\n\n**A3:** Since SpaFL personalizes clients' models, it does not have a global model. Instead, clients share global thresholds. Since global thresholds are aggregated parameter importance, clients can know which neuron/filter is globally important, thereby learning how to prune their model. \n\nHowever, SpaFL can also be extended to share some model parameters between clients. Clients can transmit their unpruned parameters to the server as done in [8,9,22,24,25,26] (references are from the manuscript) along with their thresholds. Then, the server can generate a global model by aggregating the received parameters and thresholds. Hence, we extend SpaFL to enable clients to share both global model and thresholds."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700328618556,
+                "cdate": 1700328618556,
+                "tmdate": 1700328618556,
+                "mdate": 1700328618556,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "rClAOn5vlY",
+                "forum": "DZyhUXpEee",
+                "replyto": "fuV8MPuXLW",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_HLPa"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_HLPa"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Respond to rebuttal"
+                    },
+                    "comment": {
+                        "value": "I want to thank the author for their comprehensive response; I increased my score to 6. \n\nIt would be helpful if the authors could explain the client-side update algorithm for clients who were unavailable for several rounds, especially since the clients are maintaining their local state and there is no global model."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700649693769,
+                "cdate": 1700649693769,
+                "tmdate": 1700649693769,
+                "mdate": 1700649693769,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "i5mdmQLoec",
+            "forum": "DZyhUXpEee",
+            "replyto": "DZyhUXpEee",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_Ggae"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission6217/Reviewer_Ggae"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose a novel federated learning approach with sparse personalized client models. The main technical contribution is the reduction of communication overhead by only communicating the thresholds used to determine non-zero parameters and the reduction of computation cost by joint optimization of thresholds and sparse client models. The convergence of the approach is theoretically analyzed and experiments on a range of datasets demonstrate improvements over several prior works."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The proposed approach will significantly reduce communication cost since it only involves communicating one threshold per neuron and number of neurons is much less than the number of parameters.\n\n2. The empirical results also show a significant reduction in FLOPs due to the sparsity of the models being optimized on the clients."
+                },
+                "weaknesses": {
+                    "value": "1. Some aspects of the algorithm are not clearly explained. It is not clear why the regularizer in (4) is chosen over other options. It is also not clear why the second update of the client models in 3.2.4 is necessary because technically it should be possible to continue training the model with the new global thresholds as described in 3.2.2.\n\n2.The sparsification is unstructured and thus may not actually lead to reduction in computation cost or latency due to inefficient utilization of the hardware. Since there are already several works on sparse FL I believe it is important to now start considering hardware performance etc to truly differentiate from prior work."
+                },
+                "questions": {
+                    "value": "1. In addition to an intuitive justification for the regularizer in (4) and the second update in 3.2.4 can you also provide an empirical comparison with alternate regularizers?\n\n2. Likewise can you also provide a comparison with a baseline which does not use the update in 3.2.4 but instead just directly continues training the model with the new global thresholds?\n\n3. Can you provide a derivation for (6) and (11)?\n\n4. From (10) and (11) if the gradient direction of $w$ is opposite to that of its connected threshold if $w>0$ then shouldn't the gradient direction of $w$ and $\\Delta \\tau$ be the opposite if $w>0$ and not same as is claimed in the paragraph after 11? Please clarify.\n\n5. What is the model density of the baselines in Table 1? I do not see it presented in the table.\n \n6. Do you have any thoughts on how the sparsification approach described herein could be made structured and thus more hardware efficient?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission6217/Reviewer_Ggae"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission6217/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699372822615,
+            "cdate": 1699372822615,
+            "tmdate": 1700714953849,
+            "mdate": 1700714953849,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "3GoVG8p9g8",
+                "forum": "DZyhUXpEee",
+                "replyto": "i5mdmQLoec",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the constructive comments. We provide our response to each comment below.\n\n>Q1: In addition to an intuitive justification for the regularizer in (4) and the second update in 3.2.4 can you also provide an empirical comparison with alternate regularizers?\n\n **A1**:  The main reason for choosing the regularizer  $R=\\exp(-||\\tau||)$ in (4) is that the exponential function goes to zero asymptotically as thresholds increase. This is reasonable because it can penalize low thresholds without making them become extremely large. We can also use a similar regularizer that can give penalty for low thresholds without encouraging them to become a too large value. For example, a regularizer $R' = \\frac{1}{||\\tau|| + 0.1}$ satisfies such property. Below, we provide an empirical comparison between SpaFL and the baseline that uses $R'$ as below.\n|Algorithm| FMNIST| CIFAR-10| CIFAR-100| \n|:-------------------:|:-------------------:|:------:|:------:|\n|SpaFL|    $\\boldsymbol{90.31\\pm0.34}$    |  $\\boldsymbol{73.85 \\pm 2.80}$ | $\\boldsymbol{38.80 \\pm 1.10}$|\n|Baseline| $89.92 \\pm 0.25$| $73.62 \\pm 3.42$ | $38.73 \\pm 0.53$ | \n\nFor the regularizer $R$, the achieved model densities are $5.36$%, $7.57$% and $7.38$% for FMNIST, CIFAR-10, and CIFAR-100, respectively. Meanwhile, with $R'$, the model densities are $4.85$%, $5.60$%, and $8.01$% for FMNIST, CIFAR-10, and CIFAR-100, respectively. We can see that both regularizers work well with SpaFL. Hence, SpaFL is compatible with any regularizers that can penalize the magnitude of thresholds asymptotically. \n\n>Q2: Likewise can you also provide a comparison with a baseline which does not use the update in 3.2.4 but instead just directly continues training the model with the new global thresholds?\n\n**A2**: The main purpose of Section 3.2.4 is to update the model parameters by extracting the aggregated importance from global thresholds. By investigating the difference between two consecutive global thresholds and parameters, clients can deduce which parameters are globally important.  Although clients perform their training using the received global thresholds as described in Section 3.2.2, this additional update provides meaningful performance gains. We provide an empirical comparison between SpaFL and the baseline that does not use the update in 3.2.4 as below\n|Algorithm| FMNIST| CIFAR-10| CIFAR-100| \n|:-------------------:|:-------------------:|:------:|:------:|\n|SpaFL|    $\\boldsymbol{90.31\\pm0.34}$    |  $\\boldsymbol{73.85 \\pm 2.80}$ | $\\boldsymbol{38.80 \\pm 1.10}$|\n|Baseline| $90.02 \\pm 0.30$| $72.92 \\pm 2.15$ | $38.06 \\pm 0.80$ | \n\nWe can see that the update in Section 3.2.4. can provide a clear improvement compared to the baseline by utilizing the aggregated parameter importance from global thresholds. \n\n>Q3: Can you provide a derivation for (6) and (11)?\n\n**A3**:  To derive (6), we start from the gradient of the loss with respect to a threshold, as follows:\n\n$$ \\frac{\\partial F\\_k (\\tilde{w}\\_k^{E-1}(t),  \\tau(t) )}{\\partial \\tau_i^l(t)} = \\sum\\_{j=1}^{n} \\frac{ \\partial \\tilde{w}\\_{k, ij}^{E-1} (t) } { \\partial \\tau\\_i^l (t) }   \\frac{\\partial F\\_k (\\tilde{w}\\_k^{E-1} (t),  \\tau(t)) }{\\partial \\tilde{w}\\_{k, ij}^{E-1} (t) }=  \\sum\\_{j=1}^{n\\_{in}^l}  \\frac{ \\partial \\tilde{w}\\_{k, ij}^{E-1} (t) } { \\partial Q\\_{k, ij}^{E-1, l} (t) } \\frac{ \\partial Q\\_{k, ij}^{E-1, l} (t) } { \\partial \\tau\\_i^l (t) } g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l $$\n$$= \\sum\\_{j=1}^{n\\_{in}^l} w\\_{k, ij}^{E-1, l} (t) \\frac{ \\partial S(Q\\_{k, ij}^{E-1, l} (t)) } { \\partial Q\\_{k, ij}^{E-1, l} (t) } (-1) g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l = -\\sum\\_{j=1}^{n\\_{in}^l} w\\_{k, ij}^{E-1, l} (t) g\\_k( \\tilde{w}\\_k^{E-1}(t))\\_{ij}^l ,$$\nwhere $Q\\_{k, ij}^{E-1, l} (t)) = |w\\_{k, ij}^{E-1, l} (t)|  -  \\tau_i^l(t)$, $S(\\cdot)$ is a unit step function, $\\tilde{w} = w \\cdot S(Q(w))$. The last equation results from the fact that we used the identity straight-through estimator and $w$ and $\\tau$ is constrained to be within\n$[\u22121, 1]$ and $[0, 1]$ as described in Section 3.2.1 and 3.2.2.\n\nThe derivation of eq. (11) is similar to the above. We start from the gradient of the loss with respect to a parameter $w$ as follows\n$$ \\frac{\\partial F\\_k (\\tilde{w}\\_k(t), \\tau(t) )} {\\partial w\\_k(t)}  =  \\frac{\\partial \\tilde{w}\\_k(t)}{\\partial w\\_k(t)}  \\frac{  F\\_k (\\tilde{w}\\_k(t), \\tau(t) ) } {\\partial \\tilde{w}\\_k(t) }= \\frac{\\partial \\tilde{w}\\_k(t) }{ \\partial Q\\_k(t) } \\frac{\\partial Q\\_k(t)}{\\partial w\\_k(t)} g\\_k( \\tilde{w}\\_k(t) )$$\n$$ = w\\_k(t) \\frac{\\partial S(Q\\_k(t))}{\\partial Q\\_k(t)} \\frac{\\partial |w\\_k(t)|}{\\partial w\\_k(t)}  g\\_k( \\tilde{w}\\_k(t) ) = |w\\_k(t)| g\\_k( \\tilde{w}\\_k(t) ).$$\nThis completes the derivation of eq. (11)."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700068541676,
+                "cdate": 1700068541676,
+                "tmdate": 1700068541676,
+                "mdate": 1700068541676,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "nc6pI7ApnW",
+                "forum": "DZyhUXpEee",
+                "replyto": "IsuMtZO4KR",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Ggae"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission6217/Reviewer_Ggae"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for your response"
+                    },
+                    "comment": {
+                        "value": "Thank you for the detailed response. My questions have been satisfactorily answered and therefore I am increasing my score to 6."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission6217/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700714944280,
+                "cdate": 1700714944280,
+                "tmdate": 1700714944280,
+                "mdate": 1700714944280,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

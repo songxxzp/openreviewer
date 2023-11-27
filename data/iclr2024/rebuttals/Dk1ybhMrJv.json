@@ -1,0 +1,956 @@
+[
+    {
+        "title": "Pretrained deep models outperform GBDTs in Learning-To-Rank under label scarcity"
+    },
+    {
+        "review": {
+            "id": "oIWMeUSiJm",
+            "forum": "Dk1ybhMrJv",
+            "replyto": "Dk1ybhMrJv",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_i3NM"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_i3NM"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper studies pre-trained DNN for tabular LTR problems, which is an underexplored problem. The major contribution of the paper is to identify areas where this might help, including query sparsity and label sparisity scenarios. Technically the paper proposes a loss function specific to ranking data nature based on existing contrastive learning objectives. Experiments are mainly compared against GBDT and DNN without pre-training, and it\u2019s shown that there\u2019re some benefits in the discussed scenarios. Experiments are also conducted offline on a private industry dataset."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "S1: To the reviewer\u2019s knowledge, this is the first work that shows some promises for pre-trained DNNs for the LTR task. The reviewer thought about the direction but It was not intuitively clear how to do it or if it has benefits. The paper still has several caveats but is a decent exploration in some aspects.\n\nS2: the motivation of the ranking contrastive loss is clear and easy to understand - it is clear what the hard negatives are for LTR problems, so it is good to leverage that.\n\nS3: It is good to identify two scenarios where pre-trained deep models might help, including query sparse and label sparse scenarios."
+                },
+                "weaknesses": {
+                    "value": "W1: change over SimCLR is incremental - the major weakness of SimCLR for non-ranking problems was complexity. The authors made a good point that hard negatives are clear for LTR (mentioned in S1), but SimCLR using small batches will likely largely resolve the issues? So the necessity for a new loss is not very convincing - in fact, the authors did not comprehensively compare with that baseline. - also, sometimes having easy negatives may improve the generalization of learning - this may need deeper study. SimSiam does not look to be a competitive baseline considering the factors. So the proposal of the new loss is not very convincing.\n\nW2: extendability. The reviewer thought about this problem before and one major difference between tabular vs text is, tabular datasets assume a feature space, while text encoders are for text in general that is easy to generalize. E.g., one can easily add more text fields and everything is still kind of in the \u201ctext space\u201d, but adding new features to the tabular table may completely invalidate the pre-training in the previous feature space. So when the feature space changes, which can be common in practice, the pre-training needs to be done again. Also, the pre-training needs to be done for each dataset separately, unlike text domains where one model may be sufficient. Thus pre-trained models on tabular datasets may be much limiting in general.\n\nW3: It is unclear why no online results are provided for the industry dataset. Overall it is not clear how significant the results are in this section due to unclear baselines, private dataset, and unclear real-world implications."
+                },
+                "questions": {
+                    "value": "Please discuss the weaknesses listed above.\nTypo in figure2 caption? non-pretrained counterparts?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2970/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698420508012,
+            "cdate": 1698420508012,
+            "tmdate": 1699636241194,
+            "mdate": 1699636241194,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "WccHtfO3MH",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "oIWMeUSiJm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 1"
+                    },
+                    "comment": {
+                        "value": "Thank you for your review and feedback. We would like to first take an opportunity to clarify the impact and contributions of our work.\n\nWe strongly believe our work will significantly impact industries that work with LTR problems (search, recommendation), by causing them to revise, or at least revisit, current SOTA methods. Today many large companies use GBDTs for ranking tabular data, and this approach is SOTA even in the research community. The novel starting point of our work is the often ignored fact that most of the data collected in LTR systems is unlabeled. We have shown through extensive experiments on standard public datasets and a large-scale private dataset that pretrained deep rankers can leverage unlabeled data to consistently outperform GBDTs, with outsized gains in robustness towards outlier data. \n\nAll reviewers agree we have convincingly demonstrated this. Reviewer 1XYq: \u201cExperimentally, authors show that pretrained models can outperform GBDTs, which is one of the strongest baselines, under label scarcity setting.\u201d Reviewer oW1i: \u201cthe paper highlights the superior performance of pretrained deep rankers, especially on outlier queries, in scenarios with limited labeled data.\u201d Reviewer i3NM: \u201cThe major contribution of the paper is to identify areas where [pretrained deep rankers] help, including query sparsity and label sparisity scenarios.\u201d\n\nWe now address the concerns of the reviewer.\n\n**Will decreasing the number of negatives in SimCLR be sufficient to apply SimCLR to ranking problems?**\n\nThank you for asking this insightful question. First, we would like to clarify that our primary goal is to demonstrate that DL rankers built using pre-training techniques can achieve SOTA performance in LTR settings, and consequently beat GBDT models (prior SOTA). Only as a secondary goal, we investigate a few simple but effective pre-training strategies such as SimSiam, SimCLR, and our variant SimCLR-Rank. While we identified SimCLR-Rank has a positive impact in a wide variety of LTR scenarios, we also show that SimSiam works better for our large-scale proprietary dataset. Our goal is not to show that any one particular method is the best for pretraining in LTR.\n\nAs the reviewer correctly identified, SimCLR-Rank is different from SimCLR in two aspects: (1) it uses items from the same query group as freely available hard-negatives, (2) it reduces the number of negatives from batchsize to at most query group size and thus allow better computational scaling with batchsize. To identify which of these contribute more towards SimCLR-Rank\u2019s performance, we performed an additional experiment below (as suggested by the reviewer), comparing SimCLR-Rank with a variant of SimCLR (which we call as SimCLR-sample). In SimCLR-sample, instead of using all the other items as negatives, we uniformly sample a constant number of negatives from the batch. This reduces the computational complexity from quadratic in batchsize (of SimCLR) to linear in batchsize. In the below experiments we follow the setup in Subsection 4.3.2 and SimCLR-Rank and SimCLR-sample use the same number of negatives and batchsize.\n\nWe find that SimCLR-Rank performs better on MSLR/Istella, while SimCLR-sample performs better on Yahoo. We note that MSLR/Istella are much sparser than Yahoo (see Table 12 in the paper), and are more representative of typical search and recommendations applications. Therefore we still believe that SimCLR-Rank which selects hard-negatives from the same query group is a useful pre-training method for the LTR toolbox and can be highly effective in many situations.\n\n| Method | MSLR | Yahoo | Istella |\n| --- | ----------- | - | - |\n| SimCLR-Rank| **0.3929 $\\pm$ 0.0018** | 0.5989 $\\pm$ 0.0010 | **0.5830 $\\pm$ 0.0013** |\n| SimCLR-sample | 0.3890 $\\pm$ 0.0008 | **0.6056 $\\pm$ 0.0047** | 0.5787 $\\pm$ 0.0035 |\n\n**Pretrained models in tabular datasets are not very extendable.**\n\nThe reviewer\u2019s observation that our pretrained models cannot take advantage of transfer learning is correct. Tabular datasets have specific features which can be very different. In fact, each tabular dataset is its own domain. Because in general there are no common features between tabular datasets, it is not clear how to have common knowledge. Levin et al. [1] show that if features are shared, it is possible to transfer knowledge between datasets, but in general it is not known how to do transfer learning in tabular data. The same shortcoming is true of GBDTs. Transfer learning for tabular data is a question of independent interest, and beyond the scope of our paper."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700377047905,
+                "cdate": 1700377047905,
+                "tmdate": 1700377047905,
+                "mdate": 1700377047905,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "wTUis9dqq3",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "oIWMeUSiJm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 2"
+                    },
+                    "comment": {
+                        "value": "**It is not clear how significant the results are in the private dataset section.**\n\nWe agree with the reviewer that only online experiments can reveal the true impact of an LTR model due to the counterfactual nature of the LTR problem. That is from offline experiments, it is not clear how the user might have responded to the ranking provided by the model. However  running online experiments on real-world user traffic needs to be carefully considered as it has a potential opportunity cost. Unfortunately, due to superseding business priorities we could not run online experiments. Similarly, unfortunately at this point we cannot reveal more details of the baseline, but we will try our best to provide more details in the camera ready version. \n\nTo provide more confidence in our private dataset results, we updated our Table 3 to provide error bars to our results.\n\n| Target | Method | Delta% NDCG | Delta% Outlier NDCG |\n| --- | ----------- | - | - |\n| Purchase| Baseline | +0.00% | +0.00% |\n|  | SimSiam | **+1.75% $\\pm$ 0.13%** | **+29.66% $\\pm$ 0.84%**|\n| | SimCLR-Rank | +0.18% $\\pm$ 0.13% | +2.19% $\\pm$ 0.71% |\n| Relevance| Baseline | +0.00% | +0.00% |\n|  | SimSiam | **+2.78% $\\pm$ 0.06%** | **+26.88% $\\pm$ 0.35%**|\n| | SimCLR-Rank | +0.85% $\\pm$ 0.06% | +2.99% $\\pm$ 0.31% |\n\nTabular (a.k.a.numerical) ML (e.g. LTR) systems are important for modern enterprises and therefore validating research hypotheses on large-scale practical datasets is highly valuable. Unfortunately, this is challenging due to the expensive and proprietary nature of such data and most LTR papers [2,3,4] do not prove their hypotheses on practical large-scale datasets. We demonstrate pretraining rankers achieve SOTA on public datasets but also emphatically on a large-scale commercial dataset. Therefore, we believe our results will be useful to the LTR community and the wider Tabular-DL community.\n\nWe thank the reviewer for their consideration, and are happy to help with any further concerns. If we have addressed the concerns we would appreciate it if the reviewer could consider raising their score.\n\n[1] Transfer Learning with Deep Tabular Models. Roman Levin, Valeriia Cherepanova, Avi Schwarzschild, Arpit Bansal, C. Bayan Bruss, Tom Goldstein, Andrew Gordon Wilson, Micah Goldblum. ICLR 2023.  \n[2] Are Neural Rankers still Outperformed by Gradient Boosted Decision Trees?, Qin et al., ICLR 2021.  \n[3] Learning Groupwise Multivariate Scoring Functions Using Deep Neural Networks., Ai et al., SIGIR 2019. \n[4] SetRank: Learning a Permutation-Invariant Ranking Model for Information Retrieval., Pang et al., SIGIR 2020"
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700377398903,
+                "cdate": 1700377398903,
+                "tmdate": 1700630744086,
+                "mdate": 1700630744086,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "6NPARqnRdl",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "oIWMeUSiJm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up to replies, additional info"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their helpful feedback during this rebuttal process. \n\nA follow-up W1: we produced a comprehensive comparison between SimCLR-Rank, SimSiam, and many SOTA tabular pretraining baselines in a reply to another reviewer: https://openreview.net/forum?id=Dk1ybhMrJv&noteId=1Z4qMYixVv. We hope this, combined with our earlier responses, gives the reviewer more confidence in our results.\n\nWe thank the reviewer for their time. Please kindly let us know if there are additional comments you have for us."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700546999045,
+                "cdate": 1700546999045,
+                "tmdate": 1700546999045,
+                "mdate": 1700546999045,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "kLEyXg2XCx",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "oIWMeUSiJm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Gentle request for final feedback"
+                    },
+                    "comment": {
+                        "value": "We would like to thank the reviewer again for their encouraging feedback. While we have an opportunity, we would like to make an additional point about **W2 (extendability)**:\n\nIt is common for unsupervised pretraining (self-supervised learning) papers to not consider transferability (including in very high-impact and influential works). Examples include: tabular classification [1,2,3,7], image classification [4,5,6], and text classification [4,5]. Like these papers, we show that pretraining in the same dataset provides significant benefits, and transfer learning is not needed to achieve these results.\n\nExtendability is even harder to prove in LTR than the general tabular setting. In tabular data (where transferability is hard, as noted in Ucar et al. [1]), overlapping columns seems to be what is needed to achieve transferability [8]. Getting overlapping columns seems to be nearly impossible in the three benchmark LTR public datasets, two of which (Yahoo, Istella) [9,10] do not specify what the columns even mean (due to the need to protect business trade secrets). The most transparent, MSLRWEB30K [11], also has many columns whose meanings may not make sense outside of the context of the dataset (for example, features that are the outputs of Microsoft internal models).\n\nWe hope our discussion has adequately addressed your feedback on (1) SimCLR-Rank's utility, (2) extendability of results, (3) the significance of the results. Please kindly let us know if there are additional comments you have for us.\n\n\n\n[1] SubTab: Subsetting Features of Tabular Data for Self-Supervised Representation Learning. Talip Ucar, Ehsan Hajiramezanali, Lindsay Edwards. NeurIPS 2021.  \n[2] VIME: Extending the Success of Self- and Semi-supervised Learning to Tabular Domain. Jinsung Yoon, Yao Zhang, James Jordon, Mihaela van der Schaar. NeurIPS 2020.  \n[3] Towards Domain-Agnostic Contrastive Learning. Vikas Verma, Minh-Thang Luong, Kenji Kawaguchi, Hieu Pham, Quoc V. Le. ICML 2021.  \n[4] Contrastive learning with hard negative samples. Joshua Robinson, Ching-Yao Chuang, Suvrit Sra, Stefanie Jegelka. ICLR 2021.  \n[5] Debiased Contrastive Learning. Ching-Yao Chuang, Joshua Robinson, Lin Yen-Chen, Antonio Torralba, Stefanie Jegelka. NeurIPS 2020.  \n[6] Robust Contrastive Learning Using Negative Samples with Diminished Semantics. Songwei Ge, Shlok Mishra, Chun-Liang Li, Haohan Wang, David Jacobs. NeurIPS 2021.  \n[7] SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. Dara Bahri, Heinrich Jiang, Yi Tay, Donald Metzler. ICLR 2022.  \n[8] Transfer Learning with Deep Tabular Models. Roman Levin, Valeriia Cherepanova, Avi Schwarzschild, Arpit Bansal, C. Bayan Bruss, Tom Goldstein, Andrew Gordon Wilson, Micah Goldblum. ICLR 2023.  \n[9] Yahoo! Learning to Rank Challenge Overview. Olivier Chapelle, Yi Chang.  \n[10] Fast Ranking with Additive Ensembles of Oblivious and Non-Oblivious Regression Trees. Domenico Dato et al.  \n[11] Introducing LETOR 4.0 Datasets. Tao Qin, Tie-Yan Liu."
+                    }
+                },
+                "number": 26,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700633009163,
+                "cdate": 1700633009163,
+                "tmdate": 1700633009163,
+                "mdate": 1700633009163,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "GC0uJEAF0J",
+            "forum": "Dk1ybhMrJv",
+            "replyto": "Dk1ybhMrJv",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper investigates the application of unsupervised pretraining to deep learning models for Tabular Learning-To-Rank (LTR) problems and demonstrates consistent outperformance of Gradient Boosted Decision Trees (GBDTs) and other non-pretrained rankers when there is more unlabeled data than labeled data. They introduce LTR-specific pretraining strategies, including the SimCLR-Rank loss, and show significant improvements in NDCG. Additionally, the paper highlights the superior performance of pretrained deep rankers, especially on outlier queries, in scenarios with limited labeled data."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. This article is characterized by clear and comprehensible writing, presenting methods that are straightforward and easily implementable.\n\n2. Through experimentation, this paper demonstrates that pre-trained deep models can achieve performance levels close to, or even surpass, GBDT in ranking tasks. This discovery holds practical value.\n\n3. The paper introduces a pre-training approach that leverages the nature of learning to rank problems, demonstrating reasonable effectiveness, and in certain scenarios, outperforming simclr."
+                },
+                "weaknesses": {
+                    "value": "1. This paper exhibits notable deficiencies in the aspects of experimental comparisons and discussions on related work. The experimental comparison methodology only considers comparisons between fine-tuning or probing methods based on pre-trained models, as well as MLP models. I believe that in the realm of learning to rank and tabular data, there are likely more recent deep learning methods that could serve as baselines for comparison. Proper discussions about these methods should also be incorporated into the related work section. Currently, I find the discussion on related work to be inadequate. This would aid in addressing certain evident issues, such as whether current methods for using deep learning to learn tabular data also employ contrastive learning for pre-training and what distinguishes them from the approach presented in this paper.\n\n2. Regarding the methodology, apart from applying SimCLR and SimSiam directly to pre-training for ranking tasks, the primary contribution of this paper is the SimCLR-Rank method. The key difference between this method and SimCLR lies in narrowing down the computation of contrastive learning from the entire batch to a single QG. This method possesses a degree of rationality and can effectively exploit the characteristics of the learning to rank task. However, in essence, this approach distills the semantic information contained in QG itself into the pre-trained model, similar to knowledge distillation (typically, QG is obtained through some form of retrieval, and the retrieval model can be viewed as a strong \"teacher\" model, while the pre-training model in this paper serves as a \"student\" model). Based on this observation, I believe that if the features from the retrieval model are input into GBDT, it could potentially achieve better performance, which is easily attainable in practical industrial applications. If this were the case, the application prospects of the method proposed in this paper would become rather limited.\n\n3. In SimCLR, dissimilar embeddings correspond to smaller weights, while similar embeddings correspond to larger weights, indicating its adaptive ability to mine hard samples. In the learning to rank scenario, samples from the same QG should be relatively similar, and samples from different QGs should be dissimilar. This implies that the original SimCLR method, even when calculating softmax over the entire batch, primarily emphasizes the samples from the same QG, aligning with the role of SimCLR-Rank. Therefore, I believe that the potential improvement that SimCLR-Rank can bring to typical ranking situations may be somewhat limited. I hope the authors can provide further explanations regarding this issue."
+                },
+                "questions": {
+                    "value": "Please refer to Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2970/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2970/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2970/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698689647341,
+            "cdate": 1698689647341,
+            "tmdate": 1700379682020,
+            "mdate": 1700379682020,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "EUNQzo1Cn0",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 1"
+                    },
+                    "comment": {
+                        "value": "Thank you for your review and feedback.  We would like to first take an opportunity to clarify the impact and contributions of our work.\n\nWe strongly believe our work will significantly impact industries that work with LTR problems (search, recommendation), by causing them to revise, or at least revisit, current SOTA methods. Today many large companies use GBDTs for ranking tabular data, and this approach is SOTA even in the research community. The novel starting point of our work is the often ignored fact that most of the data collected in LTR systems is unlabeled. We have shown through extensive experiments on standard public datasets and a large-scale private dataset that pretrained deep rankers can leverage unlabeled data to consistently outperform GBDTs, with outsized gains in robustness towards outlier data. \n\nAll reviewers agree we have convincingly demonstrated this. Reviewer 1XYq: \u201cExperimentally, authors show that pretrained models can outperform GBDTs, which is one of the strongest baselines, under label scarcity setting.\u201d Reviewer oW1i: \u201cthe paper highlights the superior performance of pretrained deep rankers, especially on outlier queries, in scenarios with limited labeled data.\u201d Reviewer i3NM: \u201cThe major contribution of the paper is to identify areas where [pretrained deep rankers] help, including query sparsity and label sparisity scenarios.\u201d\n\nWe now address the concerns of the reviewer.\n\n**The paper is missing important comparisons with other tabular SSL methods.**\n\nWe thank the reviewer for bringing this to our attention. We added a comprehensive and expanded related works section to Appendix A.1 (page 14 in the appendix, colored in blue) discussing the current state of pretraining for tabular (a.k.a numerical) dataset. After the paper decision, we plan to reorder the paper to place it into the main text.  \n\nFirst, we would like to clarify that our primary goal is to demonstrate that DL rankers built using pre-training techniques can achieve SOTA performance in LTR settings, and consequently beat GBDT models (prior SOTA). Only as a secondary goal, we investigate a few simple but effective pre-training strategies such as SimSiam, SimCLR, and our variant SimCLR-Rank. While we identified SimCLR-Rank has a positive impact in a wide variety of LTR scenarios, we also show that SimSiam works better for our large-scale proprietary dataset.  Our goal is not to show that any one particular method is the best for pretraining in LTR.\n\nSimCLR-Rank is different from SimCLR in two aspects: (1) it uses items from the same query group as freely available hard-negatives, (2) it reduces the number of negatives from batchsize to at most query group size and thus allow better computational scaling with batchsize. To identify which of these contribute more towards SimCLR-Rank\u2019s performance, we performed an additional experiment below (as suggested by Reviewer i3NM), comparing SimCLR-Rank with a variant of SimCLR (which name SimCLR-sample). In SimCLR-sample, instead of using all the other items as negatives, we uniformly sample a constant number of negatives from the batch. This reduces the computational complexity from quadratic in batchsize (of SimCLR) to linear in batchsize. In the below experiments we follow the setup in Subsection 4.3.2 and SimCLR-Rank and SimCLR-sample use the same number of negatives and batchsize.\n\n| Method | MSLR | Yahoo | Istella |\n| --- | ----------- | - | - |\n| SimCLR-Rank| **0.3929 $\\pm$ 0.0018** | 0.5989 $\\pm$ 0.0010 | **0.5830 $\\pm$ 0.0013** |\n| SimCLR-sample | 0.3890 $\\pm$ 0.0008 | **0.6056 $\\pm$ 0.0047** | 0.5787 $\\pm$ 0.0035 |\n\nAs an additional comparison (suggested by reviewer 1XYq), we also evaluate SubTab [1] in the setting of Subsection 4.3.2.  SubTab\u2019s pretraining objective divides input features into multiple subsets (in the language of computer vision, \u201cmultiple views\u201d) and trains an autoencoder to reconstruct the original input features.  To pretrain using SubTab, we divide the input features into 4 subsets with 75% overlap, and with input corruptions of 15% masking probability and Gaussian noise of scale 0.1 (suggested in the SubTab paper as a good setting).  The finetuning strategy and the choice for encoder model is the same as for SimCLR-Rank and SimCLR-sample.  We find that SubTab does very poorly on the MSLR and Istella datasets while performing respectably on Yahoo (though worse than both SimCLR-Rank and SimCLR-Sample).\n\n| Method | MSLR | Yahoo | Istella |\n| --- | ----------- | - | - |\n| SimCLR-Rank| **0.3929 $\\pm$ 0.0018** | 0.5989 $\\pm$ 0.0010 | **0.5830 $\\pm$ 0.0013** |\n| SimCLR-sample | 0.3890 $\\pm$ 0.0008 | **0.6056 $\\pm$ 0.0047** | 0.5787 $\\pm$ 0.0035 |\n|SubTab | 0.2879 $\\pm$ 0.0019 | 0.5889 $\\pm$ 0.0021 | 0.4700 $\\pm$ 0.0031 |"
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700375434679,
+                "cdate": 1700375434679,
+                "tmdate": 1700376725621,
+                "mdate": 1700376725621,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "jbfGyPd8Ic",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 2"
+                    },
+                    "comment": {
+                        "value": "**Could we use features from the retrieval model to improve GBDT performance over SimCLR-Rank?**\n\nWe thank the reviewer for this very interesting conjecture.\n\nFirst, we would like to note that the features of the retrieval model are in fact used in our LTR experiments on the private dataset. Despite this, SimCLR-Rank still outperforms the baseline model. Second, in the public datasets we do not have access to the upstream retrieval model features to test this hypothesis.\n\nThe last observation we would like to make is that retrieval models are typically not large or powerful in applications like search or recommendations. They are typically designed to be fast models (e.g. KNNs or even handcrafted rules) with high recall (and potentially low precision) to quickly filter millions or billions of items into hundreds of possibly relevant items. Since they are trained for recall and not for precision, these models and their features may find it difficult to differentiate and rank the relevant items in the query group. Therefore, we conjecture that  distilling from retrieval to rankers might not work well."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700375878781,
+                "cdate": 1700375878781,
+                "tmdate": 1700376805786,
+                "mdate": 1700376805786,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "GxR3efC03v",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 3"
+                    },
+                    "comment": {
+                        "value": "**The potential improvement of SimCLR-Rank over SimCLR might be limited in practical situations.**\n\nWe thank the reviewer for their insightful question.  As the reviewer correctly identified, all the negative samples in the SimCLR-Rank loss are present in the SimCLR loss as well, so the qualitative and quantitative behaviors of the two algorithms are likely similar.  \n\nHowever, SimCLR is difficult or impossible to use in large-scale big-data settings because of its high runtime and space complexity (which is quadratic in the batch size).  Reviewer i3NM also noted that SimCLR has this same shortcoming: \u201cthe major weakness of SimCLR for non-ranking problems was complexity.\u201d  \n\nTo overcome this issue, we leverage the fact that in LTR the hard negatives are in the same query group (as the reviewer correctly notices), so we do not have to use the entire batch as negatives.  This (1) provides orders of magnitude improvement in speed (Table 6 in the paper, page 16), and (2) performs slightly better than SimCLR even with the runtime and memory savings (Table 5 in the paper, page 9).\n\nTo summarize, we do not claim that SimCLR-Rank\u2019s loss will produce significantly different outcomes than SimCLR.  However, SimCLR-Rank is significantly faster, which makes it applicable in real-world big data settings for ranking.\n\nWe thank the reviewer for their consideration, and are happy to help with any further concerns. If we have addressed the concerns we would appreciate it if the reviewer could consider raising their score."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376154275,
+                "cdate": 1700376154275,
+                "tmdate": 1700377430556,
+                "mdate": 1700377430556,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "pOpwieHAXu",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 4"
+                    },
+                    "comment": {
+                        "value": "[1] SubTab: Subsetting Features of Tabular Data for Self-Supervised Representation Learning. Talip Ucar, Ehsan Hajiramezanali, Lindsay Edwards. NeurIPS 2019."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376211484,
+                "cdate": 1700376211484,
+                "tmdate": 1700376919401,
+                "mdate": 1700376919401,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "JTX6g470JC",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "pOpwieHAXu",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate the author's diligent efforts in addressing the issues I raised. While I acknowledge that the author's responses offer resolutions to some of the concerns, addressing certain issues, such as the comparative analysis with existing tabular data methodologies, poses a formidable challenge within the constraints of time. Presently, the author has introduced only a singular comparative method, a move that evidently lacks compelling strength.\n\nIn terms of the novelty of the paper, the author concedes that \"we do not claim that SimCLR-Rank\u2019s loss will produce significantly different outcomes.\" Consequently, it becomes challenging to attribute a substantial level of innovation to this work. The exploration of self-supervised learning in the context of tabular data is intriguing; however, confining the scope of this paper solely to its application in the niche domain of learning-to-rank significantly diminishes its impact as a comprehensive experimental analysis.\n\nWhile I am inclined to marginally elevate the evaluation scores, I maintain the stance that substantial revisions are imperative for this manuscript to align with the esteemed standards of ICLR."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700379587477,
+                "cdate": 1700379587477,
+                "tmdate": 1700379587477,
+                "mdate": 1700379587477,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "40Dfup7nnW",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow up: the impact of this work"
+                    },
+                    "comment": {
+                        "value": "**It becomes challenging to attribute a substantial level of innovation to this work.**\n\nWe thank the reviewer for an opportunity for us to clarify the innovation in our work. SimCLR [14,15,16,17] is known to need large batch sizes to work well, which combined with its quadratic compute scaling in batch size makes it too inefficient. For example, pretraining SimCLR on CIFAR100/ImageNet requires many nodes of V100 GPUs [15]. \n\nThe naive way to make SimCLR more efficient is to sample the negatives, which prevents quadratic scaling in batch size. This is SimCLR-sample, which we already showed does not perform very well in MSLR/Istella (the two harder LTR public datasets). A more sophisticated approach is to only include hard negatives in the contrastive loss, which Robinson et al. [18] find makes contrastive learning much faster and also perform better.\n\nOur main technical insight (SimCLR-Rank) is that the hard negatives in LTR are already known\u2013we do not have to mine for them at all because they are just samples in the same query group. Effectively, we utilize the structure of the LTR problem to obtain hard negative examples for free. Previous works showing how to mine hard negatives have been considered worthy contributions to the ML literature [18,19,20]. Note that the simplicity of SimCLR-Rank makes it more adaptable and thus more impactful: one can for example combine SCARF/DACL with SimCLR-Rank.\n\nWe hope this response explains our position better on the technical contribution of our paper.\n\n**Confining the scope of this paper solely to its application in the niche domain of learning-to-rank significantly diminishes its impact.**\n\nWe thank the reviewer for the opportunity to elaborate on the state of LTR in research and industry. LTR is a central component of highly important applications like search and recommendation, with large impacts on the economy and society. Many works solely on LTR have been published at top ML conferences [5,6,7,8,9,10,11,12, 28, 29, 30, 31]. There was also recently a workshop on ranking at ICML 2023 [13] (https://icml.cc/virtual/2023/workshop/21495). Burges et al. [11] won the ICML 2015 Test of Time award for their publication on LTR. So we believe significant results in the space of LTR are likely to achieve significant impact (and have done so in the past). LTR is a significant area in both machine learning research and industry. \n\nRecently, LTR has also garnered significant attention due to the use of new LLM (large language model) applications like Retrieval Augmented Generation (RAG) [25]. In RAG, a document retrieval mechanism is paired with an LLM to enhance the factual accuracy of an LLM\u2019s response to a query. Recently, the document retrieval mechanism has included re-ranking [26] and tabular features [27]. As a result, we believe LTR is not only a significant area now but also will become even more important in the future.\n\nWe appreciate the reviewer\u2019s comments, as they have been highly helpful in improving our paper. If the concerns have been addressed, we would appreciate it if the reviewer could consider raising their score."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700540632038,
+                "cdate": 1700540632038,
+                "tmdate": 1700540648506,
+                "mdate": 1700540648506,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ji86jHLrms",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow up: references"
+                    },
+                    "comment": {
+                        "value": "[1] SubTab: Subsetting Features of Tabular Data for Self-Supervised Representation Learning. Talip Ucar, Ehsan Hajiramezanali, Lindsay Edwards. NeurIPS 2019.  \n[2] SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. Dara Bahri, Heinrich Jiang, Yi Tay, Donald Metzler. ICLR 2022.  \n[3] VIME: Extending the Success of Self- and Semi-supervised Learning to Tabular Domain. Jinsung Yoon, Yao Zhang, James Jordon, Mihaela van der Schaar. NeurIPS 2020.  \n[4] Towards Domain-Agnostic Contrastive Learning. Vikas Verma, Minh-Thang Luong, Kenji Kawaguchi, Hieu Pham, Quoc V. Le. ICML 2021.  \n[5] Are Neural Rankers still Outperformed by Gradient Boosted Decision Trees?, Qin et al., ICLR 2021. \n[6] Toward Understanding Privileged Features Distillation in Learning-to-Rank., Yang et al., NeurIPS 2022. \n[7] PiRank: Scalable Learning To Rank via Differentiable Sorting. Robin Swezey, Aditya Grover, Bruno Charron, Stefano Ermon. NeurIPS 2021.  \n[8] On the Value of Prior in Online Learning to Rank. Branislav Kveton, Ofer Meshi, Masrour Zoghi, Zhen Qin. AISTATS 2022.   \n[9] Learning to rank using gradient descent. Learning to rank using gradient descent. Chris Burges, Tal Shaked, Erin Renshaw, Ari Lazier, Matt Deeds, Nicole Hamilton, Greg Hullender. ICML 2005.   \n[10] Learning to rank: from pairwise approach to listwise approach. Zhe Cao, Tao Qin, Tie-Yan Liu, Ming-Feng Tsai, Hang Li. ICML 2007.  \n[11] Listwise approach to learning to rank: theory and algorithm. Fen Xia, Tie-Yan Liu, Jue Wang, Wensheng Zhang, Hang Li. ICML 2008.  \n[12] Ranking measures and loss functions in learning to rank. Wei Chen, Tie-Yan Liu, Yanyan Lan, Zhi-ming Ma, Hang Li. NeurIPS 2009.  \n[13] The Many Facets of Preference-Based Learning. Aadirupa Saha, Mohammad Ghavamzadeh, Robert Busa-Fekete, Branislav Kveton, Viktor Bengs. ICML 2023.  \n[14] A Simple Framework for Contrastive Learning of Visual Representations. Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton. ICML 2020.  \n[15] Exploring Simple Siamese Representation Learning, invited talk https://rosanneliu.com/dlctfs/dlct_210326.pdf. \n[16] Exploring Simple Siamese Representation Learning. Xinlei Chen, Kaiming He. CVPR 2021.  \n[17] Bootstrap Your Own Latent A New Approach to Self-Supervised Learning. Grill et al. NeurIPS 2020.  \n[18] Contrastive learning with hard negative samples. Joshua Robinson, Ching-Yao Chuang, Suvrit Sra, Stefanie Jegelka. ICLR 2021.  \n[19] Debiased Contrastive Learning. Ching-Yao Chuang, Joshua Robinson, Lin Yen-Chen, Antonio Torralba, Stefanie Jegelka. NeurIPS 2020.  \n[20] Robust Contrastive Learning Using Negative Samples with Diminished Semantics. Songwei Ge, Shlok Mishra, Chun-Liang Li, Haohan Wang, David Jacobs. NeurIPS 2021.  \n[21] Self-training with Noisy Student improves ImageNet classification. Qizhe Xie, Minh-Thang Luong, Eduard Hovy, Quoc V. Le. CVPR 2020.  \n[22] STab: Self-supervised Learning for Tabular Data. Ehsan Hajiramezanali, Nathaniel Diamant, Gabriele Scalia, Max W. Shen. \n[23] Transfer Learning with Deep Tabular Models. Levin et al., ICLR 2023.  \n[24] MET: Masked Encoding for Tabular Data. Kushal Majmundar, Sachin Goyal, Praneeth Netrapalli, Prateek Jain.  \n[25] Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.   \n[26] Re2G: Retrieve, Rerank, Generate. Michael Glass, Gaetano Rossiello, Md Faisal Mahbub Chowdhury, Ankita Rajaram Naik, Pengshan Cai, Alfio Gliozzo.  \n[27] T-RAG: End-to-End Table Question Answering via Retrieval-Augmented Generation. Feifei Pan, Mustafa Canim, Michael Glass, Alfio Gliozzo, James Hendler.   \n[28] Beyond Greedy Ranking: Slate Optimization via List-CVAE. Ray Jiang, Sven Gowal, Timothy A. Mann, Danilo J. Rezende. ICLR 2019.  \n[29] Towards Amortized Ranking-Critical Training for Collaborative Filtering. Sam Lobel, Chunyuan Li, Jianfeng Gao, Lawrence Carin. ICLR 2020.  \n[30] Individually Fair Ranking. Amanda Bower, Hamid Eftekhari, Mikhail Yurochkin, Yuekai Sun. ICLR 2021.  \n[31] Adversarial Retriever-Ranker for dense text retrieval. Hang Zhang, Yeyun Gong, Yelong Shen, Jiancheng Lv, Nan Duan, Weizhu Chen. ICLR 2022."
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700540729948,
+                "cdate": 1700540729948,
+                "tmdate": 1700630662622,
+                "mdate": 1700630662622,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "cqEX1G0cZ9",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "40Dfup7nnW",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I must emphasize that, in my opinion, the substantial limitation of this paper arises from its exclusive focus on Learning to Rank (LTR) for tabular data. While the author provides numerous references related to LTR, it remains unclear how many of these references specifically pertain to tabular data exclusively. Perhaps my understanding of LTR has some deviation. Does LTR exclusively refer to Learning to Rank for tabular data?"
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700591679652,
+                "cdate": 1700591679652,
+                "tmdate": 1700591679652,
+                "mdate": 1700591679652,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "fR61ehgExB",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow up on the topic of tabular LTR"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their time and consideration.\n\nLTR is a general problem and has been applied to tabular, text, images and various other domains. Among the papers we cited these focus exclusively on tabular LTR: [4,5,6,7,8,9,10,11,12] (all papers were published at ICLR, NeurIPS, ICML). One of these is Burges et al. [9], which won the ICML 2015 Test of Time Award. To give some more context, a significant portion of research and real-world applications of LTR have focused on tabular LTR due to its efficiency at web-scale and ubiquitous nature of tabular data.\n\nWe would also like to note that many impactful papers on pretraining published at top ML conferences also focused on only one modality and application: images [14,16,17,20,21], text [13,15,18,19], tabular [1,2,3]. Hence we strongly believe that studying the very practical (as illustrated in experiments) topic of pretraining for tabular LTR can also be similarly impactful and useful to the community.\n\nWe thank the reviewer for their continued engagement throughout the discussion period, and we hope that we have addressed the reviewer\u2019s concerns.\n\n\n\n[1] SubTab: Subsetting Features of Tabular Data for Self-Supervised Representation Learning. Talip Ucar, Ehsan Hajiramezanali, Lindsay Edwards. NeurIPS 2019.  \n[2] SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. Dara Bahri, Heinrich Jiang, Yi Tay, Donald Metzler. ICLR 2022.  \n[3] VIME: Extending the Success of Self- and Semi-supervised Learning to Tabular Domain. Jinsung Yoon, Yao Zhang, James Jordon, Mihaela van der Schaar. NeurIPS 2020.  \n[4] Individually Fair Ranking. Amanda Bower, Hamid Eftekhari, Mikhail Yurochkin, Yuekai Sun. ICLR 2021.   \n[5] Are Neural Rankers still Outperformed by Gradient Boosted Decision Trees?, Qin et al., ICLR 2021.  \n[6] Toward Understanding Privileged Features Distillation in Learning-to-Rank., Yang et al., NeurIPS 2022. \n[7] PiRank: Scalable Learning To Rank via Differentiable Sorting. Robin Swezey, Aditya Grover, Bruno Charron, Stefano Ermon. NeurIPS 2021.   \n[8] On the Value of Prior in Online Learning to Rank. Branislav Kveton, Ofer Meshi, Masrour Zoghi, Zhen Qin. AISTATS 2022.   \n[9] Learning to rank using gradient descent. Chris Burges, Tal Shaked, Erin Renshaw, Ari Lazier, Matt Deeds, Nicole Hamilton, Greg Hullender. ICML 2005.   \n[10] Learning to rank: from pairwise approach to listwise approach. Zhe Cao, Tao Qin, Tie-Yan Liu, Ming-Feng Tsai, Hang Li. ICML 2007.   \n[11] Listwise approach to learning to rank: theory and algorithm. Fen Xia, Tie-Yan Liu, Jue Wang, Wensheng Zhang, Hang Li. ICML 2008.   \n[12] Ranking measures and loss functions in learning to rank. Wei Chen, Tie-Yan Liu, Yanyan Lan, Zhi-ming Ma, Hang Li. NeurIPS 2009.  \n[13] Universal Language Model Fine-tuning for Text Classification. Jeremy Howard, Sebastian Ruder. ACL 2018.  \n[14] A Simple Framework for Contrastive Learning of Visual Representations. Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton. ICML 2020.  \n[15] Multilingual Constituency Parsing with Self-Attention and Pre-Training. Nikita Kitaev, Steven Cao, Dan Klein. ACL 2019.  \n[16] Exploring Simple Siamese Representation Learning. Xinlei Chen, Kaiming He. CVPR 2021.  \n[17] Bootstrap Your Own Latent A New Approach to Self-Supervised Learning. Grill et al. NeurIPS 2020.  \n[18] Adversarial Multi-task Learning for Text Classification. Pengfei Liu, Xipeng Qiu, Xuanjing Huang. ACL 2017.  \n[19] Unsupervised Sparse Vector Densification for Short Text Similarity. Yangqiu Song, Dan Roth. NAACL 2015.  \n[20] Robust Contrastive Learning Using Negative Samples with Diminished Semantics. Songwei Ge, Shlok Mishra, Chun-Liang Li, Haohan Wang, David Jacobs. NeurIPS 2021.  \n[21] Self-training with Noisy Student improves ImageNet classification. Qizhe Xie, Minh-Thang Luong, Eduard Hovy, Quoc V. Le. CVPR 2020."
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700608027996,
+                "cdate": 1700608027996,
+                "tmdate": 1700630722747,
+                "mdate": 1700630722747,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "hOGisdqfof",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "fR61ehgExB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your detailed response. I have one more question: There are currently some studies on pretraining neural networks on tabular data, which also demonstrate improved performance. Do existing tabular data pretraining methods also involve the application of methods like SimCLR or SimSiam? From my understanding, these two methods in your paper do not consider the nature of LTR and are similar to general tabular data."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700630157433,
+                "cdate": 1700630157433,
+                "tmdate": 1700630157433,
+                "mdate": 1700630157433,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "3BYUgc5Vqj",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "vB43FQ1xbL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_oW1i"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate the author's response. Given that SimCLR has been validated to exhibit certain advantages on general tabular data, it is not surprising that it brings about a performance enhancement in tabular data Learning to Rank (LTR). I find that the revelations in both SimCLR and SimSiam do not offer many novel insights. On the methodological front, the author acknowledges that SimCLR-Rank's performance is not significantly stronger, and the method bears a striking resemblance to SimCLR. In summary, this paper conducts extensive experimental analysis in neural network pretraining on tabular data, potentially yielding positive impacts on the field. I maintain the borderline reject rating, but accepting the paper would not pose significant issues in my view."
+                    }
+                },
+                "number": 35,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700714276597,
+                "cdate": 1700714276597,
+                "tmdate": 1700714276597,
+                "mdate": 1700714276597,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "MP4y6EHQ7F",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GC0uJEAF0J",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your feedback. We would like to clear up one last bit of confusion.\n\nSimCLR-Rank is 7-14x faster wall-clock time and has an order-wise (big-O) speed/memory improvement over SimCLR (see Subsection 3.1). This is a significant improvement over SimCLR, which is known to require many nodes of V100 GPUs to train datasets like ImageNet (check the SimSiam talk slides https://rosanneliu.com/dlctfs/dlct_210326.pdf). \n\n**SimCLR is simply not practical in the big data regime (like large-scale recommendations/search/LTR), while SimCLR-Rank is, due to the speed difference**. We hope the reviewer can incorporate this into their final evaluation."
+                    }
+                },
+                "number": 36,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700728737854,
+                "cdate": 1700728737854,
+                "tmdate": 1700729093292,
+                "mdate": 1700729093292,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "F8WswX1k9a",
+            "forum": "Dk1ybhMrJv",
+            "replyto": "Dk1ybhMrJv",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the effectiveness of unsupervised pretraining in tabular Learning-To-Rank (LTR) problems. First, authors show how two well-known self-supervised training methods (SimCLR, SimSiam) can be formulated in LTR problems. Next, authors proposes SimCLR-Rank, which is a variant of SimCLR. SimCLR-Rank sample negatives in SimCLR loss only from the same query group. Experimentally, authors show that pretrained models can outperform GBDTs, which is one of the strongest baselines, under label scarcity setting. Additionally, authors compare self-supervised methods (SimCLR, SimSiam, SimCLR-Rank) in various settings (datasets, data augmentation methods, outlier NDCG, etc.)"
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Representation learning in tabular LTR has not been studied much.\n- SimCLR-Rank provides a strategy specific to the structure of LTR task."
+                },
+                "weaknesses": {
+                    "value": "- Technical novelty is limited.\n- Datasets in experiments are limited to three datasets and one private dataset.\n- Representation learning on tabular data not necessarily needs to consider LTR setting, since multi-layer MLP will be finetuned for LTR task. As a paper that proposes a new tabular self-supervised learning method, it lacks the comparison with other existing methods, such as\n    - Hajiramezanali, E., Diamant, N. L., Scalia, G., & Shen, M. W. (2022, October). STab: Self-supervised Learning for Tabular Data. In\u00a0*NeurIPS 2022 First Table Representation Workshop*.\n    - Wang, W., KIM, B. H., & Ganapathi, V. (2022). RegCLR: A Self-Supervised Framework for Tabular Representation Learning in the Wild.\n    - Ucar, T., Hajiramezanali, E., & Edwards, L. (2021). Subtab: Subsetting features of tabular data for self-supervised representation learning.\u00a0*Advances in Neural Information Processing Systems*"
+                },
+                "questions": {
+                    "value": "- What\u2019s the intuition behind SimCLR-Rank working better?\n- Why does pretraining improve outlier NDCG?\n- Typically, pretraining has advantages by learning useful representations from large datasets, while this paper seems to use unlabeled data in the same downstream task for pretraining. Am I understanding correctly? Can pretraining in one downstream dataset transfer to other datasets?\n- GBDT could use some well-known semi-supervised learning methods such as pseudo-labeling or consistency regularization to use unlabeled dataset. Do the pretraining methods still outperform GBDT with semi-supervised learning?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2970/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq",
+                        "ICLR.cc/2024/Conference/Submission2970/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2970/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699233773234,
+            "cdate": 1699233773234,
+            "tmdate": 1700438169953,
+            "mdate": 1700438169953,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "meEp3CyRG9",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "F8WswX1k9a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 1"
+                    },
+                    "comment": {
+                        "value": "Thank you for your review and feedback. We would like to first take an opportunity to clarify the impact and contributions of our work.\n\nWe strongly believe our work will significantly impact industries that work with LTR problems (search, recommendation), by causing them to revise, or at least revisit, current SOTA methods. Today many large companies use GBDTs for ranking tabular data, and this approach is SOTA even in the research community. The novel starting point of our work is the often ignored fact that most of the data collected in LTR systems is unlabeled. We have shown through extensive experiments on standard public datasets and a large-scale private dataset that pretrained deep rankers can leverage unlabeled data to consistently outperform GBDTs, with outsized gains in robustness towards outlier data. \n\nAll reviewers agree we have convincingly demonstrated this. Reviewer 1XYq: \u201cExperimentally, authors show that pretrained models can outperform GBDTs, which is one of the strongest baselines, under label scarcity setting.\u201d Reviewer oW1i: \u201cthe paper highlights the superior performance of pretrained deep rankers, especially on outlier queries, in scenarios with limited labeled data.\u201d Reviewer i3NM: \u201cThe major contribution of the paper is to identify areas where [pretrained deep rankers] help, including query sparsity and label sparisity scenarios.\u201d\n\nWe now address the listed concerns one by one.\n\n**Technical novelty is limited.**\n\nWe thank the reviewer for their feedback.  We would like to bring to the reviewer\u2019s attention these following novel contributions:\n\n1. We make the observation that in Learning-To-Rank (LTR) applications like search and recommendations, there is an abundance of unlabeled data. Before our work, this LTR problem setting has not been studied, to the best of our knowledge. **Reviewers agree on this point.** Reviewer 1XYq: \u201cRepresentation learning in tabular LTR has not been studied much.\u201d Reviewer oW1i: \u201cThe paper studies pre-trained DNN for tabular LTR problems, which is an underexplored problem.\u201d Reviewer i3NM: \u201cTo the reviewer\u2019s knowledge, this is the first work that shows some promises for pre-trained DNNs for the LTR task.\u201d\n\n2. SimCLR-Rank is the first pretraining method that specifically leverages LTR problem structure.  SimCLR, as noted by reviewer i3NM, is very slow: \u201cthe major weakness of SimCLR for non-ranking problems was complexity.\u201d  Our method SimCLR-Rank leverages the unique structure of the LTR problem to gain orders of magnitude speed improvements (Table 6 on page 16 of the paper) while performing slightly better than SimCLR (Table 5 on page 9 of the paper).  We believe this is technically novel. \n\n3. We would finally like to emphasize that our results on the large-scale industry-size dataset are a big contribution. Most LTR papers [1,2,3] do not give results on industry-scale datasets, and do not prove their hypotheses on true large scale datasets because of lack of availability of such data and prohibitively large expense of running large-scale experiments. The fact that we demonstrate pretraining rankers achieve SOTA on public datasets in LTR but also **emphatically** on a large-scale commercial dataset is highly impactful. Therefore we believe our results will help the LTR and the wider Tabular-DL communities tremendously.\n\n**Datasets in experiments are limited to three datasets and one private dataset.**\n\nWe thank the reviewer for giving us an opportunity to clarify the experimental breadth. In LTR literature experiments these three datasets are generally considered the standard, with many influential and peer-reviewed work only evaluating at most the three public datasets we experiment on [1, 2, 3, 4]. Further, tabular (a.k.a. numerical) ML (e.g. LTR) systems are important for modern enterprises and therefore validating research hypotheses on large-scale practical datasets is valuable. Unfortunately, this is challenging due to the expensive and proprietary nature of such data. Given that we evaluate on all three of the standard public datasets\u2014plus a large private dataset\u2014we believe our empirical evaluation is stronger than comparable papers in the literature and could be valuable for the vast LTR and Tabular-DL communities."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376309730,
+                "cdate": 1700376309730,
+                "tmdate": 1700376309730,
+                "mdate": 1700376309730,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "jg6R9SVaA3",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "F8WswX1k9a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 2"
+                    },
+                    "comment": {
+                        "value": "**Lacking comparison and discussion with existing tabular SSL methods.**\n\nWe thank the reviewer for bringing up the comparison with existing tabular SSL methods.  We add a comprehensive and expanded related works section to section A.1 (in the appendix of the paper, colored in blue) discussing the current state of tabular SSL.  After the paper decision, we plan to reorder the paper to place it into the main text. \n\nWe would like to clarify that our primary goal is to demonstrate that DL rankers built using pre-training techniques can achieve SOTA performance in LTR settings, and consequently beat GBDT models (prior SOTA). Only as a secondary goal, we investigate a few simple but effective pre-training strategies such as SimSiam, SimCLR, and our variant SimCLR-Rank. While we identified SimCLR-Rank has a positive impact in a wide variety of LTR scenarios, we also show that SimSiam works better for our large-scale proprietary dataset.  Our goal is not to show that any one particular method is the best for pretraining in LTR.\n\nRegarding the suggested tabular SSL methods: STab [12] applies a SimSiam-like method to tabular self-supervised learning, RegCLR [13] aims to extract tables from images and is not applicable to our setting, and SubTab [14] is a well-known and influential tabular SSL technique.  Given that STab has a similar strategy as SimSiam which we already evaluate in our paper (and because there was no published code for STab), we focus on evaluating SubTab in this response (respecting the time constraints of the rebuttal). \n\nWe evaluate SubTab [14] in the setting of Subsection 4.3.2.  SubTab\u2019s pretraining objective divides input features into multiple subsets (in the language of computer vision, \u201cmultiple views\u201d) and trains an autoencoder to reconstruct the original input features.  To pretrain using SubTab, we divide the input features into 4 subsets with 75% overlap, and with input corruptions of 15% masking probability and Gaussian noise of scale 0.1 (suggested in the SubTab paper as a good setting).  The finetuning strategy and the choice for encoder model is the same as for SimCLR-Rank.  We find that SubTab performs respectably on Yahoo, but fails to learn the MSLR and Istella datasets.\n\n| Method | MSLR | Yahoo | Istella |\n| --- | ----------- | --- | ---- |\n| SimCLR-Rank | **0.3929 $\\pm$ 0.0018** | **0.5989 $\\pm$ 0.0010** | **0.5830 $\\pm$ 0.0013** |\n| SubTab | 0.2879 $\\pm$ 0.0019 | 0.5889 $\\pm$ 0.0021 | 0.4700 $\\pm$ 0.0031 |\n\n**What\u2019s the intuition behind SimCLR-Rank working better?**\n\nThank you for giving us the opportunity to clarify. Recalling the response to the previous concern, our goal is to show that pretraining helps in LTR, not that any particular pretraining method (including SimCLR-Rank) is better\u2013although SimCLR-Rank does perform well in many different settings in our experiments.\n\nSimCLR-Rank is different from SimCLR in two aspects: (1) it uses items from the same query group as freely available hard-negatives, (2) it reduces the number of negatives from batchsize to at most query group size and thus allow better computational scaling with batchsize. To identify which of these contribute more towards SimCLR-Rank\u2019s performance, we performed an additional experiment below (as suggested by reviewer i3NM), comparing SimCLR-Rank with a variant of SimCLR (which we call as SimCLR-sample). In SimCLR-sample, instead of using all the other items as negatives, we uniformly sample a constant number of negatives from the batch. This reduces the computational complexity from quadratic in batchsize (of SimCLR) to linear in batchsize. In the below experiments we follow the setup in Subsection 4.3.2 and SimCLR-Rank and SimCLR-sample use the same number of negatives and batchsize.\n\nWe find that SimCLR-Rank performs better on MSLR/Istella, while SimCLR-sample performs better on Yahoo. We note that MSLR/Istella are much sparser than Yahoo (see Table 12 in the paper), and are more representative of typical search and recommendations applications. Therefore we still believe that SimCLR-Rank which selects hard-negatives from the same query group is a useful pre-training method for the LTR toolbox and can be highly effective in many situations.\n\n| Method | MSLR | Yahoo | Istella |\n| --- | ----------- | --- | ---- |\n| SimCLR-Rank | **0.3929 $\\pm$ 0.0018** | 0.5989 $\\pm$ 0.0010 | **0.5830 $\\pm$ 0.0013** |\n| SimCLR-sample | 0.3890 $\\pm$ 0.0008 | **0.6056 $\\pm$ 0.0047** | 0.5787 $\\pm$ 0.00351 |"
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376359558,
+                "cdate": 1700376359558,
+                "tmdate": 1700376359558,
+                "mdate": 1700376359558,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "MJmzNlqHI6",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "F8WswX1k9a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 3"
+                    },
+                    "comment": {
+                        "value": "**Why does pretraining improve outlier NDCG?**\n\nIt is a well-known phenomenon that pretraining helps improve robustness and out of distribution performance in domains like image and text [5, 6]. The same phenomenon, we find, is also true in the tabular LTR setting. Liu et al., [7] find that pretraining with data augmentation allows models to learn richer features they can generalize to outlier or out of distribution examples better\u2013merely supervised training only incentivizes models to attend to highly predictive features in the training set.  We conjecture that pretraining with augmentations in LTR (as we do in our paper) improves performance on outlier NDCG for similar reasons.\n\n**Can pretraining in one downstream dataset transfer to other datasets?**\n\nWe thank the reviewer for bringing up this point. Tabular datasets have specific features which can be very different. In fact, each tabular dataset is its own domain. Because in general there are no common features between tabular datasets, it is not clear how to have common knowledge. Levin et al. [8] show that if features are shared, it is possible to transfer knowledge between datasets, but in general it is not known how to do transfer learning in tabular data.\n\n**Do the pretraining methods still outperform GBDT with semi-supervised learning?**\n\nWe thank the reviewer for bringing up important baselines. Rubachev et al. [9] find that consistency regularization does not help GBDTs (https://openreview.net/forum?id=kjPLodRa0n&noteId=E4FT6VCltG). As suggested by the reviewer, we ran new experiments on pseudolabeling for GBDTs, and found that it (typically) performs worse than the GBDT baselines themselves. \n\nMethodology: we allow 0.2% of the query groups to be labeled in each dataset, we train a GBDT on the labeled set and then use the GBDT to label the unlabeled train set.\n\nA GBDT ranker outputs real-valued scores. Given that pseudolabeling datasets using GBDTs in LTR is not a well-studied problem, we propose the following approach. To convert real-valued scores into relevance scores, we take the lowest output score when labeling the unlabeled train set, and subtract it from all real scores. Then we round these positive floats into their nearest integers, and let these be the pseudolabeled relevance scores. In MSLR, this results in the pseudolabels being integers from 0-7, in Istella 0-12. For Yahoo we increase the spread of the scores by multiplying the positive floats by 100 before rounding to the nearest integer (resulting in the pseudolabels being numbers from 0-5), since without doing this all the pseudolabels would be 0.\n\nWe find that overall, pseudolabeling decreases the performance of GBDTs on MSLR and Istella (the sparser datasets which are typically more representative of search and recommendations applications, check Table 10 in the paper) while slightly improving the performance for Yahoo, which is somewhat an \u201ceasy\u201d dataset. All the GBDT results below underperform pretrained deep models (we use the methodology in Section 4.1.1).  Note that due to the size of the dataset, the GBDT results are deterministic (no stderr).\n\n| Method |MSLR | Yahoo | Istella |\n| --- | ----------- | - | - |\n| GBDT |0.3908|0.5932|0.5807|\n| GBDT + pseudo-labeling| 0.3773 | 0.5967 | 0.5396|\n| Pretrained DL | **0.3959 $\\pm$ 0.0022** | **0.6107 $\\pm$ 0.0035** | **0.5839 $\\pm$ 0.0049** |\n\nWe thank the reviewer for their consideration, and are happy to help with any further concerns. If we have addressed the concerns we would appreciate it if the reviewer could raise their score."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376408952,
+                "cdate": 1700376408952,
+                "tmdate": 1700377583974,
+                "mdate": 1700377583974,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "GqhbDmbc3u",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "F8WswX1k9a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply part 4"
+                    },
+                    "comment": {
+                        "value": "[1] Are Neural Rankers still Outperformed by Gradient Boosted Decision Trees?, Qin et al., ICLR 2021.  \n[2] Learning Groupwise Multivariate Scoring Functions Using Deep Neural Networks., Ai et al., SIGIR 2019.  \n[3] SetRank: Learning a Permutation-Invariant Ranking Model for Information Retrieval., Pang et al., SIGIR 2020.  \n[4] Toward Understanding Privileged Features Distillation in Learning-to-Rank., Yang et al., NeurIPS 2022  \n[5] Using Self-Supervised Learning Can Improve Model Robustness and Uncertainty., Dan Hendrycks, Mantas Mazeika, Saurav Kadavath, Dawn Song. NeurIPS 2019.  \n[6] Pretrained Transformers Improve Out-of-Distribution Robustness., Dan Hendrycks, Xiaoyuan Liu, Eric Wallace, Adam Dziedzic, Rishabh Krishnan, Dawn Song. ACL 2020.  \n[7] Self-supervised Learning is More Robust to Dataset Imbalance., Hong Liu, Jeff Z. HaoChen, Adrien Gaidon, Tengyu Ma. ICLR 2022.  \n[8] Transfer Learning with Deep Tabular Models. Roman Levin, Valeriia Cherepanova, Avi Schwarzschild, Arpit Bansal, C. Bayan Bruss, Tom Goldstein, Andrew Gordon Wilson, Micah Goldblum. ICLR 2023.  \n[9] Revisiting Pretraining Objectives for Tabular Deep Learning. Ivan Rubachev, Artem Alekberov, Yury Gorishniy, Artem Babenko.  \n[10] A Simple Framework for Contrastive Learning of Visual Representations. Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton. ICML 2020. \n[11] Exploring Simple Siamese Representation Learning. Xinlei Chen, Kaiming He. CVPR 2021.  \n[12] STab: Self-supervised Learning for Tabular Data. Hajiramezanali, E., Diamant, N. L., Scalia, G., & Shen, M. W. NeurIPS 2022 First Table Representation Workshop.  \n[13] RegCLR: A Self-Supervised Framework for Tabular Representation Learning in the Wild.Wang, W., KIM, B. H., & Ganapathi.  \n[14] Subtab: Subsetting features of tabular data for self-supervised representation learning. Ucar, T., Hajiramezanali, E., & Edwards, L.. NeurIPS 2021. \n[15] Improving Out-of-Distribution Robustness via Selective Augmentation.  Huaxiu Yao, Yu Wang, Sai Li, Linjun Zhang, Weixin Liang, James Zou, Chelsea Finn. ICML 2022"
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700376443056,
+                "cdate": 1700376443056,
+                "tmdate": 1700630587503,
+                "mdate": 1700630587503,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "U526UbUL2m",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "GqhbDmbc3u",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for providing the detailed response and updated results. I appreciate the authors\u2019 efforts in addressing some of my questions.\n\nI have an additional question on the semi-supervised experiment result: 0.2% of the query groups look pretty small though I understand this setting is used in other experiments as well. What does the curve look like, when varying the ratio of labeled query groups?"
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700419609333,
+                "cdate": 1700419609333,
+                "tmdate": 1700419609333,
+                "mdate": 1700419609333,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "UtjC7dq1oT",
+                "forum": "Dk1ybhMrJv",
+                "replyto": "wwLGFp6YK4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2970/Reviewer_1XYq"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your prompt update! I have adjusted my score to 5 as the authors have adeptly addressed some of the concerns I raised. However, I still maintain two primary concerns with this paper.\n\n- While I acknowledge the significance of Learning to Rank (LTR) in real-world applications, the paper falls short in demonstrating substantial technical novelty. It's well-established that deep learning models often benefit from pretraining across various domains such as vision, NLP, video, graph, and time series. As a result, the technical contributions of this work seem somewhat limited in comparison to existing practices in other domains.\n- Moreover, unlike many other domains where pretrained models exhibit transferability across datasets, the suggested method in this paper lacks such transferability. Transferability is a fundamental feature of pretrained models that has greatly contributed to recent advancements in machine learning. To make this work more impactful in the realm of LTR, I believe it is imperative for the authors to conduct further exploration on the transferability of their proposed method across different datasets by developing additional techniques."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2970/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700438311182,
+                "cdate": 1700438311182,
+                "tmdate": 1700438311182,
+                "mdate": 1700438311182,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

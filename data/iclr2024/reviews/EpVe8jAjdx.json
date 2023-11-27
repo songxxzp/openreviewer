@@ -1,0 +1,279 @@
+[
+    {
+        "id": "G3h8JS8rxP",
+        "forum": "EpVe8jAjdx",
+        "replyto": "EpVe8jAjdx",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_Sbzi"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_Sbzi"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose Scaffolder, a model-based RL method that can leverage privileged information at training time. Here, priviledged information means an MDP where:\n\n* There is some true state $s$ with observations $o^+$, where $o^+$ includes privileged info we do not want to assume is available at inference time. (i.e. ground truth object state). This could be used to train a privileged policy $\\pi^+$ that cannot be used as-is for inference.\n* There is an observation $o^-$ for unprivileged / impoverished target observations, which our final policy $\\pi^-$ will depend on.\n* We would like the best $\\pi^-$ possible while leveraging information in $o^+$.\n\nThis problem has been studied in a number of recent works, often in a model free manner. This paper aims to leverage privileged information in a model-based manner.\n\nTo do so, the authors train 2 worlds models. The world model subroutine used is DreamerV3. One models privileged information $o^+$ and the other models target information $o^-$. In this summary I'll call them WM+ and WM-.\n\nA \"latent translator\" is learned to translate WM+ into an observation that WM- can use in its rollouts. Specifically: WM+ has internal latent state $z^+$. We fit a prediction model $p(e^-|z^+)$, where $e^- \\approx emb(o^-)$. Part of DreamerV3 is learning a posterior $q(z_{t+1}|z_t,a_t,e_{t+1}=emb(o_{t+1}))$ that infers latent state from history and current observation. By replacing the impoverised $e^- = emb(o^-)$ with a prediction driven by privileged latent $z^+$, we can channel some privileged information into the rollout of $z^-$, assuming that privileged information is eventually observable in unprivileged information.\n\nThis latent translator lets us use $\\pi^-(a|z^-)$ to rollout both WM+ and WM-, giving a sequence of latents $(z^+,z^-)$ from both world models. The learned reward function is then defined as $R(z^+,z^-)$ to allow observing privileged information in the critic.\n\nWe additionally fit a $\\pi^+$ directly in the privileged world model, using this solely to generate additional exploratory data (it is possible that some exploration behaviors are easier to learn or discover from privileged information). Last, a decoder is trained to map $z^-$ to $o^+$. To me this seems the least motivated, in that not all parts of $o^+$ should be predictable from $z^-$ in the first place, but it seems to empirically be effective.\n\nThe evaluation of Scaffolder is done in a variety of \"sensory blindfold\" tasks, mostly robotics based, where some sensors are defined as privileged and some are not. The method is compared to DreamerV3 on just target information, a few variants of DreamerV3 based on only fitting one world model with decoding of privileged information, and some model free baselines like slowly decaying use of privileged information, asymmetric actor critic, or using BC to fit an unprivileged policy to a privileged one."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "The paper provides a good overview of previous methods for handling privileged information, proposes an evaluation suite for studying the problem of privileged information, and proposes a modification of DreamerV3 that handles the information better than Informed Dreamer. There is a significant amount of machinery around Scaffolder, but it's mostly clear why the added components ought to be helpful for better world modeling and policy exploration. The model-free baselines used are pretty reasonable, and it is shown that Scaffolder still outperforms these model free methods even when the model free methods are given significantly more steps.\n\nFinally, the evaluation suite covers a wide range of interesting robot behaviors and the qualitative exploratory methods discovered to handle the limited state (i.e. spiraling exploration behavior) are quite interesting. The S3 suite looks like a promising testbed for future privileged MDP work, separate from the algorithmic results of the paper."
+            },
+            "weaknesses": {
+                "value": "In some sense, Scaffolder requires doing 2x the world model fitting, as both the z^- and z^+ models need to be fit for the approach to work. In general, this is \"fair\" for model-based RL, which is usually judged in number of environment interactions rather than number of gradient steps, but it very definitely is a more complex system and this can introduce instability.\n\nA common actor-critic criticism is that the rate of learning between the actor and critic needs to be carefully controlled such that neither overfits too much to the other. Scaffolders seems to take this and add another dimension for the rate of learning between the privileged world model and unprivileged one, as well as the learning speed of the privileged exploratory actor $\\pi^+$ and target actor $\\pi^-$."
+            },
+            "questions": {
+                "value": "In general, the paper focuses on the online, tabula rasa case where we are in an entirely unfamiliar environment. How adaptable is this method to either the offline case, or the finetuning case where we have an existing policy / world model?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "10: strong accept, should be highlighted at the conference"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Reviewer_Sbzi"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6525/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698374961848,
+        "cdate": 1698374961848,
+        "tmdate": 1699636733822,
+        "mdate": 1699636733822,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "LocwyzTRe6",
+        "forum": "EpVe8jAjdx",
+        "replyto": "EpVe8jAjdx",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_bAbn"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_bAbn"
+        ],
+        "content": {
+            "summary": {
+                "value": "The learning process known as \"sensory scaffolding\" involves novice learners using more sensory inputs than experts. This principle has been applied in this study to train artificial agents. The researchers propose \"Scaffolder,\" a reinforcement learning method that utilizes privileged information during training to optimize the agent's performance.\n\nTo evaluate this approach, the researchers developed a new \"S3\" suite of ten diverse simulated robotic tasks that require the use of privileged sensing. The results indicate that Scaffolder surpasses previous methods and frequently matches the performance of strategies with continuous access to the privileged sensors."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This paper delves into a critical question within the field of reinforcement learning: how can we effectively use privileged information as a 'scaffold' during training, while ensuring the target observation remains accessible during evaluation? This question takes on an added significance in robotic learning, where simulation is a major data source.\n\nWhile there has been considerable research in this area, as detailed in the related work, this paper adds value to the existing body of knowledge, even without introducing novel methods. The proposed method may not be groundbreaking, but it offers a comprehensive examination of this issue from four perspectives: model, value, representation, and exploration.\n\nThis research serves as a valuable resource for those looking to deepen their understanding of the field. The excellent writing and presentation of this paper further enhance its contribution. Overall, despite the lack of methodological novelty, the paper is worthy of acceptance due to its systematic exploration and clear articulation of the subject matter."
+            },
+            "weaknesses": {
+                "value": "1. Increasing the clarity around the Posterior and detailing how it is used to transition from the privileged latent state to the non-privileged latent state would greatly enhance understanding of the method.\n   \n2. The related work section could be expanded to include research papers that leverage privileged simulation reset to improve policy. These works also seem to align with the scaffolding concept presented in this paper. Papers such as [1][2] could be added for reference.\n\n3. In the experimental design, the wrist camera and touch features don't appear to be excessively privileged or substantially different from the target observations. It would be beneficial to experiment with more oracle-like elements in the simulator as privileged sensory inputs. For instance, the oracle contact buffer or geodesic distance could be considered.\n\n\n[1] DeepMimic: Example-Guided Deep Reinforcement Learning of Physics-Based Character Skills\n\n[2] Sequential Dexterity: Chaining Dexterous Policies for Long-Horizon Manipulation"
+            },
+            "questions": {
+                "value": "1. More clarification on the posterior and embedding component in the method part. \n2. More clarification of other scaffolding methods in the related work, no need for any experiments."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6525/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698618084426,
+        "cdate": 1698618084426,
+        "tmdate": 1699636733701,
+        "mdate": 1699636733701,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "VLWdgtgeLN",
+        "forum": "EpVe8jAjdx",
+        "replyto": "EpVe8jAjdx",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_V3Vw"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_V3Vw"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work proposes to utilize privileged sensory information to improve every component of model-based reinforcement learning, including world model, exploration policy, critic, and representation as well. This work provides extensive evaluation over 10 environments including different kinds of sensory data, showing the proposed method outperform all representative baselines. This work also provide detailed ablation study over all environments showing the"
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This work provides systematic analysis over different components in the \u201csensory scaffolding\u201d setting, and proposes corresponding scaffolding counterparts  of every component in MBRL, except the policy during deployment. \n2. This work provides a promising evaluation comparison with multiple representative baselines, demonstrating that with the proposed pipeline, privilege information improves the sample efficiency as well as the final performance over wide-range of tasks.\n3. Through ablation study, this work shows different components in the system boost the performance in a different way, providing additional insight on how privileged information can be used in the future work.\n4. Experiment details are well presented in the Appendix, including runtime and resource comparison over different methods on different environments.\n5. The overall presentation of the work is good, considering the complexity of the system and amount of information delivered."
+            },
+            "weaknesses": {
+                "value": "1. For scaffolded TD error comparison, it\u2019s not clear why the comparison is conducted on Blind pick environment, since the gap between the proposed method and the version without scaffolded critic is much larger (at least in terms of relative gap) on Blind Cube Rotation environment. Also it would be great to see whether the estimate is close for tasks like Blind Locomotion (since the gap is small on that task). It seems there is some obvious pattern in the Figure 9, that the scaffolded TD is worse at 5, 10, 15 epoch and performs best on 7, 12, 18 epoch, it would be great to have some explanation for that.\n2. For some claims made in the paper, it\u2019s actually not quite convincing. For \u201cIn other words, much of the gap between the observations o\u2212 and o+ might lie not in whether they support the same behaviors, but in whether they support learning them.\u201d, some additional visualization like trajectory visualization might be helpful to strengthen the claim, since the similar reward score does not necessarily result in similar behavior. \n3. For runtime comparison, since the speed of given GPUs varies a lot, it might be better to compare the wall-time with similar system configuration, assuming the wall-time is consistent across different seeds."
+            },
+            "questions": {
+                "value": "1. Refer to weakness. \n2. Regarding some technical details, is a bit confusing:\n* In section C1, it says \u201cWe launch 4-10 seeds for each method\u201d, what\u2019s the exact meaning of using different number seeds across methods or across environments?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6525/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698822113737,
+        "cdate": 1698822113737,
+        "tmdate": 1699636733556,
+        "mdate": 1699636733556,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "a23ywWAMgM",
+        "forum": "EpVe8jAjdx",
+        "replyto": "EpVe8jAjdx",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_xL3j"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6525/Reviewer_xL3j"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes Scaffolder, a MBRL method that extends DreamerV3 with privileged information in its modules. Scaffolder uses privileged world models and exploration policies to roll-out trajectories to train a better target policy. To ensure consistency between target and privileged latent, Scaffolder proposes to predict target latent from privileged latent, bottlenecked by target observation. Scaffolder outperforms baselines on the newly proposed S3 benchmark."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+ The paper is well written and motivated. The presentation is clear.\n+ Strong empirical performance."
+            },
+            "weaknesses": {
+                "value": "- I agree that it makes sense to evaluate the proposed method on the newly proposed benchmark, for motivations mentioned in the paper. However, the paper would still benefit from evaluating extra existing benchmarks, just for reference. \n- One major benefit of privileged information reinforcement learning is to train the target policy with privileged information in simulation, and deploy it in the real world where there is no privileged information. However, all experiments in the paper are purely in sim. Can the authors comment more on how well the presented approach will work in real-world applications?\n- In addition to the number of frames being the x-axis for figure 6, please also include one where x-axis is the wall-clock time. This way the community will have a better understanding of how the proposed method and baselines work on this particular environment set."
+            },
+            "questions": {
+                "value": "- Real-world applications. Please see details in the weaknesses section above.\n- I am curious about one particular design choice. Why do the authors choose to predict target latent from privileged latent, bottlenecked by target observation. Why not usethe same latent, shared by both the privileged and target modules?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6525/Reviewer_xL3j"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6525/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699294036110,
+        "cdate": 1699294036110,
+        "tmdate": 1700776977361,
+        "mdate": 1700776977361,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

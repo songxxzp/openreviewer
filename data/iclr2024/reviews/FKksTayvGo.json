@@ -1,0 +1,290 @@
+[
+    {
+        "id": "fFrFuCqNzV",
+        "forum": "FKksTayvGo",
+        "replyto": "FKksTayvGo",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_BgL3"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_BgL3"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors describe diffusion generative model as a time reversal of a Brownian bridge forward process, where the Brownian bridge end points are paired samples from a coupling of two marginal distributions. The generative model is learnt as a time reversal of a Brownian bridge, amortized across pairs by learning the score conditioned on an end point.\n\nThe authors show strong empirical results and adapt parameterization of networks from current state of the art diffusion models.\n\nThis is closely related to existing diffusion model, diffusion bridge models and bridge matching methods.\n\nEssentially this is a regular denoising diffusion model where the forward and backward process is conditioned on the terminal point. This is also a conditional bridge matching approach where the reverse bridge is matched."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The authors show excellent empirical performance of the method and adapt network parameterization from current state of the art diffusion models to bridges.\n- The authors extend the time reversal approach of [1] to the generative setting by amortizing the time reversal across multiple pairs of points from the marginal distributions. Whereas [1] uses general and in particular nonlinear forward process, this work uses a Brownian bridge where the bridge conditioned on end points can now be sampled in closed form and the forward h-transform is also known. Although this is not useful for the applications considered in [1], it is useful for generative modelling where one does not care about the reference process.\n- The work is well explained and is essentially a continuous time version of [2], which does not detail the time reversal interpretation very well and does not condition on the end marginal in the network, but does in the h-transform.\n- Ultimately this is a conditional bridge matching approach which seems to empirically have a better coupling than non conditioned bridges.\n\n[1] Heng et al. Simulating Diffusion Bridges with Score Matching, 2021 \\\n[2] Li et al BBDM: Image-to-Image Translation with Brownian Bridge Diffusion Models, 2022"
+            },
+            "weaknesses": {
+                "value": "**Novelty**\nUltimately this work trains a conditional diffusion model through score matching, and conditioning on the terminal state x_T from a given coupling. The difference to regular diffusion models is simply conditioning the forward process as well as the backward process with additional information from a coupling. This can also be viewed as conditional bridge matching, by matching the reverse bridge.\n\nAlthough I very much like the connection to bridge matching, time reversal and diffusion bridges, this is not discussed to a satisfactory standard.\n\n**Lack of discussion to prior work**\n\nThe authors' work severely lacks a detailed related works section. Many related works and contributions have been briefly commented in passing. Without proper acknowledgement prior work, the authors' contributions appear inflated. \n\n1) Lacking reference [2], this appears to be the same idea but for discrete interpretation of diffusion models / bridge, derived through a variational approach similar to DDPM rather than time reversal - but which are well known to be equivalent. [2] does not condition on the end marginal in the network, but does in the h-transform.\n\n2) Lack of discussion to bridge matching prior work\n\nThere is a lack of discussion to [1,4,5,6,9], which the authors are aware of given these papers are cited. Although phrased differently they appear highly related to this work. [1,4,6,9] similarly sample from a coupling and train a network for the drift of the of the backward or forward diffusion process (which also involves a h transform), but not conditioned on a one of the marginal points. This work considers learning the the drift of the backward process by learning the score (the score and h-transform (forward drift) make up the reverse drift, as shown in [5]), but instead conditioned on the starting point, x_T. I imagine this work is essentially a conditional bridge matching approach.\n\nAs discussed above, [5] is highly related in that the high level approach is the same: train a network between two points by reversing a diffusion bridge. The differences lie in [5] focusing on general / nonlinear forward process for sampling bridges rather than generative modelling. [5] requires simulating the forward diffusion as nonlinear forward bridges cannot be sampled in closed form. [5] is for a fixed pair rather than amortized across pairs. Indeed, to further illustrate the similarities **Equation 6 within Theorem 1 of this work appears to coincide with the equation written below Equation (4) in Section 2.1 of [5].**. \n\n3) Misrepresenting prior work\n\nThe authors claim \"A related work (Somnath et al.,2023) similarly establishes a diffusion bridge that translates between two distributions and has seen success in protein differentiable domain, but the training objective requires sampling an entire SDE trajectory for computation\".\n\nAs far as I am aware this is not true. I do not understand how the authors came to this conclusion.\n\nMinor:\n-  is it not clear why [3] is being cited for the Schrodinger bridge interpretation of diffusion models. The approach of [3] is not a Schrodinger bridge between marginals but two diffusion models back to back with a Gaussian between, there are significantly more relevant works. If anything this is misleading the reader.\n\n- \"A recent work (Liu et al., 2023) considers a special case of SB\" . I2I SB [9] does not actually result in a Schrodinger Bridge, neither does the same method detailed in Aligned SB [1]. They both perform bridge matching with respect to Brownian bridge reference diffusion but for a data driven coupling. Given the data driven coupling does not correspond to the coupling from Brownian motion, the bridge matching procedure returns a Markovian projection and hence breaks the coupling. See discussion in [7] \"the Schr\u00f6dinger Bridge is the unique path measure which satisfies the initial and terminal conditions, is Markov and is in the reciprocal class of Q, see (L\u00e9onard, 2014b).\" One needs to iterate on the coupling and drift in order to obtain a SB. \n\nThis is a tangential remark as one does not need an optimal diffusion in order to perform conditional generation if it can be supervised with given paired samples from a coupling. However there appears to be many errors in papers being published in this area and I feel this should be addressed.\n\n**Claim of generalizing flow matching/ bridge matching**\n\nThe connection of diffusion bridges to flow matching has been established and detailed in [7], detailing the limit as the noise coefficient goes to 0. The original flow matching paper [8] is even derived using result from [4] on bridge matching, so this is widely known. Note: [7] was public well before submission but not published.\n\nHowever, given the score function in this work is conditioned on x_T, the learnt backward diffusion is non-Markovian, hence retains the initial marginal coupling and would not recover rectified flow / schrodinger bridge by iterative Markovian fitting as in [7] or in rectified flow. So I would argue this work does not subsume flow matching / drift matching.\n\n**Summary**\nWhilst I like the core idea of this paper and believe there is a contribution, I believe \"contextualization relative to prior work\" is lacking.\n\n[1] Somnath et al 2023, Aligned Diffusion Schr\u00f6dinger Bridges \\\n[2] Li et al 2022, BBDM: Image-to-Image Translation with Brownian Bridge Diffusion Models \\\n[3]  Su et al. 2022, Dual Diffusion Implicit Bridges for Image-to-Image Translation \\\n[4] Peluchetti 2022, Non-Denoising Forward-Time Diffusions \\\n[5] Heng et al. Simulating Diffusion Bridges with Score Matching \\\n[6] Liu et al., 2022, Let us Build Bridges: Understanding and Extending Diffusion Generative Models \\\n[7] Shi et al Diffusion Schr\u00f6dinger Bridge Matching 2023 \\\n[8] Lipman et al 2022, Flow Matching for Generative Modeling \\\n[9] Liu et al 2023, I2SB: Image-to-Image Schro \u0308dinger Bridge"
+            },
+            "questions": {
+                "value": "How does this work relate to bridge matching? Can the same result not be achieved through conditional bridge matching?\n\nIs it true this work is a continuous time version of [2]?\n\nAm I right in thinking that Theorem 1 equation (6) is the same as that derived in Section 2.1 of [1]?\n\n[1] Heng et al. Simulating Diffusion Bridges with Score Matching, 2021\n[2] Li et al BBDM: Image-to-Image Translation with Brownian Bridge Diffusion Models, 2022"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I have concerns about lack of discussion of highly related and cited work. Whilst I hope this is not intentional, without proper discussion of prior work, the contributions appear inflated."
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Reviewer_BgL3"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2089/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698599967970,
+        "cdate": 1698599967970,
+        "tmdate": 1700672320024,
+        "mdate": 1700672320024,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "imq0RfrzwR",
+        "forum": "FKksTayvGo",
+        "replyto": "FKksTayvGo",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_2Uac"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_2Uac"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a new class of generative models, Denoising Diffusion Bridge Models (DDBM), that can define a generative path between any 2 paired distributions. This is in contrast to current diffusion models where the path is always from Gaussian to a data distributions. DDBMs are a more generic representation, and they allow solving tasks like image-to-image translation (which is not trivial to do with regular diffusion models). DDBMs work by building a stochastic bridge between a paired samples. DDBMs share several attributes with diffusion models, which allows reusing many of the techniques already available in this field. These new models can be trained in a similar fashion as score matching, and the authors present extensive theoretical backing to allow for a loss formulation and transport between distributions via a reverse SDE and flow ODE. The authors show results in image-to-image tasks with reasonable results. The authors also show competitive results when running tasks currently done by diffusion models, mainly text-to-image generation."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The authors tackle an important and challenging problem, mainly how do we use our current generative pipelines (diffusion) to solve more general generative problems. The authors do a good job at presenting a sounds alternative. I highlight the following strengths:\n- The formulation of DDBMs seems solid. The authors present a good comparison between this method and score matching and flow matching. In fact, the authors show that DDBMs are a generalization of these methods. \n- The authors formulate the model in a way that shares many commonalities with current diffusion models. I appreciate this effort for two reasons. First, it makes understanding and adopting them easier given the familiarity they have with current methods. Second, it reuses many of the formulations already developed in things like score matching, which should lead to better training. \n- The authors go to good length to present and explain all relevant mathematical formulations. These look sound, although I did not fully explore all the details.\n- The authors show favorable results in image-to-image tasks and comparable results in text-to-image generation. Given that these come from the same model formulation (DDBMs), this combination of results is a strength of the formulation.\n- The paper is well written and structured."
+            },
+            "weaknesses": {
+                "value": "I have 2 concerns I believe are minor, but would like to hear from the authors:\n- The authors only validate the work with image-to-image translation. In this domain, ControlNet is the dominant solution. I value that the 2 models might not be competing solutions. Can the authors clarify why they didn't compare against ControlNet in the image-to-image task?\n- With generalized flow matching models we can in theory move between any distributions. What is the advantage of DDBMs compared to flow matching? I found some reasoning in the paper but didn't fully understand, therefore I appreciate a brief explanation from the authors.\n\nOverall I believe this are minor issues and I hope the authors provide answers during rebuttal."
+            },
+            "questions": {
+                "value": "- Why didn't the authors compare against ControlNet?\n- What is the advantage of DDBMs when compared to FM given that both can in theory model flow between arbitrary distributions?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2089/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698767307369,
+        "cdate": 1698767307369,
+        "tmdate": 1699636141308,
+        "mdate": 1699636141308,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "pMMAmW6S3g",
+        "forum": "FKksTayvGo",
+        "replyto": "FKksTayvGo",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_H8Nr"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_H8Nr"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a means of adapting standard denoising diffusion models, which parameterize the score in the Ornstein Uhlenbeck process to map a Gaussian to a data distribution, so that it can be more properly used to connect arbitrary densities, e.g. for image-to-image translation.\n\nThe main tool at play is Doob's h-transform, which they use to derive an SDE that has a learnable score conditioned on some endpoint $x_T$. They write a variant of the score matching loss that accommodates this. \n\nFollowing this, they address the usual topics of a SBDM paper, which is how to re-write the score in a way that allows you to predict $x_t$, how to consider the signal to noise ratio in the diffusion path (which is not a very meaningful name in the case of the ODE), how to write the probability flow, and what sampler to use.\n\nThey benchmark the method on various image-to-image translation tasks, quantifying image quality metrics with a consideration for the number of function calls necessary to achieve said quality.\n\n\n\n--generalized time reversal is not proven to converge to the correct distribution. Equation 13 should be shown to be justified. \n\n\n\n-- can only do this given a pair"
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "In the specific context of denoising (score-based) diffusion models (DDPM),  this paper introduces the useful perspective from the bridge literature of how to alleviate the limitation of DDPM as a generative model in that it could only connect a data distribution to a Gaussian. \n\nThe experimentation is thorough which shows that the method is performant on the image tasks presented. The ablation study is useful (even if a bit contrary to their claims in the abstract of wanting to move away from \"cumbersome methods like guidance\"). The authors usefully summarize how many of the tricks that make diffusions highly performant fit into their extension."
+            },
+            "weaknesses": {
+                "value": "Let me begin by saying, thank you for the effort you put into this. The experiments are very thorough, and the doob-h formulation is sound.\n\nUnfortunately, this paper is written in a way that highlights some misconceptions. It is unclear what the authors see as the contribution of this paper. It has become clear from the wider literature than just the narrow perspective of the same score-based diffusion equation how to do image-to-image translation. In fact, the works that this paper already cite do this, even for both the ODE and SDE between arbitrary densities. \n\nA quick summary of related work that should be properly addressed in this paper, and the authors should highlight what actually sets this method apart:\n- [1,2,3] propose a means of learning an ODE to do connect any two densities, e.g. for your image-to-image translation in finite time $ t \\in [0,1]$ without bias. In fact [1] does this image-to-image translation experiment there directly.\n- [4] shows how to do this for **both** an ODE and an SDE (with the score), also in finite time. It also shows how to avoid the added complexity of doob, and how SBDM is a subcase.\n- [5, 6] shows the influence of changing the coupling $p(x_0, x_1)$ between the densities $p(x_0)$, $p(x_1)$\n- [7] also shows how to use either and ODE or SDE to connect the densities under varying coupling. \n\nThe related worked section, in addition to the intro, should be thoroughly reworked to not overlook these clear contributions. While it is certainly beneficial to have a clear connection to how to do this with SBDM using doob-h and experiments of it, the paper is currently written so as to suggest that there is a clear need to come up with tools to do this as if many works have not addressed it. The reviewer is sympathetic to the fact that this field moves very fast, but also believes that overselling a concept by overlooking other work is detrimental to the field. \n\nWith regards to the statement that the ODE based methods [1,2,3] \"tend to severely underperform when compared to diffusion models,\" there is no evidence of this presented, and in fact the purpose of those papers is to present evidence of the contrary, e.g. see [3]. If the authors would like to make this statement, they should demonstrate it in experiments. It is of the reviewers mindset that the differentiating factor between most simulation-free transport generative models is just whether or not the model was conditionally trained, e.g. as $s(x,y,t)$ vs $s(x,t)$. Many papers report \"unconditional sampling\" FIDs by training a conditional model and using a null-token e.g. $y=-1$ to sample unconditionally, which improves their score.\n\nThere is perhaps a misinterpretation of what optimal transport is, and what role it may play in generative models that are constructed from continuous-time transport plans. The authors refer to \"VE (OT)\" bridges without providing a clear definition of what they mean by OT. Here are the two ways to learn an optimal transport between distributions:\n\n- 1. Choose the optimal coupling $p(x_0, x_1)$, with \"schedule\" $x_t = (1-t)x_0 + tx_1$. This is hard to do, and why people rely, e.g. on Sinkhorn.\n- 2. For independent coupling $p(x_0)p(x_1)$, learn a process $x_t = f_{\\theta}(t,x_0,x_1)$ which gives a time dependent velocity/score and density $v_t, p_t(x)$ that induces a minimum action (or least transport cost) in terms of Benamou-Brenier transport cost.\n\n- In the abstract, the authors reference \"OT-Flow-Matching\", though the work [3] does not propose to solve OT. At most ,they use a relationship about McCann displacement maps (which is related to OT from a Gaussian to a Gaussian) to motivate choosing a straighter conditional probability path -- they are not doing OT. \n\n\n-Throughout the text, the authors need to make sure all acronyms are defined.\n\n- The introduction of the weighting factor in equation (13) is not shown in the text to preserve an exact/unbiased transport. The authors should justify this or state that it introduces a bias, even if a beneficial one.\n\n\n*The reviewer is not opposed to adjusting their score, but there are many organizational and presentational aspects of this work that suggest it is not fit for contribution to the larger body of work at ICLR at this stage. Please find questions below that could help better demonstrate the utility of the method (in controlled experiments or new ones that e.g. exploit an interesting coupling) as well as the remarks above that need addressing.*\n\n[1] Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow. *Xingchao Liu, Chengyue Gong, Qiang Liu*, Sept 2022.\n\n[2] Building Normalizing Flows with Stochastic Interpolants. *Michael S. Albergo and Eric Vanden-Eijnden*, Sept 2022.\n\n[3] Flow Matching for Generative Modeling. *Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel, Matt Le*, Oct 2022.\n\n[4] Stochastic Interpolants: A Unifying Framework for Flows and Diffusions. *Michael S. Albergo, Nicholas M. Boffi, Eric Vanden-Eijnden*, March 2023.\n\n[5] Improving and Generalizing Flow-Based Generative Models with Minibatch Optimal Transport. *Alexander Tong, Nikolay Malkin, Guillaume Huguet, Yanlei Zhang, Jarrid Rector-Brooks, Kilian Fatras, Guy Wolf, Yoshua Bengio*, Feb 2023.\n\n[6] Multisample Flow Matching: Straightening Flows with Minibatch Couplings. *Aram-Alexandre Pooladian, Heli Ben-Hamu, Carles Domingo-Enrich, Brandon Amos, Yaron Lipman, Ricky T. Q. Chen*, April 2023.\n\n[7] Simulation-free Schr\u00f6dinger bridges via score and flow matching. *Alexander Tong, Nikolay Malkin, Kilian Fatras, Lazar Atanackovic, Yanlei Zhang, Guillaume Huguet, Guy Wolf, Yoshua Bengio*, July 2023."
+            },
+            "questions": {
+                "value": "- The authors write down the doob-$h$ transformed SDE for arbitrary coupling, but it's not clear in the experiments that they consider any coupling besides $p(x_0, x_1) = p(x_0)p(x_1)$. Can the authors consider any experiments which make use of a more interesting coupling?\n- An important ablation should be based on the sampler the authors used. Did the authors retrain the models they compared against and fixed e.g. the sampling strategy? They discuss a higher-order Euler-Maruyama sampler, but it is unclear if all the comparison to other methods used the same integrator. Many of the methods listed could use a different integrator for the same trained model, and it's unclear to the reviewer what was held fixed across comparisons and what wasn't. The reviewer points this out to stress that a paper is not a method -- the method presented in the paper should be recognizably connected to the conclusions of the experiments. If an auxiliary factor influenced the outcome, e.g. like choosing a better sampler, this diminishes the message about the method itself."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Reviewer_H8Nr"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2089/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698802515506,
+        "cdate": 1698802515506,
+        "tmdate": 1700673894790,
+        "mdate": 1700673894790,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "mvN3tHh4pn",
+        "forum": "FKksTayvGo",
+        "replyto": "FKksTayvGo",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_zUzA"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2089/Reviewer_zUzA"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposed a novel formulation on diffusion-based generative model, i.e., denoising diffusion bridge models (DDBMs). This formulation further inspire applications in important tasks such as image-to-image translation. Detailed theoretic derivation and empirical results are provided."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. The proposed method and formulation is novel and can potentially empower some pivotal applications such as image-to-image translation.\n2. The paper is well-written and easy-to-follow.\n3. Sufficient qualitative and quantitative results are provided to validate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. More results on larger-scale generation would be better (e.g., DDBM with Stable Diffusion).\n2. It would be better if the author could compare the DDBMs with some more advanced image-to-image translation algorithm such as controlnet."
+            },
+            "questions": {
+                "value": "1. Is there any advantage of DDBMs over some previous image-to-image translation methods such as controlnet?\n2. It would be better to show the variation ability of DDBMs in terms of the generation results. For example, when translating edges into an image, there exists various solutions. Are DDBMs able to generate these various results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2089/Reviewer_zUzA"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2089/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698858128485,
+        "cdate": 1698858128485,
+        "tmdate": 1699636141154,
+        "mdate": 1699636141154,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

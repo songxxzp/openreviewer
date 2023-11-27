@@ -1,0 +1,603 @@
+[
+    {
+        "title": "Rotational Equilibrium: How Weight Decay Balances Learning Across Neural Networks"
+    },
+    {
+        "review": {
+            "id": "2IMs2pJ4kT",
+            "forum": "Kr7KpDm8MO",
+            "replyto": "Kr7KpDm8MO",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Fts9"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Fts9"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work explores how the combined effect of weight decay and gradient update drives GD iterates to a rotational equillibrium for various optimizers. The authors propose that this rotational equiliibrium can be achieved early in training and how achieving this equillibirum can play a key role in effectiveness of AdamW compared to Adam with L2-regularization. To study the equillibirum point, the authors analyze a simplified setting, the optimization of a random loss function, resulting in a random walk for the neural network parameters and derive this point for various optmizers."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1) The paper is easy to read and follow.\n2) This work attempts to understand an important problem."
+                },
+                "weaknesses": {
+                    "value": "Here are some of my major concerns:\n1) I doubt comparing the dynamics of random walk (with zero mean gradients) with neural network training with true objective is meaningful. In particular, it is not clear how a random walk (drawing gradients from a normal 0 mean distribution) can trace the dynamic of neural network trained with a true loss. \n2) The authors state *\"Although the noise component can easily depend on the the progress on the underlying objective function, we can\nview the random walk as an approximation of this noise component.\"* but the random walk is not a function of the true loss, hence making it unclear how it is close to real training dynamics. It maybe possible that I misunderstood, so I will wait for further clarification from the authors. \n3) \"This causes the expected rotation of the vector in each update to remain constant along with its magnitude.\": Although the GD iterates converge in some sense but for moderate lr GD, oscillates in the edge of stability regime https://arxiv.org/abs/2103.00065. Hence, it is not necessarily true that expected rotation in each update remains constant. \n\nMinor:\n\n4) In figure-2,3, the weight norm equillibrium is a scalar, but denoted as a vector in the figure, does the author mean the weight vector at equillibrium?\n5) Similarly for figure-3, please redefine the figure as the expected quantities are scalars but shown as a vector. \n6) Define what is the expectation over, when defining the angular update?"
+                },
+                "questions": {
+                    "value": "1) In particular, the justification of neural network random walk with actual training is not clear. I would like to hear from the authors regarding this. \n2) Additionally, it is important than authors correct the terminologies."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2732/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698590743804,
+            "cdate": 1698590743804,
+            "tmdate": 1699636215539,
+            "mdate": 1699636215539,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "js5j3Kc3Fy",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "2IMs2pJ4kT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the time spent reviewing our work as well as your feedback and suggestions.\nBelow we will try to address the weaknesses you bring up and answer your questions.\n\n## Random Walk:\nFirst, we would like to provide further explanation of our random walk setting and why we consider it relevant to real neural networks. We apologize for not making this clearer in the manuscript and will update it to include the following discussion.\n\n### Relation between random walk and real training dynamics:\nLet's assume we are in the standard empirical risk minimization setting used in deep learning.\nWe have a training dataset $\\mathbb{X}$ consisting of points $\\\\{\\mathbf{x}\\_{1} \\ldots \\mathbf{x}\\_{N}\\\\}$, where each point accounts for both an input and a label/target when applicable.\nLet $\\mathbf{\\theta}$ be the whole parameter vector of our model, accounting for all layers etc.\nWe can then write our full training loss as:\n$$ \\mathscr{L}(\\mathbb{X}, \\mathbf{\\theta}) = \\frac{1}{N}\\sum\\_{i=0}^{N} \\mathscr{L}(\\mathbf{x}\\_i, \\mathbf{\\theta})$$\nSimilarly we can write the loss for a minibatch $\\mathbb{B}$ of size $|\\mathbb{B}|$ as:\n$$ \\mathscr{L}(\\mathbb{B}, \\mathbf{\\theta}) = \\frac{1}{|\\mathbb{B}|}\\sum\\_{\\mathbf{x}\\_i \\in \\mathbb{B}} \\mathscr{L}(\\mathbf{x}\\_i, \\mathbf{\\theta})$$\nThe full-batch gradient is $\\mathbf{g}\\_\\text{True} = \\nabla\\_{\\mathbf{\\theta}}\\mathscr{L}(\\mathbb{X}, \\mathbf{\\theta})$ and the mini-batch gradient is $\\mathbf{g}\\_\\mathbb{B}=\\nabla\\_{\\mathbf{\\theta}}\\mathscr{L}(\\mathbb{B}, \\mathbf{\\theta})$.\nThe noise component of the gradient, $\\mathbf{g}\\_N$ is then the difference between the two:\n$$\\mathbf{g}\\_N = \\mathbf{g}\\_\\mathbb{B} - \\mathbf{g}\\_\\text{True}$$\nNote that this noise component is zero-mean, since the minibatch gradient is an unbiased estimate of the full batch gradient for a randomly sampled $\\mathbb{B}$:\n$$\\mathbb{E}_{\\mathbb{B}}[\\mathbf{g}\\_\\mathbb{B}] = \\mathbf{g}\\_\\text{True}$$\nOur random walk analysis assumes that the batch gradient is dominated by the noise component, i.e. that:\n$$\\mathbf{g}\\_\\mathbb{B} = \\mathbf{g}\\_\\text{True} + \\mathbf{g}\\_N \\approx \\mathbf{g}\\_N$$\nThis does of course not hold exactly in practice but may be a reasonable approximation, especially for smaller batch sizes.\n\nWe note that the noise component is always zero-mean in expectation which is the main requirement for our random-walk analysis.\nThe presence of normalization also helps ensure that the gradient is orthogonal in expectation even when $\\mathbf{g}_\\text{True}$ is significant.\n\n### Relevance of Random Walk Setting:\nWe chose this random walk setting for several key reasons:\n1) It is a single relatively simple assumption that streamlines the math of the analysis.\nWithout it we would have to make various other approximations or assumptions about the gradients or alternatively introduce unknown quantities describing aspects like the alignment of gradients over time.\nThis would result in a more complicated analysis that is harder to understand as well as equilibrium predictions that may depend on unknown quantities.\n2) It allows us to extend the analysis to the unnormalized setting, unlike prior work which has only focused on the fully scale-invariant case.\nThis allows us to provide a broader view of the effects of weight decay in deep learning since most networks are not perfectly scale-invariant in practice.\n3) It captures important properties of the gradient unlike simpler models that might for example sample the weight gradient directly from a fixed distribution. \nOur setup accounts for e.g. the presence of normalization layers so $\\mathbf{g}_N$ respects fundamental properties like the orthogonality and the inverse proportionality (Equations 1 and 2 in the paper).\nFor a real optimization problem the distribution of $\\mathbf{g}_N$ may change with the progress on $\\mathscr{L}(\\mathbb{X}, \\mathbf{\\theta})$, but we believe that if this happens slowly enough compared to the convergence towards equilibrium it won't significantly affect the results (and this would likely be very hard to analyze anyway).\n\n**Finally, it is important to highlight that the predictions we derive from analyzing this random walk scenario closely match our measurements of real neural networks in practice.**\nIn Appendix G, we explore different scenarios and provide examples illustrating the accuracy of these predictions, showing a close alignment, often within a small percentage margin.\n**We therefore believe our analysis offers valuable insights and predictions applicable to real neural networks, despite being derived for a simplified setting.**"
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699923487600,
+                "cdate": 1699923487600,
+                "tmdate": 1699923487600,
+                "mdate": 1699923487600,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ZmVIWxAk0X",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "2IMs2pJ4kT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We hope this message finds you well. We understand your time is precious and deeply appreciate your efforts in this review process. Since the discussion period is ending soon, we would like to kindly ask for your feedback on our rebuttal. If you feel it addresses at least some of your concerns, we would greatly appreciate it if you updated your score accordingly.\n\nPlease let us know if you have any further questions and we will quickly get back to you."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700569427271,
+                "cdate": 1700569427271,
+                "tmdate": 1700569427271,
+                "mdate": 1700569427271,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BtO0hVJ2vT",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "ZmVIWxAk0X",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Reviewer_Fts9"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Reviewer_Fts9"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reviewer response-1"
+                    },
+                    "comment": {
+                        "value": "I thank the authors for their detailed feedback and changes made in the manuscript, it would have been easier for the reviewers to read the changes if it was highlighted with a different color say red. \n\nMy main criticism from the random walk approach in particular was the simple question: if we use $g_{N}$ doesn't it lose the information about the original loss it was supposed to minimize $L(X,\\theta)$. How much of the information of the original loss is conveyed in this $g_{N}$? Apparently it does not seem clear how the information in the loss can be conveyed through this noisy gradient $g_{N}$. \n\nRegarding scalar vs vector issue, now it is clear to me. Thanks."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700588712509,
+                "cdate": 1700588712509,
+                "tmdate": 1700588712509,
+                "mdate": 1700588712509,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "Q9ajAXjDLO",
+            "forum": "Kr7KpDm8MO",
+            "replyto": "Kr7KpDm8MO",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_tLyV"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_tLyV"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the interplay between the weight decay and the gradient updates. The underlying phenomenon being studied is related to equilibrium state, which is achieved when the gradient update and the weight decay cancel each other out. In such a state, the parameter updates keep the magnitude same but rotate the update. This work characterizes such equilibrium for various layers in a neural network, for different optimizers including AdamW and SGD. It also argues that rotational equilibrium is the root cause for the performance gap between AdamW and Adam+L2 regularization. Finally, this work also proposes routine to enforce rotational equilibrium in various optimizers."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Empirical analysis to explain the difference between AdamW and Adam+L2 regularization using rotational equilibrium is promising\n- Simple procedure to create rotational variants of the existing optimizers"
+                },
+                "weaknesses": {
+                    "value": "- It is unclear what the advantage of the rotational variants of an optimizer like AdamW over the vanilla optimizer. Paper does not do any justifications as to why one would prefer rotational variants in practice over the vanilla counterparts given that there is a non-trivial change required. For instance, Table 2 does not convincingly says that the RV AdamW would be the preferred choice.\n- Paper structure makes too many keypoints which hinders the impact of the really important aspects of this work. Since this work is more on the empirical analysis, it would be beneficial if fewer experiments are discussed in details, rather than discussing many experiments in few paras.\n- Need clarifications on many observations made in the paper (see questions below)"
+                },
+                "questions": {
+                    "value": "- In Figure 4, what do the colors correspond to? Do these correspond to different neurons or different layers?\n- In Table 1, do you have any intuition as to why the RMS update for Lion is devoid of any beta terms? In contrast, AdamW updates depend on both beta and C.\n- In Table 2, can you explain the performance degradation in RV-AdamW Zero Shot on dataset IWSLT2014 de-en? Also, why is the Wrapped Adam+L2 missing for the ImageNet-1k dataset?\n- In Figure 8, you show the ImageNet-1k+ResNet50 performance for 10 epochs. Does the trend hold true for longer training? Do the baselines and RV variant achieve significantly different Top-1 accuracy?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2732/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698807130342,
+            "cdate": 1698807130342,
+            "tmdate": 1699636215444,
+            "mdate": 1699636215444,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "dLCSJPM7y4",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "Q9ajAXjDLO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your feedback. We will try to address your concerns and questions below.\n\nOn a high level, **we believe there may have been some misunderstanding about the main goal of our paper which is understanding the effect of weight decay on the learning dynamics of existing optimizers, not proposing a new SOTA optimizer.**\nAside from the high level structure of the manuscript, we have tried to further emphasize this in various places e.g. when proposing the RVs *\"In this section we create an experimental tool to study these phenomena\"* (referring to the effects of the transient phase and imbalanced rotation) and in the experiment section *\"Although the RVs have many interesting properties and good performance, we view them primarily as a research tool\"*.\n\n## The Advantage of Rotational Optimizers\nThe main purpose of the RVs in this work is to serve as research tools to further our understanding of weight decay and balanced rotation in deep learning.\n\nWe model the RVs to match the equilibrium dynamics of the standard optimizers (with proper normalization) as closely as possible.\n**By design, this leaves no room for changes that could bring significant performance differences except in cases where the original optimizers deviate significantly from the regular \"balanced\" equilibrium dynamics.**\nWhen that is the case the rotational variants tend to perform better, see for example the poorly normalized case (imbalanced rotation) and the need for warmup (harmful transient phase) sections of our experiments.\n\nThe main conclusions we draw from Table 2 is not that the RVs perform better but rather:\n* The transient phase is not needed, the simpler enforced equilibrium dynamics of the RVs suffice for good performance.\n* In many cases we can predict what the hyperparameters of the RVs should be (zero-shot transfer). This supports our analytical results since we can predict what the rotational update size should be.\n\nIf one wants to use RVs as practical optimizers (not what we propose them for), we believe the main advantage would be simpler and more robust learning dynamics. For example:\n* Enforced balanced rotation even in cases with poor / no normalization (more robust to the neural network design).\n* Eliminating the transient phase, giving better learning dynamics early in training (likely faster progress, reduced need for warmup).\n* Allowing the direct specification of the \"effective learning rate schedule\" (in terms of the update sizes), otherwise it depends on interactions between the specified schedule with the initialization, weight decay and learning rate used.\n\nOn their own these benefits might not be significant enough to warrant switching to the RVs for mainstream, well established / tuned training tasks.\nPopular architectures are likely to have at least somewhat decent dynamics through \"natural selection\", even if obtained through trial and error.\nHowever, these are desirable properties that may inspire future optimizer design (where there is freedom to deviate arbitrarily from existing optimizers, unlike with the RVs).\n\n## Paper Structure\nWe don't consider this work primarily empirical, all of our experiments aim to validate our analysis or quantify the impact of specific phenomena observed in our analysis such as the transient phase, imbalanced rotation, different roles of learning rate and weight decay etc.\n\nOur analysis reveals a broad range of insights that we empirically explore / validate in our experiments.\nWe believe this structure makes sense for this purpose.\nIf our main goal was to propose a new SOTA optimizer, we agree that this structure would not be optimal and a narrower focus on showing specific advantages would be better.\nWe note that our discussion section further interprets and summarizes our experimental results."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699983110190,
+                "cdate": 1699983110190,
+                "tmdate": 1699983110190,
+                "mdate": 1699983110190,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "35US48BwnU",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "Q9ajAXjDLO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We hope this message finds you well. We understand your time is precious and deeply appreciate your efforts in this review process. Since the discussion period is ending soon, we would like to kindly ask for your feedback on our rebuttal. If you feel it addresses at least some of your concerns, we would greatly appreciate it if you updated your score accordingly.\n\nPlease let us know if you have any further questions and we will quickly get back to you."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700569414633,
+                "cdate": 1700569414633,
+                "tmdate": 1700569414633,
+                "mdate": 1700569414633,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Ipp3AnWujk",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "35US48BwnU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Reviewer_tLyV"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Reviewer_tLyV"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to author rebuttal"
+                    },
+                    "comment": {
+                        "value": "Thank you for the rebuttal. I understand that the rotational analysis helps in understanding the effects of weight decay on optimizers and you do not claim to create a SOTA optimizer. I acknowledge that the procedure to create rotational variants of various existing optimizers is non-trivial. But, without studying the effects of this phenomena for larger setups, it is unclear if this holds universally. For instance, it is unclear if you run the ImageNet-1k experiments for long, do you observe the same trend? Similarly for IWSLT2014 de-en, you do not observe this effect. \n\nRegarding compute restrictions, you have already done ResNet50 experiments for 10 epochs, you could choose to go with much smaller architecture and show the trend with and without the rotational variants. I don't think your paper is shooting for state-of-the-art results, all you need is a trend comparing the optimizers with and without rational variants.\n\nFinally, the paper organization could be improved further to remove misunderstandings that a lot of reviewers had during this review/rebuttal phase. \n\nGiven the current state, I do believe this work would benefit from another pass at it and in its current state, it has a lot of questions unanswered."
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700681349502,
+                "cdate": 1700681349502,
+                "tmdate": 1700681349502,
+                "mdate": 1700681349502,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "VGTChNqXX8",
+            "forum": "Kr7KpDm8MO",
+            "replyto": "Kr7KpDm8MO",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Yv1K"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Yv1K"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper investigates the impact of weight decay on the optimization dynamics of deep neural networks. It focuses on the concept of \"equilibrium,\" where the effects of weight decay and gradient updates on the magnitude of parameter vectors cancel out on average, leading to stable parameter rotations and magnitudes during training. The paper explores how different optimization algorithms, including AdamW and SGD with momentum, interact with weight decay, initialization, normalization techniques, and learning rate schedules to achieve equilibrium states. The authors demonstrate that enforcing rotational equilibrium throughout training can simplify the training dynamics by eliminating chaotic transient phases. Additionally, they discuss the role of rotational behavior in the effectiveness of AdamW compared to Adam with L2-regularization, the performance of different normalization layers, and the need for learning rate warmup."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper studies the concept of equilibrium in the context of weight decay and optimization dynamics of SGDM and Adam. A good extension over Wan et al. 2020.\n\nIn-Depth Analysis: The paper provides a comprehensive analysis of how various factors, including optimization algorithms, weight decay, initialization, normalization, and learning rate schedules, interact and affect equilibrium states. The analysis though of over-simply assuming *random walk* updates gives estimation of the *expected angular* and *equilibrium norm*. It is interesting to see these measures are correlated with the observational phenomena of AdamW vs Adam+L2, normalization and warmup.\n\nMoreover, the findings have practical implications for deep learning practitioners, as they suggest ways to simplify and improve training dynamics. Overall, the paper presents an intriguing concept and thorough analysis of equilibrium states in deep learning optimization."
+                },
+                "weaknesses": {
+                    "value": "**Gap between theory and practice** The expected angular exhibits different behaviors for different algorithms, e.g., Adam, AdamW and SGDM, empirically (see Figure 4 and 6). At the same time, the analysis based \"random walk\" gives estimation of *expected angular* and *equilibrium norm* (see Table 1). However, the theoretical estimation cannot predict the empirical differences. This makes the paper not coherent enough. \n\n**Induced algorithm shows some improvement but not significant enought**. It is a bit disappointing that the theory motivated modification Rational Variants cannot compensate Adam+L2 to make it as good as AdamW."
+                },
+                "questions": {
+                    "value": "Can the equilibrium argument explain the practical tuning wisdom of keeping $\\eta\\lambda$ constant? Does this wisdom apply to all optimizers?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2732/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698989972291,
+            "cdate": 1698989972291,
+            "tmdate": 1699636215388,
+            "mdate": 1699636215388,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "AFERt5vCPQ",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "VGTChNqXX8",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your feedback. We will try to address your concerns below.\n\n## Gap between theory and practice\n**We believe there may be some misunderstanding here: we find that our theoretical predictions closely match empirical observations and can explain the differences between various optimization algorithms.** In the following, we highlight and clarify the results in our paper that support this claim, focusing on Figures 4 and 6.\n\n### Figure 4\nThis figure shows the measured weight norm and angular updates for AdamW and Adam+L2, in a simple system undergoing a random walk with a constant learning rate.\nWe note that these are standard optimizers, not the rotational variants, and will therefore have a transient phase before converging to equilibrium.\nOur predicted values are derived for the steady state (equilibrium) that occurs after the initial transient phase.\nThe equilibrium values also describe the expected or average behavior, the exact values fluctuate between steps although their expectation (over different random seeds or time) remains constant.\nWe therefore don't expect the depicted predictions to match early in training and the exact instantaneous values in equilibrium can also deviate from them, both are fully consistent with our analysis.\n\nFor **AdamW** all neurons (solid colored lines) and their average (solid black line) converge to the same weight magnitude (left) and angular update (right). In the equilibrium phase, the measurements and our predictions (dashed red line) closely align. In particular, the average (black line) aligns well with our predictions. This is because for AdamW, neurons behave similarly and the black line represents the average expected value.\n\nFor **Adam+L2** every neuron converges to a different value due to the dependency on the average gradient magnitude. Although not shown in Table 1, Appendix section E thoroughly explains (predicts) this.\n\nWe omitted the neuron predictions for Adam + L2 due to their complex dependency on the average gradient norm of each neuron. In a slightly simplified experimental setup, where the gradient distribution is similar across the coordinates (synapses) of each neuron, we can predict the equilibrium values from measured gradient norms.\n\n### Figure 6\nWe make the following two observations.\n\n**Left:** After extensive tuning, Adam+L2 fails to match AdamW's performance, supporting Loshchilov and Hutter's original findings in their 2019 AdamW paper.\n\n**Right:** Adam+L2 shows unbalanced average angular updates across layers, unlike AdamW. This aligns with our theory, which predicts such imbalance for Adam+L2 due to varying gradient magnitudes across layers, but not for AdamW.\nWe make this observation for the optimal parameter settings for each optimizer.\n\n**General remarks:** The angular updates change over time because of the cosine learning rate schedule, the initial transient phase, and towards the end of training, as explained in detail in Section 5 (**Scheduling Effects**)."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699919896475,
+                "cdate": 1699919896475,
+                "tmdate": 1699919896475,
+                "mdate": 1699919896475,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "rDugkQfgog",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "VGTChNqXX8",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We hope this message finds you well. We understand your time is precious and deeply appreciate your efforts in this review process. Since the discussion period is ending soon, we would like to kindly ask for your feedback on our rebuttal. If you feel it addresses at least some of your concerns, we would greatly appreciate it if you updated your score accordingly.\n\nPlease let us know if you have any further questions and we will quickly get back to you."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700569396184,
+                "cdate": 1700569396184,
+                "tmdate": 1700569396184,
+                "mdate": 1700569396184,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "y2gwiFsmpC",
+            "forum": "Kr7KpDm8MO",
+            "replyto": "Kr7KpDm8MO",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Pvr2"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2732/Reviewer_Pvr2"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This submission follows the Spherical Motion Dynamics (Wan et al., 2021) to further investigate the rotational equilibrium when using normalization techniques and weight decay jointly. Some findings are further shown for analyzing the balanced and imbanced rotation, particularly for AdamW and Adam+L2."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- Simple and intuitive derivation of the \"rotational equilibrum\" for different optimizers\n- Based on the balanced and imbanlaced rotation, interesting discovery for discribing the difference between AdamW and Adam+L2. \n- Propose a simple normalization technique to explicitly control the average angular update size, forcing it to match equilibrium throughout training."
+                },
+                "weaknesses": {
+                    "value": "- I acknowledge the contribution that analyzing the difference between between AdamW and Adam+L2 from the imbalanced rotation view. However, further careful justification is required. First, the rigorous explaination is required to show why AdamW is imbanlaced while Adam+L2 is not. Second, why the balanced rotation helps to perform well in general. Without these justification, I cannot see the significant contribution of this paper, since other contribution points are too incremental and minor. \n\n- There is a number typo in Table2, row IWSLT2014 de-en."
+                },
+                "questions": {
+                    "value": "see above"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2732/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699496141572,
+            "cdate": 1699496141572,
+            "tmdate": 1699636215298,
+            "mdate": 1699636215298,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "oOeDPCTLPT",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "y2gwiFsmpC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for taking the time to review our paper and your feedback. We will try to address your concerns below.\n\n## AdamW vs Adam+L2\n**We would like to note that we do analyze the rotational equilibrium of Adam+L2 in Appendix E. Our analysis shows that the rotation depends on the gradient magnitude, resulting in imbalanced rotation when it varies between neurons / layers.**\nThis differs from AdamW, where our analysis suggests that the expected average rotation is independent of the gradient norm in equilibrium\n\n**Summary of Appendix E:** \nFor Adam+L2, the equilibrium weight magnitude depends non-trivially on the average gradient norm.\nWith some simplifying assumptions, we can describe the equilibrium weight magnitude as the roots of a third order polynomial.\nThe closed form solution is quite long and complicated.\nWe were not able to simplify it much in the general case, so we omit it from Table 1.\nThe dependency on the gradient norm does not cancel out when computing the expected angular update in equilibrium.\nThis differs from SGD where the equilibrium weight magnitude also depends on the average gradient norm, but this dependency cancels out when computing the average angular update.\n\nPlease let us know if you find this explanation sufficient or if you have any suggestions for how it could be improved.\nWe believe we could also give a more high-level intuitive explanation for the dependency on the gradient magnitude for a specific setting if that would be of interest.\n\n## Why does balanced rotation matter?\n**We note that we do provide some high level intuitions for why balanced updates might be a good heuristic in the intro and why rotation is a natural measurement of an effective update in Section 2.**\n\nFirst we would like to highlight that the standard practice of using a single learning rate across all neurons / layers is a practical but somewhat arbitrary choice.\nIn theory, we could tune a separate learning rate and even a lr schedule for each component (although intractable in practice).\nWe know that a single learning rate is often not optimal, for example AdamW can be seen as SGDM with an adaptive (time varying) learning rate scaling for each coordinate and significantly outperforms SGDM on many problems.\n\n**Similarly to the coordinate-wise scaling in AdamW, balanced rotation can be seen as a heuristic that empirically performs well.**\nDespite its performance, we don't believe balanced rotation is likely to be theoretically optimal.\nTuning a separate learning rate for each neuron on a given problem seems unlikely to result in perfectly balanced rotation.\n\n**We would also like to emphasize that the idea of balanced rotation comes from analyzing the learning dynamics arising from good modern deep learning practices (use of normalization, weight decay etc), it does not come out of nowhere.**\nOur research provides a detailed analysis and empirical evidence to support the effectiveness of balanced rotation.\nWe observe that imbalanced rotation, as seen with methods like Adam+L2 and coarse normalization, often results in poorer performance compared to when rotations are balanced (e.g. through the use of the rotational optimizer variants).\nWe also show that artificially imbalancing the rotation results in worse performance.\n\nWe believe that rigorously proving why balanced rotation often outperforms imbalanced rotation is likely to be a challenging theoretical problem.\nOther forms of coordinate or component wise scaling for example in AdamW remain poorly understood theoretically despite significant effort from the community.\n**Nevertheless, we believe these are valuable observations of practical relevance even if we cannot offer a theoretical explanation for why (perfectly) balanced rotation performs well. Our observations may inspire further theoretical research to explore why and when balanced rotation helps.**"
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699919578953,
+                "cdate": 1699919578953,
+                "tmdate": 1699919578953,
+                "mdate": 1699919578953,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "PKIQozE6Pe",
+                "forum": "Kr7KpDm8MO",
+                "replyto": "y2gwiFsmpC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2732/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We hope this message finds you well. We understand your time is precious and deeply appreciate your efforts in this review process. Since the discussion period is ending soon, we would like to kindly ask for your feedback on our rebuttal. If you feel it addresses at least some of your concerns, we would greatly appreciate it if you updated your score accordingly.\n\nPlease let us know if you have any further questions and we will quickly get back to you."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2732/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700569373054,
+                "cdate": 1700569373054,
+                "tmdate": 1700569373054,
+                "mdate": 1700569373054,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

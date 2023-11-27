@@ -1,0 +1,280 @@
+[
+    {
+        "id": "GUJsMi046Y",
+        "forum": "r2ve0q6cIO",
+        "replyto": "r2ve0q6cIO",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_fGVf"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_fGVf"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors study the execution of graph neural network under asynchrony. This is claimed to be advantageous for executing GNNs on very large graphs or efficiently simulating a group of agents with limited communication. Specifically, the partial asynchronism model of execution is used, where the the authors propose a new architecture: Energy GNN. EGNN is an Implicit GNN with appropriate input-convex networks, for which the author can guarantee convergence of the EGNN under partial asynchronism (with appropriate step size). Moreover, the proposed method is empirically tested on a variety of synthetic and real world tasks."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The main idea of studying GNNs under a different perspective than the common synchronous message passing, in this case, the partial asynchrous execution model is both novel and interesting.  \n\nThe theoretical analysis and the needed mathematical tools to properly connect the existing insights to graph neural networks are non-trivial and interesting contributions."
+            },
+            "weaknesses": {
+                "value": "I do not see sufficient evidence to support the main claim of the paper for the mentioned use cases of more efficient execution on larger graphs. In its current form, there are no runtime measures, nor any comparisons where asynchronous EGNN is better (i.e. number of executed steps). \n\nThe experimental section should be improved. The choice of baselines against which EGNN is compared to can be improved. Furthermore, it is not exactly clear to me why it is these synthetic tasks the authors focus on - they are mainly long range communication tasks, which I find interesting, but are not in the spirit or in alignment with the main claims of the paper. Moreover, if the focus is more on the long range communication ability, I believe there should be other baselines (from the MPNNs) other than a 2 layer GCN.\n\nPresentation of the paper could be improved. This not as big of a concern as the two points mentioned above and I believe to be (easily) fixable as they are not conceptual issues."
+            },
+            "questions": {
+                "value": "Regarding the performance of synchronous GNNs which are executed asynchronously: I can see that the error can become arbitrarily large (as the synchronous assumption is violated). Are there other methods which could make them more robust? Could you already train them using the outlined schedule in Appendix A.5 (or dropout?) or use something similar to the original Scarselli work to encourage a contraction operation that converges? Especially a baseline similar to the Scarselli work I believe to be very important for your comparisons - this would support the claim that these models are too simple. \n\nWhat about other MPNN baselines beyond the 2 layer GCN (which of course can learn to solve the tasks)? Do regular MPNNs which could learn the task correctly (and do so) also have the same performance drop?\n\nIf long range communication should be more of a main feature of the presented architecture I would recommend comparison against other baselines which also focus on this, i.e. by building deeper GNNs (or even graph transformers)\n\nHow long do the implicit GNNs and the EGNN run in practice? How deep are the \u201cinfinite depth\u201d gnns in practice?\n\nI was not quite able to follow the task setup for 6.3. I think a precise formulation of the problem using mathematical notation would help to clarify the task and training objective (can also be included in the Appendix).\n\nIf the main claim of the work is regarding improved performance on larger graphs when execution can be asynchronous I would expect at least some real world measurements or an otherwise adequate comparison (maybe number of node activations, or rounds per node) to further support the statement.\n\nRelated to the previous point, in Figure 2 of the Appendix: (i) what exactly is the dataset loss? And I interpret the plot that you need 2k updates per node in a graph of size 10 to reach convergence during inference? Do I understand this correctly and if this is the case, how is this more efficient than a 10 layer synchronous GNN?\n\nIn the real world dataset experiments EGNN performs worse than IGNN. Especially for PPI, EGNN only reaches performance similar to a 2 layer GCN, whereas EGNN is almost perfect. A performance loss, which comes at the benefit of execution speed would be ok or in some cases even desired. I would appreciate at least a comment or hypothesis on why the performance does not translate. Also I would suggest keeping the notation consistent and report the number of layers for all models in the tables.\n\nThe insight that EGNN still converges (with the right step size) seems like the main contribution of your work and I would suggest highlighting this more (in the main part).\n\nThe required step size is in O(1/nb) (which seems quite small). Could you provide an intuition on why this has to be dependent on n, to me this is not obvious (I would have thought maybe a graph parameter such as the node degree might be necessary?)\n\nThe results provided in the main part of the paper are only on individual modes and not reported as the mean over multiple runs if I understand correctly? I see that it might not be straightforward, as you also need to avg. over the used schedule - but I would appreciate it if the results would be averaged over multiple learned models.\n\nWhat is the limiting factor of scaling to larger graphs? Could you go beyond the size of 100 nodes used in the paper, what are the tradeoffs?\n\nAre the models trained on the same graph sizes that they are run on during inference? Or do you only train on one and then generalize across sizes for the synthetic tasks? \n\nAdditional Feedback:\nI know that some of these comments are just personal preference, feel free to dismiss the comments that concern presentation style if you disagree.\nIn the related work section, I would encourage to include the work on asynchronous GNNs (rather than the focus on distr. training which is not that close to the presented ideas). This includes the work of Faber et al. (https://arxiv.org/abs/2205.12245) and Dudzik et al (https://arxiv.org/abs/2306.15632)\nI would suggest to move the first two paragraphs before 3.1 and the GCN formulation in your notation to the Appendix. Instead, I would try to include A1, which actually outlines the specific assumptions of partial asynchronism. \nThe update of (9) should consider multisets instead of just regular sets right?\nIt is a bit weird to have all the def. on node levels but then (6) on graph level\nSection title 4 is a bit long, also title A4 is almost a paragraph in itself.\nI have trouble understanding the definition of $\\tau^i_j$, shouldn\u2019t it be the last updated timestep rather than the amount by which the embedding is outdated (this in my understanding is the quantity $s_ij$\nIn Section 4 adaptivity to dynamic inputs is mentioned (as a feature of the framework) but no further evidence is provided. I rewrite to make it more clear that this could be an application but should be further investigated as future work (as is done in the conclusion).\nA5 Appendix; nodes never deviate by more than one, i.e. which means regular updates. Is this correct? In my understanding this ensures that the total work of all nodes is similar B=20 ensures (somewhat) regular updates\nThe sampling notation in A5 is a bit weird - but this might be due to my confusion about the role of $tau^i_j$ which makes it hard for me to verify the correctness of the shown procedure.\nIn the Appendix layer sizes are noted as 4,4,1 - this seems quite small, is there a particular reason for this limitation?\nIn the Appendix multiple references are broken, where a ? shows instead.\nIn Section 5 you mention that prior work unifies the objective oriented view. But then you continue with saying that there is no reason to restrict - so what is a unifying or restricting view? I believe this to be mostly a formulation issue.\nHow would you like to capitalise during the paper, in the main text energy GNN is used but then in the Appendix it is Energy GNN. I would recommend keeping it consistent throughout. \nIn Section 5, how does the energy function enable robustness? Isn\u2019t this a property of the implicit GNNs and not limited to EGNN?\nI did not follow the statement \u201cnot necessarily convex with respect to the features\u201d, but the node embeddings, but usually the initial node embeddings are the features? I also think it would be good to make explicit where the convexity is required (in the final convergence proof I assume, following the original proof).\nIn A.2 there is an additional + on the third line of the proof\nThe proof of the main insight could be improved for presentation: restating the original theorem, showing the individual assumptions (the second condition where the Ks are set is not immediately obvious), is this why e_i is defined this specific way?\nDo you have any intuition on why IGNN is first stable, but then diverges for larger graphs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8497/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698699210896,
+        "cdate": 1698699210896,
+        "tmdate": 1699637061365,
+        "mdate": 1699637061365,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "KkTTDxefK9",
+        "forum": "r2ve0q6cIO",
+        "replyto": "r2ve0q6cIO",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_zshX"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_zshX"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper considers the problem of distributed inference of GNNs. The authors focus on partial asynchronism, which bounds the time between updates across each node and the the amount of data that can be outdated at each node. They then present how GNN inference is performed under the partial asynchronism. Finally they propose an architecture, called Energy GNN in which node embeddings are computed by minimizing an energy function which is amenable to partially asynchronous inference."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The problem of distributed executions in the context of GNNs is interesting."
+            },
+            "weaknesses": {
+                "value": "I think the paper only considers distributed inference, but does not deal with distributed training. I am not sure I understand why one would want only the inference to be distributed if the training is not. More precisely, if the graphs are so large that inference needs to be distributed, how was the model even trained? \n\nThe paper is hard to follow and tends to lack clarity. The appendix is confusing and it contains broken pointers (see the number of \"??\") thus I did not find it useful in understanding the paper better. Also what is the meaning of the \"*\" in the tables?\n\nThe experimental section is limited and tends to be not very clear. I think it should explore much larger graphs having millions of nodes, and certainly not those having 100 nodes that can be easily ran by standard non-distributed GNNs. For example, what about the ogb MAG240M dataset?"
+            },
+            "questions": {
+                "value": "1. Please evaluate on large scale datasets, e.g., MAG240M, where distributed executions are needed.\n2. Why some entries of the tables have the std while some others have not?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8497/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698699695349,
+        "cdate": 1698699695349,
+        "tmdate": 1699637061242,
+        "mdate": 1699637061242,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Z6ycriCVZv",
+        "forum": "r2ve0q6cIO",
+        "replyto": "r2ve0q6cIO",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_Ea9C"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_Ea9C"
+        ],
+        "content": {
+            "summary": {
+                "value": "One major issue in running graph neural networks (GNN), at inference time, in a distributed fashion is that GNNs require synchronous communication between layers of the graph, but distributed execution is asynchronous which means communications between nodes in a GNN are done at different times or can have stale communications. This can lead to the GNN inference failing. However, some types of GNNs can handle asynchronous execution which are termed \u201cHogwild\u201d GNNs. This paper introduces a \u2018hogwild\u2019 GNN architecture termed \u201cenergy GNN\u201d which views message passing (communication) between nodes as a convex optimization problem during training and, as a result, can run asynchronously during inference, in addition to having good performance compared to modern GNN architectures."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "\u2022\tGood introduction that clearly explains the problem and good grammar throughout the paper.\n\u2022\tComprehensive experimental evaluation done on multiple datasets."
+            },
+            "weaknesses": {
+                "value": "\u2022\tSome GNN related terminology is difficult to follow, due to not having explicit definitions\n\u2022\tSection 4 last paragraph difficult to understand.\n\u2022\tPaper is math-heavy in several sections. \n\u2022\tMany references to appendix, which is not visible."
+            },
+            "questions": {
+                "value": "One issue in this paper is that it uses terminology which is not explicitly defined (if such terminology is commonly known in the target audience, this may not be big issue). For example, Finite depth GNN, contractive (in context of GNNs), and energy function have no explicit definition. Implicit GNN and fixed point GNN seem to be used interchangeably. IGNN is first used in the evaluation section without being defined, (is it referring to Implicit GNNs?).\n\nIn Section 4, the last paragraph which explains the advantages of a fixed-point GNN over finite depth GNNs, it is unclear what the benefit is, due to insufficient explanation. For example, what do \u201cchange its output in response to changes in the inputs\u201d and \u201ccoordinating another forward pass of the network\u201d mean, and why is it important for GNNs?\n\nThe experiments section is easy to follow, since each experiment and its results are explained clearly. In addition, several different datasets used for experiments, which makes the benefits of the proposed architecture stand out. However, only a total of 3 GNN architectures are tested. Having more architectures or explaining why the chosen architectures are sufficient would be good to include. Furthermore, in all experiments we see the proposed energy GNN performs best, but is this always the case and could there be cases where energy GNN fails to perform well?\n\nLastly, the paper is also math-heavy in several sections, which makes it difficult to follow for readers unfamiliar with GNNs. Perhaps some figures could be used to supplement the math sections."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Reviewer_Ea9C"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8497/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698770940071,
+        "cdate": 1698770940071,
+        "tmdate": 1699637061122,
+        "mdate": 1699637061122,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "tbAa04Tc1o",
+        "forum": "r2ve0q6cIO",
+        "replyto": "r2ve0q6cIO",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_e2vg"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8497/Reviewer_e2vg"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper develops energy GNN, a novel architecture for distributed GNN inference with asynchronous communication which can be applied to robotics, remote sensing, and other domains. Most existing GNN architecture cannot handle this problem. Energy GNN leverages input-convex GNN to ensure convergence."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- This paper explains the related works and background in details, and the proposed method is well-motivated.\n- The research problem studied in this has some practical applications but was seldom studied before.\n- The proposed algorithm is interesting and intriguing.\n- Experimental evaluation shows that Energy GNN works well on the synthetic datasets."
+            },
+            "weaknesses": {
+                "value": "- The experiments are not sufficient.\n\n  - The convergence curves of Energy GNN are not reported.\n\n  - The efficiency and time complexity of Energy GNN are not reported.\n\n- The accuracy performance is relatively worse than GCN on real-world datasets (e.g., PPI and MUTAG)."
+            },
+            "questions": {
+                "value": "- What's the performance of GCN (async) on real-world datasets?\n\n- Is $\\tau_i^j(t)$ in Equation 8 a staleness bound? If yes, how to set this term in your evaluation? What's the effect of changing this term?\n\n- It would be great if the authors can provide a similar histogram in Figure 1(d) for Energy GNN.\n\n- Some reference links in the supplementary material are broken.\n\n- The citation format is not consistent. Some first names are abbreviated (e.g., A Bojanczyk) but some are not."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8497/Reviewer_e2vg"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8497/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698975546871,
+        "cdate": 1698975546871,
+        "tmdate": 1699637061007,
+        "mdate": 1699637061007,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

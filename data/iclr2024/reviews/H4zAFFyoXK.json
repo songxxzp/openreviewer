@@ -1,0 +1,279 @@
+[
+    {
+        "id": "2zj1Qv6bOT",
+        "forum": "H4zAFFyoXK",
+        "replyto": "H4zAFFyoXK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_Dd3G"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_Dd3G"
+        ],
+        "content": {
+            "summary": {
+                "value": "The objective of the paper is to allow LLMs to be used with speech modality as input. Toward this, the authors propose to align the speech and text modalities through a method they call \u201ccontinuation writing.\u201d The key idea is to first use text input to generate text continuation, and then train an adaptor to predict the same continuation when the text is replaced with its corresponding speech input. The authors show that this simple strategy shows strong results on several tasks such as ASR, translation, and SLU. Analysis also reveals that this strategy helps to align the latent space of speech/text prompts for the same instruction, and push apart different instructions."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. Arguably the biggest strength of the paper is the simplicity of the proposed method. There are no complex training strategies, nor the requirement of large amounts of hard-to-obtain data. The authors keep the largest components of the model (the speech encoder and the LLM) frozen and only train a small modality adapter, and this is done using publicly available ASR training data. As such, the BLSP method should be easy to replicate and use for downstream applications.\n\n2. The authors have performed detailed empirical evaluation on several tasks: speech recognition (ASR), speech translation (ST), and spoken language understanding (SLU). While their model does not beat single-modality baselines (e.g., on ASR, the WERs are much worse than whisper-small, and on ST, the BLEU is worse than a cascade of ASR+LLM), it is still promising and reminds one of the early days of end-to-end speech translation. I believe with better modality adapters and training strategies, this method may get close to or surpass cascaded approaches.\n\n3. More importantly, on the SLU task, BLSP outperforms a cascaded system since semantic similarity is sufficient for this task. This is an important take-away if this method is used to provide a common interface into a general-purpose QA system, which may only need to be semantically correct to provide accurate responses."
+            },
+            "weaknesses": {
+                "value": "### Loss of speaker and paralinguistic information\n\nSpeech contains much more instruction than just its transcription, such as speaker, emotion, etc. Using paired ASR training data for modality alignment forgoes this extra information, and simply marginalizes over them. As such, the resulting model may only be good at tasks which worked with text inputs (i.e., recognition and semantic tasks). If we are extending an LLM with another modality, a natural requirement may be to extend the capabilities of the model \u2014 for example, for vision-language models, image understanding is usually achievable, which is not possible with text-only LLMs. But this kind of \u201cextension\u201d is not shown in this setting. It would have been great to evaluate the model on a non-semantic task (such as emotion recognition) which is not possible using text-only LLMs. This may be an adversarial task for this kind of training; in Section 3.1, the authors conjecture that \u201cthe LLM should behave the same no matter whether it is given the speech segment or its transcripts as input,\u201d but this may not always hold.\n\n### Regarding representations of modalities\n\nIn Section 2 (Figure 1), the authors find that training the modality adapter only on the ASR task is not beneficial since the input speech representations remain the same regardless of the task instruction used, meaning that the corresponding tokens are not being attended to. This is not surprising: the model only learns transcription since that is all it sees in training. Perhaps it would learn to attend to the instruction if the authors trained using a combination of different instructions, such as ASR, translation, and SLU, and also paraphrased the instructions themselves. The resulting model would still not be as good as BLSP, but would not see the representation collapse we observe in Figure 2.\n\nAnother common concern about joint speech-text training usually has to do with sequence lengths. Speech models usually need aggressive downsampling because of their large sequence lengths and redundancy of semantic information. For ASR, usually the speech-text length difference is solved using either cross-attention (e.g. LAS) or alignment-free training (e.g., CTC). For the BLSP model, the modality adapter takes the speech encoder representations, and transforms them for input to LLAMA, which is trained on autoregressive text decoding. Therefore, we expect the adapter to transform the speech representations to the same space as LLAMA input representations. In the paper, the authors used simple speech inputs not containing long pauses, so fixed-length subsampling worked well for them. However, in real scenarios, users often speak with pauses, or correct themselves, and so I wonder perhaps it would be a better idea to use variable-length subsampling techniques in the modality adapter [1].\n\n[1] Y. Meng et al., \"On Compressing Sequences for Self-Supervised Speech Models,\" 2022 IEEE Spoken Language Technology Workshop (SLT), Doha, Qatar, 2023, pp. 1128-1135, doi: 10.1109/SLT54892.2023.10022991.\n\n### Empirical results\n\nWhile the BLSP performance on ST and SLU is reasonable and promising, the degradation for ASR is quite large (Table 3). In particular, LLAMA may already have seen the audiobooks from LibriSpeech, or transcripts of the TED talks from TED-LIUM 3, so I expected these WERs to be much lower. The authors suggest (in Table 4) that this is mainly because of the nature of LLAMA to produce fluent text output (probably because of the prompt used). I have two questions about this:\n1. Can the authors show WER results only on rare words to see if important words are transcribed faithfully (without caring about stop words)?\n2. Did the authors try different prompts to see what is the lowest WER that can be achieved? For example, from an application perspective, it may be very useful to have one model that can generate both verbatim and non-verbatim transcripts simply by using different prompts."
+            },
+            "questions": {
+                "value": "1. Is the term \u201ccontinuation writing\u201d used before? Why did the authors not simply call it \u201cnext token prediction\u201d?\n2. In Section 4.4, the authors show multilingual capabilities of the trained model even though the modality adapter is only trained with English ASR data. This suggests that the transformation from speech representations to corresponding text is the same (or similar) across all languages. Can the authors measure this isomorphism among spaces more carefully, perhaps using some of the techniques in [2]?\n\n[2] Marchisio, Kelly et al. \u201cIsoVec: Controlling the Relative Isomorphism of Word Embedding Spaces.\u201d ArXiv abs/2210.05098 (2022): n. pag."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3521/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698605247044,
+        "cdate": 1698605247044,
+        "tmdate": 1699636305792,
+        "mdate": 1699636305792,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ng49aFrCG3",
+        "forum": "H4zAFFyoXK",
+        "replyto": "H4zAFFyoXK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_tfEL"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_tfEL"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes training an adapter to connect an audio encoder to a text LLM so that speech tasks such as ASR, sentiment analysis, translation, and continuation writing can be performed using the same setup. Initial experiments with frozen Whisper encoder and Llama2 LLM does not show an improvement on the tasks. In Section 4.2. where there is fine-tuning of the models, there is some improvement on the translation task (Table 8)."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "Originality: \nThe paper puts simple ideas together to achieve multiple speech tasks in a single model which can also extend to other languages. \n\nQuality:\n1. Analysis in Section 2 on overtuning for ASR and not generalizing well to other speech tasks of models without adapter is useful. \n\nClarity: \nLimited at times. The goal of the paper is not always clear. \n\nSignificance: \nCombining speech and LLMs is getting popular as it was discussed in Section 5."
+            },
+            "weaknesses": {
+                "value": "Experiments do not show positive results especially when the audio encoder and the LLM is freezed. The goal of the paper is not clear to the reviewer.  \n- If the main contribution is the way the paper prepares the data, then it is not the only factor for success given the experimental results. \n- If the goal is to show the effect of fine-tuning, it provides some marginal gain. \n- If the goal is to show the usefulness of behavioral alignment, it seems as if giving \"noisy\" input in the sense that an audio, a text prompt and some other irrelevant (?) text and let the model ignore the continuation text and perform the recognition task. I might be misunderstanding this, but it sounds as if the experiment is doing some robustness improvement on the model with this type of \"noisy\" data."
+            },
+            "questions": {
+                "value": "1. Please clarify the goal of the experiments more clearly. \n\n2. Is having a BLUE score over 5 good enough in terms of model quality given that the baseline models achieve over 15? Similarly, a WER over 20% does not show the benefit of the model. \n\n3. Section 4.2 shows some minor improvements on the speech translation task. Are there similar experiments on other tasks discussed earlier in the paper?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Reviewer_tfEL"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3521/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698610294669,
+        "cdate": 1698610294669,
+        "tmdate": 1700660645016,
+        "mdate": 1700660645016,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4A3qRZjtj6",
+        "forum": "H4zAFFyoXK",
+        "replyto": "H4zAFFyoXK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_EDCC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_EDCC"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work introduces BLSP, which attempts to align speech and text modality in LLM. The model first starts collect supervised samples from LLM by generating text continuation based on speech text via instruction. Those supervised samples are then used to train a modality adapter on Whisper encoder, which helps align speech and text modality in LLM generation.\n\nThe experiment demonstrates that it can achieve unseen tasks to some extent even those the adapter was only trained with the continuation task. Although some tasks are not as good as the cascade systems, it shows some promising results in some tasks (i.e. speech understanding). Further analysis demonstrates that the text and speech embedding are better aligned using this approach and it also demonstrates some capabilities across languages."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "This work proposes to align speech and text modality in LLM and successfully show the proposed protocol allows the model to achieve unseen tasks even it is only trained with the continuation task. I think it has lots of potential for this direction.\n\nThe experiment analysis over a few speech tasks are convincing and demonstrate its usefulness, especially in the speech understanding task"
+            },
+            "weaknesses": {
+                "value": "The speech encoder is from Whisper-small which has only 120M parameter (244M/2 as it only uses encoder) , this is considerably much smaller than the LLM (7B). Using it as models/baselines might not be strong enough, although it might because it is bound by the large GPU memory caused by LLM.\n\nThe results of ASR/translation task still has a large gap with the text-based model."
+            },
+            "questions": {
+                "value": "In Figure 1, only 1 type (grey triangle) of speech embedding is plotted, where is the other speech embeddings? are they overlapped with other symbols?\n\nThe convolution modality reduces the length of the speech features by a factor of 8, how did authors choose this reduction factor? does author also try changing this factor? for instance, larger reducing factor might reduce lexical info, but make semantic info denser."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3521/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698767489767,
+        "cdate": 1698767489767,
+        "tmdate": 1699636305580,
+        "mdate": 1699636305580,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "AiSMUzRHbz",
+        "forum": "H4zAFFyoXK",
+        "replyto": "H4zAFFyoXK",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_ZRsu"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3521/Reviewer_ZRsu"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a speech-text modality alignment method based on learning a lightweight modality adapter by continuation writing using continuations generated from LLM and speech transcript as supervised signals. Compared to ASR task-based pre-training, the proposed method gives good alignment and better speech translation performance."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper proposes a pre-training method for a lightweight modality adapter by continuation writing, which works better than ASR task-based pre-training."
+            },
+            "weaknesses": {
+                "value": "The advantage of the proposed method is unclear from the experiments."
+            },
+            "questions": {
+                "value": "Is it correct that if the modality adapter does nothing but output the input obtained from the encoder as it is (or learns an identical transformation), high alignment is obtained since you use an ASR system as the encoder? \n\nHow did you choose the structure of the adapter?\n\nIn the experiment in Table 8, where you update the speech encoder, what is the performance of the cascade approach with the fine-tuning of the ASR module?\n\nWhat is the performance if you use other speech encoders?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3521/Reviewer_ZRsu"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3521/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698845662930,
+        "cdate": 1698845662930,
+        "tmdate": 1699636305502,
+        "mdate": 1699636305502,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

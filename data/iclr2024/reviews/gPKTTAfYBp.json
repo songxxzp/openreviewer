@@ -1,0 +1,205 @@
+[
+    {
+        "id": "cK3q1jlpgp",
+        "forum": "gPKTTAfYBp",
+        "replyto": "gPKTTAfYBp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_8BY8"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_8BY8"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes FlashFFTConv, a new algorithm for computing FFT on GPUs. This algorithm is more efficient than existing methods and can be used to accelerate a variety of machine learning tasks, especially for the long-sequence tasks. The author proposes approximation algorithms by leveraging the sparsity."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper is well organized and easy to follow.\n2. The implementation is in the supplementary material. The appendices provide many details.\n3. The method is solid and the experiments are convincing."
+            },
+            "weaknesses": {
+                "value": "### Major issues\n1. My understanding is that the main algorithm is arithmetic equivalent to the standard FFT. In other words, the proposed methods can be seen as an implementation of the FFT without any approximations. The method in Section 3.3 is an approximation algorithm. Is it correct?\n2. FlashAttention is a great success since the attention is a \"new\" operator and lack efficient implementation. However, FFT is a standard operator with long history. Specifically, the Monarch FFT Decomposition was developed in the last century. Considering that this algorithm is not new and GPU engineers can handle the memory hierarchy and other hardware specifications properly, why this method was not developed previously?\nI do not know the detailed algorithms in the cuFFT library, which is assumed to be highly-optimized. What is the reason of better performance of FlashFFTConv over cuFFT, (1) the better algorithm, i.e., Monarch FFT Decomposition, or (2) a better implementation considering the GPU architecture?\n3. In Table 3, FlashFFTConv outperforms torch.fft by up to 8.7\u00d7, while the speedup is about 2x without the domain-specific optimizations. Does it mean the major speedup comes from the domain-specific optimizations instead of the FlashFFTConv algorithm? Could the authors conduct this ablation study (with and without the domain-specific optimizations) in other experiments?\n4. When analyzing Table 4, the authors claim that \"speedup varies by the size of the models and the relative amount of time spent computing the convolution compared to other parts of the models\". Please provide the quantitative results, e.g., the relative amount of time spent computing the convolution.\n\n### Minor issues\n1. What about the results on small and medium sequence tasks?\n2. Other than the machine learning applications, FFT is widely used in many fields. It is better to expand the scope of the paper. What about the results in signal processing?"
+            },
+            "questions": {
+                "value": "1. What are the limitations and extensions of the method?\n2. What is the potential negative impact of the method? Can we always obtain better performance on FlashFFTConv over cuFFT?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8584/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8584/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8584/Reviewer_8BY8"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8584/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698731860417,
+        "cdate": 1698731860417,
+        "tmdate": 1700718002082,
+        "mdate": 1700718002082,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "DeYQlcn21x",
+        "forum": "gPKTTAfYBp",
+        "replyto": "gPKTTAfYBp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_Bh63"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_Bh63"
+        ],
+        "content": {
+            "summary": {
+                "value": "In this paper, the authors propose an efficient method to compute the convolution of long sequences by exploiting new computational features available on modern GPUs, tensor cores. The motivation for this study comes from the long sequences that are typically encountered in language and time-series models that require large filters, in stark contrast with the usually small filters utilized in convolutional vision models. The method is based on a matrix interpretation of the FFT algorithm, specifically a p-Monarch formulation, that decomposes the FFT operations into a small set of multiplications that are performed using the much higher arithmetical intensity afforded by tensor cores on modern A100 and H100 GPUs. The authors discuss several algorithmic details required to achieve high performance using this FFT expression, such as parallelizing over the sequence, instead of a direct distribution of work over the batch and hidden dimension and exploiting several properties related to the nature of the FFTs of interest to large sequence models, such as folding a K element real-to-real transform into a K/2 complex transform. With these observations, the authors were able to significantly extend the applicability of the proposed method to sequences up to 32K 16-bit entries processed within a single threadblock. Performance studies on long sequences demonstrate the performance improvements achieved compared to the baseline FFT implementation available in PyTorch and a fused version implemented using the cuFFTdx library."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- Generally well-written with an extensive presentation of the algorithmic and system-related details provided in the appendices.\n- Highlights a key difference between traditional convolution filter sizes present in vision models versus larger models and utilizes a decomposition that takes into account modern architectural features available on GPUs, tensor cores specifically.\n- The proposed strategy to process the inputs over sequences effectively maximizes the number of elements that may be processed in a single thread block and maximally utilizes the tensor cores with more work per block.\n- By fusing multiple operations into a single kernel the authors increase the arithmetic intensity of the conv kernel to move it away from the memory boundness of a single FFT call to a more compute-rich fused counterpart."
+            },
+            "weaknesses": {
+                "value": "Major:\n- I would appreciate a clearer distinction between the order-p Monarch FFT and the classic (Bailey) 4-step FFT. The 4-step FFT may also be computed using the Fourier matrices in $\\mathcal{O}(n^2)$ work but, as noted in the text, this expense is reduced substantially by realizing a DFT will perform the same action in $\\mathcal{O}(n \\log n)$ work. It's not clear from the description how the reader to reconcile these 2 competing ideas regarding the reduction in computational work and improvement in overall performance. I suppose the idea is that although the algorithmic expense of the matrix formulation is higher the small sizes of the blocked inputs coupled with the increased throughput of the tensor core units vs the general arithmetic path makes the overall algorithm performance profitable, is that the correct way to think about this issue?\n\nMinor:\n- HBM in section 2.2 introduced as global memory instead of high-bandwidth memory\n- I'm not convinced Figure 2 adds any meaningful insight into the differences between the different broadcasting strategies. Parallelization over the batch and hidden dimensions seems clear but the alternate strategy to parallelize over sequences is less informative.\n- $\\sigma_H$ and $\\sigma_S$ are defined in section 3.3 but never referenced in the cost model or definition of $w(i)$.\n- The components of the cost model could use a bit more explanation to ensure the reader is aware of the origin of each component and its relationship to the algorithmic definition.\n- Is the precision of the datatypes ever mentioned in the main text? I see it is referenced in Appendix D as a 16-bit type."
+            },
+            "questions": {
+                "value": "- Are the arrows in Figure 3 in the correct positions? The text references tradeoff or crossover points between the different order-p decompositions being of interest but 2 of the arrows seem to reference downward slopes. Maybe I'm interpreting either the text or the graph incorrectly.\n- Does the cufftDx variation use also fold the inputs to perform an order N/2 complex transform instead of an order N real-to-real transform?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8584/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698807000036,
+        "cdate": 1698807000036,
+        "tmdate": 1699637074009,
+        "mdate": 1699637074009,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4Fe5WNpdjU",
+        "forum": "gPKTTAfYBp",
+        "replyto": "gPKTTAfYBp",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_pq6T"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8584/Reviewer_pq6T"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposed to improve the Fast Fourier Transform in the long convolution operation by better utilizing hardware advances. Concretely, it first decoupled the matrix to smaller components such that they can be computed via matrix multiply units (Tensor Cores) in hardwares. Second, through monarch decomposition, it allows the proposed algorithm to process much longer sequences under the constrains of shared memory of GPUs.\n\nExperiments on Hyena and M2-Bert demonstrate that the proposed algorithm achieved significant efficiency, while does not hurt model performance."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. This paper aims to solve an import problem in long-sequence convolution computation: poor hardware utilization for FFT.\n\n2. The proposed algorithm achieved significant efficiency, while maintaining model accuracy/performance."
+            },
+            "weaknesses": {
+                "value": "NA."
+            },
+            "questions": {
+                "value": "One question is about the precision of the proposed algorithm: since all the intermediate computations are performed using bf16/fp16, I was wondering how precise they are when comparing with the vanilla FFT implementation under fp32."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8584/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699085527770,
+        "cdate": 1699085527770,
+        "tmdate": 1699637073901,
+        "mdate": 1699637073901,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

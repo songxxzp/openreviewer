@@ -1,0 +1,206 @@
+[
+    {
+        "id": "HRfa8PvLls",
+        "forum": "OVPoEhbsDm",
+        "replyto": "OVPoEhbsDm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_Criu"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_Criu"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper deals with the problem of mutation stability prediction\u2014i.e., given a mutation to a bound complex with known structure, predicting the change in binding free energy. The authors make two contributions (1) they propose _masked mutation modeling_ (MMM) a auxiliary training task where the model must generate a structure for the mutant complex, and this generated (\u201challucinated\u201d) structure is used as additional input to the free energy predictor; (2) they introduce a _probability density cloud_ (PDC) modification to EGNN which is meant to capture the uncertainty in atomic positions. The empirical results slightly improve over RDE, the previous state-of-the-art."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* The introduction of the MMM task is quite sensible and well-suited for data-poor tasks such as mutation stability prediction.\n* The \u201cprobability density cloud\u201d modification to EGNN is quite interesting and represents a commendable attempt to introduce physical inductive biases into point cloud networks.\n* The clarity of the exposition is above average for ICLR submissions. Each contribution is well-motivated and contextualized."
+            },
+            "weaknesses": {
+                "value": "* The PDC module, while a very interesting idea, is on shaky ground mathematically.\n    * The authors assume all atom positions to be independent, which is a very questionable assumption as the thermal fluctuations and epistemic uncertainty of neighboring atoms certainly should be dependent.\n    * It is not possible to write down the self-covariance of the difference of random variables without knowing the cross-covariances. However, even assuming the positions to be independently distributed, then if their mean is updated as in Eq 6, then Eq 7 should read $${\\sigma_{x_i}^{(l+1)}}^2 = \\left[1 + \\frac{1}{|N(i)|}\\sum_{j \\in N(i)} \\phi_\\mu(m_{j \\rightarrow i})\\right]^2{\\sigma_{x_i}^{(l)}}^2 + \\frac{1}{|N(i)|}\\sum_{j \\in N(i)}{\\sigma_{x_j}^{(l)}}^2\\phi_\\mu(m_{j \\rightarrow i})$$ i.e., with $\\phi_\\mu$ instead of a different $\\phi_\\sigma$, and distributing and squaring the $x_i$ terms because $x_i - x_j$ is not independent of $x_i$.\n    * With that said, I don\u2019t think it\u2019s a serious issue in itself if the network is not updating the co-variances properly. But my general concern is that the authors have not given sufficient treatment to these subtleties, and hence, the PDC module is not actually constrained to model the atomic uncertainties as the authors claim; rather, to the network ${\\sigma_{x_i}^{(l+1)}}^2$ just looks like some other latent variable which it can use to help model the positional updates. It would be better to call the module \u201cloosely inspired\u201d by the modeling of uncertainty. If the authors nevertheless claim that this is a generally helpful modification to EGNN, this is a claim that requires significantly more thorough evaluation (on many different tasks ideally) than is given here.\n\n* There are several critical missing details in the methodology and experiments (see Questions below). \n\n* Some over- or mis-claiming throughout the paper\n    * The authors claim (Eq 1) to recover the structural distribution of the masked residues, but the training objective is risk minimization (Eq 3), not any kind of distributional modeling objective. \n    * The authors state that MMM \u201cencourages graph manifold learning with the denoising objective\u201d, but there is no further discussion or elaboration on how \u201cgraph manifold learning\u201d is accomplished.\n    * Repeatedly misleading use of the term \u201cthermodynamics\u201d when the authors mean \u201cuncertainty.\u201d The former term should be reserved when explicitly referring to physically meaningful quantities like energy, entropy, and free energy.\n    * \u201cThe pictures show that particles in the interface have smaller variation compared to those in the edges of proteins.\u201d This claim is not backed quantitatively, and, as discussed, there is no reason to believe that the learned $\\sigma^2$ actually corresponds to uncertainty.\n    * \u201cIt can be found that generally, a small error of wide-type structure reconstruction leads to a more accurate $\\Delta\\Delta G$ prediction.\u201d I see no such correlation in Figure 4B.\n\n\n\nJustification for score: there is the potential for interesting technical contribution in the PDC, but the current presentation is not thorough enough for a conference paper. The MMM objective by itself is less novel, as auxiliary training or pretraining for mutational stability prediction has been done before, and the results are only a bit better than those prior approaches."
+            },
+            "questions": {
+                "value": "* Methodology details and design are unclear\n    * Where is the PDC module actually used? How are the $\\sigma^2$s initialized?\n    * \u201cMoreover, it is readily apparent that PDC-Net maintains the equivariance property.\u201d The authors should provide a proof here.\n    * Because there are no gradients from the $\\Delta\\Delta G$ task to the structure refinement module $f_\\theta$, the MMM task is really a pretraining task and not an auxiliary training task. Is there any reason to not train MMM across the entire PDB?\n    * Is there any reason to use the same encoding module $h_\\rho$ for the $\\Delta\\Delta G$ predictor and for the structure refinement module $f_\\theta$. Why can\u2019t $f_\\theta$ carry its own encoding module?\n* Experimental details\n    * It is not clear how the baselines are run in order to obtain \\Delta\\Delta G predictions, especially. ESM-1v, B-Factor, etc. While some reasonable guesses exist, the authors should spell it out and not leave it up to guessing.\n    * How many different complexes are in SKEMPI and is the average per-complex improvement statically significant?\n    * In the ablation studies, why does Model 1 use the RDE-Net backbone instead of the Refine-PPI modules $h_\\rho$?\n* Minor issues\n    * Broken link to figure 3.2 where a visualization of the PDCs is promised. \n    * The term \u201cprobability density cloud\u201d suggests a more expressive parameterization than Gaussian uncertainty. I suggest the authors rename the module.\n    * In Table 1, what is the meaning of \u201cpretraining\u201d? How is it possible that Refine-PPI and ESM are classified as no-pretraining, yet B-factors are classified as pretraining?\n    * Inconsistent use of $\\Sigma$ vs $\\sigma$.\n    * Typos: \u201cWide type\u201d, \"paradiagm\", \"disucssion\", \"intergrate\", \"envision\" instead of \"visualize\"\n    * The clarity could be improved with a figure illustrating the coordinate initialization."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7154/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7154/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7154/Reviewer_Criu"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7154/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698156287428,
+        "cdate": 1698156287428,
+        "tmdate": 1699636847260,
+        "mdate": 1699636847260,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "eoZnqtuTc8",
+        "forum": "OVPoEhbsDm",
+        "replyto": "OVPoEhbsDm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_xfqG"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_xfqG"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a novel deep learning architecture, Refine-PPI, for protein-protein binding mutation effect (DDG) prediction. Refine-PPI consists of two modules. The first module learns to predict the mutated structure through a masked mutation modeling task on wild-type structures. The second module learns to predict DDG of a protein-protein complex based on wild-type and mutated structures. The second module represents a protein-protein complex as a probabilistic density cloud (PDC) and encodes it using a novel PDC-GNN, where the messages are represented by its mean and variance. Refine-PPI achieves state-of-the-art performance on the standard SKEMPI benchmark."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* This paper models a protein as a dynamic structure, using a probabilistic density cloud representation.\n* This paper develops a new message passing network architecture for probabilistic density clouds. The messages between each node consists of both mean and variance.\n* The evaluation setup is comprehensive, with all the relevant baselines"
+            },
+            "weaknesses": {
+                "value": "* The model only slightly outperforms previous state-of-the-art RDE-Net on a subset of metrics. It seems that overall performance of Refine-PPI and RDE-Net is similar.\n* The evaluation of Refine-PPI on the first mutation structure prediction task is missing."
+            },
+            "questions": {
+                "value": "* The description of probabilistic density cloud representation is a bit unclear. In particular, how are the $sigma$'s initialized? If they are initialized as zero, then they will stay zero all the time. Are they initialized by some physical calculations?\n* For the first task of mutation structure prediction task, can you report the RMSD between predicted mutated structure and ground truth?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7154/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698782291519,
+        "cdate": 1698782291519,
+        "tmdate": 1699636847115,
+        "mdate": 1699636847115,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ZD7J0i1uOV",
+        "forum": "OVPoEhbsDm",
+        "replyto": "OVPoEhbsDm",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_cuXz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7154/Reviewer_cuXz"
+        ],
+        "content": {
+            "summary": {
+                "value": "A framework, Refine-PPI, of predicting $\\Delta\\Delta G$ is proposed in this paper, which include 3 components: a structure encoder $h_\\rho$, a structure refiner $f_\\theta$, and a readout (pooling) function $g_\\tau$.\n\nNew backbone coined as PDC-Net is proposed to model structures.\n\nExperimental results show marginal improvements on $\\Delta\\Delta G$ prediction."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The general framework of Refine-PPI is interesting.\n\nThe $\\Delta\\Delta G$ prediction quality is seemingly equivalent / marginally improved."
+            },
+            "weaknesses": {
+                "value": "1. A lot of missing details hinder the reproducibility of the paper. See Questions.\n\n2. Overall the paper introduce a new framework and a new architecture. Although a general ablation is done, the paper very much lacks deep analysis to each components.\n\n3. Weak benchmark performance: the elevation of performance is too marginal (especially those in the Appendix), and the time complexity is not studied. No variance is reported.\n\n4. The usage of term \"thermodynamics\" and \"hallucination\" is hardly relevant to the proposed method and thus confusing. I would suggest the authors to use plainer descriptions."
+            },
+            "questions": {
+                "value": "Q1 How are $h_\\rho, f_\\theta, g_\\tau$ built precisely? What are the $\\phi$ functions in Eq 5-7?\n\nQ2 How are $\\sigma_{x_i}$s modeled? And how are those initialized? In Eq 4 they are matrices while in Eq 7 they seem to be vectors. In my opinion 3d variance should either be a scalar or a learnable SPD matrix. Using vectors does not satisfy SE(3) invariance because an ellipsoid with standard axis is presumed, and the results are thus varied when rotations are applied to the input structure. Thus the method is not \"readily apparent\" to be equivalent.\n\nQ3 There lacks a visualization of the \"hallucinated\" structures.\n\nQ4 On what data, precisely, is Refine-PPI trained? The description seems to point to a 3-fold cross validation, but the concrete splits should be specified. And, since all benchmark performances are \"directly copied\" from a preprint, the authors must justify that their evaluation scheme is exactly the same to all benchmarks."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7154/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699001713554,
+        "cdate": 1699001713554,
+        "tmdate": 1699636846995,
+        "mdate": 1699636846995,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

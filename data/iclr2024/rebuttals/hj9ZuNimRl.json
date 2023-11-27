@@ -1,0 +1,439 @@
+[
+    {
+        "title": "Better Neural PDE Solvers Through Data-Free Mesh Movers"
+    },
+    {
+        "review": {
+            "id": "9qgOUytLqz",
+            "forum": "hj9ZuNimRl",
+            "replyto": "hj9ZuNimRl",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_Uu92"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_Uu92"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors proposed a mesh mover based PDE solver in this paper. The solver consists of two main components: a mesh mover and a neural PDE solver. The mesh mover is trained unsupervised based on a physical loss motivated by optimal-transport based Monge-Amp`ere mesh movement method. The GNN neural PDE solver is trained supervised given solutions from numerical simulations. The experiments show that the proposed method can outperform existing NN solvers on 2D Burger's equation and flow past cylinder cases."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The idea to design a neural PDE solver with mesh movement method is novel.\n- The Monge-Amp`ere equation motivated physics loss for mesh mover training is intuitive. \n- The use of BFGS for memory intensive training and the sampling method for Monge-Ampere equation are sound.\n- The background part is informative and help understand the proposed method."
+                },
+                "weaknesses": {
+                    "value": "- One essential challenge for r-adaptive (i.e., mesh movement) based mesh adaptive methods is mesh tangling. The mesh tangling happens when the mesh have elements with negative Jacobian-determinant, or in other words, the edges of mesh nodes come across each other after being moved. Although the optimal-transport based Monge-Amp`ere mesh movement method is designed to alleviate the mesh tangling issue, it is hard to guarantee tangling-free especially for a learned model, which only has a soft physical loss as the constraint. It is unclear how the proposed DMM perform regarding mesh tangling as there are no related evaluations in the paper.\n- The Monge-Amp`ere based physical loss is the key contribution of this paper, however it is not clear how each part of the loss i.e. $loss_{equation}$, $loss_{bound}$ and $loss_{convex}$ contribute to the model performance.\n- The experiments are limited to one fixed mesh resolution (48 x 48 or 2521 triangular lattices) and there are no evaluations on generalization of the proposed model, i.e., trained on a (small) resolution and test on other (potentially larger) resolution. Therefore, it is not clear how the proposed method perform given unseen data / boundary conditions/ physical parameters in equations. \n- The presentation and text of the paper should be improved."
+                },
+                "questions": {
+                    "value": "- The mesh tangling is a key challenge for mesh movement methods. It is hard to evaluate the performance of the proposed mesh mover without the evaluations on this potential issue. I would suggest that adding a solid discussion for mesh tangling will improve the soundness of this paper.\n- Regarding to the physical loss, the $loss_{equation}$ part is designed based on the difference between the current mesh and the uniform mesh. In a time-dependent problem, does it indicate the mesh mover always move the mesh nodes starting from the very initial uniform mesh without using the moved mesh in the last timestep? Does this strategy perform better comparing to reuse the previous moved mesh as the starting mesh? \n- An ablation study for contributions of each components in the physical loss ($loss_{equation}$, $loss_{bound}$ and $loss_{convex}$) will help evaluate its effectiveness.\n- Mesh movement methods may struggle with cases where the monitor functions give large values near boundaries, e.g. the peak values of the initial conditions of the burger's equation are located close to simulation domain boundary. It would be more convincing if there are such test cases for evaluating the proposed model. \n- It is mentioned in the paper that the mesh for Burger's is 48x48, however it is only 20x20 shown in Figure 2. Are there any missing results for the 48 x 48 resolution?\n\nMinors:\n- The DMM model architecture is not shown in Figure 2(a)"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "n/a"
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Reviewer_Uu92"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5965/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698483181960,
+            "cdate": 1698483181960,
+            "tmdate": 1700764553056,
+            "mdate": 1700764553056,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Xcgvr41egE",
+                "forum": "hj9ZuNimRl",
+                "replyto": "9qgOUytLqz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Uu92"
+                    },
+                    "comment": {
+                        "value": "We sincerely appreciate your mention of the strengths of our paper and your pieces of advice which help us enhance the manuscript.\n\n> **Suggestion about the mesh tangling.**\n\n**Answer**: Thanks for your suggestion. \n\n- Firstly, as we use the output of DMM to enhance neural solvers' message passing rather than use it as generated mesh for traditional PDE solvers, mesh tangling does not pose a problem in our context. \n- Secondly, to address your concern, we also made an additional discussion and exploration on it in Section 6.4 and Appendix C.2.  Constraining the Jacobian determinant of $f$ to be non-negative is equivalent to requiring $\\Phi$ in our paper to be convex, which is already constrained by $l_{convex}$. The trend of $l_{convex}$ during training is illustrated in Figure 3 in our paper, showing that it can reach a very low level (nearly zero) early in the training process. Additionally, we find that the generated grid points of test data have $l_{convex}=0$. These demonstrate that this constraint is well met. \n\n> **Question about roles of three losses within the physics loss.**\n\n**Answer**: Thanks for your question. We conduct new experiments to explore how the three losses impact the performance of DMM in Section 6.4 and Appendix C.3. We reduce the weights of the three losses within the physics loss by a factor of ten for training respectively. Results show that when the weight of $l{equation}$ is decreased, the std and range increase the most, suggesting that the MA equation is not adequately satisfied. The result does not deviate significantly from the original when the weight of $l_{convex}$ is decreased, as $l_{convex}$ can already reach a low level as stated in Answer to Re 1. Figure 4 in the paper shows the plotted meshes of decreased $l_{bound}$, implying that boundary conditions are not as well satisfied as before. All the results above conform to intuition. \n\n\n\n> **Question about resolution transformation.**\n\n**Answer**: Thanks for your question. One of DMM's advantages is its ability to generate meshes of varying resolutions during inference. \n\n- We have added a new experiment in Section 6.4 and Appendix C.1. The result shows that DMM can handle data of resolution different from the training data's resolution.\n- Please note that since the selected encoder 1 cannot handle varying resolutions, we need to interpolate the state $u$ prior to inputting states of different resolutions. We assess bicubic interpolation and the softmax interpolation as in Eq 16, with training data at $48\\times48$ and 2521 resolutions. \n- The meshes from the pre-trained DMM are illustrated in Figure 2 in the paper, and associated quantitative results are in Table 7 and 8 in the paper. Results show that the data adheres well to the MA equation regardless of resolution. \n\n\n\n> **Question about how the proposed method performs given unseen data/boundary conditions/physical parameters in equations.**\n\n**Answer**: Thanks for your question. Firstly, our method can generalize to unseen data in a considerable range due to the generalization ability of the neural networks and the physics-informed data-free DMM training. However, we don't think that our current model can generalize to different boundary conditions and physical parameters in equations since we have not taken it into the input of the model. \n\n\n\n> **Suggestion of improving presentation and text.**\n\n**Answer:** Thanks for your suggestion. We have modified our paper according to the reviewers' suggestions and revised the entire paper.\n\n\n\n>  **Question about moving the mesh nodes using the moved mesh in the last timestep.**\n\n**Answer**: Thanks for your question. The reason why we can not learn the meshes based on meshes in the last timestep is that the meshs in the last timestep are not known explicitly at the DMM training period, which means that we can not deduce the physics loss in this situation. \n\n\n\n> **Question about cases where the monitor functions give large values near boundaries.**\n\n**Answer**: Thanks for your question. A new visualization of these cases is provided in Appendix D. We choose some states where the maximum value of the monitor function is relatively close to the boundary to generate meshes. Additionally, we have generated new states with maximum values much closer to boundaries and obtained the new mesh. We can see from Figure 7 that DMM can also handle such situations.  \n\n\n> **Question about why to only show 20x20 meshes for Burgers' equation.**\n\n**Answer**: Thanks for your question.  We have added 48x48 meshes to Appendix D.\nThe reason why we show 20x20 meshes previously is that 20x20 meshes are clearer and can help reduce the length of the main text.\n\n\n> **Suggestion about typos of Figure 2(a).**\n\n**Answer**: Thanks for your suggestion. We have fixed it and revised the manuscript to make the paper more clear."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700462651190,
+                "cdate": 1700462651190,
+                "tmdate": 1700731012609,
+                "mdate": 1700731012609,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VnsO0FEQGb",
+                "forum": "hj9ZuNimRl",
+                "replyto": "9qgOUytLqz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "We have made efforts to address your concerns. Are there any other suggestions?"
+                    },
+                    "comment": {
+                        "value": "Thank you once again for your valuable insights and suggestions. \n\nWe have meticulously addressed your concerns. Please let us know if you have any further suggestions."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700731348905,
+                "cdate": 1700731348905,
+                "tmdate": 1700734550632,
+                "mdate": 1700734550632,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "QMaPvl0GXP",
+            "forum": "hj9ZuNimRl",
+            "replyto": "hj9ZuNimRl",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_W4Uo"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_W4Uo"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose a mesh moving method to improve dynamics learning of graph neural networks. Theoretical understanding of the neural mesh adapter is provided, and empirical results are shown on two problems: the Burgers' equation and flow past cylinder, both in 2D."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "A detailed explanation was provided for the framework, with plenty of background information. The method applies well in practice, and the appendix provides enough technical detail on results in the main paper."
+                },
+                "weaknesses": {
+                    "value": "1. Runtimes should be mentioned for the proposed model, especially when comparing with equivalent methods such as GNN, CNN, FNO and LAMP. How much overhead does DMM require, and what number of extra trainable parameters are we talking about in practice?\n2. When training the DMM separately, how well is the physics loss being minimized? It is important to know to what extent the equations need to be satisfied until we see an improvement in MM-PDE.\n3. A sentence of explanation should be added when training the DMM, where we use a combination of both Adam and BFGS, but only finetune the last layer. Did this show the best performance? Why did Adam alone not suffice. When the high memory consumption is mentioned, what numbers is required by the two example problems shown in this paper?\n4. From a practitioner's perspective, it is unclear why the metric for cell volume matters for the examples, aside from showing that the DMM loss was minimized. Most importantly, we never perform any testing on the adapted/moved mesh, hence its structure can be arbitrary as long as it is conducive to the training of the GNN. It has been shown that uniform meshes as a representation perform worse, but is it the case that reducing the cell volume std and range will also monotonically decrease the test loss of the model? \n5. For the non-uniform grid example in flow past cylinder, CNN and FNO were not considered. Would the non-uniform equivalent of FNO, the Geometry-Aware FNO GeoFNO, be applicable as a baseline? If so, comparing with non-uniform state-of-the-art methods would strengthen the paper as well.  \n6. More details should be added on the experimental results, for example, for the flow past cylinder, is the MSE computed on just the velocity, or also pressures? The values reported in Table 2 seem relatively high then, perhaps visualization of the rollout results could also be added to the appendix."
+                },
+                "questions": {
+                    "value": "1. The implications of the ablation study are that having a trainable DMM performs better, but having it trainable also means now it is finetuning on the MSE loss from the solution data, hence the DMM equations may no longer hold. Did you quantify the std and range of cell volumes after this mm+end2end training as well?\n2. How are the DMM loss derivatives computed, using finite differences, or autodifferentiability?\n3. Is there any limitation in terms of extending the framework to 3D problems? Computational complexity?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Reviewer_W4Uo"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5965/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698694556822,
+            "cdate": 1698694556822,
+            "tmdate": 1699636636943,
+            "mdate": 1699636636943,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "mlm3A4U6No",
+                "forum": "hj9ZuNimRl",
+                "replyto": "QMaPvl0GXP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer W4Uo [Part 1]"
+                    },
+                    "comment": {
+                        "value": "Thanks for your valuable suggestions to help us improve the manuscript.\n\n> **Question about the runtimes of MM-PDE and other baselines.**  \n\n**Answer**: Thanks for your suggestions. We have added the inference time of MM-PDE to Table 1 in Section 6.1 and list it below.  We can see that MM-PDE is comparable to GNN. But the time is slower CNN and FNO since the base model architecture GNN is slower.\n\n| Model   | MM-PDE (MP-PDE) | MP-PDE | bigger MP-PDE | MM-PDE (MGN) | MGN    | CNN    | FNO    | LAMP   |\n| ------- | --------------- | ------ | ------------- | ------------ | ------ | ------ | ------ | ------ |\n| Time(s) | 0.5192          | 0.3078 | 0.3298        | 0.1187       | 0.0400 | 0.0027 | 0.0159 | 1.4598 |\n\n\n\n> **Question about the overhead DMM requires.**\n\n**Answer**: Thank you for your questions, we have revised Section 6.1 and 6.2 to add the information to the paper for clarity.\n\n- As for the overhead DMM requires, the DMM for the Burgers' equation has a parameter count of 1222738, with a training time of 7.52 hours and memory usage of 15766MB. The DMM for the flow around a cylinder has 2089938 parameters, with a training time of 22.91 hours and memory usage of 73088MB. And the inference of the DMM is 0.001s for the Burgers' equation and 0.088s for the flow around a cylinder, while several tens of seconds are needed for the conventional PDE solver on the Burgers' equation's mesh adaptation. [1] This means that once DMM is trained, the use of it is quite fast and the time exceeds traditional solvers a lot.  \n\n[1] Song W, Zhang M, Wallwork J G, et al. M2N: mesh movement networks for PDE solvers[J]. Advances in Neural Information Processing Systems, 2022, 35: 7199-7210.\n\n\n\n> **Question about the physics loss.**\n\n**Answer**: Thank you for your question. \n\n- We have revised Section 6.4 and provided the physics loss of DMM at the beginning and end of the Burgers' equation and flow around a cylinder both below. It is evident that there is a substantial decrease in this loss throughout the training process, indicating that the DMM has been optimized effectively. The result is also listed below.\n- The reason we did not previously provide this loss is that we perceived it as not being sufficiently intuitive. Therefore, we proposed the std and range as more intuitive indicators before.  \n\n| Loss           | Init    | Adam    | BFGS    |\n| -------------- | ------- | ------- | ------- |\n| $l$            | 28.248  | 0.045   | 0.026   |\n| $l_{equation}$ | 28.209  | 0.044   | 0.023   |\n| $l_{equation}$ | 3.94e-4 | 1.07e-6 | 2.80e-6 |\n| $l_{convex}$   | 2.47e-7 | 0.0     | 0.0     |\n\n| Loss           | Init    | Adam    | BFGS    |\n| -------------- | ------- | ------- | ------- |\n| $l$            | 0.881   | 0.101   | 0.095   |\n| $l_{equation}$ | 0.547   | 0.095   | 0.093   |\n| $l_{bound}$    | 3.34e-4 | 5.99e-6 | 1.54e-6 |\n| $l_{convex}$   | 0.0     | 0.0     | 0.0     |\n\n> **Question about the optimization of DMM.**\n\n**Answer**: Thanks for your question. \n\n- Our choice to combine the Adam and BFGS optimizers follows many works on Physics-Informed Neural Networks (PINNs) that use several rounds of the LBFGS optimizer at the end of the optimization process [1, 2, 3]. However, in practice, we find that the LBFGS optimizer is quite slow and not very accurate, failing to further reduce the loss. Consequently, we employ the more precise BFGS optimizer. \n- To address your concern, we also have conduced an additional ablation study to show whether the BFGS is effective. The result is also listed in Table 2 in Section 6.4 and the table above. We can conclude that BFGS indeed results in a further reduction of the DMM loss.\n- However, the BFGS optimizer does require more memory, so we only optimize the parameters of the final layer, and we try to increase the width of this layer as much as possible. The current memory usage has already been mentioned earlier: the Burgers' equation requires 15766MB, and the flow around a cylinder requires 73088MB. A single GPU card would not be sufficient to support our training if we optimized the parameters of the last two layers. However, it can be anticipated that optimizing more parameters could potentially improve the optimization results.\n\n[1] Lou Q, Meng X, Karniadakis G E. Physics-informed neural networks for solving forward and inverse flow problems via the Boltzmann-BGK formulation[J]. Journal of Computational Physics, 2021, 447: 110676.\n\n[2] PATRONI R. Towards adaptive PINNs for PDEs: a numerical exploration[J]. 2022.\n\n[3] Pratama D A, Abo-Alsabeh R R, Bakar M A, et al. Solving partial differential equations with hybridized physic-informed neural network and optimization approach: Incorporating genetic algorithms and L-BFGS for improved accuracy[J]. Alexandria Engineering Journal, 2023, 77: 205-226."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700462358727,
+                "cdate": 1700462358727,
+                "tmdate": 1700462358727,
+                "mdate": 1700462358727,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "2O0fsMY64m",
+                "forum": "hj9ZuNimRl",
+                "replyto": "QMaPvl0GXP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Reviewer_W4Uo"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Reviewer_W4Uo"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you to the authors for the extensive reply and the additional runtimes and experiments, especially adding GeoFNO as a strong recent baseline, and even an additional 3D experiment, although the improvements are less impressive in 3D, nevertheless the proposed framework shows it can outperform the baseline. The quantitative evaluation of MM-PDE is much appreciated, yet it does raise some concern on the overhead for using the approach. The extra results on Adam and BFGS helps understand the reasoning for using both. Even though the improvement is incremental, and it is more fine-tuning, it can be seen as an engineering solution to make the framework slightly better.\n\nMy questions have been addressed properly, thank you once again to the authors for their time to making the paper stronger by incorporating the reviewer feedback."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700600056886,
+                "cdate": 1700600056886,
+                "tmdate": 1700600056886,
+                "mdate": 1700600056886,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "L5IBkYwCyf",
+            "forum": "hj9ZuNimRl",
+            "replyto": "hj9ZuNimRl",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_qbBA"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5965/Reviewer_qbBA"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors have introduced the Data-free Mesh Mover (DMM) as an innovative component for neural PDE solvers. DMM functions as a mesh adaptation solver, facilitating the adjustment of node positions within a uniform mesh. It's referred to as \"data-free\" because it achieves an optimal mesh configuration by solving the Monge-Ampere equation. The DMM is subsequently integrated with the MM-PDE (Message passing neural PDE solvers) to enhance overall accuracy."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The application of adaptive meshes will improve the accuracy."
+                },
+                "weaknesses": {
+                    "value": "- The efficiency of DMM requires further comprehensive demonstration.\n- The contribution of this work appears to be incremental, as the core neural PDE solver used is essentially the message passing neural PDE solver developed by Brandstetter et al."
+                },
+                "questions": {
+                    "value": "- My main concern is on the efficiency of DMM. As data-free, for each input solution $u$, training is needed. Then this can be very costly. Can authors compare the time if using the conventional PDE solver for the mesh adaptation? \n- For time-dependent problems, what is the input $u$? At the current time step or the next time step? The singularity of the solution could move. The mesh obtained for $u_k$ may not be suitable for $u_{k+1}$. \n- The error listed in Table 1 shows MM-PDE only improves from around $2 \\times 10^{-6}$ to $6.7 \\times 10^{-7}$ and in Table 2 is from $0.0258$ to $0.0141$ using a bigger GNN. Then a fair comparison is the computational time of MM-PDE and the bigger GNN to achieve the same error. A bigger GNN may need a larger model size, but since no DMM solver is involved, the overall time might be smaller. Again, this is related to Question 1: the efficiency of DMM.\n- Evaluation metric. Why not compute the interpolation error directly instead of an upper bound on the interpolation error?\n- \"Two-order\" should be corrected to \"second order.\""
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5965/Reviewer_qbBA",
+                        "ICLR.cc/2024/Conference/Submission5965/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5965/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698723495332,
+            "cdate": 1698723495332,
+            "tmdate": 1700684198686,
+            "mdate": 1700684198686,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "PHRo5afu2N",
+                "forum": "hj9ZuNimRl",
+                "replyto": "L5IBkYwCyf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer qbBA [Part 1]"
+                    },
+                    "comment": {
+                        "value": "We greatly appreciate the suggestions from the reviewers, which have enabled us to further enhance our manuscript. \n\n\n> **Concerns about the efficiency of DMM.**\n\n**Answer**: Thanks for your question. To make it clear, we have revised Section 6.1 to show that the Data-free Mesh Mover (DMM) is fast in inference. \n\n- The DMM is an operator trained on data belonging to a distribution rather than a single state. Therefore, once training is complete, it requires only a brief inference time when applied to new data from the same distribution.\n\n- Regarding DMM: we have calculated the inference time of the DMM to be 0.001s for the Burgers' equation and 0.088s for the flow around a cylinder, whereas the conventional PDE solver for the Burgers' equation's mesh adaptation requires several tens of seconds [1].\n\n- Regarding MM-PDE: when we use MM-PDE, the extra cost brought by DMM is comparable with the inference time. A comparison of the MMPDE's time with other baselines' is provided in the table below, showing that its time is comparable to other models. And we have added these above results to the new version of our paper in the section of the 'Burgers' equation'.\n\n| Model   | MM-PDE (MP-PDE) | MP-PDE | bigger MO-PDE | MM-PDE (MGN) | MGN    | CNN    | FNO    | LAMP   |\n| ------- | --------------- | ------ | ------------- | ------------ | ------ | ------ | ------ | ------ |\n| Time(s) | 0.5192          | 0.3078 | 0.3298        | 0.1187       | 0.0400 | 0.0027 | 0.0159 | 1.4598 |\n\n[1] Song W, Zhang M, Wallwork J G, et al. M2N: mesh movement networks for PDE solvers[J]. Advances in Neural Information Processing Systems, 2022, 35: 7199-7210.\n\n\n\n> **Concerns for the core contribution.**\n\n**Answer**: Thanks for your discussion about the contribution. Please note that our contribution includes design on both DMM and MM-PDE rather than choosing a specific neural network structure for MM-PDE. \n\n- To further demonstrate that our contribution is orthogonal to the neural network structure in MM-PDE, we have conducted an additional experiment using another model architecture Mesh Graph Nets commonly used to handle irregular grids [1]. This is to showcase the universality and novelty of our method. The table below shows the experimental results of the Burgers' equation. From the table, the error of MGN combined with the MM-PDE framework still surpasses MGN, which indicates the effectiveness of our method. The results are added to the 'Burgers' equation' section.\n\n| Model | MM-PDE (MGN) | MGN      |\n| ----- | ------------ | -------- |\n| Error | **2.138e-5** | 2.459e-5 |\n\n- For clarity, we have revised our conclusion section to make our contribution clearer: As for DMM, we introduce the physics loss to make it data-free, and we design the model architecture, sampling strategy, and training framework to enhance performance. As for the MM-PDE, we propose a framework to improve the base model and have added many design features tailored specifically for the moving meshes, such as the two-branch architecture, the residual cut network, and interpolation networks capable of adaptively generating interpolation weights. Given the dynamic and irregular grid, we thus choose the GNN network structure employed by Brandstetter et al. as our base architecture. \n\n[1] Pfaff T, Fortunato M, Sanchez-Gonzalez A, et al. Learning mesh-based simulation with graph networks[J]. arXiv preprint arXiv:2010.03409, 2020.\n\n\n\n> **Question about only using the current state for moving mesh.**\n\n**Answer**: Thank you for this question. In practice, we use the state of the current time step as input. \n\n- On the one hand, PDE solvers can only see the state of the current time step during the solving process. \n- On the other hand, to the best of our knowledge, traditional methods that use r-adaptive meshes also generate adaptive meshes based on the current time step [1, 2, 3].  \n- However, we also considered the issue you raised before. We may be able to give the mesh mover the ability to predict the future by introducing a surrogate model to provide information about the future. We had originally intended to explore this idea as a topic for future work. Now we have incorporated our thoughts on this issue into the 'Conclusion and Discussion' section of the manuscript.\n\n[1] Budd C J, Cullen M J P, Walsh E J. Monge\u2013Amp\u00e9re based moving mesh methods for numerical weather prediction, with applications to the Eady problem[J]. Journal of Computational Physics, 2013, 236: 247-270.\n\n[2] Wallwork J G, Barral N, Ham D A, et al. Goal-oriented error estimation and mesh adaptation for tracer transport modelling[J]. Computer-Aided Design, 2022, 145: 103187.\n\n[3] Budd C J, Williams J F. Parabolic Monge\u2013Amp\u00e8re methods for blow-up problems in several spatial dimensions[J]. Journal of Physics A: Mathematical and General, 2006, 39(19): 5425."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700462144203,
+                "cdate": 1700462144203,
+                "tmdate": 1700462256207,
+                "mdate": 1700462256207,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "zyIOJhAUCH",
+                "forum": "hj9ZuNimRl",
+                "replyto": "QHv0B2rr77",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5965/Reviewer_qbBA"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5965/Reviewer_qbBA"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "The authors have successfully addressed my primary concern regarding the efficiency of DMM, particularly noting that the interference time is within an acceptable range. This positive development prompts me to consider raising my score. However, I still find the improvement of MM-PDE over GNN to be less impressive than expected."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5965/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700623913468,
+                "cdate": 1700623913468,
+                "tmdate": 1700623913468,
+                "mdate": 1700623913468,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

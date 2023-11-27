@@ -1,0 +1,504 @@
+[
+    {
+        "title": "Depthwise Hyperparameter Transfer in Residual Networks: Dynamics and Scaling Limit"
+    },
+    {
+        "review": {
+            "id": "hlzjH9rJXf",
+            "forum": "KZJehvRKGD",
+            "replyto": "KZJehvRKGD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_J7oQ"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_J7oQ"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors study hyperparameter transfer between models at different scales with an emphasis on the hyperparameter transfer of ResNets (or ResNets sub-components) with depth. Following parts of the rational behind muP parameterization, they argue that good parameterizations are those having stable infinite width/depth limits. They then consider one such recent limit (\"1/\\sqrt{depth}\" scaling) and extend prior theoretical results on ResNets at initialization to ResNets trained with gradient flow. Specifically, they establish that network updates are also stable at this limit. The manuscript contains several experimental results on CIFAR-10,Tiny ImageNet, and ImageNet showing successful hyper-parameter transfer based on this \"1/\\sqrt{depth}\" scaling. As an additional theoretical side, the DMFT equations are solved for an infinite widh&depth linear network acting on a single data point."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The work offers a good combination of theory and experiment.  \n\nIt expands a useful and timely avenue of research, hyperparameter transfer, where theory can actually aid practitioners.\n\nIt studies relevant complex architecture acting on realistic datasets as opposed to linear or shallow networks."
+                },
+                "weaknesses": {
+                    "value": "Several gaps exist between the stated goal of the theory and its practical implementation. One such gap, which the authors themselves cite, is that the theory predicts stable results following a scale-up. Naturally, however, spending more compute and getting equal performance, is of little practical value. In practice, one expects to get better results which seems to be the case at least for the larger datasets they consider. This means that in examples where HP-transfer is worthwhile, one is by definition well away from the scaling limit. \n\nAnother gap, of a similar kind, is that, as far as I could tell, their DMFT framework is based on gradient flow but it is then used to transfer the learning rate. While gradient flow may be a good approximation for SGD in the asymptotically low learning rate regime, typically the optimal learning rates lay far away from this regime. \n\nFor CIFAR-10, the 1/\\sqrt{depth} scaling leads to poorer performance compared to muP scaling. \n\nReference to current literature could be broadened and sharpened. For instance, muP parameterization is also a unique parameterization having maximal updates, not just a stable limit (This fuller characterization also partially escapes the first gap described above). Citing further alternatives to muP scaling and adaptive kernel approaches to feature learning is also desirable."
+                },
+                "questions": {
+                    "value": "1. Can the authors rationalize why the above two gaps could be excused? \n\n2. Can the authors explain why for CIFAR-10 their parameterization seems non-optimal?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3778/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697533327801,
+            "cdate": 1697533327801,
+            "tmdate": 1699636334309,
+            "mdate": 1699636334309,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "vinMOcGcfn",
+                "forum": "KZJehvRKGD",
+                "replyto": "hlzjH9rJXf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank the reviewer for their careful reading and valuable feedback, to which we respond below.\n\n### **Weakness 1 = Gap 1**\n\nOur article neither seeks nor claims to reduce the computational cost of training a large model with a fixed setting of hyperparameters. The core contribution of our work is a methodology for significantly recuding the cost of hyperparameter optimization itself. \n\nOur claim was that this could be achieved by using our parameterization to optimize hyperparameters in much smaller models. We indeed found in all of our experiments that optimal hyperparameters settings were stable over many orders of magnitude with our procedure. To validate this empirically, however, it was necessary to train rather large models.\n\nWe certainly agree that it is desirable to obtain a target model accuracy while minimizing compute. However, our experiments consistently showed that larger/deeper models result in better performance. This is consistent with the literature on scaling laws and with the common practice of training very large models to obtain best SOTA performace. That said, the marginal gain from using larger models is sometimes very small (especially when very close to the limiting dynamics) and perhaps not worth the computational cost. An understanding of when this happens is not something we know how to predict. \n\n\n### **Weakness 2 = Gap 2**\n\nThe reviewer is entirely correct that we've presented in the main text the DMFT equations using optimization with gradient flow, rather than discrete time (S)GD. However, as in the prior work on DMFT (Bordelon & Pehlevan, 2022), discrete time SGD also leads to a consistent scaling limit for training dynamics and accompanying DMFT equations. These are included in the Appendix (now App. K.4). The discrete time dynamics of $h, g$ are almost identical to their continuous time counterparts but with sums instead of integrals over time. The dynamics for the predictor is no longer governed by the dynamical NTK but rather is given by the last layer feature kernel and the final layer response function (see equation 131). \n\n### **Weakness 3 = CIFAR10 Performance**\n\nThe reviewer is right that in Figure 1 the best learning rates found in our proposed parameterization reach somewhat higher values of training loss than the best learning rates we found with a vanilla $\\mu P$ parameterization. Thank you for suggesting that we address this issue directly. \n\nWe have done so in our revision by emphasizing in the introduction that the discrepancy in training loss is actually predicted by our theory. Indeed, note that the $\\mu P$ runs diverged at large depth (that is why the orange line corresponding to depth 30 doesn't appear at all in Figure 1(a)). Our theory predicts that increasing depth at a fixed learning rate in the $\\mu P$ parameterization corresponds to an effectively higher learning rate. Thus, since our experiments were run for a constant but moderate number of epochs, $\\mu P$ runs result in models that are closer to convergence. This is true until the effective learning rate is so large that the runs diverge. \n\nWe also note that Figure 1 seeks to illustrate hyperparameter transfer, which clearly fails for $\\mu P$ but works well with our parameterization. In particular, we didn't attempt to obtain the best possible test loss for each architecture, which would have requred optimizing other hyperparameters (e.g. notably the lr schedule, how to do data augmention, momentum, batch size etc). In this sense, we do not believe that the discrepancy in test loss in Figure 1 takes away from the merit of our core proposal.\n\nWe hope that this addresses the reviewer's concern and welcome any further feedback on this point. Also, we are in the process of running several followup experiments to illustrate the first bullet point and will post then once they have finished running. \n\n\n### **Weakness 4 = Literature**\n\nWe thank the reviewer for their valuable suggestions to improve our coverage of the literature and have made the following improvements in the revision:\n* We have added Appendix C outlining the original work on $\\mu P$ and have included a discussion of maximal vs. stable updates as well as alternative parameterizations. \n* We have included a new Appendix section (App. M) discussing other scalings which give stable feature learning infinite depth limits. We also provide more experiments showing hyperparameter transfer for zero-init block readouts (similar to rezero) and $\\text{depth}^{-\\alpha}$ scalings for residual branches with $\\alpha=\\frac{1}{2},1$. The $\\alpha=1$ case gives a Neural ODE like infinite depth limit rather than the SDE-like limit at $\\alpha=1/2$ (which is the focus of the rest of the paper). We hope this shows that our general methods can be applicable to derive and characterize many large depth limits which can show transfer. \n* We have added to the Related Works section in our revision references to recent work on using adaptive kernel methods."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699889500298,
+                "cdate": 1699889500298,
+                "tmdate": 1699890794790,
+                "mdate": 1699890794790,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "rqH4ExCKEv",
+                "forum": "KZJehvRKGD",
+                "replyto": "hlzjH9rJXf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_J7oQ"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_J7oQ"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply to reply"
+                    },
+                    "comment": {
+                        "value": "I thank the authors for addressing my comments. \n\nRegarding the authors' response to \"Gap I\", I think there may have been some misunderstanding worth clearing. \n\nMy main focus in this gap is not on the matter of compute. Rather it is on the fact that, as I understand it, in the scaling limit the authors offer the DMFT equations become independent of depth and width. This seems to imply that performance should also be scale invariant. In contrast, however, in their experiments, where they employ this scaling the performance does change. For instance, in Fig. 1b and width=1024, train loss changes from about 0.3 to 0.2 as depth increases. Shouldn't this number be fixed if one is indeed in the asymptotic scaling regime? This seems to mean that in the typical regime of interest (a regime where increasing scale/compute improves performance) sizable corrections to the asymptotic still exist. These corrections could, in principle, scale differently with hyper-parameters thereby augmenting the optimal transfer of parameters based on keeping the asymptotic theory the same.\n\nNotwithstanding, while I'm curious about this I don't consider this a major drawback. Potentially what could be going on is that the asymptotic theory is stable/invariant under scaling in early training stages with corrections to the asymptotic entering in only at later times. If so one can base the logic here on the common practice of tuning parameters based on early epochs. This is roughly consistent with the authors' Supp. figure B3a where the difference between the original and scale-up network becomes larger only at later epochs."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700388327087,
+                "cdate": 1700388327087,
+                "tmdate": 1700388448885,
+                "mdate": 1700388448885,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "ApiuYrFzpt",
+            "forum": "KZJehvRKGD",
+            "replyto": "KZJehvRKGD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_SFFE"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_SFFE"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors' contribution in this work lies in their introduction of a straightforward parameterization for residual networks. Through empirical observations, they have demonstrated the remarkable consistency of hyperparameter transfer across various dimensions of network architecture, such as width and depth, as well as across diverse hyperparameters and datasets. This empirical evidence is further substantiated by theoretical analysis, which reveals that the behaviors of hidden layers remain intricate, unaffected by changes in network dimensions, and do not approach vanishing limits."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "This paper demonstrates that a straightforward adaptation of the $\\mu P$  parameterization enables the transfer of learning rates across both depth and width in residual networks, incorporating $1/\\sqrt{depth}$ scaling on the residual branches. The authors conduct extensive experiments. The theory is also nice.\n\nI think these findings have the potential to significantly reduce the computational expenses associated with hyperparameter tuning, thereby enabling practitioners to train large, deep, and wide models just once while achieving near-optimal hyperparameters."
+                },
+                "weaknesses": {
+                    "value": "1. Since that the $\\mu P$ parameterization is not a commonly used method, the authors should provide a more comprehensive introduction.\n\n2. The $1/\\sqrt{depth}$ trick has been extensively investigated in previous works [1-3]. The novelty of the proposed method appears to be limited. Please clarify the differences. Moreover, many recent works propose initializing ResNet using \"rezero\"-like methods, which achieve similar performance to the $1/\\sqrt{depth}$ trick. The authors should provide some comparisons. In particular, I would like to see some discussions on the scaling parameter. Why use $1/\\sqrt{depth}$? What would happen if the scaling parameter is set as $1/depth$ or 0?\n\n3. As the authors admitted in the \"Limitation\" paragraph, most of the experiments are confined to 10-20 epochs. This limitation makes the empirical evidence less convincing. In fact, I don't understand the difficulty in training a ResNet with more epochs if one can train it with 10-20 epochs.\n\n[1] Tarnowski W, Warcho\u0142 P, Jastrz\u0229bski S, et al. Dynamical isometry is achieved in residual networks in a universal way for any activation function. The 22nd International Conference on Artificial Intelligence and Statistics. PMLR, 2019: 2221-2230.\n\n[2] Yang G, Schoenholz S. Mean field residual networks: On the edge of chaos. Advances in neural information processing systems, 2017, 30.\n\n[3] Zhang H, Dauphin Y N, Ma T. Fixup initialization: Residual learning without normalization. arXiv preprint arXiv:1901.09321, 2019."
+                },
+                "questions": {
+                    "value": "Please see  weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3778/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697981273404,
+            "cdate": 1697981273404,
+            "tmdate": 1699636334232,
+            "mdate": 1699636334232,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "yR1vDe5RH1",
+                "forum": "KZJehvRKGD",
+                "replyto": "ApiuYrFzpt",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank the reviewer for their careful reading and valuable feedback, to which we respond below. We hope in light of our responses the reviewer will consider raising their score. \n\n### **Weakness 1**\n\nWe agree that it makes sense to add a brief description of the $\\mu P$ parameterization. Thank you for the suggestion. This is now done in the Appendix C and C.2. \n\n### **Weakness 2**\n\nRegarding the $1/\\sqrt{\\mathrm{depth}}$ scaling of residual branches:\n* We agree that our work is certainly not the first to propose the $1/\\sqrt{\\text{depth}}$ scaling of residual branches and have emphasized this in our revised review of literature. \n* As far as we are aware, ours is the first work which shows that this is precisely the residual branch scaling that gives rise to training dynamics that are both consistent across depth/width and also are capable of feature learning. \n* We have included a new Appendix section (App. M) discussing other possible large depth limits which give stable feature learning infinite depth limits. We also provide more experiments showing hyperparameter transfer for zero-initialized block readouts (similar to the initialization of re-zero) and $\\text{depth}^{-\\alpha}$ scalings for residual branches with $\\alpha = \\frac{1}{2},1 $. See Figure M.1. The $\\alpha=1$ case gives a Neural ODE like infinite depth limit rather than the SDE-like limit at $\\alpha=1/2$ (which is the focus of the rest of the paper). We hope this shows that our general methods can be applicable to derive and characterize many large depth limits which can exhibit transfer. We note that even with the zero initialization trick, the depth exponent $\\alpha$ of the model is still important in controlling the training dynamics, with some different behaviors for different values of $\\alpha$. We plan to explore this in greater detail in future work. \n\n### **Weakness 3**\n\nWe are starting to run experiments where we train models for longer and still see good hyperparameter transfer and larger \"deeper is better\" effects. We plan on adding additional experiments where we train these models longer (see for instance some additional experiments here https://imgur.com/a/GA6qepR).\n\nIn our original submission, we chose to train for 10 - 20 epochs in most of our experiments for these reasons:\n* Our experiments were rather computationally expensive, at least with the compute resources available to us because\n    * The focus of our work is hyperparameter transfer over both depth and width. We were thus bottlenecked by the computational cost of training our largest (deepest and widest) architectures, which in many experiments were Convolutional ResNets with depth 34, width 2048 and roughly 50M parameters. \n    * Each experiment involved re-training the same architecture over many -- often 10 or more -- different learning rates (or other hyperparameter settings)\n* We believe directly checking hyperparameter transfer after model convergence would likely require an entirely different suite of experiments, rather than simply training longer. Indeed, hyperparameter transfer for models after covergence is most interesting only after optimizing over not only the learning rate but also the learning rate schedule, the batch size, momentum coefficient, data augmention, etc. We have presented a fair amount of evidence indicating that in our proposed paramaterization all these hyperparameters individually transfer (see Figure 3 for learning rate schedules and normalization layer and Figure 4 for momentum and feature learning rate). But running large scans jointly over all these parameters was not computationally feasible.\n\n### **Further Citations**\n\nWe thank the reviewer for citations [1]-[3]. We have now added [2] to our list of references ([1] and [3] were already present). We have also included in our revised Related Works section the point that the main difference between [1]-[3] and our work is threefold: \n* our article derives DMFT equations that govern training dynamics, rather than only the behavior at initialization\n* our analysis is combined $\\mu P$-type initialization in the final layer, whereas most of this prior work considered standard parameterization\n* we focus on empirical investigation of whether hyperparameters transfer in this parameterization, while prior work was mainly concerned with the stability of the forward and backward pass at initialization"
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699889275076,
+                "cdate": 1699889275076,
+                "tmdate": 1699890762036,
+                "mdate": 1699890762036,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VgL7yWucR3",
+                "forum": "KZJehvRKGD",
+                "replyto": "yR1vDe5RH1",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_SFFE"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_SFFE"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Relpy to authors"
+                    },
+                    "comment": {
+                        "value": "Thank you for your answer, and most of my concerns have been addressed. I am inclined to accept this paper."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699933845753,
+                "cdate": 1699933845753,
+                "tmdate": 1699933845753,
+                "mdate": 1699933845753,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "F90IQ3ykP0",
+            "forum": "KZJehvRKGD",
+            "replyto": "KZJehvRKGD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_fkzv"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_fkzv"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Paper proposes a novel parameterisation of deep residual networks that tackles width- and depth-dependent cost of hyper-parameter tuning, an issue, exacerbated by recent increase in SOTA models' sizes. A novel $1/L$ extension of $\\mu P$ parameterization of residual networks is proposed. Paper argues that hyperparameter transfer is consistent across both width and depth for a variety of architectures, hyperparameters, and datasets. \nThe work is primarily empirical whose experimental evidence is supported by statistical physics and NTK theory. In particular, the paper advances a width-invariant feature updates present in $\\mu P$ parameterisation and in the same spirit derives depth scaling to ensure feature updates invariance over depth using dynamical mean field theory (DMFT). \n\nExact solutions of the DMFT dynamics in the rich (i.e.non-kernel) regime for a simple deep linear network are provided. The suggested parameterisation is verified empirically by well selected range of experiments, mostly presented in appendices and  summarised in the Section 3. The exposition of the challenges, method and main results is well and accessibly written rounded by limitations and future directions."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "+ Rounded, well written and easy to follow timely paper presenting valuable empirical evidence put into NTK theory context.\n+ Future directions section proposes the method as suitable to study depth-width trade-offs while scaling neural networks since hyperparameter dependencies are consistent across widths/depths. In my opinion this can be very valuable addition to community even if the method does not turn out practically useful and adds positively to my overall rating.\n+ Convincing experiments (with a caveat, that I hope will be addressed in the rebuttal, see Weaknesses, ad 1)) cover well selected range of settings and architectures"
+                },
+                "weaknesses": {
+                    "value": "1. Fig. 1 Loss levels reached seem to be higher in case of proposed parameterization compared to alternatives. Could authors add some comments on the topic? Especially, is a proposed parameterization capable of reaching an optimal value of hyper parameters in scope, e.g., learning rate in practical settings? I rate paper 'accepted' conditioned on this issue will be alleviated in the camera-ready version.\n\n2. Limited applicability(?) - Could authors argue otherwise? How could it be improved in the paper? Could authors elaborate on computational costs of proposed method vs. alternatives?\n\n3. Paper heavily depends on $\\mu P$ parameterisation properties derived in Yang & Hu (2021). In my view a short primer on $\\mu P$ parameterisation (even in Appendix) would improve self-consistency and readability of the paper.\n\n4. Proposition 2, Assumption $\\gamma_0 \\rightarrow 0$ renders ODE from Proposition 1 solvable due to time invariant kernels (and thus given by Gaussian initialization) and the same goes for the second example where linearity of network makes time invariance explicit. To what extend are conclusion transferable to any realistic non-linear scenario?"
+                },
+                "questions": {
+                    "value": "See section Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3778/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698837157807,
+            "cdate": 1698837157807,
+            "tmdate": 1699636334136,
+            "mdate": 1699636334136,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "OkmzNG6jdW",
+                "forum": "KZJehvRKGD",
+                "replyto": "F90IQ3ykP0",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank the reviewer for their careful reading and valuable feedback, to which we respond below.\n\n### **Weakness 1**\n\nThe reviewer is certainly right that in Figure 1 the best learning rates found in our proposed parameterization reach somewhat higher values of training loss than the best learning rates we found with a vanilla $\\mu P$ parameterization. Thank you for suggesting that we address this issue. \n\nWe have done so in our revision by emphasizing in the introduction that the discrepancy in training loss is actually predicted by our theory. Indeed, note that $\\mu P$ runs diverged at large depth (that is why the orange line corresponding to depth 30 doesn't appear at all in Figure 1(a)). Our theory predicts that increasing depth at a fixed learning rate in the $\\mu P$ parameterization corresponds to an effectively higher learning rate (see explanation in global response). Thus, since our experiments were run for a constant but moderate number of epochs, $\\mu P$ runs result in models that are closer to convergence. This is true until the effective learning rate is so large that the runs diverge. We add a comment about this near the top of page 2 when we reference Figure 1. \n\nWe are performing new experiments where the parameterizations coincide in their dynamics at a large depth so that all SP/$\\mu$P models in this range of depths are stable over the range of learning rates we consider. This can be achieved, for example by choosing a smaller $O(1)$ value for $\\beta$ in the SP/$\\mu$P experiments (or larger $\\beta_0 = \\beta \\sqrt{L}$ for our proposed parameterization). In these experiments, we expect to see that the shallower SP/$\\mu$P networks will train **slower** than their counterparts in our $\\frac{1}{\\sqrt L}$ parameterization, resulting in higher train loss. We will revise our sumbission and post them here if/when these expts finish during the rebuttal period. \n\nWe also note that Figure 1 seeks to illustrate hyperparameter transfer, which clearly fails for $\\mu P$ but works well with our parameterization. In particular, we didn't attempt to obtain the best possible test loss for each architecture, which would have requred optimizing other hyperparameters (e.g. notably the lr schedule, how to do data augmention, momentum, batch size etc). In this sense, we do not believe that the discrepancy in test loss in Figure 1 takes away from the merit of our core proposal.\n\nWe hope that this addresses the reviewer's concern and welcome any further feedback on this point. Also, we are in the process of running several followup experiments to illustrate the first bullet point and will post then once they have finished running. \n\n### **Weakness 2**\n\nWhile our theory was derived for a certain class of ResNets (Appendix K) and not fully theoretically analyzed for the case of transformers etc, we tried to verify experimentally the broad applicability of our proposed parameterization in at least the following ways:\n- Experiments on CIFAR10 with Wide ResNets. Here, while the dataset is not very complicated, we check that not only the learning rate but also the momentum coefficient and regularization strength transfer (e.g. Figure 4).\n- Experiments on both ImageNet and Tiny ImageNet with Vision Transformers. Here, we checked not only that the learning rate but indeed also the learning schedule transfers (e.g. Figure 3).\n- Empirical validation of our theory in linear MLPs and ResNets in which we have analytic formulas for the NTK.\n- In terms of computational savings we find, for instance, that already depth 6 and width 128, we can estimate optimal learning rates for models at depth 30 and width 1024 (Figure 1). This results in a cost savings of roughly 320x in each forward and backward pass used for hyperparameter tuning. In appendix B.2 (see Figure B.3), we saw that hyperparemeter turning after training ViTs on CIFAR-10 for only 3 epochs gives the same results as training for 9 epochs. So all together we get a computaitonal savings in this case of approximately 1000x. Moreover, we made no serious attempt to systematically investigate the minimal width and depth at which to perform hyperparameter turning.\n\n### **Weakness 3**\n\nWe agree that it makes sense to add a brief description of the $\\mu P$ parameterization. Thank you for the suggestion. This is now done in the new Appendix C and C.2. \n\n### **Weakness 4**\n\nThis is an excellent question! The final Figure 7 which shows the linear network solution is actually in the feature learning regime $\\gamma_0 > 0$. Figure 7b plots the *change in the kernels* after one step of feature learning for $\\gamma_0 > 0$. The linear activations make analysis of feature learning much more tractable. As far as we are aware no one has been able to find explicit solutions for the evolution of the NTK and related feature and gradient kernels in nonlinear networks in regimes where $\\gamma_0 > 0$. We hope to return to this in future work but for now have included this point in the discussion."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699888609466,
+                "cdate": 1699888609466,
+                "tmdate": 1699890729569,
+                "mdate": 1699890729569,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ogLYOFSWjT",
+                "forum": "KZJehvRKGD",
+                "replyto": "F90IQ3ykP0",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_fkzv"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Reviewer_fkzv"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks to authors for their \"fair enough\" responses, that are acceptable if the gaps are properly addressed in Discussion and Appendices, as mentioned in rebuttals. Especially, comments on computational savings are encouraging. I have no further comments and think it's an interesting paper that should be accepted. Thank you."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700391088148,
+                "cdate": 1700391088148,
+                "tmdate": 1700391153323,
+                "mdate": 1700391153323,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "1pQKDMJC6F",
+            "forum": "KZJehvRKGD",
+            "replyto": "KZJehvRKGD",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_vjdW"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3778/Reviewer_vjdW"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents a parameterization for Resnet neural networks which is claimed to enable the transfer of hyperparameters such as the learning rate over a large range of network widths and depths. The motivation for this work is to enable engineers to tune hyperpaprameters on small models and then apply them to large models, avoiding a costly fine tuning on large models.\n\nThe method extends the muP parameterization which, according to the authors, enables hyperparameter transfers across different widths but not different depths. The proposed parameterization consists of zero-mean unit-variance parameter initialization and scaling factors for the residual branches, output pre-activations and learning rate that depend on both the width and depth of the model, and no normalization layers.\n\nThe proposed parameterization is derived by theoretically analyzing the behavior of a (simplified) neural network in the limit of  infinite width and infinite depth, and choosing a parameterization which satisfy certain desiderata. Experiments on a small dataset CFAR-10 are used to support the analysis on realistic neural architectures."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The method tackles an important practical problem: the efficient tuning of hyperparameters.\n- Good presentation"
+                },
+                "weaknesses": {
+                    "value": "- The experimental section is quite limited: only a single task and a very simple dataset are considered."
+                },
+                "questions": {
+                    "value": "N/A"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3778/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698956775600,
+            "cdate": 1698956775600,
+            "tmdate": 1699636334056,
+            "mdate": 1699636334056,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "P9wjaAJfsk",
+                "forum": "KZJehvRKGD",
+                "replyto": "1pQKDMJC6F",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3778/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We thank the reviewer for their feedback and positive assessment of our work! We agree that additional experiments on larger dataset, larger models, and longer training times would be useful to explore the limits of hyperparameter transfer. However, we also wanted to respectfully point out that our original submission already included experiments on Tiny ImageNet and ImageNet (Figure 3). We plan on adding additional experiments where we train these models longer (see for instance some new experiments here where we train on Tiny-ImageNet for 100 epochs and CIFAR for 40 epochs https://imgur.com/a/GA6qepR). We plan to add these to the paper once we get the corresponding SP/$\\mu$P baselines without the branch scalings."
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3778/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699888291228,
+                "cdate": 1699888291228,
+                "tmdate": 1699888291228,
+                "mdate": 1699888291228,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

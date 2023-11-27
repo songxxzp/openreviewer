@@ -1,0 +1,265 @@
+[
+    {
+        "id": "sy81WjOvep",
+        "forum": "CNL2bku4ra",
+        "replyto": "CNL2bku4ra",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_y6wT"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_y6wT"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a retrieval-augmented LM recipe with these steps:\n\n1) Given a query context, retrieve N sequences.\n2) Sequentially finetune the LM on the N sequences.\n3) Use the finetuned LM to predict the next tokens. (Although results in the main text use the same text for retrieval and testing)\n\nThe paper shows improve perplexity on multiple datasets of the pile, and uses the pile for retrieval (done with a distributed neighbor index). The main weaknesses of the paper are lack of analysis to show why retrieval is helpful (perhaps it only helps when finding exact matches in retrieval?) and weakly implemented retrieval-based baselines."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The approach is simple and effective.\n\n2. There is evaluation using a large amount of data for retrieval, and across many datasets. Although, lack of analysis is concerning and makes it hard to understand how significant the improvements are.\n\n3. The approach relies on a distributed neighbor index. In general, it will be helpful for the community working on retrieval-enhanced ML to see papers that operate with such large retrieval. Although there are not many details about how the distributed index is implemented besides the server count and amount of data used. \"We find that 180 servers is a reasonable trade-off for the cluster we use.\" is not backed up by any statistics. Also, sometimes retrieval is done on this large scale with sparse retrieval, e.g. BM25, and dense retrieval is done here but not not with a model designed for retrieval such as DPR or others."
+            },
+            "weaknesses": {
+                "value": "1. The paper is lacking in analysis. Consider this statement from the intro \"In this paper, our hope is that a sufficiently large database will contain data relevant enough to each \u201cdomain\u201d, induced by each test instance, such that fine-tuning improves local performance.\". Perhaps it is worth measuring if the data found was from the matching domain? Although we see improvements in perplexity, we do not have a sense of why these improvements are happening. In addition, there is mention that 4 percent of retrieval is nearly an exact match---if the perplexity improvements is only due to exact match from the training data then it is not clear how useful this is.\n\n2. The retrieval baselines are very weak and not well configured for this task. Also, \"Unlike ours, models for those methods need to be trained also with retrieval.\" Except many of the models do not need to be trained with retrieval, including the ones used as baselines. Is the implication that models trained for retrieval are better than test time training?\n\n2a. The kNN-LM comparison is far from fair. By looking at the interpolation param, the value is clearly much worse than expected. The param is only 0.02 but in the kNN-LM paper it is much higher 0.25 when the retrieved and test data are from the same domain, and 0.6 when they are from different domains. This is a huge difference and either the kNN-LM results should be excluded or amended. I make suggestions for how to amend the results in the questions section.\n\n2b. The \"in-context\" baseline gives almost the same result as the base model. This suggests the in-context approach is almost not doing anything, probably for two reasons: 1) the context length is very limiting and 2) LMs often do not attend well to retrieved information in such large contexts (Sun et al and Liu et al). In contrast, Shi et al shows that when done properly the in-context approach can be very effective both for language modeling and QA. To be done properly, probably chunks should be retrieved and the query shortened. If there is still a context limit issue then Shi et al proposes an ensembling technique that enables scaling up the number of retrievals more efficiently.\n\n3. Despite the clarification in 4.1 about retrieval-evaluation overlap, it seems inappropriate to include the results in Figure 5 as the model is using the text it is meant to predict for retrieval. Fortunately, this should be an easy fix as the fair comparison is already in the appendix. \n\n4. In general, there are not many insights about how effective and influential retrieval is. It would be helpful to include an alternative retrieval, such as BM25. Similarly, it may be helpful to include an alternative dense retriever---since in this setup the LM is disjoint from the retriever, then it makes sense to include a model designed specifically for retrieval.\n\nSun et al. Do Long-Range Language Models Actually Use Long-Range Context?\n\nLiu et al. Lost in the Middle: How Language Models Use Long Contexts\n\nShi et al. REPLUG: Retrieval-Augmented Black-Box Language Models"
+            },
+            "questions": {
+                "value": "Q1: What if the retrieved contexts are not relevant to the query context?\n\nQ2: How would GPU acceleration further improve the speed? Isn't the data much too large for any GPU?\n\nQ3: Is there any plan to release the code for the distributed server? Is it meant to be a novel contribution of this work? Is there existing work that achieves anything similar? My impression is that there are multiple options for this type of distributed neighbor index used in industry.\n\nQ4: \"largest gradient step\" I am confused what is meant by this. I assume it is meant to correspond to learning rate scheduling, but in general I would think the furthest neighbors may have a larger gradient magnitude if they are more different from the existing context. Also, can you simply measure the gradients and see if this is true or not---whether the first step is the largest?\n\nSuggestions for kNN-LM\n\n* Use GPT2 for retrieval. This has been shown to work well with kNN-LM.\n* Use only a single dataset, e.g. github, for retrieval and encode every token for all or contiguous subset of the data.\n* Retrieve at every token, and follow the recipe from kNN-LM.\n* Alternatively, simply report perplexity on a dataset that kNN-LM was already evaluated for.\n\n\nMinor notes\n\n* Fig 7: What are the top tasks? I assume they are the largest.\n\nOther Related Work\n\n* Basu et al: This paper does test-time training on other tasks and also presents a modern theoretical view on the value of test-time training.\n* Drozdov et al: This paper improves upon the kNN-LM by adapting the interpolation to the quality of retrieval.\n* Ram et al: An effective application of the in-context approach.\n\nBasu et al. A Statistical Perspective on Retrieval-Based Models\n\nDrozdov et al: When and how to rely on retrieval in the kNN-LM\n\nRam et al: In-Context Retrieval-Augmented Language Models"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3896/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698716175950,
+        "cdate": 1698716175950,
+        "tmdate": 1699636348816,
+        "mdate": 1699636348816,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "gY2dNvWWYY",
+        "forum": "CNL2bku4ra",
+        "replyto": "CNL2bku4ra",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_zh5b"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_zh5b"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper investigates test-time training on nearest neighbors (TTT-NN) in the context of large language models, specifically transformer models. The authors create a large-scale distributed nearest neighbor index based on text embeddings of the Pile dataset. For each test instance, the system retrieves nearest neighbors from this index and fine-tunes the model on these neighbors before applying it to the test instance. The method is evaluated on 22 language modeling tasks from the Pile benchmark, using three causal language models of increasing size (small GPT2, large GPT2, and GPTNeo).\n\nThe results show that training for only one gradient iteration on as few as 50 neighbors can reduce a normalized perplexity measure (bits per byte metric) by 20%. Test-time training narrows the performance gap between a small GPT2 model and a GPTNeo model, which was specifically trained to convergence on the Pile. The improvements due to TTT-NN are more dramatic on unseen tasks, while still helpful on seen tasks. Test-time training can increase the effective capacity of a model, though at the cost of increased inference time. The authors conclude that their work establishes a valuable baseline for implementing test-time training in large language models and opens the door to further research in this area."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The organization of this paper is well-structured, making it easy to read and comprehend.\n2. This paper presents a simple test-time training approach on nearest neighbors (TTT-NN), which significantly improves performance across more than twenty language modeling tasks in the Pile benchmark with minimal fine-tuning.\n3. Test-time training effectively increases the capacity of a model, showcasing its potential to narrow the performance gap between smaller and larger models, and offering a valuable  baseline for implementing test-time training in the context of large language models.\n4. The large-scale distributed nearest neighbor index built on text embeddings of the Pile dataset enables efficient retrieval of relevant data for test-time training, serving queries to approximately 200 million vectors and 1TB of data in just one second."
+            },
+            "weaknesses": {
+                "value": "1. Why not use the PQ (Product Quantization) Index, which can significantly reduce storage overhead and thus avoid the cost of distributed retrieval? Although the vectors after PQ are approximations of the original vectors, recent works such as \u201d**[KNN-MT](https://openreview.net/forum?id=7wCBOfJ8hJM)\u201c** have demonstrated better performance using this approach.\n2. Retrieval plus k*seq_len gradient updates may reduce inference speed. How much of a difference is there between the inference speed of the proposed method and the original model?\n3. How is the database used by TTT-NN constructed? Is it built using the training data from Pile?\n4. How does the baseline \"interpolation with the distribution of tokens among the neighbors\" work? What is the key used for retrieval when predicting the next token? Also, for KNN-LM, directly constructing the database is indeed very costly. Dai's work \u201d**[SK-MT/SK-LM](https://openreview.net/forum?id=uu1GBD9SlLe)\u201c** provides an efficient construction method for their KNN-LM, i.e., first using BM25 to retrieve similar N documents, and then using these N documents to build a token-level database for interpolation and prediction. Considering that this work retrieves k documents, how are the k documents and the original model's predicted probability distribution interpolated? Is it similar to Dai's work mentioned above?\n5. For Section 4.1, \"Splitting sequences to avoid retrieval-evaluation overlap,\" suppose the test sequence is $x_t = ABCDEFGH$. Do the authors mean that there might be a sentence $x_d = ABCDEFGH$ in the database? If so, does this introduce test data leakage? Moreover, even if we split $x_t$ into $x_t^{'}=ABCD$, according to the description in Section 3, when using the prefix for retrieval, can we still retrieve $x_d$ and thus cause test data leakage?\n6. What does \"plain\" refer to in Table 1? No specific definition was found.\n7. Some missing related works\n    - [REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909)\n    - [Training Language Models with Memory Augmentation.](https://aclanthology.org/2022.emnlp-main.382.pdf) The work is to retrieve similar k neighbors to aid training\n    - To some extent, this paper can be considered as an explicit extrapolation of KNN-LM/KNN-MT. Specifically, Gao's work\u201c[Nearest Neighbor Machine Translation is Meta-Optimizer on Output Projection Layer](https://arxiv.org/abs/2305.13034)\u201d demonstrates that the working mechanism of KNN-LM/KNN-MT is to perform implicit gradient updates using the retrieved k nearest neighbors. In contrast, this paper explicitly uses the retrieved k nearest neighbors for explicit gradient updates."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3896/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698847519767,
+        "cdate": 1698847519767,
+        "tmdate": 1699636348552,
+        "mdate": 1699636348552,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "DIKuA6ll0p",
+        "forum": "CNL2bku4ra",
+        "replyto": "CNL2bku4ra",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_Cq76"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_Cq76"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addresses the problem of improving the language model perplexities by using the training data during inference. The core idea is to find the sequences similar to the test sequence from the indexed training data and finetune the base model with these nearest neighbor sequences. \n\nThe paper evaluates this on pile benchmark, where the training data is indexed using representations obtained from the Roberta model. For each test sequence from various pile categories, the nearest neighbors are picked to finetune the model and later the test sequence is evaluated for perplexity measure. The empirical results show usefulness of the approach as it improves the LM perplexities."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and easy to follow. The idea is clearly described and empirically validated.\n\n2. The empirical results on various pile benchmark show the usefulness of the approach."
+            },
+            "weaknesses": {
+                "value": "1. While the idea is neat and simple to implement, as shown in Figure 9, the training costs for each neighbor is expensive, thus limiting the usefulness in real-time applications. \n\n2. While the results on the LM perplexity are useful, it would be interesting to see how this compares in an end-to-end task such as code generation, etc. Few-shot prompt tuning (with or without retrieval augmented learning) are popular paradigms that are used in bigger LLMs. It would be interesting to see the comparison with such methods (in offline evaluation settings)."
+            },
+            "questions": {
+                "value": "1. It is not clear to me how indexes handle larger sequences? Bigger sequences are chunked [chunk1, chunk2, chunk3, ..] and if the nearest neighbor match happens at chunk2, what is the process? \n\n2. While it is neat that this method doesn't require hyper-paramter tuning? What happens when one tries that? (I agree it is prohibitively expensive, but could be done for few test sequences)\n\n3. How does KNN-LM work with document level index? For the original work, it was context -> next_word, how do we get token probabilities with document level index."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "Doesn't require ethics review."
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3896/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698847995299,
+        "cdate": 1698847995299,
+        "tmdate": 1699636348441,
+        "mdate": 1699636348441,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "SCnC8jMbIy",
+        "forum": "CNL2bku4ra",
+        "replyto": "CNL2bku4ra",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_kVHL"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3896/Reviewer_kVHL"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a method of training at test time"
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The method is not too complicated, and could likely be reproduced.\n* In some ways, the evaluation was very impressive. Quite large scale, showing benefits with an index that spans the whole Pile across many domains.\n* The baselines of kNN and in-context prompting also seemed relevant/strong."
+            },
+            "weaknesses": {
+                "value": "There were some weaknesses. I think this paper still could have value, but I would be more confident in recommending that the paper be accepted if the following could be addressed:\n\n1. There are some clarity issues with the paper. For instance, it was not very clear to me if retrieval is done after every token or at some other cadence.\n\n2. There is a discussion of inference speed, but it is not very concrete. Could inference throughput be added to table 1?\n\n3. While bits/byte based LLM evaluation is good, it would also be really nice to see results on extrinsic tasks as well.\n\n4. This is not so much a weakness as a missed reference, but this paper is very relevant: https://arxiv.org/abs/1609.06490\nLi, Xiaoqing, Jiajun Zhang, and Chengqing Zong. \"One sentence one model for neural machine translation.\" arXiv preprint arXiv:1609.06490 (2016).\nI think it should definitely be cited, but I think even if a similar idea has been proposed before in the neural (conditional) LM space, the modernized evaluation of the current paper has significant value."
+            },
+            "questions": {
+                "value": "See weaknesses above.\n\n* Also, will the code/data/datastore be released so others can reproduce these studies?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3896/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698943864415,
+        "cdate": 1698943864415,
+        "tmdate": 1699636348356,
+        "mdate": 1699636348356,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,280 @@
+[
+    {
+        "id": "3Xp1a8IDrT",
+        "forum": "Y8OaqdX5Xt",
+        "replyto": "Y8OaqdX5Xt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_v2eY"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_v2eY"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a model-based reinforcement learning algorithm for strategic decision making in sequential social dilemmas (i.e. Markov games) called Planning with Theory-of-Mind (PToM). PToM agents learn to flexibly respond to other agents by inferring their goals from their actions (an aspect of theory-of-mind), then approximating a best response to those agents via Monte Carlo Tree Search (MCTS). Within each episode, goals beliefs are updated via Bayesian inference using a learned opponent model that assigns a likelihood to each action an opponent might taken given their current goal and state (intra-ToM). These opponent models are also used to simulate how the other agents will act during MCTS. Goal beliefs are also updated across episodes by taking a weighted average of the most recent goal belief and the goal belief for earlier episodes (inter-ToM). The authors show that by explicitly performing inference over opponent goals and responding accordingly via planning, PToM outperforms baseline (model-free) multi-agent RL algorithms in both self play (as measured by convergence rate and the reward achieved after convergence) and few-shot adaptation to other algorithms (as measured by performance after 2400 episode steps). They also show that PToM outperforms ablated algorithms without goal updating or opponent modeling, and demonstrates emergent cooperative behavior."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This paper takes what I think of as the \"right approach\" to building agents that can rapidly adapt to the policies of other agents in the few-shot and online settings: Explicitly model the goals (or to use game-theoretic language, \"types\") of other agents, as well as their (approximately rational) goal-directed policies, then use Bayesian inference to rapidly infer the goals/types of those agents from their actions. While this approach comes with a number of representational commitments -- e.g. the need to specify what goals other agents might have -- it also defines a normative standard (or something close to it) that basically any intelligent agent would have to approximate in order to rapidly and flexibly coordinate with other agents in the environment: Such an agent would inevitably have to learn the types of the other agents it is playing against in order to best respond to them, and the right way to learn those types from just a few actions or episodes is Bayesian inference.\n\nPToM appears to successfully approximate that normative standard in the multi-agent RL environments studied by the authors, integrating Bayesian goal inference (as an aspect of theory-of-mind), neural opponent modeling, and model-based planning with neurally-guided MCTS in order to achieve high performance in both self-play and few-shot adaptation to unseen agents, while also showing intuitively cooperative behavior within single episodes. While I have several questions about how exactly the goal-conditioned policies for the opponents are trained, overall PToM appears to be a coherent and well-motivated approach to integrating learned neural components with explicit model-based reasoning about the goals of other agents. In particular, it seems to me that the various components should bootstrap each other in a virtuous manner during the course of self-play: Since the learned goal-directed policies try to imitate the actions produced by MCTS, they should converge to reasonably policies quite quickly since the actions produced by model-based search are going to be well-informed. In turn, improvements in the opponent model lead to more informative MCTS rollouts, which in turn improve the value and policy networks used to guide MCTS.\n\nEmpirically, PToM largely outperforms the MARL baselines tested by the authors. In a way, this is unsurprising, since there's no reason to suspect that these offline trained RL baselines would be able to succeed in few-shot adaptation and within-episode coordination with novel agents without an online learning mechanism (e.g. explicit Bayesian goal inference, or a meta-learning approximation of such inference). Nonetheless, the results clearly demonstrate the value of imbuing agents with the ability to perform online inference of the types of their opponents, in contrast to the offline focused paradigm that is common in MARL. The ablation results also validate the importance of individual PToM components, showing in particular that vanilla opponent modeling is not enough to achieve the same level of performance compared to opponent modeling combined with online goal inference."
+            },
+            "weaknesses": {
+                "value": "Like many other model-based RL algorithms (e.g. AlphaZero), a limitation faced by PToM is that it requires additional representational commitments compared to purely model-free methods (e.g. A3C). In particular, PToM requires that agents have a veridical model of the environment to plan over via MCTS, and, as noted by authors, also requires some specification of the space of possible goals that other agents might have.\n\nThat said, this is not a huge limitation to my mind --- specifying the space of possible goals is not much of an additional assumption, once one is willing to assume that PToM agents also have accurate models of their environment. Furthermore, these representational assumptions seem like they can be addressed by future research, similar to how MuZero lifted the need for agents to have accurate simulators for MCTS. (One could also argue that PToM's model-based approach is preferable for interpretability and safety reasons, compared to a completely learned but uninterpretable world model and goal space.)\n\nTo me, the primary limitation of this paper is more methodological --- while Figure 3 shows how PToM converges much more rapidly during self-play as compared to other methods, and Table 1 shows how PToM performs better in terms few-shot adaption, it is not clear to me how much of this improvement is due to the fact that PToM uses model-based planning via MCTS, versus the fact that PToM leverages goal inference over other agents. Intuitively, it seems to me that any model-based RL algorithm would converge a lot faster during self-play (and also adapt faster), as compared to the model-free MARL baselines that PToM is compared against. Thus, I think it's important to add a model-based RL baseline to both Figure 3 and Table 1, in order to better evaluate how much the ToM component is improving performance, vs. model-based planning alone. Perhaps the direct-OM ablation in the Supplementary Results could play this role -- or as an alternative, it'd be interesting to see the performance of neurally guided MCTS when the other opponents are assumed to act in a complete random manner.\n\nSpeaking of planning, one issue that came to mind is that in general, it seems like agents should be performing *belief-space planning*, given that they have uncertainty over their opponents' goals, not just planning in the original state space of the MDP. While sampling possible goal combinations from the goal belief provides for some amount of uncertainty-awareness, it does not account for the possibility of information gathering actions that reduce uncertainty about the opponents' goals. Given the difficulty of belief-space planning, I don't expect the authors to implement that as an alternative, but I do think belief-space planning should be mentioned as a potential avenue of future work.\n\nRegarding the clarity of the paper, I found the description and exposition mostly clear, apart from what seem to be important missing details about how the opponent module is trained, and how the replay buffer for them is collected. In particular, Eq. (3) suggests that in order to train a goal-directed policy for each goal $g$ that an agent might have, a replay buffer containing the state, action, and goal history is needed. But how is the goal history collected, given that there are no \"ground truth\" goals in the environment simulator? Is this goal history imputed somehow? Or are the goals generated via sampling at the start of each MCTS round? It wasn't clear to me what the answer was, even after looking at the PToM pseucode.\n\nAs a final, less important, weakness, the inter-ToM belief update shown in Eq. 2 seems rather ad hoc right now. While taking a weighted average of current and past goal beliefs seems like it makes sense intuitively, I believe this can be better justified as a Bayesian update of the goal belief across episodes, under a model where there's some probability that the opponent will resample its goal from the uniform prior at each timestep. I would encourage the authors to motivate or justify Eq. 2 in those terms. I believe this will also alleviate the requirement of \"knowing\" what the true goal of each agent is at the end of the episode (which Eq. 2 seems to assume), since it is possible to perform the inter-episode Bayesian update without knowing the true goal."
+            },
+            "questions": {
+                "value": "1. How does PToM perform compared with an agent that performs neurally-guided MCTS trained via self-play like AlphaZero, and how much of the fast convergence benefit comes from model-based planning vs. ToM?\n\n2. How is the replay buffer for opponent goals collected, given that there are no ground-truth goals?\n\n3. Can the inter-ToM update in Eq. (2) be justified as a Bayesian update with respect to some model of how goals change over time?\n\n4. Have the authors considered using belief-space planning (e.g. POMCP) instead of MCTS for planning under uncertainty?\n\n5. In the Problem Formulation section, I believe the appropriate formalism here is not MDPs, but Markov Games [1]\n\n6. In Eq. 5, is there a reason to use a Boltzmann model here, instead of just always picking the best action estimated by MCTS? Is this meant to encourage exploration?\n\n7. In Appendix E.3, I would avoid using the term \"partially crippled\", since \"cripple\" is often considered pejorative. \"Ablated\" would be a good replacement.\n\n8. Why does LOLA do better at converging than PToM in SPD, as seems to be shown by Figure 4(b)?\n\n[1] Liu, Q., Szepesv\u00e1ri, C., & Jin, C. (2022). Sample-efficient reinforcement learning of partially observable Markov games. Advances in Neural Information Processing Systems, 35, 18296-18308."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Reviewer_v2eY"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5187/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698732183502,
+        "cdate": 1698732183502,
+        "tmdate": 1699636514761,
+        "mdate": 1699636514761,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "emS5sd3qFf",
+        "forum": "Y8OaqdX5Xt",
+        "replyto": "Y8OaqdX5Xt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_PVXH"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_PVXH"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a multiagent training paradigm for sequential social dilemma (SSD) environments that involves opponent modeling and MCTS planning. The opponent modeling module has two components: goals modeling and goal-conditioned policies. The goal modeling comprises two parts, one being updated through an episode in a Bayesian manner (intra-ToM) and another (inter-ToM) forming a prior. The goal-conditioned policies are learned using a replay buffer and a cross-entropy loss. The planning is performed for each agent separately by sampling the opponents' objectives from the belief distribution supplied by the goals modeling part and using the appropriate goal-conditioned policies. This procedure is repeated multiple times, and the averaged Q-values induce the agents' Boltzmann policies. The method was evaluated on three SSDs."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The paper proposes a method that successfully blends multiagent setup, planning, and opponent modeling.\n* The results are promising and show the adaptation capabilities of the approach."
+            },
+            "weaknesses": {
+                "value": "* The paper deals with toy environments. What are the scaling capabilities (and limitations) of the approach to more complex tasks, multiple agents, number of rounds, etc.?\n* The method compares against other baselines (including model-free approaches), however, it is not clear how fair this comparison is. One has to take into account multiple factors: planning budget, number of repeated planning runs, time to train each of the networks, number of parameters, number of network inferences, wall time, etc. \n* The paragraph below Table 1 is unclear.\n* The last paragraph of Section 5.2 SSH seems rather anecdotic. Is there evidence that what is described happens (visualization of beliefs, mathematical argument, etc.)?\n* In Section 5.2 SSD, the paper mentions \"the effectiveness of PToM in quickly adapting to non-cooperative behavior\". A justification or analysis of this phenomenon would be helpful (visualization of beliefs, mathematical argument, etc.). Additionally, some insights into the lack of adaptivity of the baseline models would improve the exposition.\n* In Section 5.2 SPD, it is written that \"PToM tends to engage in exploratory cooperative actions to understand the opponent\u2019s characteristics\". What is the reasoning behind this statement?\n\nOther:\n* The overall mechanics of MCTS (expansion phase, tree-traversal, backpropagation step, action-taking) could be explained better.\n* The paper would benefit from moving the pseudo code from Appendix A to the main paper.\n* The parameters used for each environment should be placed in the main body of the paper (in particular, the number of seeds). Consequently, the Authors should consider moving Table 3 from Appendix D.3 to the main paper.\n* The content of Appendix F (emergence of social intelligence) is interesting enough that the Authors should consider moving it to the main body."
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5187/Reviewer_PVXH"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5187/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698912485398,
+        "cdate": 1698912485398,
+        "tmdate": 1699636514663,
+        "mdate": 1699636514663,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "WCmJ81N7RQ",
+        "forum": "Y8OaqdX5Xt",
+        "replyto": "Y8OaqdX5Xt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_zWBc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_zWBc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This article proposes an algorithm for multi-agent systems that incorporates the benefits of planning and of opponent modelling. The algorithm is validated on custom environments that are temporally and spatially extended versions of the three main social dilemma incentive structures. The algorithm is constrasted against LOLA, Social Influence, traditional A3C and prosocial A3C and shows much faster and better convergence than the baselines. The authors also show their algorithm is much better a few-shot adaptation to new co-players."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The article is well written and for the most part explains the methodology in enough detail. The combination of Theory of Mind (ToM) and Monte-Carlo Tree Search (MCTS) is interesting, and valuable. The authors sidestep the biggest hurdle with applying MCTS to multi-agent situations by training a module that predicts actions conditioned on (hidden) co-player goals. When doing MCTS, the search samples goals for co-players, and uses the learned conditioned policies to do the rollouts. The algorithm is, prima facie, significantly more sample efficient than the studied baselines. The presentation of results on the three custom environments is appreciated, as it shows behaviours on the main social dilemma categories."
+            },
+            "weaknesses": {
+                "value": "The fundamental problem with this work is that it is not comparing fairly against baselines. No planning benchmark was given, despite talking about MuZero or even vanilla MCTS. I understand that opponent modelling restricts applications of straight-forward MCTS, but even if one were to assume random opponents, or full self-play (i.e. using the self policy for rollouts of others) it would produce a reference point. Otherwise, comparing how many environment steps it takes to converge is unfair for something that does search with something that doesn't.\n\nThe question of few-shot adaptation is also suspect. The main issue is that their algorithm is specifically designed to take an inter- and intra-episode estimation of co-player goals. None of the baselines have this capability. Then the authors test how fast their agent can adapt to others in a fixed number of environment timesteps at inference time. This is unfair for non-MCTS, non-goal conditioned algorithms which are _not_ built for this purpose, and couldn't even process the goals signals. Moreover, that are specific benchmarks for few and zero-shot generalisation to others (e.g. Leibo, et al 2021, cited). Those seem to be too complex for this algorithm to tackle, though.\n\nAnother significant issue is that it is unclear whether the environments are partially observable. I suspect not, since MCTS would be much harder to roll out if so. However, the authors do talk about the POMDP (Partially Observable Markov Decision Process) as the conceptualisation typically used in studying sequential social dilemmas. If this algorithm _only_ works on fully observable environments, that severely limits the applicability. I'd like to see a scalable solution that does apply to POMDPs to warrant publication in ICLR.\n\nEven beyond the issue of full observability, the use of custom environments is a drawback. I'm not convinced that the environments actually have the incentive structure the authors claim. When creating a temporally and spatially extended version of a repeated matrix game, one has to be careful that the strategies actually map to the right returns. The traditional way to validate this is via a Schelling Diagram (as explained in Hughes, et al 2018, cited). The authors sequential stag hunt wouldn't have the right incentives if the episode were allowed to continue past the first hunt. But this causes those episodes to be artificially short. This, when paired with a system in which evaluation is a fixed number of timesteps, for environments that have very different lengths of episodes, makes me wonder why such a system was chosen. I worry it might be to artificially strengthen the results (as in, cherry picked numbers)."
+            },
+            "questions": {
+                "value": "What do the authors mean when they say: \"We observe the emergence of social intelligence\"? It seems to me this is either a strong claim (i.e. none of the other algorithms exhibit it) for which I would need a definition, or a weak claim, in which case probably all other baselines also exhibit it.\n\nHow is the PToM agent learning the goals? Is it trained against specifically incentivised co-players? Otherwise how does the ground-truth goal is obtained?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5187/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699304912511,
+        "cdate": 1699304912511,
+        "tmdate": 1699636514581,
+        "mdate": 1699636514581,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "BpqXcLgiPj",
+        "forum": "Y8OaqdX5Xt",
+        "replyto": "Y8OaqdX5Xt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_ciXi"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5187/Reviewer_ciXi"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce a new method for decision-time planning, based on inferring co-player goals, learning co-player goal-based policies and then rolling out MCTS using these policies. They apply this new method to several sequential social dilemma domains."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The introduction provides clear motivation, and the conclusion provides a concise summary and sound suggestions for future work.\n- To my knowledge, the idea of doing MCTS based on explicitly learned co-player models using goals that are inferred online is novel. In principle, this could yield an impactful improvement over the state of the art.\n- The method is generally well-described, and therefore I assess that this paper is likely reproducible."
+            },
+            "weaknesses": {
+                "value": "- The main weakness of this paper is that the experimental results are quite weak. Table 1 does not show a very large improvement from PToM over the baselines except in some specific cases (e.g. adaptation to exploiters in SS). PToM does not achieve cooperation in SPD. There are no videos or behavioral analyses provided to corroborate qualitative claims about the better behaviour of PToM over the baselines. Can the authors provide such results? For instance, what is the evidence that PToM is significantly better at hunting stags in SSH? \n- Some of the experimental claims are poorly explained and some of them are unsubstantiated. For example, on page 8, what is meant by \"we find that the leading space of PToM is not significant\"? Also on page 8, the \"further intuition\" on why PToM is effective at adaptation is not substantiated by analysis of the belief model for the agent during intra- and inter-ToM. Can the authors provide this data? \n- There is some important missing related work which should be cited on theory of mind in the context of RL: https://arxiv.org/pdf/2102.02274.pdf, https://arxiv.org/pdf/1901.09207.pdf. Ideally these methods would be provided as baselines, or the authors would explain why their method was clearly an improvement from a theoretical standpoint. Can the authors comment on this?\n- The authors could also cite more recent work in the LOLA line: e.g. https://arxiv.org/abs/2205.01447. \n- Above equation (3) the authors seem to assume that the focal agent has access to the goals of its opponents during training. Is this correct? Yet earlier in Section 3, the authors claim that agent j's true goal is inaccessible to agent i. Can they clarify this apparent contradiction (perhaps the goals are known during training but not during execution, in the usual centralized training, decentralized execution paradigm)? \n- In Figure 3, does the x-axis for PToM take into account the experience steps used in MCTS? This is unclear, and if not, these experience steps should also be accounted for, to make this a fair comparison between algorithms."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5187/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699627869701,
+        "cdate": 1699627869701,
+        "tmdate": 1699636514475,
+        "mdate": 1699636514475,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

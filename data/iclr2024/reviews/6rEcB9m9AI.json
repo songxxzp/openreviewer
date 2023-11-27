@@ -1,0 +1,278 @@
+[
+    {
+        "id": "tg8ekWWRVH",
+        "forum": "6rEcB9m9AI",
+        "replyto": "6rEcB9m9AI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_qx25"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_qx25"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses the challenge of poor generalization performance in adaptive gradient methods like Adam, hypothesizing that adding an exploration strategy with additional memory of gradient information could improve performance. Building on previous work, which used a memory buffer for storing \"critical gradients,\" the authors propose a new memory-augmented Adam optimizer that stores \"critical momenta\" (CM). This new approach aims to prevent gradient cancellation and allows the optimizer to escape sharp minima and converge to flat regions which are more likely to generalize. The authors validate their approach through convergence analysis and empirical benchmarks, showing improvements in model performance in both supervised and online learning settings."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The paper introduces a new concept of storing \"critical momenta\" in a memory buffer, aiming to overcome the limitations of previous memory-augmented optimizers.\n- Intuitions for why this approach is helpful are built by analyzing toy functions.\n- The method has potential applications in both supervised and online learning showing empirical improvements over vanilla Adam with combinations of CG/SAM.\n- The paper is written with a clear structure and logical flow."
+            },
+            "weaknesses": {
+                "value": "My main concerns are regarding the memory cost of the approach and whether these costs are justified given the plethora of other alternatives to Adam. The paper does not sufficiently discuss the computational overhead introduced by the memory component, which is critical for practical deployments, especially in resource-constrained environments. \n\nThe experimental results indicate some improvements, but these could potentially be attributed to the additional use of memory and hyperparameters. It would be beneficial for the paper to discuss whether Adam+CM offers any regret guarantees or optimality conditions given the added computational complexity i.e. could there be another algorithm that does better? \n\nOne potential alternative baseline that comes to mind is to consider averaging the weights via approaches such as Polyak averaging or Stochastic Weight Averaging. These methods have been shown to improve generalization performance and only require one additional copy of the parameters if one employs the exponential moving average trick. The paper could be strengthened by comparing Adam+CM to these alternatives--perhaps the two approaches are orthogonal."
+            },
+            "questions": {
+                "value": "- I would consider additional measures of sharpness as well. For instance, it seems common to consider $|\\lambda_{max}/\\lambda_5| $ (Jastrzebski et al. (2020)) or measures of how quickly loss changes in a local neighborhood. The interaction between sharpness, distance travelled, and generalization performance seems quite complicated generally as it is also a function of the learning rate and other hyperparameters. This should be made clear in Figure 7 and Figure 8.\n- In general, as mentioned in weaknesses, I would be interested in a more thorough study on how additional memory can best be used. It seems like C is generally set to 5 in the grid search -- can we get away with smaller $C$? What if we used a different value for CG and CM?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3594/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698780447969,
+        "cdate": 1698780447969,
+        "tmdate": 1699636314880,
+        "mdate": 1699636314880,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "CWtiRugt2K",
+        "forum": "6rEcB9m9AI",
+        "replyto": "6rEcB9m9AI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_V8UZ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_V8UZ"
+        ],
+        "content": {
+            "summary": {
+                "value": "Building upon the framework of critical gradients, which maintains a buffer containing a limited history of gradients from previous iterations, this paper takes a similar approach by maintaining a buffer of previous momenta, which they call critical momentum (CM). The proposed method is expected to effectively escape sharp basins and converge to flat loss regions. They also investigate the effectiveness of combining CM with sharpness aware minimization (SAM)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The preliminary experiments using artificial loss functions such as the Goldstein-Price loss function and Ackley loss function show a clear advantage of CM variants to explore and find the lower loss surface near the global solution."
+            },
+            "weaknesses": {
+                "value": "Although the experiments using artificial loss functions are promising, the results on actual deep neural networks is not as good. The fact that both CM methods overfit after convergence for LSTM on PTB in Figure 6 raises a major concern, and contradicts the main claim of the paper that CM methods can find a flatter minima.\n\nThe scores that are reported in this paper seem to be quite lower than what is reported in \"papers with code\". For example, EfficientNet-B0 on ImageNet should achieve a top-1 validation accuracy of 76.3% [https://paperswithcode.com/paper/efficientnet-rethinking-model-scaling-for], but the results reported in the paper range between 65.4-71.7%. Also, Adam+SAM is performing very poorly for this specific case, and is significantly worse than the original Adam, but no explanation is given for this poor performance.\n\nIt would seem like the current experiments would be strongly affected by the batch size, but the batch size is not included in their hyperparameter search."
+            },
+            "questions": {
+                "value": "The escape ratio in Figure 5 is monotonically increasing with the sharpness coefficient. What happens if it is increased further?\n\nIn Figure 6, the validation perplexity of Adam+CM shows a peculiar behavior where it initially drops very fast but gradually increases and eventually crosses over with Adam+SAM. Is there any explanation as to why Adam+CM behaves this way when it is supposed to explore flatter regions compared to other optimizers?\n\nWhy is Adam+SAM performing so poorly for EfficientNet-B0 on ImageNet in Table 2?\n\nComments\nThe correspondence between the two plots in Figure 4 would be more obvious if the color of the lines were matched."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Reviewer_V8UZ"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3594/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698820637009,
+        "cdate": 1698820637009,
+        "tmdate": 1699636314799,
+        "mdate": 1699636314799,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "uX2Znm1l7M",
+        "forum": "6rEcB9m9AI",
+        "replyto": "6rEcB9m9AI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_GnW1"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_GnW1"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a memory-augmented version of Adam named Adam+CM, which maintains a buffer of critical momenta to enhance exploration and avoid sharp minima during training. The authors have conducted theoretical convergence analysis for the proposed method. Furthermore, they provided empirical results to substantiate the claims regarding the properties of the method. By presenting results in online learning and supervised learning scenarios (NLP + CV), the authors demonstrate that the proposed method achieves superior generalization performance compared to baseline methods."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The proposed method is well-motivated, and to the best of my knowledge, it presents a novel approach to optimization.\n- The presentation is lucid and easy to follow.\n- The paper offers comprehensive evidence to back the primary claims, including theoretical analysis, numerical simulation results with toy examples, and real-world practical experiments."
+            },
+            "weaknesses": {
+                "value": "- (minor) The paper would be more convincing if larger-scale empirical experiments on NLP were conducted."
+            },
+            "questions": {
+                "value": "- As a proposed deep learning optimization method, it would be more convincing if comparisons were made on larger-scale language model optimization tasks as well."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "1: You are unable to assess this paper and have alerted the ACs to seek an opinion from different reviewers."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3594/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698839723518,
+        "cdate": 1698839723518,
+        "tmdate": 1699636314689,
+        "mdate": 1699636314689,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ESSWoytK0w",
+        "forum": "6rEcB9m9AI",
+        "replyto": "6rEcB9m9AI",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_Jwku"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3594/Reviewer_Jwku"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a memory-augmented variant of the Adam optimizer that maintains a memory of critical momenta. The proposed method aims to address the gradient cancellation problem of Adam with critical gradients, encouraging exploration toward flatter minima. It is shown to improve performance across various tasks, including language modeling and image classification, by allowing the optimizer to escape sharp basins and converge in flatter regions."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper is well-written and clear, and uses both toy examples and real-world problems to demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. Prioritizing momenta with large gradient norms is not well motivated. It is unclear if and how this choice affects the performance of the method.\n2. The paper seems to associate flat minima with global minima or lower loss values in some of the toy examples, which is not always the case in practice. Indeed, the training loss of a flat minimum is usually higher than that of a sharp minimum on real-world datasets.\n3. The proposed method is partly motivated by the performance gap between SGD and Adam, but is not compared to SGD in the experiments. Moreover, it would be interesting to see if critical momenta improve the performance of SGD as well.\n4. The baselines are not particularly strong, and it is a bit strange that Adam+SAM performs almost the same or even worse than vanilla Adam on image classification tasks.\n5. The results shown in Fig. 5 could be sensitive to hyperparameters such as learning rate, which is not discussed in the paper."
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3594/Reviewer_Jwku"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3594/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699729916897,
+        "cdate": 1699729916897,
+        "tmdate": 1699729916897,
+        "mdate": 1699729916897,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

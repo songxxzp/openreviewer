@@ -1,0 +1,385 @@
+[
+    {
+        "title": "Embracing Diversity: Zero-shot Classification Beyond a Single Vector per Class"
+    },
+    {
+        "review": {
+            "id": "L3aIT0uDnH",
+            "forum": "WqeRtP2T3R",
+            "replyto": "WqeRtP2T3R",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_3g4D"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_3g4D"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work studies the zero-shot classification problem. Rather than using a single vector to represent each class label, this work proposes to represent the rich diversity within each class using inferred attributes without any training. The proposed method is shown to outperform zero-shot classification methods (including DCLIP, Waffle, and CHiLS) on various datasets that contain hierarchies, diverse object states, and real-world geographic diversity (such as MIT States, Breeds, DollarStreet, and GeoDE)."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The proposed idea of using VLMs to inferred attributes for zero-shot learning is valid, and it seems effective to use multiple attribute vectors per class in the zero-shot classification benchmark. \n\nUsing attributes can help to improve interpretability of the zero-shot inference results."
+                },
+                "weaknesses": {
+                    "value": "Even though using attributes is a valid idea in zero-shot learning/classification. The proposed method is not convincing. VLMs (such as CLIP) already has the zero-shot recognition ability, therefore, it seems a redundant inference step to use them for inferring attributes first and then for predicting the corresponding class labels. Why not directly applying the VLMs (e.g., CLIP) for zero-shot recognition? What are the empirical results using single-vector for zero-shot inference using CLIP or OpenCLIP.\n\nThe proposed method is also computationally more expensive compared to zero-shot inference with one vector. The compute requirement scales linearly to the number of attributes. Does the model performance improve and scale in proportion to the number of attributes? If not, why should one consider to add more compute for a more complicated inference process with not guarantee on performance improvement?"
+                },
+                "questions": {
+                    "value": "Why not directly applying the VLMs (e.g., CLIP) for zero-shot recognition? What are the empirical results using single-vector for inference using CLIP or OpenCLIP.\n\nDoes the model performance improve and scale in proportion to the number of attributes?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "No concern on Ethics."
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698816116472,
+            "cdate": 1698816116472,
+            "tmdate": 1699636205195,
+            "mdate": 1699636205195,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "yhSgHdoKoB",
+                "forum": "WqeRtP2T3R",
+                "replyto": "L3aIT0uDnH",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Substantial gains over directly applying the VLMs; Low cost of our method"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their feedback. We now address the raised concerns.  \n\n**Strong and consistent gains compared to using a single vector for zero-shot inference**: We note that we did indeed consider using the zero-shot capabilities of VLMs directly without attributes. This corresponds to our \u2018vanilla\u2019 baseline, where a single vector (i.e. the classname embedding) is used per class. **Our method significantly outperforms this baseline, with average (over 8 datasets and two VLMs) improvements of +1.5% in accuracy, +2.6% for the worst 20% of classes, and +2.7% for the worst 20% of subpopulations** (see table 6). Notably, we achieve higher accuracy than this vanilla baseline for every setting. In additional experiments over 9 new datasets conducted during the rebuttal period, we see similar gains over this baseline: +1.8% in accuracy and +1.5% for the worst 20% of classes* (see table A in the response to Reviewer KwVV). In fact, we see similar gains to stronger, more recent baselines that also incorporate additional information beyond classnames: compared to each baseline, on average, our method yields gains of 1.3% and 1.7% in accuracy overall and for the worst 20% of classes respectively.\n\nThe reason why we infer attributes is to enrich the model\u2019s coverage of *all* instances within a class, as the classname embedding often inadequately covers atypical subpopulations. The larger gains for worst class and subpopulation metrics suggest our method indeed improves on the baseline by better covering challenging (usually atypical; see sec 3.1) instances, showing that including attributes is well-motivated and effective. **Our method also provides clear interpretability advantages**; both the standard method and most baselines have no or little interpretability, while we offer fine-grained and faithful interpretations for each inference.\n\n*The new datasets do not have attribute annotations, so we cannot report accuracy on the worst 20% of subpopulations, as a subpopulation consists of all instances within a class that share an attribute. \n\n**On computational cost**: Crucially, **we only infer attributes and embed subpopulation vectors once for any classification task**. The other extra computations are all very simple (e.g. computing the similarity to more vectors only involves the dot product), and importantly, they take far less time than encoding the test image, which is a necessary step for any zero-shot method. Thus, aside from a constant cost done once and a small number of very quick extra computations, **our method is nearly just as fast as the standard method** *per test image*. Moreover, our method improves accuracy, performance on atypical samples, and interpretability. Finally, we note that **our method does indeed improve as more attributes are incorporated**, even though the cost of adding attributes is minimal. Further, our method is unique in this regard: Sec. 5.4 shows how **baselines saturate or deteriorate as more attributes are added, while ours continues to improve**. Thus, (i) the added computational cost is very small (and zero asymptotically), and (ii) our method continues to improve with more attributes, so we believe the benefits of our method certainly outweigh the very small extra cost. \n\nTo summarize, we\u2019ve studied the requested baseline, in the original submission and once more in a new set of evaluations during the rebuttal. In both cases, we see significant gains from our method. Also, we\u2019ve explained how the added computational cost of our method is minimal. We hope these address your concerns, an if you feel as though they have, we\u2019d greatly appreciate it if you could raise your score to an accept. We\u2019d also be more than happy to answer any follow up questions if concerns linger. Thank you!"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700247747016,
+                "cdate": 1700247747016,
+                "tmdate": 1700247747016,
+                "mdate": 1700247747016,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "nL0MzFR9We",
+            "forum": "WqeRtP2T3R",
+            "replyto": "WqeRtP2T3R",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_NLHE"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_NLHE"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper further explores VLM's zero-shot capacity by introducing non-linear hyperplanes, specifically through k-nearest neighbors. The diverse neighbors are achieved by using attributes of sub-classes within each class. The idea of employing sub-classes to enhance the variance of decision boundaries aligns well with the nature of VLMs, especially considering that VLMs typically consist of LLMs with open word space. The reported results also demonstrate the improvements introduced by the proposed method."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "I think using diverse word attributes rather than limited words to represent recognition categories is a good idea. It well aligns with VLMs, showcasing the flexibility of VLMs compared to traditional one-vector based recognition protocol. The intuition why the author chose this route to address zero-shot with VLMs is clearly stated. The experiments also shows the validity of the method."
+                },
+                "weaknesses": {
+                    "value": "1) I think figure 4 is misleading. The idea is by using subclasses, the majority of close subclasses should be from the correct major class (correct me if I am wrong).  However, this figure does not show the two atypical classes have more close subclasses that make the two classes be classified to the correct class.\n2) I think the proposed method may not work on fine-grained classes, as the variance of each class gets smaller and smaller. \n3) The preparation of subclasses for each class may require even more effort than preparing hierarchical datasets or traditional attribute learning datasets."
+                },
+                "questions": {
+                    "value": "As above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698816142839,
+            "cdate": 1698816142839,
+            "tmdate": 1699636205080,
+            "mdate": 1699636205080,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "tgickEdzlm",
+                "forum": "WqeRtP2T3R",
+                "replyto": "nL0MzFR9We",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Clarifying fig 4, New results showing gains of our method on fine grained datasets, and Low cost of inferring attributes"
+                    },
+                    "comment": {
+                        "value": "Thank you very much for your feedback. We especially appreciate that you note how our method takes advantage of the complementary nature of LLMs and VLMs to tackle the problem of improving classification in the face of high intra-class diversity. We now address each of your concerns. We highlight that we conduct two additional experiments: (1) a large evaluation of 9 new datasets, (2) a time analysis of the added cost of our method. \n\n1. Your intuition is very close to correct. One added detail, as shown in figure 4, is that our consolidation method allows for an atypical subpopulation to be classified correctly even when it is far from most subpopulation embeddings for that class. This property is unique to our consolidation method: using a single vector (either by not including attributes or by averaging over attributes), a sample is penalized if it is far from most subpopulations, even if the subpopulation it belongs to happens to be very different from all other subpopulations (like the Arctic fox or Red wolf).  In figure 4, we use $k=1$, which means that a sample only needs to be close(st) to one subpopulation from its true class in order to be correctly classified. We use $k=1$ for simplicity in Figure 4, and discuss the choice of $k$ in depth in Sec 5.4. \n\n2. Thank you for pointing out our experiments warrant further investigation of finer-grained datasets. Based on your suggestion we ran extra experiments on 9 new datasets, which are nearly all fine-grained. Fortunately we find that our method still improves against all baselines consistently over datasets, with an average improvement of +1.3% over each baseline when using CLIP (see table A). Nonetheless, we will add a limitations section to discuss when our method may not be best suited (e.g. super fine-grained tasks with precise class names), at your suggestion.\n\n3. In practice, hierarchy or attribute labels are not available. Thus, one must infer them. Doing so manually is costly, and even prohibitively so when the number of classes grows, or when you consider as many axes of variation as we do. In contrast, our method is fully automatic, allowing for the attribution of dozens of classes along many axes of variation to be done in just tens of minutes. Specifically, we timed how long it took to generate LLM responses to all queries in our method over multiple datasets, and found that **on one GPU (no parallelism), our attribution takes roughly 18.5 seconds per class**.  Thus, attributing datasets with 30 classes takes only about 10 minutes, and this number can be sped up by parallelizing. Crucially, this is done only once per classification task. Therefore, the computational cost per test image to classify is nearly equivalent to standard zero-shot classification.\n\nFeel free to comment if there are any lingering questions. If you feel that we have addressed all your concerns (namely that our method is too costly computationally or that it may not work for finer grained datasets), we would be very grateful if you could increase your score. Thank you!"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700246885669,
+                "cdate": 1700246885669,
+                "tmdate": 1700247223687,
+                "mdate": 1700247223687,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "fjWIDVxfDG",
+            "forum": "WqeRtP2T3R",
+            "replyto": "WqeRtP2T3R",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper attempts to alleviate the issue of single class names being used in image classification where those classes can be in fact, broad and diverse - in many possible aspects, like state, appearance, sub-groups/species, etc.  \nThe authors argue that models do not have a mechanism for representing diversity within classes, and that models suffer from having to associate concepts/objects of potentially many subclasses or forms of objects in different state, under a single class.\n\nTo address this limitation of the models, the paper proposes a method that relies on querying an LLM for additional texts that could describe different variants of a class. Queries include prompting for possible attributes, subclasses, etc. (e.g. \u201cpear\u201d --> \u201cwhole pear\u201d, \u201cpear slices\u201d; \u201cwolf\u201d --> \u201cgray wolf\u201d, \u201cred wolf\u201d, etc.).  \nThen, the authors classify among all possible generated additional classes, averaging predictions from the selected number of top subclasses (e.g. red wolf) to the original base class (e.g. wolf). This way, they hope to better capture some form of granularity or diversity within each class.\n\nThe proposed method is relatively similar to CHiLS (Novack et al. (2023)) not specific to hierarchies, however, but considers more possible types of \u201csubclasses\u201d or extended \u201cclasses\u201d instead.\n\nThe paper contains experiments of the proposed method against baselines, such as using original classnames, and other relevant models, on a number of datasets that contain concepts that within classes are either hierarchical or appear in different states."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "- (S1) The paper contains experiments on relatively many datasets of different kinds. The datasets used cover different types of structure and relations between classes: hierarchies, classes with different states and attributes. That gives a better understanding of how the model\u2019s performance in wider range of scenarios. Although see W5\n    \n- (S2) From the technical point of view, the work has a sound and valid motivation (single class names as labels problematic for within class diversity)\n    \n- (S3) The approach proposed in the paper is technically simple and sound, does not seem to require modest extra computational resources. Although see W3."
+                },
+                "weaknesses": {
+                    "value": "- (W1) The performance improvement from the proposed approach is far from substantial. In many cases, the performance is almost equivalent to WaffleCLIP, which uses completely random text sequences.\n    \n- (W2) The motivation of the paper might not have much practical significance and the problem addressed appears to be somewhat artificial.  \n    The underlying issue behind the paper\u2019s motivation seems mostly related to how classes in those datasets are constructured/selected, their granularity, structure, and relations between them.  \n    Whether e.g. Big Ben is a clock, a building, or a tower, basically depends on the problem underlying problem that one intends to solve. Many datasets are not made to solve any practical problem but to facilitate many types of research in general. Therefore, the classes in those datasets are defined in a way that might be very broad, capture many possible sub-categories, or the granularity of which is not practically usable. Using an example from the paper, classifying an \u201carctic fox\u201d as a \u201cfox\u201d might marginally improve the accuracy numbers but is not necessarily a better output. Whether it is depends on the underlying problem one intends to solve. Similarly, would it necessarily be better for a classifier to predict tomato as a vegetable, not a fruit? Because the biological classification of a tomato is a fruit (a type of berry).  \n    The within-class \u201cdiversity\u201d that the paper attempts to capture seems to be mostly relevant for datasets where labels somewhat artificially capture many possible sub-categories just because they can technically be marked under the same name. But for any practical applications, the label space/names should be defined more meaningfully.  \n    Also, considering the point above (W1), given the difference in performance is only marginal between models, if that difference comes from the technical correctness on the labels (e.g. \u201carctic fox\u201d classified as a \u201cfox\u201d) that might necessarily mean that the model is more useful in practice. Also, see W5.\n    \n- (W3) Despite the approach being simple from the technical aspects (see S3), the model is dependent on the accuracy and structure of the LLM\u2019s outputs. This requires tailoring queries/prompts for a specific dataset or a set of datasets. \u00a0Potentially, they could require a lot of tuning. Even though the set of queries used in the paper is fixed, and appears to work on all datasets, these are queries/prompts that had to be tuned/selected to be somewhat \u201ccompatible\u201d with all datasets.\n    \n- (W4) The qualitative analysis (Figure 5, Appendix A) seems to consist of selected samples and likely does not represent the model\u2019s predictions across the whole dataset accurately.\n    \n- (W5) The method is evaluated only on datasets which (in this case explicitly) contain some forms of sub-populations, hierarchies, or significant differences across attributes. Although this is an important analysis, the question of whether the method is only usable in these kinds of datasets is open. Would the method still be usable for datasets that might, but not necessarily do contain (at least not explicitly) some form of sub-groups or diversity within classes (maybe ImageNet for example?). Or datasets where not much diversity is expected, e.g. StanfordCars dataset?"
+                },
+                "questions": {
+                    "value": "- (Q1) How exactly are the \u201cworst\u201d %x classes selected? Are they the same across all models or are they selected individually for each model? For Figures 6 (right) and 7, are they re-selected for every point (adding attributes, changing $k$ or $\\lambda$ or kept the same?\n    \n- (Q2) For the Breeds dataset, on which level of the hierarchy of the labels the model is trained on?\n    \n- (Q3) Is the image sample of a \u201cred wolf (in Figure 4) indeed a red wolf? Doing a quick search I am not so convinced that is what a red wolf looks like. Could it be a misclassified dog, for example? Do all other samples look similar to this one?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2649/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698852941325,
+            "cdate": 1698852941325,
+            "tmdate": 1699636204991,
+            "mdate": 1699636204991,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "E4a4U2pROh",
+                "forum": "WqeRtP2T3R",
+                "replyto": "fjWIDVxfDG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2649/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Clear advantages vs WaffleCLIP; Underperfoming on diverse instances is real world problem with precedent within the community"
+                    },
+                    "comment": {
+                        "value": "tldr: Per your suggestion (thx!), we conducted new experiments on 9 finer-grained datasets, including ImageNet and 4 of its variants. We observe gains for our method consistent with those seen in our original submission, suggesting that our method is not tuned to the original dataset suite and the prompts we used can be effective on new datasets with no tuning required. We hope this provides ample evidence demonstrating our method's performance gains over existing baselines.\n\nWe sincerely thank the reviewer for taking the time to really engage with our paper and offer so much feedback. We now address weaknesses and concerns one by one.\n\n(W1) First, we note that despite WaffleCLIP\u2019s simplicity, it is a recent and strong baseline. In all settings we study (hierarchical, states, real-world geographic diversity), we improve accuracy over WaffleCLIP. In fact, aside from GeoDe where there are fewer errors to correct, we improve accuracy by at least 0.9% for each setting (tables 1,2). These consistent gains also hold when using a different VLM (BLIP-2), where we improve by at least 0.8% for every setting aside from GeoDe (tables 7,8). These gains are consistent on each of the 8 datasets as well, as shown in table 9. **Averaging over all datasets and both VLMs, we improve accuracy compared to WaffleCLIP by 1.4%, with a larger gain of 2.6% and 2.4% for the worst 20% of classes and subpopulations respectively (see table 6)**.  We stress that these latter metrics (worst class/subpopulation) more closely reflect the core problem we seek to tackle, and see the larger gains there as encouraging evidence that our method improves upon the limitation it was designed to address (i.e. underperformance on atypically appearing instances). \n\nMoreover, **WaffleCLIP offers no interpretability, while we offer faithful and fine-grained explanations for each inference, for free** (Sec. 5.2). Similarly, overall, the reason why WaffleCLIP is effective is not well understood. In contrast, we make principled arguments as to why our method should work, and we support these arguments with extensive empirical evidence, such as notable gains for the least performant classes and subpopulations, and precise ablations (Sec. 5.3, 5.4). \n\nIn summary, while WaffleCLIP is surprisingly strong, our method is (i) consistently stronger, (ii) unambiguously more interpretable, and (iii) better understood with respect to why it works.\n\n(W2) Respectfully, we disagree that diversity within classes is an artificial problem. Even something as simple and well defined as a \u2018pear\u2019 can actually manifest in many visually distinct ways. Moreover, this is a problem with precedent, as there are numerous existing efforts within the AI community to ensure models work beyond typical instances. For example, the field of out-of-distribution (OOD) generalization focuses on improving performance where some aspects of test inputs, such as spurious correlations [1,2,3] or domains [4], are shifted compared to the training data. Many works have also focused on algorithmic fairness towards mitigating biases, which often consist of model\u2019s underperforming on instances that are less common / atypical (e.g. due to belonging to a demographic group underrepresented in the training data) [5]. In fact, our worst subpopulation/class metrics are inspired by the OOD community (e.g. \u2018worst group accuracy\u2019 is standard), and DollarStreet and GeoDe come from the fairness community, as they show diversity in images (resulting in harmful discrepancies in performance) is a naturally arising **real-world** problem. Notably, these datasets contain everyday objects whose labels are intuitive and unambiguous (that is, the class names are in no way designed to artificially capture many sub-categories). Many other benchmarks also exist to measure how classifiers will perform when encountering atypical data [6,7], suggesting this is a problem the scientific community deems important. \n\nNonetheless, we agree that it's important to verify that our method works generally, and not just for one set of attributed datasets curated to inspect accuracy along various axes of diversity. We explore this below. \n\n[1] Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization, https://arxiv.org/abs/1911.08731\n[2] WILDS: A Benchmark of in-the-Wild Distribution Shifts, https://arxiv.org/abs/2012.07421\n[3] Invariant Risk Minimization, https://arxiv.org/abs/1907.02893\n[4] In Search of Lost Domain Generalization, https://arxiv.org/abs/2007.01434\n[5] Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification, https://proceedings.mlr.press/v81/buolamwini18a.html\n[6] The Many Faces of Robustness: A Critical Analysis of Out-of-Distribution Generalization, https://arxiv.org/abs/2006.16241\n[7] ObjectNet: A large-scale bias-controlled dataset for pushing the limits of object recognition models, https://openreview.net/forum?id=SkgnRNHgIS"
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700245050804,
+                "cdate": 1700245050804,
+                "tmdate": 1700245050804,
+                "mdate": 1700245050804,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ogNIPa7Vn1",
+                "forum": "WqeRtP2T3R",
+                "replyto": "WW3RFR0ObQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to the rebuttal"
+                    },
+                    "comment": {
+                        "value": "I want to thank the authors for the extensive response!\n\nUnfortunately, I do not think the weaknesses (W1), and (W2) I described have been effectively addressed.\n\nWaffleCLIP is a dummy baseline that uses random texts.  \nI would consider it as a baseline of a form of a sanity check of proposed alternative methods, not some SOTA model that one tries to outperform by a percent or two. Because what would that tell us?\n\nI apologize if I was not precise enough with (W2) because my comment seems to be interpreted not exactly as I intended it to be - I did not mean to say that within-class diversity itself is not important or an artificial problem.\nRather, I meant to question using a setting of image classification datasets where class definitions or granularity is somewhat artificial and not defined to solve any particular underlying problem.\n\nI elaborated more in my initial comment, providing examples, but what is referred to in the paper as within-class \"diversity\" is in many datasets an artifact of how labels are selected.\nObjects/concepts share the same class only because they technically could be described with the same word or because of biological relations (which again, might be very different from how humans would describe them - tomato being a cherry), without considering the underlying problem such image classification would aim to solve."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700671395965,
+                "cdate": 1700671395965,
+                "tmdate": 1700671395965,
+                "mdate": 1700671395965,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "TMX9iAIC81",
+                "forum": "WqeRtP2T3R",
+                "replyto": "oF6n4U68Kh",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2649/Reviewer_KwVV"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Final confirmation"
+                    },
+                    "comment": {
+                        "value": "I just want to confirm (to both the Authors, AC, and other Reviewers) that I have indeed seen the added results.\n\nHowever, I do not believe that the above comments are to the point concerning the weaknesses I describe.\n\nAdditionally, I find the above characterization of WaffleCLIP and the meaning of it as a baseline, misleading.\nEven the WaffleCLIP paper refers to their method as a \"sanity-check\" for other methods.\nThe authors seem to miss the point of comparing to this kind of dummy/sanity-check baselines."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2649/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700732690274,
+                "cdate": 1700732690274,
+                "tmdate": 1700732690274,
+                "mdate": 1700732690274,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

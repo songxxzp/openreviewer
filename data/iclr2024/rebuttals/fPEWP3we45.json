@@ -1,0 +1,458 @@
+[
+    {
+        "title": "AED: Adaptable Error Detection for Few-shot Imitation Policy"
+    },
+    {
+        "review": {
+            "id": "KfvXRztVZO",
+            "forum": "fPEWP3we45",
+            "replyto": "fPEWP3we45",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_upjt"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_upjt"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies a novel problem: detecting behavior errors online in novel environments and name it adaptable error detection (AED). The problem setting comes with several challenges, including how to deal with unseen objects/backgrounds, subtle behavior differences between success and failure as well as detecting failure during policy execution. \n\nThe authors propose to learn pattern flow in the policy\u2019s representation space and design novel architectures, such as a pattern extractor to extract discriminative patterns of different rollouts. It also applies several novel training tricks: rollout augmentation and temporal-aware triplet loss to stabilize training.\n\nBesides the contribution of a new method, this paper also designs new challenging FSI tasks to evaluate AED methods and baselines."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- Studies an interesting problem that is essential for the deployment of robotic learning systems in safety-critical settings. \n- The proposed method is novel and achieves superior performance compared to some error detection baselines.\n- The designed tasks and paired environments (base and novel) will be beneficial for the community to study policy generalization and benchmark deployment performance."
+                },
+                "weaknesses": {
+                    "value": "- Baselines are not recent and strong enough for meaningful comparisons. All the baselines do not have access to the policy network while the proposed method utilizes it. There are a couple of recent works in error detection in robot manipulation, including MoMaRT [1], ThriftyDAgger [2], and some model-based approaches [3] worth comparing.\n\n- Since both the policy and error detector are conditioned on demonstrations, it\u2019s worth seeing the performance of the error detector under different demonstration qualities. When deploying a human-robot interactive system, we should be able to separate out human error and robot error.\n\n- In the visualizations, the failure is detected after the fact (5 frames later), which is undesirable if the damage is already happened. This is expected as the design doesn\u2019t include a world model to predict possible failures. I hope the authors can discuss this in more detail and point out the intended application of the proposed error detector.\n\n[1] Wong et.al. Error-Aware Imitation Learning from Teleoperation Data for Mobile Manipulation\n\n[2] Hoque et.al. ThriftyDAgger: Budget-Aware Novelty and Risk Gating for Interactive Imitation Learning\n\n[3] Liu et.al. Model-Based Runtime Monitoring with Interactive Imitation Learning"
+                },
+                "questions": {
+                    "value": "How does the method compare with recent papers, such as MoMaRT, ThrifyDAgger, etc.?\n\nHow does the PRAUC change with different demonstration qualities?\n\nWhat\u2019s the use case of the proposed system if it only detects failure after the fact?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Reviewer_upjt"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4408/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698645445829,
+            "cdate": 1698645445829,
+            "tmdate": 1699636415135,
+            "mdate": 1699636415135,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "2IfjJWH9G7",
+                "forum": "fPEWP3we45",
+                "replyto": "KfvXRztVZO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer upjt's review [1/2]"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer upjt,\n\nWe sincerely appreciate your insightful comments and positive assessments. We now address the questions and issues you raised.\n\n*The issues listed in the weaknesses and questions are denoted as Wx and Qx, respectively, where x is the issue's index.*\n\n---\n\n\n**What\u2019s the use case of the proposed system if it only detects failure after the fact? (W3, Q3)**\n\nThank you for this question.\n\nThe fundamental assumption of our work is that  we are monitoring the few-shot imitation (FSI) policies, and they usually have the following settings:\n\n- **Training and testing environments are disjoint**. (base env. vs. novel env.)\n- **No exploration** before inference in novel environments.\n- **The expert only provides demonstrations** in the novel environment but may not be around the robot when it executes.\n\nThese settings make our AED methods unable to get the information of human assistance (e.g., intervention, labeling new data) or world dynamic model as used in the references the reviewer listed. A practical scenario of our AED study is provided at the end of our response.\n\nMoreover, we are dealing with robot manipulation tasks, where the robot interacts closely with objects. Therefore, in our definition, an error (failure) occurs (right) after a failed interaction. From this moment, the current observation is inconsistent with demonstrations.\n\nIn addition, to our knowledge, most existing studies related to failure detection on robot manipulation also detect the error after the fact, e.g., the reference [1] the reviewer listed. \n\nWe are not saying that our setting is better than the one in [3], but the settings, targeted policies, and scenarios between ours and [3] are different. Thus, in our AED task, the goal is to detect the error as early as possible (after the fact). And our PrObe detects errors at the most accurate timing.\n\nRegarding the issue of delaying 5 frames, the camera collects the observations with fps=20. It means that our PrObe only causes a delay less than 0.25 seconds, which should be acceptable in practice. From our demo video, our PrObe can detect the error before the mug falls on the table. We believe the AED problem and proposed PrObe suit many real-world situations.\n\n\n**A practical scenario of our AED problem:**\n\nAn intelligent robot (containing policy and AED method) is trained in the factory with daily life tasks. Then, it is sold to the customer's house to perform those tasks. The customer will provide few demonstrations for the robot but may not stay around the robot for the whole time. The robot itself should be able to recognize if it performs the task correctly or not. Also, it should terminate the policy and wait for expert's help or apply the recovery policy (in our appendix) when it detects a behavior mismatch. Note that in this case, the expert is the customer, who can provide demonstrations but may not be able to label corrected actions for the robot.\n\n---\n\n**How does the method compare with recent papers, such as MoMaRT, ThrifyDAgger, etc.? (W1, Q1)**\n\nThank you for recommending these references.\n\nAs explained in Q3, in our setting, we don\u2019t have access to human assistance (intervention and newly labeled data) and environmental exploration before inference, which are the natural limits of the FSI literature. Therefore, the works that need human-in-the-loop (reference [2]) or the world model (reference [3]) cannot be compared with our work.\n\nThe reference [1] is already included in our references. However, as we pointed out in the Introduction, these reconstruction-based methods (one-class classification) suffer when dealing with our problem. \n\nThey monitor the policies based on the *reconstruction errors of observations*. However, they will raise errors for **every frame in the novel environments** since they did not see them before. We have tried to add [1] as one of our baselines, but we cannot find appropriate thresholds since it yields large errors no matter if the frame is normal or an error in the novel environments.\n\nMoreover, we actually build our baselines **with various attributes**, including policy dependent, OCC (trained with only normal rollouts), temporal information, and demonstration-conditioned. Please find them in Appendix Table 3. Besides, there are also powerful models in our baselines. For example, DCTED (2021) is a transformer model, which should be more complicated than cVAE used in [1].\n\nHowever, we are grateful for receiving the references related to our work. We think summarizing and introducing these interactive error detection works is valuable, even though our settings are different. **We will include them in our final paper**.\n\nPlease let us know if there is any other paper the reviewer thinks is related to us or fits our setting and should be compared.\n\nThank you again for suggesting the references.\n\n---\n\nPlease find the rest of our response below."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699712271694,
+                "cdate": 1699712271694,
+                "tmdate": 1699712271694,
+                "mdate": 1699712271694,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "pwyVSUY1Hk",
+                "forum": "fPEWP3we45",
+                "replyto": "BhdkHCVIMJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_upjt"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_upjt"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the new experimental results! This is insightful and addresses my concerns!"
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700111040410,
+                "cdate": 1700111040410,
+                "tmdate": 1700111040410,
+                "mdate": 1700111040410,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "L01ZFJlVej",
+            "forum": "fPEWP3we45",
+            "replyto": "fPEWP3we45",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_BbBE"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_BbBE"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work formulates the adaptable error detection (AED) problem for monitoring few-shot imitation (FSI) policy behaviors. The main goal is to have a robust system that can notify operators when FSI policies are inconsistent with the intent of demonstrations. To address the three challenges while achieving the main goal, this work proposes Pattern Observer (PrObe) parse the state patterns in policy feature representations. Experiments demonstrated that PrObe outperforms strong baselines in seven complex multi-stage FSI tasks."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1.\tThis work first emphasizes the importance of the adaptable error detection (AED) problem in few-shot imitation. Then, it indicates the previous error detection methods are infeasible in the three challenges of AED: (1) working in novel environments, (2) no impulse signal when errors occur, and (3) it requires online detection. \n\n2.\tPattern Observer (PrObe) is then proposed to address the three challenges in AED. They first compute the policy feature embeddings for the successful and failed rollout frames. Then, PrObe uses an extractor to parse patterns in the policy features. Next, PrObe leverages existing temporal information by computing the pattern flow over time. Finally, PrObe distinguishes the feature source by comparing the fusion of pattern flow and transformed task embeddings. \n\n3.\tThis work designed challenging multi-stage FSI tasks to validate PrObe\u2019s effectiveness. The experiments demonstrated that PrObe outperforms baselines significantly."
+                },
+                "weaknesses": {
+                    "value": "1.\tAs discussed in related work, adaptable error detection (AED) is more challenging than few-shot anomaly detection (FSAD), and previous error detection methods are infeasible for AED. After reading the introduction, I understand that the main goal of AED is to monitor FSI policies and report their behavior errors. PrObe is proposed to address the challenges of AED. However, sections 4 and 5 are relatively not well connected to each other. If Figure 2 describes the whole framework of this paper, which part does PrObe contribute to? In AED training of AED inference? What is the relationship between equations (1) (2) and (3)?"
+                },
+                "questions": {
+                    "value": "1.\tRegarding the rollout augmentation (second paragraph of section 5.1), the authors iterate each frame from sampled agent rollouts and randomly apply the following operations: keep, drop, swap, and copy, with probability 0.3, 0.3, 0.2, and 0.2.  Is there any specific reason for choosing the four operations with the mentioned probabilities?\n\n2.\tIf Figure 2 describes the whole framework of this paper, which part does PrObe contribute to? In AED training of AED inference? What is the relationship between equations (1) (2) and (3)?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4408/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698652247295,
+            "cdate": 1698652247295,
+            "tmdate": 1699636414823,
+            "mdate": 1699636414823,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "99mgeLl5hO",
+                "forum": "fPEWP3we45",
+                "replyto": "L01ZFJlVej",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Dear Reviewer BbBE,\n\nWe sincerely appreciate your insightful comments. We now address the questions and issues you raised.\n\n*The issues listed in the weaknesses and questions are denoted as Wx and Qx, respectively, where x is the issue's index.*\n\n---\n\n**Which parts of the framework in Figure 2 do our PrObe contribute to? (W1, Q2)**\n\nThanks for the question. \n\nOur PrObe is an AED method (i.e., adaptable error detector, denoted as $\\phi$ in Figure 2), which involves the phases of AED training and AED inference.\n\nThe framework of our AED problem contains three phases:\n- **Policy training phase:** The few-shot imitation policy $\\pi$  first trains on the base environments. \n- **AED training phase:** The AED methods also train on the base environments. In this phase, some methods, e.g., our PrObe, might leverage the knowledge from the trained policy.\n- **AED inference phase:** The trained policy $\\pi$ performs the FSI tasks in novel environments. AED methods aim to monitor the policy and report timely once the policy behavior error occurs, i.e., the policy rollout is inconsistent with demonstrations provided by the expert in the novel environments. \n\nThus, all AED methods involve the last two phases of Figure 2; however, our PrObe can tackle the challenging AED problem with superior performance. We will make this more clear in the revised version. \n\nBesides, please note that the FSI tasks are semantically similar in the base and novel environments (e.g., both are pick&place tasks). However, the interactable objects and backgrounds are disjoint between them. \n\n**A practical scenario of our AED problem:**\n\nAn intelligent robot (containing policy and AED method) is trained in the factory with daily life tasks. Then, it is sold to the customer's house to perform those tasks. The customer will provide few demonstrations for the robot but may not stay around the robot for the whole time. The robot itself should be able to recognize if it performs the task correctly or not. Also, it should terminate the policy and wait for expert's help or apply the recovery policy (in our appendix) when it detects a behavior mismatch.\n\n---\n\n**What's the relationship between Eq. 1, 2 and 3? (W1, Q2)**\n\nThanks for the question. \n\nEq. 1 and 2 are the formal representations of how the AED method predicts the error status and how they will be evaluated.\n\n- Eq. 1: The AED method $\\phi$ takes rollout history (observations) $h$ and few demonstrations $\\mathcal{D}^{n}$ as inputs and then predicts the error status $\\hat{y}$.\n- Eq. 2: The AED method is evaluated by its prediction $\\hat{y}$ and ground-truth $y$ across all novel environments.\n\nEq. 3 is a new objective we proposed to train the PrObe, which is a temporal-aware variant of triplet loss. The complete objectives of PrObe can be found in Appendix Section B.\n\n---\n\n**Why do we choose these operations and probabilities in our designed rollout augmentation (RA)? (Q1)**\n\nGood question. \n\nAs mentioned in the main paper's Section 5.1, the four operations (keep, drop, copy, and swap) can inject **different behaviors** into the pre-collected rollouts during the AED training phase.\n\n- **Dropping** consecutive frames can *speed up* the movements.\n- **Copying** consecutive frames can *slow down* the movements.\n- **Swapping** consecutive frames can provide *unsmooth* movements.\n\nMoreover, the copy operation could be replaced by the interpolation operation. We have tested this replacement, but no significant performance difference is observed. Meanwhile, the interpolation operation is very time-consuming. Thus, we still apply the four operations above.\n\nRegarding determining their probabilities (0.3, 0.3, 0.2, 0.2), we observe that the policy usually *behaves faster* than the pre-collected rollouts. Thus, we would like to have a higher chance of generating speeded-up rollouts during training. \n\nNevertheless, the probabilities can be easily adjusted to cover more diverse rollout behaviors, which may benefit the AED training. If the reviewer wants to try any combination of the probabilities, we would love to verify it. \n\nHowever, the AED methods' performance is not sensitive to the probability setting, as we tested before.\n\n---\n\nPlease let us know if our responses have addressed your questions and issues. \n\nBesides, feel free to point out if there is any other issue or topic you are interested in or think will make our work more convincing.\nWe look forward to having active and insightful discussions with you!\n\nThanks again for providing valuable comments."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699692502594,
+                "cdate": 1699692502594,
+                "tmdate": 1699693415482,
+                "mdate": 1699693415482,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "g81bYJCNUL",
+            "forum": "fPEWP3we45",
+            "replyto": "fPEWP3we45",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a problem called AED to monitor few-shot imitation (FSI) learning policies. It also proposes a solution for this problem called Probe that utilizes FSI policy features."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. AED is a fairly novel problem\n2. A variety of experiments across the newly created FSI tasks."
+                },
+                "weaknesses": {
+                    "value": "1. It is very hard to read the paper. The prose could use significant improvements. There are also too many abbreviations in the paper making it hard to follow the content. What does \"No impulse signals in behavior errors\" mean? The problem and its challenges itself are unclear.\n2. The papers makes many claims without supporting evidence, e.g. \"We emphasize that addressing AED is as critical as enhancing FSI policies\u2019 performance\". \n3. As far as I understand, the term \"vFSAD\" refers to OOD detection in time-series data which includes a large quantity of work that has not been compared with or even mentioned. Example: Kaur et al. \"CODiT: Conformal Out-of-Distribution Detection in Time-Series Data.\" \n4. The related work subtitles of \"Policy\" and \"Evaluation tasks\" are not descriptive and seemingly unrelated to the actual content.\n5. There is repeated, unnecessary emphasis on the importance of the task: \"FSAD is an innovative research topic\", \"FSI is a framework worthy of attention\".\n6. The stated aim of the experiments is confusing -- do you aim to check if detection is useful or if detection works?"
+                },
+                "questions": {
+                    "value": "Please see weaknesses"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4408/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698845420407,
+            "cdate": 1698845420407,
+            "tmdate": 1700674070368,
+            "mdate": 1700674070368,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "fMWXHytIpb",
+                "forum": "fPEWP3we45",
+                "replyto": "g81bYJCNUL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Zod3's review [1/2]"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer Zod3,\n\nWe respectfully disagree with your assessment. \n\nWe will address the raised concerns now, and look forward to having a constructive conversation with you.\n\n*The issues listed in the weaknesses and questions are denoted as Wx and Qx, respectively, where x is the issue's index.*\n\n---\n\n**The problem and its challenges itself are unclear. What does \"No impulse signals in behavior errors\" mean? (W1)**\n\nWe propose a new problem named adaptable error detection (AED), which aims to detect the behavior inconsistency between the few-shot imitation policy rollouts and demonstrations.\n\nThe proposed AED contains three challenges, which makes it more challenging than an existing video few-shot anomaly detection problem. The second challenge, \u201cno impulse signals in behavior errors,\u201d means no significant difference between the consecutive frames when the error happens. We also provide two cases with detailed visual explanations in Figure 1. \n\nIt is worth mentioning that all other reviewers agree **our proposed AED problem is crucial** for robot learning when considering the safety perspective.\n\n---\n\n**Presentation Issues (W1, W5)**\n\nWe are perplexed about these issues. \n\nFor W1, there are only three new abbreviations in our paper, i.e., AED for adaptable error detection, PrObe for Pattern Observer, and vFSAD for video few-shot anomaly detection.\n\nAll remaining abbreviations are well-known or the method names from existing literature. For example, OCC for one-class classification, OOD for out-of-distribution, or DC for demonstration-conditioned. Also, we usually write the full name of the abbreviation at the beginning of each section if it does not frequently appear.\n\nFor W5, we do not find any inappropriateness when emphasizing the importance of our work since we propose a new problem in this paper. Most importantly, the two cases the reviewer mentioned are not even our proposed problem. Instead, they are the two problems related to us. We state the fact that they are relatively new and have drawn the researcher's attention recently.\n\nAt last, we want to highlight that we got >= 3 presentation scores from all other reviewers. We would appreciate it if the reviewer could point out which parts of the paper are unclear so that we can further improve it.\n\n---\n\n**The papers make many claims without supporting evidence, e.g. \"We emphasize that addressing AED is as critical as enhancing FSI policies\u2019 performance\". (W2)**\n\nIt is the motivation of our work, which we spent **more than 13 lines** (first two paragraphs of Introduction) to describe the situation that the few-shot imitation policies may provoke damage when applying them to real-world scenarios. Thus, we should also consider promoting their ability for safety executions rather than the performance of their own tasks (e.g., manipulation tasks). \n\nWe believe this motivation is clearly presented, which all other reviewers recognize.\n\nWe would appreciate it if the reviewer could point out other unsupported claims or motivations we made in the paper. We would love to explain or improve it.\n\n---\n\n**Works related to OOD detection in time-series data should be compared. (W3)**\n\nThank you for pointing out this question.\n\nThe fundamental assumption of our work is that we are monitoring the few-shot imitation (FSI) policies, and they usually have the following settings:\n\n- **Training and testing environments are disjoint**. (base env. vs. novel env.)\n- **No exploration before inference** in novel environments.\n- **The expert only provides demonstrations** in the novel environment but may not be around the robot when it executes.\n\nThus, the traditional methods on OOD detection in time-series data are unavailable. In our case, the error detector works in an unseen environment. And we only have few demonstrations in the environment which makes it hard to compute those p-values in the reference [1] or other information in the frequency space. \n\nMoreover, the OOD samples defined in our work is the inconsistency between the policy rollout and demonstrations, which have two time-series. The OOD samples can be only detected by comparing these two video streams rather than simply computed on any one of them.\n\nThe vFSAD problem is the most related problem we can find. But our problem raises more challenges than the vFSAD problem, as we stated in the Introduction.\n\nPlease let us know if there is any other paper the reviewer thinks is related to us or fits our setting and should be compared.\n\nThank you again for suggesting the reference.\n\n---\n\nPlease find the rest of our response below."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699725708143,
+                "cdate": 1699725708143,
+                "tmdate": 1699725708143,
+                "mdate": 1699725708143,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "wFwIxzHZhg",
+                "forum": "fPEWP3we45",
+                "replyto": "g81bYJCNUL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Additional clarification on presentation issues"
+                    },
+                    "comment": {
+                        "value": "As the authors requested, here are just a few issues with the writing at the start of the paper that made it hard for the reviewer to understand the paper. I've provided rewritten statements or rewritten statements phrased as questions if I was not sure how to rephrase a sentence. \n\n> adjacency frames \n\n--> \"adjacent frames\"\n\n> Online detection (lacking global temporal information) \n\n--> do you mean \"Online detection has to take place without any information about the timestamp of the particular state\"?\n\n> a robot solves a set of everyday missions by giving a few demonstrations from the owner \n\n--> \"a robot solves a set of everyday tasks given few demonstrations of performing these tasks\". Your original sentence made it unclear if the robot provides the owner of the robot with demos or if the robot is given demos.\n\n> task misunderstanding [Figure 1]\n\n--> I am not sure what this image even represents. Is the agent doing the opposite of the expert demonstration? \n\n> ... learning in policy features also has additional knowledge related to FSI tasks\n\n--> learning policy features provides additional knowledge\n\n> (1) AED monitors the policy in novel environments whose normal states are not seen during training. Although vFSAD\nalso monitors unseen videos, the anomalies they monitor are objects, which in AED are policy behaviors. (2) Unlike the anomaly in vFSAD raises a notable change in the perception field (e.g., a cyclist suddenly appearing on the sidewalk (Mahadevan et al., 2010)), no impulse signals appear when behavior errors occur. Either (2-a) minor visual difference or (2-b) task misunderstanding is hard to recognize through adjacency rollout frames. (3) AED requires online detection to terminate\nthe policy before causing disasters, lacking global temporal information\n\n--> It is unclear how a problem (AED or vFSAD) \"does\" anything. These words are used without any explanation: \"impulse signals\", \"global temporal information\". \n\nBut, here is my attempt to rephrase your paragraph: \"(1) In the AED problem, unlike the vFSAD problem, novel anomalies are actions performed by a policy rather than objects that appear in a video. (2) The observed changes are subtle in the AED problem unlike vFSAD. (3) The AED problem, unlike vFSAD which detects in anomalies in videos that have already been recorded, does not have any information from the future and hence is more challenging.\" \n\n> unvanquishable obstacles\n\n--> challenging obstacles\n\n> ... to demonstrate the practice of the proposed AED problem\n\n--> ... to demonstrate potential next steps after the AED problem is addressed.\n\n>  the community explores the paradigm for policy learning ...\n\n--> the wider community has explored various solutions for learning from demonstrations such as ...\n\n> Notably, they either assume the agent and expert are the same or explicitly learn an action mapping\n\n--> I am not sure what this could mean.\n\n> MoMaRT forms a more challenging task using a mobile robot\n\n---> MoMaRT tackles a more challenging mobile robot task, namely ...\n\n> demonstrations are length-variant\n\n--> demonstrations vary in length\n\n> Developing a policy to solve the FSI problem and simultaneously tackle these challenges is indispensable\n\n--> indispensable to who? Perhaps you mean \"Developing a policy to solve the FSI problem and simultaneously tackle these challenges is difficult but necessary for human-robot collaboration\"\n\n> After receiving the rollout history h, the feature encoder extracts the history features f_h. Meanwhile, the feature encoder also extracts the demonstration features. Then, the task-embedding network computes the task-embedding f_\u03b6.\n\n--> Is f_h the same as f_\u03b6. What is f even? A function is usually defined by a domain and a codomain before being used. \n\n> an adaptable error detector \u03d5 \n\n--> again, no definition for \u03d5 \n\n> \u03d5 predicts the categorical probability y of the behavior mode for the lastest state in h\n\n--> I am not sure what the behavior mode refers to. Also, \"lastest state\" --> \"last state\"\n\n> The task-embedding network is expected to handle length-variant sequences by padding frames\n\n--> The task-embedding network is expected to handle input sequences of varying length with padding to a large prefixed length.\n\n> Our main experiment examines whether the AED methods can accurately report behavior errors when seeing the policy rollouts.\n\n--> Our main experiment examines whether the method aimed at solving the AED problem can accurately report behavior errors when provided policy rollouts.\n\nI am happy to help in identifying other statements that could use improvement but believe the above few represent a good starting point."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699809247849,
+                "cdate": 1699809247849,
+                "tmdate": 1699809648251,
+                "mdate": 1699809648251,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "aEiMGNDdzw",
+                "forum": "fPEWP3we45",
+                "replyto": "g81bYJCNUL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Reviewer_Zod3"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "My concerns beyond the writing have been addressed by the authors response and my (fifth!) rereading of the paper. Perhaps my initial rating was a bit harsh, and hence, I've amended my rating to a 5 (although I am leaning towards 3). The problem is novel. The FSI tasks to evaluate Probe are comprehensive. But, since I believe that the writing needs a big update to be suitable for ICLR (and that has not been done so far by the authors), I am not recommending an accept considering the significant effort required by anyone to parse the first half (before experiments) of the paper."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700674130487,
+                "cdate": 1700674130487,
+                "tmdate": 1700674502401,
+                "mdate": 1700674502401,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "yx6PNJyYdI",
+                "forum": "fPEWP3we45",
+                "replyto": "g81bYJCNUL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4408/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer Zod3's comment"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer Zod3,\n\nThank you for the valuable feedback and your time in reviewing our paper.\n\nFirst, we sincerely appreciate your updated score and positive feedback on our work (related to the problem setting, method, and evaluation).\n\nBesides, we agree that improving paper writing can strengthen our work and make it easier for all readers to follow.\nThus, we are thankful for your writing suggestions in our earlier conversations.\n\nTo reflect our determination to continuously improve our paper writing, we have considered most of your suggestions and updated our paper. Please check the updated PDF (*modified parts are marked as blue*). We keep some parts as they are since we need more time to rephrase the paragraphs. But we will carefully inspect the whole paper and continually improve it.\n\nHence, if the updated PDF eases some doubts about paper writing and you recognize our problem, method, and evaluation, Please consider further updating your evaluation. \n\nWe will deeply appreciate it and try our best to address this remaining concern.\n\nThank you again for your valuable time to review our work and your active participation in the discussion."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4408/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700722930517,
+                "cdate": 1700722930517,
+                "tmdate": 1700740494599,
+                "mdate": 1700740494599,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

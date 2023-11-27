@@ -1,0 +1,445 @@
+[
+    {
+        "title": "PRES: Toward Scalable Memory-Based Dynamic Graph Neural Networks"
+    },
+    {
+        "review": {
+            "id": "VKcl4CjTIQ",
+            "forum": "gjXor87Xfy",
+            "replyto": "gjXor87Xfy",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2962/Reviewer_pqbr"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2962/Reviewer_pqbr"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper aims to offer a scalable training method for Memory-Based Dynamic Graph Neural Networks (MDGNNs) by mitigating the temporal discontinuity issue, thus training MDGNNs with large temporal batch sizes. It consists of two main contributions: 1) conducting a theoretical study on the impact of temporal batch size on the convergence of MDGNN training, and 2) proposing PRES based on the theoretical study, an iterative prediction-correction scheme combined with a memory coherence learning objective to mitigate the effect of temporal discontinuity. The evaluation shows that the proposed approach enables up to 4X larger temporal batch sizes and achieves up to 3.4X speedup during MDGNN training."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "+ It targets an emerging and important GNN, MDGNNs, and the proposed designs generally make sense. \n+ The problem definition is easy-to-follow.\n+ The introduced concept of memory coherence is interesting.\n+ The code is publicly available."
+                },
+                "weaknesses": {
+                    "value": "- The trained graphs seem small. It is unclear how PRES performs on large-scale graphs.\n- No absolute execution time is reported.\n- It is tested on four GPUs. Its scalability to multi-nodes (with more GPUs) is somewhat unclear.\n- In many cases, PRES still sacrifices some precision for performance gains."
+                },
+                "questions": {
+                    "value": "Overall, this is a solid study with clear innovations. The theoretical study on the impact of temporal batch size on the convergence of MDGNN training is extensive and helpful. My major concerns focus on the evaluation aspects. It would be extremely helpful if the authors could offer more information about these questions:\n\n1. PRES is mainly evaluated on four graph datasets (Reddit, Wiki, Mooc, and LastFM). It seems these graphs are not very large with around 1K to 10K vertices and 400K to 1.3M edges. It would be helpful to justify that these graphs are large enough or PRES\u2019s performance is not affected by the graph size.\n\n2. It would be helpful to report the absolute execution time as well rather than relative speedup only.\n\n3. It would be helpful to discuss if this method can be extended to multi-nodes with more GPUs.\n\n4. It seems Table 1 shows that PRES still sacrifices some precision for performance gains in many cases. Please correct me if I have any misunderstanding here."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2962/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698722421508,
+            "cdate": 1698722421508,
+            "tmdate": 1699636239998,
+            "mdate": 1699636239998,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "7xenKbpryt",
+                "forum": "gjXor87Xfy",
+                "replyto": "VKcl4CjTIQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response 1"
+                    },
+                    "comment": {
+                        "value": "Thank you for your detailed feedback and comments. Based on your feedback, we have revised the paper and would like to address and clarify your concerns as follows:\n\n**Q1.** PRES is mainly evaluated on four graph datasets (Reddit, Wiki, Mooc, and LastFM). It seems these graphs are not very large with around 1K to 10K vertices and 400K to 1.3M edges. It would be helpful to justify that these graphs are large enough or PRES\u2019s performance is not affected by the graph size.\n\n- MDGNN primarily employs a link prediction task, which makes dataset size mostly dependent on the number of events rather than vertices. The datasets and baselines used in our empirical study adhere to the standard practices within the MDGNN field (e.g., [1][2]).\n- The analysis and methods presented in the paper primarily focus on the size of the temporal batch. They are independent of the size of the dataset. As a result, they are applicable to datasets of any scale.\n- We have included an additional dataset, GDELT, containing approximately 17k vertices and 2 million events in the main experiment (page 8). The results from this dataset align with our predictions and expectations.\n\n| GDELT | TGN | JODIE | APAN |\n| --- | --- | --- | --- |\n| without PRES | 96.8%, 50 Epoches, 1325 Second/Epoch | 95.1%,  50 Epoches, 1123 Second/Epoch | 96.7%,   50 Epoches, 1215 Second/Epoch |\n| with PRES | 96.0%,   50 Epoches, , 490 Second/Epoch,  | 94.3%,  50 Epoches, 401 Second/Epoch | 96.0%,  50 Epoches, 506 Second/Epoch |\n\n**Q2. It would be helpful to report the absolute execution time as well rather than relative speedup only.**\n\n- Thank you for the suggestions. We have included absolute execution time in the revised version (Table 1 Page 8). The absolute execution time reported aligns with the value of the observed speed-up.\n\n**Q3. It would be helpful to discuss if this method can be extended to multi-nodes with more GPUs.**\n\n- Our method and analysis apply to the temporal batch size of MDGNN, which can be viewed as the global batch size in distributed deep neural network training. Therefore, our method can naturally be applied in a multi-node setting to enable a larger \"temporal (global) batch size\" (data parallelism) and better leverage the abundant computational resources available in such configurations.\n- It is worth noting that in the current state, MDGNN struggles to fully harness the abundant computational resources offered in a multi-node setup, due to the limited temporal batch size. Addressing this limitation forms a central motivation behind our work, and we aspire to enhance MDGNN's efficiency in capitalizing on computational resources in the future.\n\n**W4.  It seems Table 1 shows that PRES still sacrifices some precision for performance gains in many cases. Please correct me if I have any misunderstanding here.**\n\n- We want to clarify that the slight drop in model accuracy shown in Table 1 is very small, around 1%. This trade-off between making the training process faster and maintaining high accuracy is quite beneficial, especially during the phase when developers are experimenting with different settings for their models (like trying different model types or regularization techniques). When we achieve a speedup of around 2 to 3 times, it significantly speeds up the development process, saving a lot of time and possibly money if we're using cloud services. This speed boost allows developers to try out more configurations and methods, which can help them find the best settings and make up for the tiny accuracy loss.\n- It's important to note that the broader community also values training efficiency, as seen in various studies that explore methods to improve efficiency even if it means a small drop in accuracy (like the line of research on using staleness in training [3]).\n\nThank you once more for the invaluable insights. We hope that our response has addressed your concerns and provided clarifications that further emphasize the significance and contributions of our work.  \n\n[1] Zhang, Yao, et al. \"TIGER: Temporal Interaction Graph Embedding with Restarts.\"\u00a0*Proceedings of the ACM Web Conference 2023*. 2023.\n\n[2] Emanuele Rossi, Ben Chamberlain, Fabrizio Frasca, Davide Eynard, Federico Monti, and Michael Bronstein. Temporal Graph Networks for Deep Learning on Dynamic Graphs. In Proceedings of International Conference on Learning Representations, 2021\n\n[3] Wan, Cheng, et al. \"PipeGCN: Efficient Full-Graph Training of Graph Convolutional Networks with Pipelined Feature Communication.\"\u00a0*International Conference on Learning Representations*. 2021."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700120135826,
+                "cdate": 1700120135826,
+                "tmdate": 1700120135826,
+                "mdate": 1700120135826,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "AKVQc7VF8W",
+                "forum": "gjXor87Xfy",
+                "replyto": "VKcl4CjTIQ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you again for the feedback on our paper. We hope that our responses have addressed your inquiries and concerns. If this is not the case, please inform us and we would be glad to engage in further discussion."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700397045536,
+                "cdate": 1700397045536,
+                "tmdate": 1700397045536,
+                "mdate": 1700397045536,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "QaRu8BOiUt",
+                "forum": "gjXor87Xfy",
+                "replyto": "AKVQc7VF8W",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_pqbr"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_pqbr"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I sincerely appreciate the authors' careful response to my questions. Most of my questions are addressed. However, the absolute execution time somewhat confirmed my concern about the problem size. In addition, after reading another review, it is difficult for me to champion this paper. I want to maintain my score."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700634101815,
+                "cdate": 1700634101815,
+                "tmdate": 1700634101815,
+                "mdate": 1700634101815,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "e3DXJynxkS",
+            "forum": "gjXor87Xfy",
+            "replyto": "gjXor87Xfy",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work conducts a theoretical study on the impact of the temporal batch size in MDGNN training. This shows that there can be a significant gradient variance using a small temporal batch, which in turn sheds light on an unexpected benefit of large batch sizes. Next, the authors define memory coherence, which represents the similarity of gradient directions within a temporal batch. Memory coherence is then used to model the upper boundary of gradient. \nWith these theoretical insights, the authors present PRES with two main components: 1) iterative prediction-correction scheme 2) memory coherence smoothing. The former uses a GMM (updated with MLE) to predict newest memory states and fuses it with the calculated memory state to obtain the final \u2018corrected\u2019 state. The latter uses a new learning objective to promote larger memory coherence. \nUsing PRES, the authors were able to increase the temporal batch size without compromising overall accuracy."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "-\tThe authors provide theoretical results on the influence of temporal batch size on MDGNN training.\n-\tWith memory coherence, the authors effectively define new methods to compensate for the accuracy drop of naively increasing the temporal batch size."
+                },
+                "weaknesses": {
+                    "value": "- The tradeoff of improved speed at the cost of lower accuracy does not seem to be appealing.\n- Comparison with prior work on increasing temporal batch size is insufficient. \n-\tIn a similar manner, there are only a small number of baselines in the experimental results. \n-\tThe specific results of a dataset (LASTFM) is excluded."
+                },
+                "questions": {
+                    "value": "The paper is overall well written. The introduction on MDGNN was easy to follow. Insights from theoretical analyses were well presented. It was also evident how these insights became the main building blocks of PRES. However, my main concern comes from the experiment section.\n\n-\t**Is it really useful to gain speed at the cost of accuracy?**\n\nSo far this is my main concern. At first I thought the authors were trying to achieve SOTA accuracy.\nHowever, what the authors are doing is gaining speedup of around 2x to 3x, at the cost of decreased accuracy (~1.0%).\nI am not so sure about this, considering the effort the community is putting to gain higher accuracy.\nEspecially on the tested datasets, the number of vertices is only around few thousands, which wouldn't take terribly long to train.\nI believe this partially comes from not reporting the training time (only the speedup is reported) and there are not enough baselines to compare. But the bottomline is that a strong justification is needed for this.\n\n-\t**What is the consensus on the \u2018optimal\u2019 temporal batch size?**\n\n\tIn Figure 3, the authors show the performance of baselines by increasing the batch size up to 100. In the figure the \u2018small batch size\u2019 seems to be ~50. My question is do the majority of MDGNNs use a batch size smaller than 50, or are they already using approximately 500 (which seems to be the optimal size in Figure 4)? If the latter is the case, then personally the insight from theorem 1 (variance of the gradient for the entire epoch can be detrimental when the temporal batch size is small) loses some of its shine. Thus, the authors should try to first do a comprehensive overview on the currently used batch sizes.\n\n-\t**How does PRES differ from other baselines?**\n\tTwo related works came to my mind which are missing in the current paper. \u201cEfficient Dynamic Graph Representation Learning at Scale\u201d (arXiv preprint, 2021, https://arxiv.org/abs/2112.07768) and \u201cDistTGL: Distributed Memory-Based Temporal Graph Neural Network Training\u201d (arXiv preprint, 2023, https://arxiv.org/abs/2307.07649). Both try to increase the temporal batch size without harming the accuracy. The former also uses prediction to utilize data-parallelism, while the latter tries to push the temporal batch size to the extreme for distributed GPU clusters. In my opinion, both (and any other baseline that shares the same goal with this work) should be compared methodologically and speedup-wise (in the current setting). Also, it would be interesting to see if these can also benefit from PRES. \n\n-\t**Why is performance with/without PRES not shown with the LASTFM dataset?**\nLASTFM stands out in that 1) the AP is the lowest 2) the speedup of PRES is the lowest. However, I was unable to find a figure like figure 4 for this dataset. Is there a reason for only leaving this dataset out?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2962/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2962/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2962/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698835737211,
+            "cdate": 1698835737211,
+            "tmdate": 1700813778940,
+            "mdate": 1700813778940,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "bbhsRM6hSB",
+                "forum": "gjXor87Xfy",
+                "replyto": "e3DXJynxkS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response 1"
+                    },
+                    "comment": {
+                        "value": "Thank you for your detailed feedback and comments. Based on the feedback, we have revised the paper and would like to address and clarify the concerns as follows:\n\n**Q1 (W1). Usefulness of improved training efficiency and the scale of dataset (tradeoff of improved speed)**\n\n**Usefulness and Significance of Improve Training Efficiency**\n\n- Enhancing training efficiency is particularly crucial in the development phase, where it is necessary to experiment with various hyperparameter settings (e.g., different model configurations, and different regularizations). Achieving a speedup of approximately 2x to 3x can significantly accelerate the development process, resulting in substantial savings of computation, waiting time, and potentially monetary cost when utilizing cloud services. This acceleration empowers developers to explore a broader range of configurations and methodologies, ultimately leading to the potential discovery of optimal settings that can offset the minor accuracy trade-offs (~1%).\n- The importance of training efficiency is also well-recognized and of interest to the community, as evidenced by numerous studies exploring techniques to increase efficiency despite some loss in accuracy (e.g., the extensive line of research in using staleness in training [1]).\n\n**Scale of the Tested Dataset and Report of Training Time** \n\n- We have reported the training time of a complete epoch for each dataset and model (Table 1 of Page 8) in the revised version.  For instance, when training TGN with default settings (50 epoches) on the LASTFM dataset can take up to 9 hours within our computational environment (NVIDIA Tesla V100). Therefore, achieving the observed speed improvements can result in substantial savings (~5.8 hours) in computation and waiting time.\n- MDGNN employs a link prediction task for training, making the size of the dataset dependent on the number of events rather than vertices. The datasets utilized in our study encompass event ranges from 10k (WIKI) to 1.3 million (LASTFM), which are reasonably large for academic purposes. Additionally, we introduced an additional dataset, GDELT, consisting of approximately 17k vertices and 2 million events in the main experiment (as shown in Table 1 on Page 8 in the revised paper). The results for this dataset align with the observations from the other datasets:\n\n| GDELT | TGN | JODIE | APAN |\n| --- | --- | --- | --- |\n| without PRES | 96.8%, 50 Epoches, 1325 Second/Epoch | 95.1%,  50 Epoches, 1123 Second/Epoch | 96.7%,   50 Epoches, 1215 Second/Epoch |\n| with PRES | 96.0%,   50 Epoches, , 490 Second/Epoch,  | 94.3%,  50 Epoches, 401 Second/Epoch | 96.0%,  50 Epoches, 506 Second/Epoch |\n\n**Q2. What is the consensus on the \u2018optimal\u2019 temporal batch size? and significance of Theorem 1**\n\n- First, we would like to point out that the batch size of 500 is still small relative to the size of the dataset. Furthermore, the choice of temporal batch size in practical applications should not diminish the significance of Theorem 1. The main contribution of Theorem 1 is to provide an alternative perspective to the conventional wisdom regarding the use of large batches. The prevailing belief has been that employing a large temporal batch size is generally detrimental due to the interdependence of events within that batch. However, Theorem 1 uncovers a surprising advantage of using a large temporal batch size, which results in a smaller variance in the gradient.\n- The impact of temporal batch size represents a relatively uncharted territory within MDGNN research, which constitutes a central motivation for our work. Due to the trade-off between training efficiency and sensitivity to accuracy, determining the \"optimal batch size\" is likely to vary for different datasets and tasks. While establishing a unified criteria for determining the optimal temporal batch size is an interesting research topic, it falls beyond the primary scope of this paper."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700119750220,
+                "cdate": 1700119750220,
+                "tmdate": 1700119750220,
+                "mdate": 1700119750220,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "iv00uhgSoS",
+                "forum": "gjXor87Xfy",
+                "replyto": "e3DXJynxkS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you again for the feedback on our paper. We hope that our responses have addressed your inquiries and concerns. If this is not the case, please inform us and we would be glad to engage in further discussion."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700397026025,
+                "cdate": 1700397026025,
+                "tmdate": 1700397026025,
+                "mdate": 1700397026025,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BxBty0CqWF",
+                "forum": "gjXor87Xfy",
+                "replyto": "riUfnoBgBY",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+                ],
+                "content": {
+                    "title": {
+                        "value": "thanks for the response"
+                    },
+                    "comment": {
+                        "value": "Thanks for the response.\n- I am little bit more, but still not fully convinced on the claim between accuracy vs speedup. This is because many GNN (and TGN) papers propose around 1% improvement in each publication. The authors mention that PipeGCN [1] utilizes staleness, but PipeGCN does not sacrifice accuracy at all.\n- Maybe one way to make this work shine is to provide a 2D plot of speed-accuracy comparison among a series of other work to show the provided trade-off is meaningful. That is, something we could find from pruning/quantization/nas papers a few year ago (although those were usually comparing the inference time with accuracy). For example, Fig1 of Efficientnet.\n\n- I could not find LastFM result from appendixF of the revision. Could you provide a precise pointer?"
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700534869060,
+                "cdate": 1700534869060,
+                "tmdate": 1700534869060,
+                "mdate": 1700534869060,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "wUwk3j2cy1",
+                "forum": "gjXor87Xfy",
+                "replyto": "e3DXJynxkS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "First of all, thank you for the response, suggestions, and the chance to further clarify and address your concerns.\n\n> I am little bit more, but still not fully convinced on the claim between accuracy vs speedup. This is because many GNN (and TGN) papers propose around 1% improvement in each publication. The authors mention that PipeGCN [1] utilizes staleness, but PipeGCN does not sacrifice accuracy at all.\n\nWe would like to further address the significance of improved training efficiency with the following aspects:\n\nMotivating setting and scenario\n\n- We agree that accuracy is of central importance to machine learning models under unlimited resources. However, different settings might have different preferences. For instance,  a setting with limited resources (time or computation) might prefer better training efficiency.\n    \n    One typical application of MDGNN, the mode considered in our paper,  is an E-commerce platform where MDGNN is used for real-time personalization of user experience [2]. In such a scenario, models must be trained within tight time constraints to adapt to evolving user behaviour and preferences, ensuring that recommendations remain relevant and engaging.\n    \n\nPipeGCN\n\n- First of all, we would like to point out that it takes a large epoch number (e.g., training Reddit for 2000 epochs, a significantly higher number compared to the typical 100 to 200 epochs) for PipeGCN to reach the same performance as the baselines. In our experimental setting, we follow the default setup as TGN which uses 50 epochs. As illustrated by Fig.4 [1], PipeGCN also experiences minor performance degradation (~1%) if we look at the region where the vanilla baseline has converged when compared to the vanilla baseline in the convergence region (e.g., around 250 epochs for ogbn-products and 1000 epochs for Reddit).\n    \n    As our proposed method does not affect the expressive power of the underlying models,  we believe our method can also achieve similar experimental results as PipeGCN if we allow the training session to be long enough. We are working hard on showing such an experiment and will have you updated once we have the data ready.\n    \n\n> Maybe one way to make this work shine is to provide a 2D plot of speed-accuracy comparison among a series of other works to show the provided trade-off is meaningful. That is, something we could find from pruning/quantization/nas papers a few year ago (although those were usually comparing the inference time with accuracy). For example, Fig1 of Efficientnet.'\n\n- Thank you for suggesting a 2D plot to showcase the trade-off between speed and accuracy among various works. We are diligently working on creating such a plot and will notify you as soon as we have both the data and plot ready.\n\n> I could not find LastFM result from Appendix F of the revision. Could you provide a precise pointer?\n\n- The figures of the LastFM dataset are included in Figure 13 Page 24 of the updated version.\n\nWe sincerely appreciate your engagement and feedback, which contribute to the improvement of our work.\n\n[1] Wan, Cheng, et al. \"Pipegcn: Efficient full-graph training of graph convolutional networks with pipelined feature communication.\"\u00a0*arXiv preprint arXiv:2203.10428*\u00a0(2022).\n\n[2] Bai, Ting, et al. \"Temporal graph neural networks for social recommendation.\"\u00a0*2020 IEEE International Conference on Big Data (Big Data)*. IEEE, 2020."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700554139869,
+                "cdate": 1700554139869,
+                "tmdate": 1700554244659,
+                "mdate": 1700554244659,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "alXvkvCVTE",
+                "forum": "gjXor87Xfy",
+                "replyto": "wUwk3j2cy1",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Reviewer_dnLR"
+                ],
+                "content": {
+                    "title": {
+                        "value": "reply"
+                    },
+                    "comment": {
+                        "value": "Thanks for the response. I will be waiting for the results (DistTGL, speed-accuracy comparison, long enough training)\n- I still cannot see the result on page 24. could you check again if the revision has been correctly uploaded?\n- On PipeGCN, could you check if we are looking at the same curve? I believe we should be comparing GCN vs PipeGCN-GF and they both have converged at 250 epochs."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700557434007,
+                "cdate": 1700557434007,
+                "tmdate": 1700557434007,
+                "mdate": 1700557434007,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "kbjV5XYD7C",
+                "forum": "gjXor87Xfy",
+                "replyto": "e3DXJynxkS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2962/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response (1/2)"
+                    },
+                    "comment": {
+                        "value": "Thank you once again for your responsiveness and valuable suggestions. We greatly appreciate your feedback and the opportunity to address your concerns. \n\n> Maybe one way to make this work shine is to provide a 2D plot of speed-accuracy comparison among a series of other works to show the provided trade-off is meaningful. That is, something we could find from pruning/quantization/nas papers a few years ago (although those were usually comparing the inference time with accuracy). For example, Fig1 of Efficientnet.\n\nIn response to your suggestion, we have created a 2D plot comparing speed and accuracy among our method and several other relevant works. You can find this plot in Figure 15 on Page 26 in Appendix F.4 of the updated paper. Here are the brief details and data used for this plot:\n\nFor the plot, we have considered various efficient methods studies exemplified (but not limited) to the following lines of research:\n\n- use of staleness: which sacrifice the ``freshness of information'' in the training process to accelerate computation or communication in training[1,4]\n- use of quantization: which sacrifices precision to accelerate computation [3]\n- use of estimation: use an estimation method to accelerate the efficiency of the model [2]\n\nWe have sampled methods from each category to create a comparison between the relative speed-up and their effect on accuracy. The values of the sampled methods are obtained as follows. \n\n- The value of SAPipe is taken from [1]. The underlying tasks for these values are image classification tasks and language translation tasks.\n- The value of FastGCN is taken from [2] and the underlying task is node classification.\n- PRES(our) is computed by averaging the values from Table. 1 of our paper\n\nThe rest of the values are obtained from running the open-source code[6,7,8]. \n\n- AdaQP code link [6]: node classification with GCN on the public OGB-product  dataset\n- PipeGCN code link [7]: node classification with GCN on the public OGB-product dataset\n- Sancus code link [8]: node classification with GCN the public OGB-product dataset\n\nThe data used for the plot are as follows. The methods with * indicate the values are taken from the original paper.\n\n|  | SAPipe*[1] | FastGCN*[2] | AdaQP[3] | Sancus[4] | PipeGCN[5] | PRES(our) |\n| --- | --- | --- | --- | --- | --- | --- |\n| Average Relative Speed-Up | ~2.3x | ~2x | ~2.5x | ~1.6x | ~2.1x | ~2.6x |\n| Average Drop on Accuracy | ~1.7% | ~1.2% | ~0.9% | ~2.3% | ~1.1% | ~0.7% |\n\nWe note that the 2D plot is just a rough comparison, as these methods may not be directly comparable due to different domains and tasks. However, the plot demonstrates that our method provides a reasonable balance between accuracy and speed.\n\n[1]Chen, Yangrui, et al. \"SAPipe: Staleness-Aware Pipeline for Data Parallel DNN Training.\"\u00a0*Advances in Neural Information Processing Systems*\u00a035 (2022): 17981-17993.\n\n[2] Chen, Jie, Tengfei Ma, and Cao Xiao. \"Fastgcn: fast learning with graph convolutional networks via importance sampling.\"\u00a0*arXiv preprint arXiv:1801.10247*\u00a0(2018).\n\n[3] Wan, Borui, Juntao Zhao, and Chuan Wu. \"Adaptive Message Quantization and Parallelization for Distributed Full-graph GNN Training.\"\u00a0*Proceedings of Machine Learning and Systems*\u00a05 (2023).\n\n[4] Peng, Jingshu, et al. \"Sancus: staleness-aware communication-avoiding full-graph decentralized training in large-scale graph neural networks.\"\u00a0*Proceedings of the VLDB Endowment*\u00a015.9 (2022): 1937-1950.\n\n[5] Wan, Cheng, et al. \"Pipegcn: Efficient full-graph training of graph convolutional networks with pipelined feature communication.\"\u00a0*arXiv preprint arXiv:2203.10428*\u00a0(2022).\n\n[6] https://github.com/raywan-110/AdaQP\n\n[7] https://github.com/GATECH-EIC/PipeGCN/tree/main\n\n[8] https://github.com/chenzhao/light-dist-gnn."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2962/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700723399710,
+                "cdate": 1700723399710,
+                "tmdate": 1700723454319,
+                "mdate": 1700723454319,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

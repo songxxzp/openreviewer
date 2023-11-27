@@ -1,0 +1,271 @@
+[
+    {
+        "id": "Ipj1BxuGaV",
+        "forum": "hdCDVSPQ7v",
+        "replyto": "hdCDVSPQ7v",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_yz1B"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_yz1B"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents a method to approximate the preconditioners used in the Shampoo optimizer by using a Taylor series. The authors show that this method has performance comparable to that of Shampoo in terms of number of steps, but since they do not need to compute inverses and fourth roots, the algorithm can run much faster than Shampoo. They also show that the performance gains obtained from second order optimization continue to hold with the approximation."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The main result of the paper is in Section 3, where the authors describe their approximation. This is very clearly described --- although for some reason the next step --- using X_L / || X_L || instead of (1 - b)/b X_L to ensure convergence --- is relegated to the appendix.\nThe theory and experimental results are well described."
+            },
+            "weaknesses": {
+                "value": "The idea is quite straightforward (but maybe that is not a weakness).\n\nThe equality on line -2 on page 4 is not valid:  (A + B)^r =/= A^r (I + A^{-1} B)^r, unless A and B commute. Is there a way to fix the equation?"
+            },
+            "questions": {
+                "value": "The authors main claim is that the Taylor approximation is sufficient to compute the preconditioners --- do you have some direct evidence of this (i.e. some illustration of the difference between the original preconditioners and the Jorge approximations)?\n\nIn your paper please do include the Shampoo metrics as a column in all your tables, since you already have them.\n\nIn most Shampoo implementations, the matrix roots are also computed via an iterative process that only involves matrix multiplications. How does your approximation compare with this process, for example by limiting the number of iterations to a fixed value?\n\nYou say that (1 - b)/b X_L is chosen adaptively to ensure convergence of the Taylor approximation --- what values of b do you get as a result? Note that if b is small than effectively the previous gradients will be forgotten very quickly, which may lead to instability (so the b also serves a different purpose than the one you use it for)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8677/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697940568997,
+        "cdate": 1697940568997,
+        "tmdate": 1699637087975,
+        "mdate": 1699637087975,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "rEWAZ4L10K",
+        "forum": "hdCDVSPQ7v",
+        "replyto": "hdCDVSPQ7v",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_LZ4W"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_LZ4W"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new second-order optimizer for deep learning. \nThe proposed method, Jorge, based on Shampoo, but does not require matrix inversion when applying gradient conditioning. \nThe key contribution in Jorge is to approximate matrix inversion in Shampoo with binomial series expansion, and keep the first and second item.\nOwing to the approximation, Jorge can be done efficiently on GPUs in terms of wall-clock time.\nExperiments show that Jorge achieves faster wall-clock training compared to SGD and Adam, as well as Shampoo."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "This paper targets a practical and important problem of reducing the complexity of second-order optimizers for deep learning, especially for large models. Several contributions are highlighted below\n\n**1**, The presentation is clear. \n\nThe way the authors present Jorge is very easy to understand. By having a point-to-point comparison with Shampoo (Alg 1 and 2), I can quickly understand how Jorge adapts Shampoo and how matrix inversion is avoided when applying pre-conditioning. \n\n**2**, Jorge reduces efforts for optimizing training hyperparameters. \n\nFinding training hyperparameters for second-order methods is a practical and important problem. The way Jorge learns hyperparameters (learning rate, weight decay, scheduler) is important to reduce overall training time, especially for large models. \n\n**3**, The evaluations cover different tasks.\n\nThe authors demonstrate the efficacy of Jorge on different tasks, which shows Jorge not only achieves faster convergence, but also gives comparable validation accuracy as SGD."
+            },
+            "weaknesses": {
+                "value": "**1**, Lack of analysis for the proposed method\n\nWhile the authors propose a practical solution that avoids computing matrix inversion, it lacks the necessary analysis:\n\n**1)**, The authors need to analyze computation and memory complexity for Jorge.\n\nWhile Jorge avoids to compute matrix inversion, it also introduces additional operations (lines 5-8 in Algorithm 2). It is necessary to analyze the complexity of these additional matrix multiplications compared to matrix inversion in line 11 in Algorithm 1. \nI noticed the authors provide a wall-clock comparison between Jorge and Shampoo. However, it would be more insightful to have a theoretical complexity analysis. \n\n**2)**, It is unclear how accurate the approximation is. \n\nIn Eq(7), high-order items are removed. It is unclear how much error is introduced after the approximation. And importantly, how is the error propagated with Eq(4)? \nWhile it is impractical to analyze the approximation for highly non-convex NNs, it is possible to analyze in a simplified case, like simple convex functions. \nTherefore, I would suggest the authors do an analysis on the effectiveness of the approximation.\n\n**3)**, No convergence analysis.\n\nBesides empirical analysis, it is also important to analyze convergence and show how the approximation and related parameters affect the convergence speed. \n\n**2**, Comparison between Jorge and baseline methods needs further justification.\n\nIn experiments, the authors use step learning rate decay for Jorge, SGD, and Shampoo, but use a cosine decay for Adam. It is difficult to compare convergence speed with different learning rate schedulers. I understand different optimizers might prefer different schedulers. However, it would be more straightforward if compare optimizers with the same scheduler. \n\n**1)**, According to Table 2, AdamW achieves validation accuracy close to Jorge. However, there is no convergence plot like Figure 2 showing the convergence speed of Adam compared to Jorge. It would be great if the authors also provide such a plot in the paper.\n\n**3**, Lack of necessary ablation studies.\n\nIt would be good if the authors provide more ablation studies. \nFor instance, how does the preconditioner update frequency affect convergence and final model performance?\n\n**4**, Need more baselines.\n\nFor reducing the complexities of using second-order methods, optimizers such as K-FAC [1] and mL-BFGS [2] also target the same goal. It would be good if the authors compare Jorge against these methods in terms of per-iteration and wall-clock convergence performance.\n\n[1] George, T., Fast approximate natural gradient descent in a kronecker factored eigenbasis. NeurIPS'18\n\n[2] Niu, Y., mL-BFGS: A Momentum-based L-BFGS for Distributed Large-scale Neural Network Optimization. TMLR'23."
+            },
+            "questions": {
+                "value": "**1**, According to Algorithm 2, Jorge introduces additional matrix multiplications compared to SGD. However, in Figure 2, it seems per-iter running time of Jorge is almost the same as SGD. Can the authors explain that?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8677/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698444170739,
+        "cdate": 1698444170739,
+        "tmdate": 1699637087867,
+        "mdate": 1699637087867,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "1p4giR63Uw",
+        "forum": "hdCDVSPQ7v",
+        "replyto": "hdCDVSPQ7v",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_9qvx"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_9qvx"
+        ],
+        "content": {
+            "summary": {
+                "value": "Building off of Shampoo, the authors introduce a new second-order SGD optimizer, called Jorge.  In order to speed up the original second-order SGD optimizer, the author's avoid all matrix-inverse calculations used in Shampoo.  Jorge approximates all such matrix inverses, leading to a second-order optimizer whose preconditioner only relies on GPU-friendly operations (i.e., matmul and matrix additions).  The authors then show how Jorge's hyperparameters are bootstrapped, via grafting given a well-tuned, prerun SGD optimizer.  Jorge is then evaluated over 3 vision CNN architectures (ResNet-50, Mask-RCNN, and DeepLabv3) and datasets (ImageNet and MS-COCO 2017), and compared to 2 first-order solvers (AdamW and vanilla SGD) and 2 implementations (serial and distributed) of the second-order Shampoo solver."
+            },
+            "soundness": {
+                "value": "1 poor"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The work tackles an important problem; first-order solvers remain the go-to optimizers for DNN architectures across application domains.  A truly efficient second-order solver has the potential to decrease the significant levels of overhead currently being incurred by training LLMs and other massive-scale, data hungry models (e.g., diffusion models).\n\nThe authors did an excellent job in their writing, the paper was easy to follow.  Furthermore, the description of Jorge and its juxtaposition to the original Shampoo algorithm were well done."
+            },
+            "weaknesses": {
+                "value": "While the derivation of Jorge is interesting and the focus on GPU-friendly computations makes sense, the paper contains several causes for concerns.  I look forward to hearing the authors' replies to the following issues.\n\n# Comparison to other second-order solvers\nEvaluation to other related methods is limited, where only a single second-order optimizer is compared to.  The authors reference the recent SGD L-BFGS papers, but it should also be explained why these methods aren't compared to (i.e., implementations of these SGD L-BFGS have not been released).  However, the following second-order SGD optimizer should be compared to in the paper:\n- Yao, Zhewei, et al. \"Adahessian: An adaptive second order optimizer for machine learning.\" proceedings of the AAAI conference on artificial intelligence. Vol. 35. No. 12. 2021.\n\n# Reported metrics, performance of/fair-comparison to AdamW\n> We borrow AdamW hyperparameters for the imagenet benchmarks from Heo et al. (2021).  The complete list of all hyperparameters used in this study can be found in Appendix A.6.\n\nFor ResNet50+Imagenet in the Heo et al. paper, both AdamW and SGD achieve ~76% accuracy, whereas in the current paper, AdamW saturates at ~70% (in Figure 2).  Furthermore, Figure 2 clearly shows SGD and Jorge benefiting from the authors decay schedule, which is not a fair comparison for AdamW (i.e., SGD is further well-tuned, while AdamW is not).  A fairer comparison for all methods would to use the same hyperparameters for both SGD and AdamW from Heo\tet al. (2021), while also determining the cause of performance loss for\tAdamW observed in this work.\n\nFurthermore, Jorge requires running SGD prior to each step (due to Jorge's use of grafting SGD).  However, Jorge reported runtime in Table\t3 is lower than\tSGD itself.  Thus, Jorge's reported timings seem inaccurate; because Jorge is dependent\ton grafting SGD, its runtime should reflect this.\n\n# Lack of Adam support and transformer architecture evaluations\nGiven the ubiquity and importance of transformer architectures used across applications (not only in NLP, but vision as well), Jorge's impact on transformer training should also be demonstrated.  A smaller issue is, similarly, Adam/AdamW is widely used, even for vision (e.g., vision transformers, ViT), and the inclusion of this optimizer for bootstrapping Jorge's hyperparameters is warranted for current deep learning."
+            },
+            "questions": {
+                "value": "- For Table 3, please include the (average) number of epochs required to achieve target performance.\n\n- > Interestingly, simply switching to the step decay schedule with 2 decay steps (reducing the learning rate by 10\u00d7 at each step) at one-third and two-thirds of the total training epochs (total epochs same as that of the tuned SGD baseline) resolves this issue\n\nNote that similar behavior and decay schedule was used in Zhang et al \"Lookahead Optimizer: k steps forward, 1 step back\".\n\n- > For example, SGD remains the optimizer of choice in computer vision due to its better final validation accuracy, even though Adam converges faster initially.\n\nThis is a very debatable claim, please revise.  In particular, Adam is widely used as the out-the-gate optimizer for vision transformers (e.g., ViT) as well as CLIP.  Furthermore, even in extensive benchmark studies, mixed results refute this statement, e.g., see:\nKumar, Ananya, et al. \"How to fine-tune vision models with sgd.\" arXiv preprint arXiv:2211.09359 (2022)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8677/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698784946628,
+        "cdate": 1698784946628,
+        "tmdate": 1699637087751,
+        "mdate": 1699637087751,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "j8cMNhPk1b",
+        "forum": "hdCDVSPQ7v",
+        "replyto": "hdCDVSPQ7v",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_k7BV"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8677/Reviewer_k7BV"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a compute-efficient approximate second-order optimization algorithm named Jorge for training deep neural networks. Jorge has a similar per-iteration speed with SGD but has a faster convergence speed in terms of the # of iterations than SGD. Jorge is also hyper-parameter friendly as it can enjoy the well-tuned hyperparameters from SGD. Some experiments show that Jorge is faster than SGD, AdamW, and Shampoo on some CV tasks."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The proposed approximate second-order optimizer seems novel.\n- Comprehensive experiments to show the effectiveness of Jorge.\n- The paper is well-written."
+            },
+            "weaknesses": {
+                "value": "- Some important baselines are missing, e.g., KAISA [ref1], Eva [ref2], and MKOR [ref3].\n- Jorge is built based on the key idea of Shampoo, but Jorge seems more hyper-parameter friendly than Shampoo as claimed in the paper. It is unclear why Jorge has such a property.\n\n[ref1] Kaisa: an adaptive second-order optimizer framework for deep neural networks, SC'21.\n[ref2] Eva: practical second-order optimization with Kronecker-vectorized approximation, ICLR'23.\n[ref3] MKOR: Momentum-Enabled Kronecker-Factor-Based Optimizer Using Rank-1 Updates, NeurIPS'23."
+            },
+            "questions": {
+                "value": "- Could you include some recent compute-efficient second-order algorithms like KAISA (with a large update frequency), Eva, and MKOR for comparison?\n- What is the update frequency used in Shampoo when comparing wall-clock time? Is possible to use a second-order update interval for Shampoo such that it runs at a similar speed to Jorge to achieve the target accuracy?\n- Could you explain why Jorge can enjoy well-tuned hyper-parameters from SGD while Shampoo cannot?\n- Is Jorge possible to apply to NLP tasks like LLM pertaining or fine-tuning?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8677/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8677/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8677/Reviewer_k7BV"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8677/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699496409334,
+        "cdate": 1699496409334,
+        "tmdate": 1699637087649,
+        "mdate": 1699637087649,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

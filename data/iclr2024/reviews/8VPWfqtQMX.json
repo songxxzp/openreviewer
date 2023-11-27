@@ -1,0 +1,287 @@
+[
+    {
+        "id": "qWw8kl6I3d",
+        "forum": "8VPWfqtQMX",
+        "replyto": "8VPWfqtQMX",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_cBZm"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_cBZm"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a domain generalization (DG) method called In-Context Risk Minimization (ICRM).\nICRM uses a transformer architecture that takes multiple datapoints as input and predicts their labels.\nIn DG, inputs come from different environments for which the distribution of inputs and labels change.\nDG assumes that the environment index is known for each datapoint at training and test time, i.e. we can group datapoints by their environment.\nIn ICRM, each set of 'in-context' inputs belongs to the same environment.\nAt test time, this allows ICRM to learn _in-context_ to adapt to a particular set of test inputs.\nThe authors argue this is advantageous to previous work in DG, which either learns models that aggregate test points into a single embedding or learn invariant predictors that ignore dependencies between test observations.\n\nThe authors provide theoretical evidence that ICRM can achieve better loss in iid and ood settings than naive context-free empirical risk minimization.\nThey provide experiments on FEMNIST, Rotated MNIST, WILDS Camelyon17, and Tiny ImageNet-C where they show ICRM outperforms the following methods: ARM, TENT, and ERM."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "I am convinced that ICRM is advantageous to methods that do not rely on context or aggregate all context points into a single embedding.\n\nThe linear regression toy example they provide nicely illustrates the advantages of ICRM over invariant methods.\n\nThe paper is largely well-written and the description of the ICRM method is clear."
+            },
+            "weaknesses": {
+                "value": "Unfortunately,  I cannot recommend acceptance of the submission in its current state.\n\nA) My biggest concern is the strong resemblance the proposed approach bears to neural processes (NPs) (Garnelo et al., 2019), and in particular attentive neural processes NPs (Kim et al., 2019); ANPs), as well as other related work, e.g. from M\u00fcller et al. (2022) and Kossen et al. (2021).  This line of related work is not discussed at all in the current draft. Chiefly, these works are related because, excluding the original NP paper, they all propose transformer architectures that process multiple datapoints at the same time to improve predictions. Neural Processes are framed around 'function learning', where 'functions' are analogous to 'environments' for ICRM. For a set of context points $\\{(x_i, y_i)\\}_{i\\in\\mathcal{C}}$ drawn from a 'function' they make predictions for the labels $y_t$ of test points $x_t$, $x\\in \\mathcal{T}$ of that function. In the attentive neural process, attention is used to predict test labels by attending to the context points \u2013\u00a0strikingly similar to ICRM! \n\nI would strongly encourage the authors to highlight ANPs (and related work) as important prior work, and dial down claims of novelty when appropriate.\nI do believe that the application of ANP-like architectures to domain generalization is interesting and sufficiently novel, however, the current omission of relevant prior work is not acceptable.\n\nNote that there are some differences between prior work and ICRM.\nFor ANPs, the $x_i$ are often single features, e.g. the pixels of an image or (multi-dimensional) observations drawn from a Gaussian Process.\nHowever,  ICRM itself does not process high-dimensional inputs itself, and instead relies on ConvNet/ResNet-50 embeddings: these could also be used as pre-processing with ANPs.\n(Note that Neural Processes have been scaled to image classification before by Requeima et al. (2019))\n\nB) Perhaps the biggest difference between prior work and ICRM is, that ICRM does not use labels of examples as input.  This could be a restriction of ICRM: it can only model p(X|C) of the context. If there are any shifts in p(Y|X, C) between environments, ICRM cannot model these. For ANPs, this is not a problem, as inputs are (x, y) pairs. I would argue, ANPs are a generalisation of the proposed ICRM architecture.\nDoes domain generalization always preclude access to (even a few) of the test environment labels? Relatedly, does DG always assume that p(Y|X, E) does not shift? Even if both of these are true,  ANPs can still be used without test-context labels as these can be iteratively predicted. Conversely, if either is not true, then it seems like ANP-like architectures are clearly advantageous.\n\n\n* Kim, Hyunjik, et al. \"Attentive neural processes.\"  ICLR (2019). https://openreview.net/forum?id=SkE6PjC9KX.\n* Garnelo, Marta, et al. \"Neural processes.\" ICML 2018 workshop on Theoretical Foundations and Applications of Deep Generative Models. https://arxiv.org/abs/1807.01622\n* M\u00fcller, Samuel, et al. \"Transformers can do bayesian inference.\" ICLR (2022). https://openreview.net/forum?id=KSugKcbNf9.\n* Kossen, Jannik, et al. \"Self-attention between datapoints: Going beyond individual input-output pairs in deep learning.\" NeurIPS (2021). https://openreview.net/forum?id=wRXzOa2z5T.\n* Requeima, James, et al. \"Fast and flexible multi-task classification using conditional neural adaptive processes.\" NeurIPS (2019).\n\n\nC) My second biggest concern is with the results of the experimental evaluation. Figure 5 and Table 2 show that ICRM does not consistently improve performance when increasing the number of in-context demonstrations. In particular, for WILDS Camelyon17 and Tiny ImageNet-C the results are concerning. For Tiny ImageNet-C performance only improves very slightly when including additional in-context observations: crucially, the zero-shot ICRM performance outperforms all competing methods at _any_ number of in-context observations. Most concerning is WILDS Camelyon17: here, performance _decreases_ when including in-context examples \u2013\u00a0performance is maximal when the context is empty! \n\nIt seems to me as though the main selling point of ICRM, improving performance by including test-time examples in the context, only comes true for FEMNIST. The benefits of including datapoints in the context with ICRM are not as large as the authors proclaim. I did not see any discussion of this in the paper, and would ask the authors to provide one.\n\nD) Thanks for providing the ERM+ baseline, which uses \"an identical architecture to ICRM, but without context\". Comparing the numbers of Tables 3 and 2, I was surprised to see that ICRM at context size 0 significantly outperforms ERM+ across tasks. Do you have any insights as to why this would be the case? What differences are left between ICRM and ERM+?\n\nE) \"[...] even in the absence of test context. Specifically for both WILDS Camelyon17 and Tiny ImageNet-C, ICRM outperforms baselines despite not leveraging any context from the test environment. This is because ICRM training still benefits from contexts as to find contextual features that ERM ignores\" --> This is unclear to me \u2013\u00a0how can ICRM benefit from context if there is no context? Why does ICRM outperform the other baselines in the zero-shot setting?\n\nF) I think your definition of 'in-context learning' is misleading throughout the draft and a significant departure from the meaning of in-context learning (ICL) as introduced by Brown et al. (2020). This is a recurrent problem throughout the submission. For one, ICRM is about learning from _unlabelled_ examples. ICL is about learning novel tasks from a few-shot set of _labelled_ examples. For example, the 'poem' example the authors give on page 4 is inappropriate: neither does it provide multiple examples, nor does it provide labels. A more appropriate example for ICL for poem writing would be a set of input-output pairs, e.g. a list of target audiences and matching poems for them.\n\nG) \"The key to our answer resides in a recently discovered emergent ability of next-token predictors, namely, in-context learning.\"  I agree with you that an interesting aspect of ICL in LLMs is that it seems to 'emerge', at least the model is not knowingly trained to learn ICL. However, for ICRM, you _train_ the model to rely on the context, i.e. very similar to the setup of Neural Processes that predates ICL. Thus, I find it highly misleading to suggest ICRM relies on any emergent abilities.  Further, ICRM does _not_ preform auto-regressive next-token prediction: your inputs are images and your outputs are labels, opposed to input tokens at time t and output tokens at time t+1. One could even argue that what ICRM does, does not meet common expectations for in-context learning, as there are no labelled in-context examples.\n\nH) You frequently write that ICRM can  \"fully exploit data in natural order\". Are you using causal attention or positional embeddings? If not,  your Transformer architecture should be equivariant to the order of the inputs. Further, the prediction on the test input should then be _invariant_ to the order of the context examples. I therefore find your statements about 'nature does not shuffle data' misleading. In fact, I believe that, often, the order of the data should not affect predictions (cf. exchangeability). On the other hand, if you _are_ using causal attention or positional embeddings (which are part of the GPT-2 default architecture), I believe these might negatively affect your performance, and would like to see an ablation with them removed.\n\nI) \"The maximum context length, or support, is fixed at 100 for all algorithms\" \u2192 Do you sample uniformly between [0, 100] examples at training time, or do you train different ICRM models, one for each context length? Relatedly, you write that you train your model to minimize the 'auto-regressive loss'. Does this mean that, for each training input, you minimize the predictive loss for each of the training inputs, i.e. you perform 'teacher forcing', just like in LLM training?\n\nJ) Your highlighting of low and high attention scores in Figure 2 seems arbitrary. The caption suggests you highlight all low/high attention scores. In addition to not explaining how you decide what is a low/high attention score, you also clearly miss some low/high scores, e.g. 0.00, 0.00, and 0.05 in row 1 should be marked as low if 0.11 is, and 0.20 in row3 should be high if 0.15 is. It seems like you highlight only those scores that fit your narrative, e.g. the pizza in row three is not highlighted, but the train and bus matching the query 'train' are. I would suggest you highlight scores consistently. Alternatively, make clear you highlight only some examples: those which you discuss in the main text.\n\nK) Why is the performance on WILDS Camelyon17 the same for worst and average case? Does this mean the performance is exactly equal on all environments? Why is this the case?\n\n## Nits\n\nL) \"We attain significant out- of-distribution abilities in a multitude of specific tasks \u2014such as writing poems\" --> Why are you sure that writing poems out of distribution for large language models\u00a0\u2013\u00a0even if conditioned on some context?\n\nM) Figure 1b): It seems like it should be $x_i^e$ instead of $x_{i,1}^e$?\n\nN) The sentence before Eq. 5 does not make sense to me. Perhaps move the 'estimates the conditional expectation P (Y | X, C)' to after the definition in equation 5?"
+            },
+            "questions": {
+                "value": "O) \"Define \u03b4e to be a permutation of \u03b3e that swaps its two components\" \u2192 What are the two components (it seems to me there are three?) and what does it mean to swap them?\n\nP) How do the computational costs of ICRM and the baselines compare?\n\nQ) \"minimizing the worst risk across\" \u2192 Later you write that you sample environments at random during training. Does that not mean that you are actually minimizing the average risk across environments?\n\nR) \"to minimize the auto-regressive loss\" --> Why is this loss auto-regressive? It does not depend on the model's past predictions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Reviewer_cBZm"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1022/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698401203888,
+        "cdate": 1698401203888,
+        "tmdate": 1700506020082,
+        "mdate": 1700506020082,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3WJVoBcvGn",
+        "forum": "8VPWfqtQMX",
+        "replyto": "8VPWfqtQMX",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_NswY"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_NswY"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new method for domain generalization called In-Context Risk Minimization (ICRM), a method which generalizes to a new domain given a sequence of unlabeled examples from that domain. The authors motivate ICRM by referring to the LLM literature, in particular their emergent ability to perform well OOD. They prove that ICRM can \"zoom-in\" on good/optimal risk minimizers given a sample/infinite data. Empirically, they demonstrate that ICRM outperforms baselines on several DG datasets and perform supplemental experiments to ablate and interpret these results."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "- I think this is an ambitious paper and connects two interesting areas within OOD-type research - there are definitely interesting insights gained from the new setup and the idea of receiving a sequence of new-domain examples\n- empirical results are strong, demonstrate a good use of unlabelled data\n- experiments are pretty thoroughly done, I appreciate the supplementary studies in Table 3, Fig 2, and Fig 5\n- the new method is described clearly and the theoretical results seem useful: in particular Theorem 3 and its extension seem important in terms of plugging this work into the iVAE work. I also like the specification of the limitations in terms of Voronoi cells of the training environments as a concept"
+            },
+            "weaknesses": {
+                "value": "- I find myself somewhat confused by the analogy between LLMs and ICRM - the paper makes it seem as those these should map 1:1 but I can't quite make it clear to myself, perhaps the authors can clarify. It's not clear what the sequence of Xs that arrive correspond to in LLMs, since they are listed as being selected at random at training time: this means they can't be language tokens, and if they are unrelated sequences I don't see how they correspond with the notion of context laid out in the \"gravitational fields poem\" example (these are also correlated - context sequences in the LLM space are usually not thought of as random wrt what follows them). I think ICRM is interesting nonetheless but I have trouble getting the intuition straight because of this\n- I think that the relationship to various types of distribution shift should be highlighted a little bit more here: for instance, it seems like ICRM will be vulnerable to shifts in P(Y | X) across environments, since it only receives unlabelled examples from the new domain at test time. I think this is true of many DG methods, and I think this is what the \"Voronoi cells\" specification in Thm 3 is constraining, which I think is nice. However, I think this weakness is somewhat obscured by the discussion of context and the analogy to LLMs (e.g. gravitation fields poem example): in LLMs the \"context\" as it is generally considered is quite rich and can help with generalization to compound ie Y | X shifts, but ICRM as I understand it does not have that capability.\n- in Sec 5, I don't find the example particularly clarifying: I may be missing something but it seems unfair to give ICRM access to the \\mu variables, and not give them to ERM. It's possible this is a reasonable comparison to make but I think it needs to be explained a bit more in that case.\n- I don't understand how ICRM allows models to take advantage of \"natural order\", since the examples are drawn randomly at training time, correct?\n- I find it a little puzzling that the performance of ICRM decreases with added context in Camelyon17 - is there an explanation for this?\n- It's strange to me that ICRM would outperform other methods even at 0 context: isn't the advantage of the method the ability to use context?\n\n\nSmaller questions:\n- Intro: Minor point but important I think - the Angwin et al paper (Propublica COMPAS investigation) is not an example of an investigation of the impact of out of distribution model failures, but rather the impact of unbalanced model error rates. There are many studies of societal impacts of OOD failures and I think it would be better to cite one of those\n- Thm 3: \"there exists an ICL algorithm\" - what is an ICL algorithm? I don't think this is defined as a mathematical object\n- end of Sec 5: I think you mean that lung cancer is \"deterministic\" in the single smoker case, rather than it \"invariably follows\""
+            },
+            "questions": {
+                "value": "- Some people would argue that LLMs don't actually perform well OOD - rather, they are trained on a large enough dataset that instances where they have to perform truly OOD are much rarer. This might be good to address in the motivation/intro\n- In general, I find the two concrete examples in the paper more confusing that clarifying (gravitational fields poem, ICRM example in Sec 5): I think clarifying these would go a long way to my understanding of the method and paper"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1022/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698676352428,
+        "cdate": 1698676352428,
+        "tmdate": 1699636028214,
+        "mdate": 1699636028214,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xs6P222RJm",
+        "forum": "8VPWfqtQMX",
+        "replyto": "8VPWfqtQMX",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_1GJP"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_1GJP"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a new method for domain generalization that utilizes data previously seen in the test set as contextual information to improve generalization accuracy."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The writing in the article flows smoothly, and the experiments seem to yield very promising results."
+            },
+            "weaknesses": {
+                "value": "The combination of domain generalization and in-context learning is an ambitious idea. However, the theoretical and experimental discussions in this paper are not sufficient. \n\nI find that the motivation for integrating these two concepts does not fully convince me. It appears that this paper only utilizes information from observed data samples x, which I believe is not entirely consistent with the current concept of in-context learning in LLM because a sequence formed solely from observed training data x may not be sufficient as a demonstration to the model. Authors could consider providing sequences of x, y pairs as context, rather than just a sequence of x. \n\nWhile this paper seems to get promising results, its practical applicability may be limited because it does not account for the possibility of the testing set data samples being a mixture of unknown domains. To address this issue, it might be worth exploring the identification of domain-specific information or introducing additional information as prompts (context). \n\nIn fact, the method proposed in this paper is quite similar to the example presented in Figure 1.b, with the key difference being that this paper's method does not involve averaging."
+            },
+            "questions": {
+                "value": "* The method proposed in this paper was inspired by some ideas in in-context learning, but its relationship with in-context learning in LLM is not significant. The description in the third paragraph of the introduction can easily lead to misunderstandings.\n\n* A concern regarding Theorem 1: Why does the inequality hold? Even though we assume that data can be independently sampled from x, it doesn't necessarily imply that the distribution of the sequence formed by the samples is independent of the variables. Therefore, The assumption in Theorem 1 seems not correct. Are there any relevant references that can confirm the existence of this independence?\n\n* Does function h have different parameters for different environments? Theorem 1 indicates that h has different parameters depending on the environment. If this is the case, which set of parameters should be used during testing?\n\n* The current motivation of this article lies in the idea that applying context information in domain generalization can get better generalization results. Furthermore, this paper argues that previous methods did not consider this aspect. However, there is an issue in assuming that testing data comes from the same domain (or we know the domain partition of test data) when discussing the generalization problem. If it samples from different domains, this approach may potentially mislead the model to produce incorrect results, as the function h learned during training somehow combines information from c and x to make decisions.\n\n* Although the experiments have yielded many promising results, they are only compared to ERM and two baselines from three years ago. The baseline's performance is even lower than ERM, although the author initially acknowledges that most methods may not necessarily outperform ERM. However, the choice of baselines appears insufficiently comprehensive."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Reviewer_1GJP"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1022/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698819283035,
+        "cdate": 1698819283035,
+        "tmdate": 1700811187585,
+        "mdate": 1700811187585,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "soHrhhvmme",
+        "forum": "8VPWfqtQMX",
+        "replyto": "8VPWfqtQMX",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_7Bph"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1022/Reviewer_7Bph"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors introduce In-Context Risk Minimization (ICRM): an algorithm that leverages techniques from next-token predictors (i.e., \"in-context learning\") to learn a transformer-based prediction model that generalizes at test time to new unseen domains.  The authors present several theoretical results that provide intuition on the similarities and differences between their proposed approach and existing approaches in domain generalization. They also demonstrate the value of ICRM by benchmarking their algorithm against other domain generalization approaches on several datasets. \n\nMore abstractly, the authors argue that the success of their approach provides evidence that \"context is environment\": the intuitive idea considering examples from a similar environment as \"context\" can encourage the learned model to \"zoom in\" to control for environment-specific features, while also learning environment-agnostic invariant features."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "This paper is extremely timely and would be of great interest to researchers on domain generalization and group robustness. I strongly recommend that this paper is accepted.\n\n* The authors clearly motivate, present from first principles, and connect modern research in domain generalization and in-context learning.  Their notation and exposition in Sections 2 and 3 is thoughtful and clear.  Abstract concepts are made clear using examples, such as the self-driving car in Section 2 and sentence examples in Section 3.\n* The authors' proposed algorithm (ICRM) is intuitive to implement, and described clearly.\n* The authors' theoretical results in Section 3 (with the exception of the domain generalization result Theorem 3) are relatively intuitive, and also demonstrate the conditions under which ICRM is equivalent (Prop. 1) vs. beneficial (Theorem 1) over global ERM.\n* The authors provide detailed information about their experimental design and instantiation of each algorithm being benchmarked so that their experiments are clearly reproducible.\n* The authors' proposed method appears to result in significant performance gains over comparable domain generalization algorithms, which suggests its ability to have positive impact in practice.\n* I appreciate the authors' efforts to thoughtfully connect more abstract interpretations of how \"environment is context\" to existing literature from causality that studies similar phenomena (at the end of Section 5).  I found the smoking example to be an especially clear analogy that helped me better understand the motivation behind the approach."
+            },
+            "weaknesses": {
+                "value": "I am happy to consider raising my score if the authors address the below concerns.\n1. **Choice of datasets for evaluation + including experiments on \"harder\" datasets with spurious correlations that vary across environments**. \n  * My basic sense of the datasets that the authors chose to benchmark the value of their domain generalization method on is that there is arguably not *that* high variance in what semantic features are present across environments (e.g., simple rotations or corruptions are somewhat artificial shifts that are detached from reality). To really buy the author's claim that this approach is relevant for domain generalization, I would love to see experimental results on prominent spurious correlation benchmarks, such as those used in [1] (e.g., CivilComments, WaterBirds, CelebA).  I understand that several of these benchmarks only have 2 total test environments (so are perhaps unsuitable for domain generalization specifically), but can you attempt to include additional results on a spurious correlation benchmark (or justify why it's not appropriate)? I'm curious if on more difficult benchmarks, the model learned by ICRM may undesirably \"zoom-in on toxic spurious correlations\".\n2. **Weakening claims about \"what ICRM has learned\"**.  \n  * Unless the authors attempt to peek under the hood (using post-hoc explanation methods or by designing controlled experiments) to probe at what features the ICRM models have \"learned\", I suggest that the authors make clear that some of their claims that their models learn \"invariant\" or \"contextual features\", are hypotheses/intuition (rather than assertions of the truth). ex: in 6.1, you state that the gains are \"because ICRM training still benefits from contexts as to find contextual features that ERM ignores\".  I think this is a bit too strong (what are the \"contextual\" invariant features for your experiments using real data, for example?).  Perhaps soften to \"we hypothesize that this is because\u2026\"\n3. **More discussion of how to use ICRM in practice**, i.e., the nuances of what test set data to present as belonging to the same \"environment\" (/context) vs. different environments.  IMO this approach is perfect for domain generalization settings where the \"environment\" is literally the institution in which the algorithm is being deployed (ex: I begin using it in a new hospital), but has way more challenges when we consider \"environments\" as naturally occurring subpopulations or time-based shifts.  Can you please include additional discussion within your paper about how one would decide what examples to group together as being in the same \"environment\" in practice? I also thought it was a really cool result that you don't need to observe labels in order to include examples in the same \"context\" that should be emphasized further in such a practical discussion.\n\n\n[1] https://proceedings.mlr.press/v177/idrissi22a/idrissi22a.pdf"
+            },
+            "questions": {
+                "value": "In addition to the above 3 weaknesses which are most important to my score, I also had several comments, questions, and suggestions about places I got confused when reading the paper that can be made more clear.  \n\n* nit: Why did you choose the title \"context is environment\"? I wonder if \"environment is context\" is more appropriate, as you're aiming to solve domain generalization using in-context learning, and treating environment as context.  \"Context is environment\" to me implies that you are labeling \"context\" as environment to feed as input to domain generalization algorithms. \n* nit, Intro: Is the expectation here that we have environment labels available during training time? \u2013 when you state that \"simple empirical risk minimization\" is a strong baseline, do you mean just training using ERM on the entire dataset in an environment-agnostic way? (As a reader, I would need to dig into the references you've cited here to clarify). EDIT:  I see in Section 2 that you mean a global ERM that \"pools the data together\".  Can you clarify this earlier in the intro?\n* nit, Intro: Can you make more clear, perhaps using an example, what it means to \"reveal\" an \"invariance\"?  By an \"invariance\", do you mean some semantic feature that is predictive of the true label $y_i^e$ across all environments $e$?  By \"reveal\", do you mean that you discover that your in-context learner models actually \"use\" the invariant features to make predictions, or something else?\n* Section 2: \"the size of the representation would have to grow linearly with the size of the training data to describe aspects corresponding to a small group of examples, such as extreme value statistics\". I had trouble interpreting this sentence.  What do you mean by \"size\" here \u2013 do you mean the dimensionality of each $\\phi_i^e$?  Why are more dimensions necessary for the representations to encode relevant information?  Why do we care about \"describing aspects corresponding to a small group of examples\" \u2013 is it because we have fewer samples from some environments relative to others?  Is the problem that we must use the same function $\\phi$ across all the environments?\n* Section 5: \"define $\\delta_e$ to be a permutation of $\\gamma_e$ that swaps its two components\".  What do you mean by \"two components\" \u2013 do you mean swaps the parameters for $y = 0$ and $y = 1$?\n* Section 5: I may be missing something, but I'm not sure if I understand the linear least-squares example given in Equation 7.  Is it fair in this case to compare ICRM to \"global ERM\", which in many cases will fail to learn to add environment-specific averages $\\mu_e^i$? Does this phenom (that the true model can be learned) not hold for simple per-environment ERM too?  I am unsure of how illustrative this example (that ICRM tends to learn the true $\\alpha$ vs. some $\\alpha'$) is for the overarching claim that \"ICRM learns invariant features\".\n* Section 5, last paragraph: I don't really understand the value of including the last sentence here (\"when constraining the environment to only one smoker, the outcome of lung cancer disease invariably follows\").  Are you trying to suggest that when we have fewer environments (a \"smaller diameter\"), that invariance is easier to achieve? Can you provide more practical context around this point?\n* Section 6: I am confused by why in Figure 2, you show images that appear (from my eye) to be identical to the query, and calculate the attention score (e.g., between the two rotated 2s or Js).  Can you clarify exactly how the images on the right of the line are \"augmented\"?  Are you certain that these augmentations were significant enough?  Does it make sense for the model to see two almost identical images in the set of test examples?\n* Section 6: nit: In Figure 2, can you write (in small font) what the true labels are for each image, rather than the integer indices? (or at least for the query images?)\n* Section 7: \"we enable learning machines to fully exploit data in natural order\". I question if you should emphasize this point in your conclusion, as you didn't actually present any of the data \"in natural order\" (i.e., chronologically from its creation date) in any of your experiments."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1022/Reviewer_7Bph"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1022/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699541122300,
+        "cdate": 1699541122300,
+        "tmdate": 1699636028041,
+        "mdate": 1699636028041,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

@@ -1,0 +1,942 @@
+[
+    {
+        "title": "SENSITIVITY-INFORMED REGULARIZATION FOR OFFLINE BLACK-BOX OPTIMIZATION"
+    },
+    {
+        "review": {
+            "id": "HuAfxBoW8I",
+            "forum": "XCVuT5Stl5",
+            "replyto": "XCVuT5Stl5",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper tackles the problem of offline black-box optimization. In this problem, a surrogate model is trained to approximate the black-box objective function using a training dataset. The paper proposes a sensitivity measure of the surrogate model. Then, it proposes to train the surrogate model with this sensitivity measure as a regularization term. The goal is to achieve a surrogate model with low sensitivity. Thus, it avoids the problem of out-of-distribution prediction when performing the optimization."
+                },
+                "soundness": {
+                    "value": "1 poor"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The out-of-distribution problem in offline blackbox optimization is important and relevant to the community. The consideration of the model sensitivity seems to be new."
+                },
+                "weaknesses": {
+                    "value": "The proposed approach is not convincing and involves complicated approximations that may not be practical.\n\n1. Could you please explain the rationale behind considering sensitivity across the entire input domain in the definition of the sensitivity measure, while our dataset (and hence our optimization) may only belong to a small manifold of the input domain?\n\n2. The issue raised in the paper is the out-of-distribution prediction of the surrogate model for the black-box function. However, the paper solves it by using another surrogate model without addressing the out-of-distribution prediction of the model. For example, $\\Phi(\\gamma_i;w)$ is approximated with a neural network. It may also suffer from the out-of-distribution prediction, especially for the high dimensional input $\\gamma_i$ which has the same dimension as $\\phi$ (the parameters of a neural network). Hence, it raises a concern about the approximation quality.\n\n3. $\\Phi(\\gamma_i;w)$ is either $0$ or $1$. Is it reasonable to approximate it with a neural network?\n\n4. It is also unclear how tight is the upper bound of the sensitivity in Lemma 2. This issue deteriorates when this upper bound is further approximated using a first-order Taylor expansion. Hence, the resulting impact on the approximation quality is unknown.\n\n5. Even though $\\omega$ is trainable, its range still needs to be set manually to avoid the sensitivity measure being vacuous. This may be difficult in practice. Furthermore, other parameters such as $\\alpha$ and $\\lambda$ also need to be manually set."
+                },
+                "questions": {
+                    "value": "1. The sensitivity measure is defined by considering the expectation over random $x$ drawn from the input domain. What is the distribution of $x$ over the input domain? As $x$ can be a high-dimensional vector, sampling $x$ from its high-dimensional space seems to be very difficult.\n\n2. Why is $\\gamma$ drawn from a distribution with non-zero mean $\\omega_{\\mu}$? Another thing is whether it is reasonable to use the same $\\sigma_{\\sigma}$ for all parameters, given that some parameters may be very small while other parameters are larger (as these are parameters of a neural network).\n\n3. Please also address the above weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7087/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698260373564,
+            "cdate": 1698260373564,
+            "tmdate": 1699636835957,
+            "mdate": 1699636835957,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "hIIvUjlkUv",
+                "forum": "XCVuT5Stl5",
+                "replyto": "HuAfxBoW8I",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the detailed review. We have addressed all your questions below."
+                    },
+                    "comment": {
+                        "value": "**1. The rationale behind considering sensitivity across the entire input domain.** To answer the reviewer\u2019s question, the definition of sensitivity measure is generic but, in our implementation, the expectation over the entire input space is approximated by the empirical expectation of the training input in the offline dataset. Alternatively, we can always find a low-dimensional embedding of the input (e.g., via a variational auto-encoder) and sample on that latent space, whose results can be decoded back to the original space.\n\n**2. Will the approximation quality of $\\Phi(\\gamma_i; \\mathbf{w})$ be affected at out-of-distribution regime.** We would like to assert that the out-of-distribution phenomenon will not happen during the learning of $\\Phi$. To see this, note that the erratic out-of-distribution prediction happens on the surrogate of the true oracle because it is trained on non-representative (offline) data observing only values of the oracle at the bottom 40-th percentile -- see COMS -- https://arxiv.org/pdf/2107.06882\n\nOn the other hand, **the model $\\Phi(\\gamma_i,\\mathbf{w})$ is used in the context of Eq. (10) which aims to approximate the level set in Eq. (8). This only involves the surrogate model from which we can sample representatively since (unlike the oracle) we have full access to its parameterization. Thus, the out-of-distribution will not happen.** In addition, we note that $\\gamma_i$ is a scalar, not a high-dimensional vector.\n\n**3. $\\Phi(\\gamma_i; \\mathbf{w})$ is either $0$ or $1$.** This is a misunderstanding. In our work, the output of $\\Phi(\\gamma_i; \\mathbf{w})$ denote the probability that $\\gamma_i$ belongs to the level set in Eq. (8). As such, its value is a continuous value between 0 and 1. It is therefore reasonable to approximate it with a neural network.\n\n**4. How tight is the bound of the sensitivity in Lemma 2?** The tightness of the upper-bound of the sensitivity in Lemma 2 can be seen from the inequality $\\mathbb{I}(x \\geq \\alpha) \\leq \\min(1, (x/\\alpha)^n)$ -- see Eq. (22) & (23) in Appendix B which proves Lemma 2. This inequality is tight because when $x \\geq \\alpha$, both sides are 1. Otherwise, when $x < \\alpha$, $(x/\\alpha) < 1$ and so, $(x/\\alpha)^n$ is very close to $0 = \\mathbb{I}(x \\geq \\alpha)$ when n is large. Given this, the further use of first-order Taylor expansion should be acceptable as it is a common practice. \n\nTo evaluate the tightness of Lemma 2, we undertook a minor experiment to calculate the disparity between $S_\\phi$ and $S_{\\phi}^{+}$ , specifically $\\|S_\\phi \u2212 S_{\\phi}^{+}\\|$. The findings of this experiment are visualized in\n\nhttps://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/tightness/tightness.png \n\nwhere we present the average and standard deviation across batch data during 50 epochs of training the gradient ascent algorithm (GA) on two tasks: Superconductor and TF-BIND-8. The illustration reveals that the largest divergence $\\|S_\\phi \u2212 S_{\\phi}^{+}\\|$ is approximately 7.5%, which is sufficiently tight to affirm the accuracy of Lemma 2.\n\n**We will address the remaining questions in the next comment**"
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700226484684,
+                "cdate": 1700226484684,
+                "tmdate": 1700284960773,
+                "mdate": 1700284960773,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "X30PpU4QVJ",
+                "forum": "XCVuT5Stl5",
+                "replyto": "HuAfxBoW8I",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (cont.)"
+                    },
+                    "comment": {
+                        "value": "**5. Hyper-parameter Tuning for $\\omega$.** Indeed, setting such hyper-parameters is non-trivial. We have however detailed several strategies to do this via building pseudo-oracle based on generating synthetic data, such as those described above in response to Reviewer **kNdc**, which we quote below for your quick review.\n\nTo fine-tune the hyper-parameters of our regularizer, we can use the surrogate of the base method (which was trained on the offline data) as a pseudo-oracle, which helps evaluate design proposals generated by each specific configuration of the regularizer. For example, we can leverage the surrogate model of COMs as a pseudo-oracle to evaluate design proposals generated by the gradient ascent method (GA). \n\nTo demonstrate this, we conducted three experiments that mirrored those in our ablation studies in Section 5.3 with the key difference being the use of a pseudo-oracle in place of the true oracle. The results are promising, showing that this technique can successfully discover the same optimal hyperparameters as those determined using the true oracle. \n\nThis is visualized in the plots below, \n\n**(a)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_alpha.png \n\nwhich shows that the value of sensitivity threshold $\\alpha = 0.1$ (GA-0.1) is the best, as previously demonstrated using true oracle in Figure 2b. Likewise, the plots at \n\n**(b)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_n_gamma.png\n\nand\n\n**(c)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_omega_bound.png\n\nalso show that the best hyperparameters are: \n\nNo. of perturbation sample $m=100$ as the corresponding regularized baseline GA-100 is best among those in plot (b) and the bounds on mean and variance of the perturbation distribution are $([-10^{-3},10^{-3}],[10^{-5},10^{-2}])$ as the corresponding regularized baseline GA-0 is best among those in plot (c). These are the same tuning results found by the oracle in our ablation studies in Figure 2c and Figure 2d.\n\nPlease note that we only use the true oracle in the ablation studies (Section 5.3) which is necessary to show the isolated effect of each of the component. Our other experiments do not use the true oracle for hyper-parameter tuning.\n\nPlease also note that the indexing of baseline in plots (a) and (b) correspond to different indexing systems of the tuning parameter candidates.\n\n**6. What is the distribution over random $\\mathbf{x}$ drawn from the input domain.** To answer the reviewer\u2019s question, the definition is generic but in our implementation, the expectation over the entire input space is approximated by the empirical expectation of the training input in the offline dataset. Alternatively, we can always find a low-dimensional embedding of the input (e.g., via a variational auto-encoder) and sample on that latent space, whose results can be decoded back to the original space.\n\n**7. Why is $\\gamma_i$ drawn from a distribution with non-zero mean?** In our work, we aim to find a model that is most robust against the most adverse (but small) perturbation. Thus, the mean and variance of the perturbation distribution is not set but rather learned adversarially (as described in the paragraph following Eq. (7)). This can also be seen from Algorithm 1, specifically in step 11. As a result of such adversarial training, the mean of the perturbation distribution appears to be non-zero. We describe the overall process in the last paragraph of Section 5.1 and the last paragraph of Section 5.3.\n\n**Overall, we believe we had addressed all your concerns. Please let us know if the response is satisfactory or if you still have follow-up questions for us. We will be happy to discuss further.**"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700227012411,
+                "cdate": 1700227012411,
+                "tmdate": 1700228328492,
+                "mdate": 1700228328492,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "FRq68Evx0U",
+                "forum": "XCVuT5Stl5",
+                "replyto": "HuAfxBoW8I",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the detailed response. However, my concerns persist."
+                    },
+                    "comment": {
+                        "value": "1. **the expectation over the entire input space is approximated by the empirical expectation of the training input in the offline dataset.** The paper addresses the challenge of making reliable predictions beyond the scope of offline data. In response to question 2, the authors noted that the offline data is considered **non-representative** of the entire input space. Given this, how do we justify the rationale behind approximating the expectation over the entire input space using the empirical expectation derived from the training input in the offline dataset?\n\n**we can always find a low-dimensional embedding of the input (e.g., via a variational auto-encoder) and sample on that latent space, whose results can be decoded back to the original space.** This might be questionable because of the **non-representativeness** of the offline data. If we can discover a lower-dimensional representation of the input that can be reliably reconstructed into the original space, I am wondering why we do not build a model for the function g using this reduced-dimensional representation and optimize the surrogate with it? It would significantly alleviate the challenge of offline black-box optimization.\n\n2. I believe the key question here is whether $\\gamma_i$ is a scalar or a high-dimensional vector. If it is a scalar, then I agree with the authors that the domain is sufficiently small to be accurately approximated with a neural network. However, the paper defines $\\gamma_i = \\omega_\\mu + \\omega_\\sigma \\epsilon_i$, where $\\omega_\\mu$ represents the mean of a multivariate Gaussian distribution with the same dimension as the neural network's parameters $\\phi$ in Definition 1. Therefore, it would be beneficial to provide additional clarification on why it is a scalar value.\n\n3. In the first line of Equation 9, the probability within the expectation should be an indicator function of values of either $0$ or $1$ (the only random variable is $\\gamma$, so if $\\gamma$ is given, $\\gamma \\in R_\\alpha$ is either true or false). Please provide clarification on why it is a probability.\n\n4. The author asserts that the bound is tight when $n$ is large. However, in the appendix following Equation (23), the author opts for $n=2$ which is not considered a large value.\n\nI'm interested in understanding why we do not incorporate the first-order Taylor approximation from Eq. (14) into the definition of the sensitivity measure in Eq. (4) directly."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700288364717,
+                "cdate": 1700288364717,
+                "tmdate": 1700289159153,
+                "mdate": 1700289159153,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "V79tvYo0LB",
+                "forum": "XCVuT5Stl5",
+                "replyto": "HuAfxBoW8I",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the response, but they contain many confusions."
+                    },
+                    "comment": {
+                        "value": "**Sensitivity measure definition**\n\nThe response appears to be inconsistent. The initial explanation (and my question) discusses the rationality of approximating the expectation over the input space with that over the offline data. However, in the latest response, the authors argue that the authors hypothesize a sensitive measure should be calculated on the offline data. Additionally, under this hypothesis, the question arises as to why the sensitive measure is not defined as an expectation over the offline data but rather as an expectation over the input space.\n\n**Learning of $\\Phi(\\gamma_i;w)$**\n\nThe authors assert that they misunderstood my question regarding $\\kappa_i$ when stating that $\\gamma_i$ is a scalar value. This is perplexing, as the initial response from the authors focused entirely on $\\gamma_i$, with no mention of $\\kappa_i$.\n\nI am also puzzled by the connection between the factorized Gaussian distribution of $\\gamma$ and the learning of $\\Phi$. In the response, the authors mentioned, \"with $m=100$ samples of $\\gamma$, we have a set of $m=100$ scalars per dimension to sufficiently represent its $1$-dim Gaussian distribution.\" Does this imply that if $\\gamma$ is $500$-dim, only $500$ samples (**dimension independent?**) of $\\gamma$  are needed to find a neural network that approximates $\\Phi(\\gamma_i;w)$? To approximate $\\Phi(\\gamma_i;w)$, I believe a substantial number of samples is necessary to adequately cover the distributional support of $\\gamma$. This becomes particularly challenging for high-dimensional $\\gamma$, even when considering the factorized distribution of $\\gamma$. In fact, when the distribution of $\\gamma$ is factorized, the support of the distribution becomes even broader compared to the scenario where it is highly correlated.\n\n**$n=2$**\n\nAlthough there might be additional intricacies in plotting the approximation of $S_\\phi^+$, I believe that examining the function $(x/\\alpha)^n$ can provide insights into its proximity to zero, particularly when comparing the case of $n = 2$ to a larger value of $n$. Therefore, it appears contradictory that the authors advocate for a large value of $n$ while simultaneously opting for $n = 2$.\n\n\n**First-order Taylor approximation in Eq. (4)**\n\nI do not understand the authors' statement that \"we cannot directly apply the first-order Taylor approximation from Eq. (14) to Eq. (4)\". I can just utilize the identical Taylor approximation from Equation (14) for Equation (4):\n$|\\mathbb{E}[g(x;\\phi + \\gamma)] - \\mathbb{E}[g(x;\\phi)]|= |\\triangledown h(\\phi)^\\top \\gamma|$\n\nSince, $\\gamma$ follows a multivariate Gaussian distribution, $\\triangledown h(\\phi)^\\top \\gamma$ follows a Gaussian distribution. Then\n\n$\\\\text{Pr}\\_{\\\\gamma}(|\\\\mathbb{E}[g(x;\\\\phi + \\\\gamma)] - \\\\mathbb{E}[g(x;\\\\phi)]| \\\\ge \\\\alpha) = \\\\text{Pr}\\_{\\\\gamma}(|\\\\triangledown h(\\\\phi)^\\\\top \\\\gamma| \\\\ge \\\\alpha)$\n\nIt is only a combination of two univariate Gaussian CDFs. Hence, this greatly simplifies the calculation process."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700503550037,
+                "cdate": 1700503550037,
+                "tmdate": 1700503576980,
+                "mdate": 1700503576980,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "KsejSIK0TU",
+                "forum": "XCVuT5Stl5",
+                "replyto": "HuAfxBoW8I",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (cont.)"
+                    },
+                    "comment": {
+                        "value": ">**First-order Taylor approximation in Eq. (4)**\n\nThank you for this interesting suggestion. \n\nNow, we realize and agree that indeed the Taylor approximation can also be plugged into the above formulation of $S$, making it differentiable.\n\nThis is a feasible alternative to our approach and we will inspect it in our revision. However, we do not think this invalidates our approach which is based on an empirically tight bound. It also provides significant improvement across a diverse set of baseline as shown in Table 1.\n\nOverall, it is an interesting exploration for future follow-up but a thorough investigation of this approach is currently out-of-scope for this paper."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700646010529,
+                "cdate": 1700646010529,
+                "tmdate": 1700647149648,
+                "mdate": 1700647149648,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "duVou9C7aJ",
+                "forum": "XCVuT5Stl5",
+                "replyto": "KsejSIK0TU",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "**Sensitivity measure definition** Following the discussion, I have arrived at the conclusion that the sensitive measure's definition should be an empirical expectation from the offline data. It is due to the lack of a clear explanation regarding the approximation of the expectation across the entire input space with the empirical expectation based on offline data.\n\n**Learning of $\\Phi(\\gamma_i;w)$** (the 2nd point in the first response)\n\n+ **\"we thought part of the concern is if the output of the neural network were to be a high-dimensional vector\"** (authors' response in quotes): After checking the initial response, there is no reference to the **output being a high-dimensional vector**. Why are the authors introducing the neural network's output at this point?\n\n+ **\"we clarified that $\\Phi$ is a probability\"** The clarification $\\Phi$ is a probability is to address the third point in the first response (which is different from the second point where $\\gamma_i$ is claimed to be a scalar).\n\n**Learning using $m$ samples of $\\gamma$** I do not understand why the authors mention the problem of maximizing $\\log P(\\gamma_1, \\gamma_2, \\dots, \\gamma_m|\\mu, \\sigma^2)$. The problem is to learn $w$ in $\\Phi(\\gamma_i;w)$ using a set of samples $(\\kappa_i, \\gamma_i)_{i=1}^m$ using Eq. (10)\n\n**large values of $n$** I just leave it here for other reviewers and the AC to decide if advocating for larger values of $n$ while setting $n=2$ is a contradiction. Furthermore, employing larger values of $n$ may not result in significantly increased computational burden, contrary to the authors' assertion.\n\n**First Taylor approximation** The authors evaded addressing this question in the second response, asserting that directly applying the first-order Taylor approximation from Eq. (14) to Eq. (4) is not feasible. It is only when I explicitly demonstrated this by just directly substituting Eq. (14) into Eq. (4) that the authors admitted its viability. Anyways, this is a significant problem as it implies the possibility of removing many unnecessary approximations and assumptions.\n\nIn general, there is a lack of sincerity from the authors in addressing the questions, and there are significant problems present in both the paper and the response."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700709593897,
+                "cdate": 1700709593897,
+                "tmdate": 1700709593897,
+                "mdate": 1700709593897,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "sRCcZ7YQce",
+                "forum": "XCVuT5Stl5",
+                "replyto": "EYxltB2cSf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Apology to the Authors"
+                    },
+                    "comment": {
+                        "value": "I apologize the authors for the statement about insincerity. This perspective arises from my personal interpretation, and I acknowledge that the authors may have rightfully pointed out that we should not discuss or imply this aspect in academic discussions. I learned a valuable lesson from this experience.\n\nRegarding the experiment plot, my intention was to highlight that analyzing the function $(x/\\alpha)^n$ provides a simpler approach. On the other hand, creating a plot for the approximation of $\\mathcal{S}_{\\phi}^+$ introduces numerous intricacies, including randomness, sample size variations in $\\gamma$ and the distribution of $\\gamma$. I apologize for any confusion caused by my lack of clarity.\n\n> Although there might be additional intricacies in plotting the approximation of $\\mathcal{S}_{\\phi}^+$ , I believe that examining the function $(x/\\alpha)^n$ can provide insights into its proximity to zero, particularly when comparing the case of $n = 2$ to a larger value of $n$.\n\n\nNevertheless, my perspective on the paper remains, as I highlighted several major problems in my last response to the authors that have yet to be resolved. This is different from the authors' perspective in the summary."
+                    }
+                },
+                "number": 25,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700722489501,
+                "cdate": 1700722489501,
+                "tmdate": 1700722565580,
+                "mdate": 1700722565580,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "YHZkQeRoLn",
+                "forum": "XCVuT5Stl5",
+                "replyto": "duVou9C7aJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Clarification on the learning of $\\Phi(\\gamma;w)$ with 100 samples of $\\gamma$"
+                    },
+                    "comment": {
+                        "value": "I will elaborate my response below in further details.\n\n> **Learning using $m$ samples of $\\gamma$** I do not understand why the authors mention the problem of maximizing $\\log P(\\gamma_1, \\gamma_2, \\dots, \\gamma_m|\\mu, \\sigma^2)$. The problem is to learn $w$ in $\\Phi(\\gamma_i;w)$ using a set of samples $(\\kappa_i, \\gamma_i)_{i=1}^m$ using Eq. (10)\n\nExplanation:\n\nThe conversation has revolved around determining the parameters $w$ of a neural network $\\Phi(\\gamma;w)$ using a set of m training examples $(\\kappa_i, \\gamma_i)_{i=1}^m$ (following the notations in the paper, where the training input $\\gamma_i$ is in the second position, and the label $\\kappa_i$ is in the first position). The distribution of $\\gamma$ is a multivariate Gaussian distribution with a known mean and a known diagonal covariance matrix.\n\nTo support the claim that we only need around $100$ training examples, in the latest response, the authors discuss the problem of finding $\\mu$ that maximizes $\\log P(\\gamma_1, \\gamma_2, \\dots, \\gamma_m|\\mu, \\sigma^2)$ (following the authors' argument, so we use $\\sigma^2$) for a set of $m$ samples of $\\gamma$. By showing that the variance of the estimator of $\\mu$ is small with $m=100$ samples, the authors conclude that $m =100$ samples are enough. However, I fail to find any connection between **this problem of of finding $\\mu$ that maximizes $\\log P(\\gamma_1, \\gamma_2, \\dots, \\gamma_m|\\mu, \\sigma^2)$** and **the problem of finding parameters $w$ of a neural network $\\Phi(\\gamma;w)$ using a set of m training examples $(\\kappa_i, \\gamma_i)_{i=1}^m$ where the distribution of $\\gamma$ is known**.\n\nExample:\n\nLet's assume the validity of the authors' claim that we only require $100$ samples of $\\gamma$ (hence, $100$ training examples) to learn $w$ of $\\Phi(\\gamma;w)$. As the authors' proof remains unaffected by the dimension $d$ of $\\gamma$, for the sake of argument, let's set the dimension $d$ to be $200$ (keeping in mind that $\\gamma$ shares the same number of dimensions as the parameters of another neural network, hence, $d=200$ is not a large number). It would be surprising if we could find a good estimator for $w$ given that the dimensionality of $w$ should surpass $d=200$ (the dimension of the input to the neural network), yet we only have $m=100$ training examples available."
+                    }
+                },
+                "number": 29,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700726903771,
+                "cdate": 1700726903771,
+                "tmdate": 1700726903771,
+                "mdate": 1700726903771,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "EpCnauu4VU",
+                "forum": "XCVuT5Stl5",
+                "replyto": "grAZYF5lbM",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_RJQp"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for keeping the conversation going"
+                    },
+                    "comment": {
+                        "value": "Thank you for continuing the conversation and for accepting my apology.\n\nConcerning the learning of $\\Phi$, I have provided a brief explanation and an example in my latest response to clarify my concern. Essentially, my hesitation is about the number of unknowns (dimension of $w$) and the number of data points (the samples of $\\gamma$). I find it somewhat challenging to accept that having 100 samples of $\\gamma$ is adequate, regardless of the dimensionality of $w$, which increases with the input dimension $\\gamma$.\n\nI acknowledge that my perspective on the values of $n$ may be overly stringent. Therefore, let's assume that $n=2$ is acceptable based on your empirical argument.\n\nAs for the first-order Taylor approximation approach, I plan to consult with other reviewers and the AC to determine its acceptability. In any case, I hope to see you fully develop the idea that is relevant to your expertise."
+                    }
+                },
+                "number": 32,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700730189179,
+                "cdate": 1700730189179,
+                "tmdate": 1700730189179,
+                "mdate": 1700730189179,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "Lgxg8Jai0Q",
+            "forum": "XCVuT5Stl5",
+            "replyto": "XCVuT5Stl5",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes to add a sensitivity regularization term to the function surrogate models to improve the performance on offline black-box optimization problem. The authors define the formulation of sensitivity measurement and derive its differentiable version via reparameterization of the Gaussian distribution. Comprehensive experiment on both continuous and discrete benchmarks demonstrate that the proposed regularization term is able to improve the algorithm performance on most cases."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The idea is clear and the paper is well written.\n\n2. The experiment evaluation and ablation study is extensive and the result is impressive."
+                },
+                "weaknesses": {
+                    "value": "1. According to [1], the Superconductor and ChEMBL benchmarks do not have an exact function oracle, which may inherently have the sensitivity issue, and evaluations on these two benchmarks can not well access the model performance.\n\n\n[1] Trabucco, Brandon, et al. \"Design-bench: Benchmarks for data-driven offline model-based optimization.\" International Conference on Machine Learning. PMLR, 2022."
+                },
+                "questions": {
+                    "value": "1. The goal of the added regularization term is to make the surrogate function more accurate and less sensitive. In addition to the algorithm performance, can you show some surrogate prediction results with the regularization term?\n\n2. In Table 1 and Ant Morphology task, seems that the variance of the CMA-ES increases with the performance. Can you give some insights of why this happens?\n\n3. In Table 1 and TF Bind 10 task, seems that the REINFORCE with regularization term always find the global optimum. Can you give some insights of this impressive results?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv",
+                        "ICLR.cc/2024/Conference/Submission7087/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7087/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698658451364,
+            "cdate": 1698658451364,
+            "tmdate": 1700719338112,
+            "mdate": 1700719338112,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Soox1CTNg3",
+                "forum": "XCVuT5Stl5",
+                "replyto": "Lgxg8Jai0Q",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the positive review. We have addressed your questions below"
+                    },
+                    "comment": {
+                        "value": "**1. Showing some surrogate prediction results with the regularization term.** Our regularization technique is designed to develop a more resilient surrogate model, capable of handling minor disturbances and delivering accurate predictions in out-of-distribution regimes. \n\nTo assess the precision of predictions using SIRO versus the original baseline, we carried out a small-scale experiment. In this experiment, we calculated the root-mean-square-error (RMSE) of surrogate predictions for designs suggested by the gradient ascent method (GA), with the ground truth being the actual objective value determined by the oracle. \n\nThe outcomes, including the mean and standard deviation of RMSE, are displayed in \n\nhttps://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/RMSE/RMSE.png \n\nThroughout 50 steps of gradient ascent, the integration of SIRO resulted in the surrogate model making more accurate predictions than the original, particularly indicated by a lower RMSE and reduced standard deviation. This trend was consistent across both tasks, Superconductor and TF-BIND-8.\n\n**2. Variance of CMA-ES seems to increase with performance.** We do not think this is a consistent pattern. In Table 1, this is only the case with Ant Morphology and D\u2019Kitty. Note that for TF-BIND-10, the variance increases but the performance decreases. Overall, the variance of the regularized optimizer can increase (but not always) because it has more parameters than the non-regularized version.\n\n**3. REINFORCE with regularization always find the global optimum.** Thank you for bringing our attention to this. Upon a closer look into this, we realize that the REINFORCE baseline is somehow sensitive to the randomization of the offline data. We have re-run it for 16 times with more randomization of the offline dataset, the reported performance is $0.964 \\pm 0.096$. So, we do not think REINFORCE + SIRO baseline always finds the global optimum. It was a coincidence that REINFORCE + SIRO performs extremely well in one particular dataset generated by Design Bench. When we add more data variation to it, the performance is no longer perfect but it is nonetheless close to the optimal performance.\n\n**We hope the above have addressed all your concerns. Please let us know if you have any follow-up questions for us. We will be happy to discuss further.**"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700225387091,
+                "cdate": 1700225387091,
+                "tmdate": 1700226224780,
+                "mdate": 1700226224780,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "qQFkBWFjsZ",
+                "forum": "XCVuT5Stl5",
+                "replyto": "Lgxg8Jai0Q",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank for your reply about the model prediction and experimental detail.\n\nBut I think the result does not convince me of the better prediction of the proposed method. Like I mentioned in the weakness part, the Superconductor benchmark does not have an exact function oracle, which may inherently have the sensitivity issue (seems not addressed in the previous rebuttal).  On the TF-Bind-8 task with an exact oracle, the performance between SIRO and the original model seems at the same level to me.\n\nTherefore, I think the additional result does not help me to better understanding the improved performance of SIRO."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700470655954,
+                "cdate": 1700470655954,
+                "tmdate": 1700470667602,
+                "mdate": 1700470667602,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7N3Yr41sgR",
+                "forum": "XCVuT5Stl5",
+                "replyto": "Lgxg8Jai0Q",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the quick response. We have addressed your questions below"
+                    },
+                    "comment": {
+                        "value": "We appreciate the Reviewer for the prompt feedback. \n\nTo facilitate a better understanding of SIRO's improved performance, we made an earnest effort to conduct additional experiments on the TF-BIND-8 and TF-BIND-10 tasks. Unfortunately, due to time constraints, we could only complete experiments using the CbAS baseline for TF-BIND-8 and TF-BIND-10. You can access the results at this link: https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/RMSE/RMSE_CbAS.png \n\nThese findings illustrate that the utilization of SIRO aids surrogate models in generating more accurate predictions than the original baseline. We hope that these results adequately address the Reviewer's concerns.\n\nRegarding the issues related to Superconductor task, we agree with the Reviewer's observation that the lack of an exact oracle function could potentially introduce sensitivity issues. In principle, we would prefer to avoid conducting experiments on this task. However, since most prior studies have carried out experiments on this task, we have included the results to provide readers with a comprehensive perspective. We concur with the Reviewer's concern that the Superconductor baseline may not be an ideal choice. However, it's important to note that this concern is rooted in how the benchmark itself was constructed, rather than any shortcomings in our approach.The issues were mentioned before but the benchmark was still published after that. Please refer to the link below for more details: \n\nhttps://openreview.net/forum?id=cQzf26aA3vM&noteId=_Cs3nvyGs5J ."
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700711042082,
+                "cdate": 1700711042082,
+                "tmdate": 1700711099899,
+                "mdate": 1700711099899,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "nMOj7lDCUp",
+                "forum": "XCVuT5Stl5",
+                "replyto": "7N3Yr41sgR",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_eoHv"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the additional experiment, and the results are more convincing. I have increased the soundness score."
+                    }
+                },
+                "number": 24,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700719335778,
+                "cdate": 1700719335778,
+                "tmdate": 1700719335778,
+                "mdate": 1700719335778,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "S2pNFGHvSb",
+            "forum": "XCVuT5Stl5",
+            "replyto": "XCVuT5Stl5",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper investigates offline model-based optimization problems, which build a surrogate model using an offline dataset to approximate an unknown black-box function. This paper proposes an optimizable measurement of model sensitivity and proves its relationship with the brittleness of the model. In order to improve the model\u2019s quality, this paper adds the measurement into the training objective and proposes a bi-level framework to automatically optimize both the measurement parameter $\\omega$ and model parameter $\\phi$. The key contribution of this paper is the novel measurement of model sensitivity, which can be used to regulate the existing gradient-based surrogate model. Experiment results in this paper appear to show the effectiveness of the improvement brought by model sensitivity regularization."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. This paper is easy to follow and understand.\n2. The proposed model sensitivity measurement is well-motivated. The authors provide a novel perspective of measuring the surrogate model\u2019s quality, which theoretically contributes to offline MBO, and it can be scaled to other model-based domains, like BO and offline RL.\n3. The procedure of optimizing \\omega and \\phi is reasonable."
+                },
+                "weaknesses": {
+                    "value": "Experiments are insufficient. Below are the main aspects and my advice:\n    1. Lack of tasks. In Design-Bench (Trabucco et al., 2022), there are 8 real-world tasks while this paper only conducts 6 tasks, lacking Hopper-Controller from continuous domain and NAS from discrete domains.\n    2. Lack of baselines. This paper only compares SIRO to basic baselines provided by Design-Bench, not containing recent works like Roma (Yu et al., 2021), NoMA (Fu & Levine, 2021), and IOM (Qi et al. 2022), which share a similar framework and sensitivity regularization can be easily applied to. Some works on offline MBO, like COMs (Trabucco et al., 2021), also add regularization terms to the learning objective. If the authors provide experiment comparisons between different regularization methods, the experiments will be more solid and persuading."
+                },
+                "questions": {
+                    "value": "1. Some mistakes in Eq.(6) and Eq.(7) where it should be $\\omega = \\arg \\max_{\\omega^{\\prime}} \\mathcal{S}(\\alpha, \\omega^{\\prime})$ in Eq.(6) and $\\lambda\\cdot\\max_{\\omega^{\\prime}}S_{\\phi^{\\prime}}(\\alpha, \\omega^{\\prime})$.\n2. In Definition 1, X is defined as the input space. Does \u201cthe input space\u201d mean the offline dataset D? It may confuse the readers."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c",
+                        "ICLR.cc/2024/Conference/Submission7087/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7087/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698929256593,
+            "cdate": 1698929256593,
+            "tmdate": 1700553216590,
+            "mdate": 1700553216590,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "R9muidljUC",
+                "forum": "XCVuT5Stl5",
+                "replyto": "S2pNFGHvSb",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the overall positive rating! We have addressed your questions below"
+                    },
+                    "comment": {
+                        "value": "**1. Including more experiments.** Thank you for the suggestions. We report below the **result of regularizing ROMA with SIRO**:\n\n| RoMA | Ant Morphology        | D'Kitty Morphology    | Superconductor        | TF Bind 8             | TF Bind 10            | ChEMBL                |\n|------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|\n| Base | 0.553 \u00b1 0.094         | 0.834 \u00b1 0.017         | 0.489 \u00b1 0.022         | 0.665 \u00b1 0.000         | 0.553 \u00b1 0.000         | 0.633 \u00b1 0.000         |\n| SIRO | 0.606 \u00b1 0.059 (+5.3%) | 0.836 \u00b1 0.017 (+0.2%) | 0.498 \u00b1 0.023 (+0.9%) | 0.665 \u00b1 0.000 (+0.0%) | 0.553 \u00b1 0.000 (+0.0%) | 0.633 \u00b1 0.000 (+0.0%) |\n\nAs for other experiments regarding NEMO (Fu & Levine, 2021) and IOM (Qi et al., 2022), the authors did not release code so it is impossible to demonstrate the actual impact of SIRO on these optimizers (in their best implementation).\n\n**2. Compare with different regularization methods.** We also provide **extra experiments showing comparison between different regularization methods**:\n\nIn particular, we have run additional experiments on the Superconductor and TF-BIND-8 tasks to compare the performance improvement achieved by regularizing the gradient ascent (GA) optimizer with our proposed SIRO regularizer and the traditional L1 and L2 regularizers. \n\nThe results are visualized in the below plot hosted on the same anonymized GitHub repository that contains our experimental code:\n\nhttps://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/L1_L2/L1_L2.png \n\nThe results indicate that regularizing GA with L1 and L2 (GA w/ L1 and GA w/ L2) norms is not as effective as regularizing with SIRO (GA w/ SIRO). This is expected since SIRO is specifically designed to condition the output behavior of the model against adversarial perturbation while L1 and L2 only generically penalize models with high complexity, measured by the L1 and L2 norms of their parameters.\n\n**3. Including more baselines.** While we agree with the reviewer that incorporating the suggested baselines are interesting to include and could strengthen our paper, we also believe that not including them in the current manuscript does not pose a weakness to our main claim, as elaborated below:\n\n(1) We do NOT aim to develop a new regularized surrogate that introduces a new offline optimizer competing with existing ones. Instead, we want to develop an optimizer-agnostic regularizer (SIRO) that can be applied synergistically to a diverse set of existing optimizers, boosting their performance as shown in our experiments. \n\n(2) Although the set of existing optimizers used in our experiment is not exhaustive, we also do NOT aim to build a regularizer that works with all optimizers, which might not be feasible. We only claim (in our 2nd contribution bullet) that our developed regularizer works well to boost the performance of a diverse (but not necessarily exhaustive) set of optimizers. Even so, this is still a solid and practical contribution as none of the existing optimizers outperform others in all tasks.\n\nOverall, we agree having those experiments will strengthen the paper (and we have indeed generated new experiment results for some of the suggestions as presented above) but we hope the reviewer will consider our points (1) and (2) above and would not view these missing experiments as weaknesses to our contribution claim.\n\n**4. Typos in Eq. (6) and (7).** Thank you for catching the typo. We have corrected them.\n\n**5. In Definition 1, does the input space mean the offline dataset?**   In Definition 1, $\\mathfrak{X}$ is the entire input space that include the example inputs in the offline dataset. We will put a footnote in the paper to make this clear."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700224692595,
+                "cdate": 1700224692595,
+                "tmdate": 1700284192391,
+                "mdate": 1700284192391,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "tBpBaOteBb",
+                "forum": "XCVuT5Stl5",
+                "replyto": "S2pNFGHvSb",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for your response"
+                    },
+                    "comment": {
+                        "value": "Thanks for your response. I still have the following concerns: \n\n1. Regarding the NEMO code, although it is not open-source, the RoMA project has implemented NEMO. It would be interesting if the author could utilize this implementation available at (https://github.com/sihyun-yu/RoMA/blob/main/design_baselines/safeweight_latent/nets.py) to conduct experiments. Since both codes are based on the design-baselines framework, if the model is applicable, the author can directly make use of it.\n\n2. In the third point raised by the author, there seems to be a potential misunderstanding of my intention. What I meant to convey was that if the author wishes to highlight the advantages of the regularization term, they can simply incorporate their own regularization term into existing model-based methods. This would effectively demonstrate the significance of their approach. For example, comparing it with COMs by conducting a comparison between Grad. Ascent+SIRO and Grad. Ascent+COMs, in order to investigate the effects of SIRO.\n\n3. The feedback from Reviewer kNdc regarding the unsatisfactory performance of the 50th percentile and 75th percentile is intriguing. However, the current response lacks sufficient convincing discussion. Further discussion on this issue is requested."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700319922275,
+                "cdate": 1700319922275,
+                "tmdate": 1700319961060,
+                "mdate": 1700319961060,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "pJJOCxSEs7",
+                "forum": "XCVuT5Stl5",
+                "replyto": "1I1NSTgEqq",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_bS6c"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your response. \n\nI will increase the \"Soundness\" Score to 4 and lean towards accepting this paper."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700553181002,
+                "cdate": 1700553181002,
+                "tmdate": 1700553181002,
+                "mdate": 1700553181002,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "BCPnzGBR8a",
+            "forum": "XCVuT5Stl5",
+            "replyto": "XCVuT5Stl5",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_kNdc"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7087/Reviewer_kNdc"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper presents a framework for offline black-box optimization that accounts for the smoothness/sensitivity to perturbations of the learned surrogate model. The method works by including this sensitivity as a regularization term when training the surrogate model, for which the authors provide a practical scheme and approximation. Many computational benchmarks are used to show that the proposed framework improves existing offline black-box optimization methods."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "4 excellent"
+                },
+                "strengths": {
+                    "value": "1. The presentation of the regularization methodology and practical implementations is very clear.\n2. The results are very impressive and show that the proposed method performs well across a wide variety of problems. Furthermore, the method seems to generalize to improve many algorithms for offline black-box optimization."
+                },
+                "weaknesses": {
+                    "value": "1. While the results show the improvements that come from adding this regularization term, it would be interesting to see how this compares with other methods for regularization, e.g., when tuned properly, standard $L_1$ and $L_2$-norm regularization may help avoid overfitting. More advanced methods may also indirectly penalize non-smoothness.\n2. Similarly, the idea of avoiding large output changes subject to a perturbation into the decision variable could be compared against methods assuming the worst-case perturbation, i.e., robust black-box optimization or robust Bayesian optimization [1].\n3. The method seems to improve the best-case performance of an algorithm, but performance at the 50th and 75th percentiles is a lot less impressive.\n\n[1] Bertsimas, D., Nohadani, O., & Teo, K. M. (2010). Robust optimization for unconstrained simulation-based problems. Operations research, 58(1), 161-178."
+                },
+                "questions": {
+                    "value": "1. Given that offline black-box optimization assumes you already have a batch of samples, could this information be used to help select the hyperparameters of the proposed regularized? Otherwise, the user is guessing the smoothness of an unknown black-box function.\n2. Does regularizing for smoothness make the trained parametric surrogate models behave more similarly to Gaussian processes with standard kernels (i.e., sampling from smooth functions)?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7087/Reviewer_kNdc",
+                        "ICLR.cc/2024/Conference/Submission7087/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7087/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699294937309,
+            "cdate": 1699294937309,
+            "tmdate": 1700657342677,
+            "mdate": 1700657342677,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "lqNbBkLWs2",
+                "forum": "XCVuT5Stl5",
+                "replyto": "BCPnzGBR8a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the positive rating! We had addressed all your questions below"
+                    },
+                    "comment": {
+                        "value": "**1. Comparison with L1 and L2 regularization.** As requested, we have run additional experiments on the Superconductor and TF-BIND-8 tasks to compare the performance improvement achieved by regularizing the gradient ascent (GA) optimizer with our proposed SIRO regularizer and the traditional L1 and L2 regularizers. \n\nThe results are visualized in the below plot hosted on the same anonymized GitHub repository that contains our experimental code:\nhttps://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/L1_L2/L1_L2.png\n\nThe results indicate that **regularizing GA with L1 and L2 (GA w/ L1 and GA w/ L2) norms is not as effective as regularizing with SIRO (GA w/ SIRO).** This is expected since SIRO is specifically designed to condition the output behavior of the model against adversarial perturbation while L1 and L2 only generically penalize models with high complexity, measured by the L1 and L2 norms of their parameters.\n\n**2. Considering similar idea of robust Bayesian optimization in [1].** Thank you for the insightful suggestions. We believe the idea presented in [1] can be repurposed to fit into our context but that will be non-trivial since [1] defines the adverse effect of perturbation in terms of the maximum value a perturbed model can achieve -- see Eq. (4) in [1] -- which does not necessarily measure how susceptible a model is to perturbation.\n\nFor example, a low-output model can have its output doubled at the maximum adverse perturbation, but the final output is still less than that of another high-output model whose output only changes by 1% at the worst perturbation. In this case, the proposed algorithm in [1] will favor the former while ours would favor the latter. \n\nThis conceptual discrepancy stems from a key difference in focus between our work and [1]. In particular, [1] is set in a context where the regularization is applied directly to the function that needs to be minimized, assuming that it is either known or can be queried. \nAs such, it makes sense that the optimizing algorithm in [1] has an implicit bias that low-output models can tolerate more perturbation, which is true in its context. In contrast, our work is set in a more sophisticated context where the regularization is applied to a learning model of the (unknown) function being optimized. As such, unlike [1], we cannot prioritize surrogates with low prediction over surrogates with high prediction. \n\nBut nonetheless, we agree that the idea in [1] is very intriguing and we will explore potential adaptation of it into offline optimization in our follow-up work. We note that this is also similar in spirit to the central idea in RoMA [2], another baseline that we had compared against. Thank you again for this interesting suggestion.\n\n[1] Bertsimas, D., Nohadani, O., & Teo, K. M. (2010). Robust optimization for unconstrained simulation-based problems. Operations research, 58(1), 161-178.\n\n[2] Yu, Sihyun, Sungsoo Ahn, Le Song, and Jinwoo Shin. \"Roma: Robust model adaptation for offline model-based optimization.\" Advances in Neural Information Processing Systems 34 (2021): 4619-4631.\n\n**3. Improvement at 50th and 75th percentile.** We agree with the reviewer that results for the 50th and 75th percentile are less impressive than reported results for the 100th percentile. This is potentially because most base methods are also not very effective at those percentiles. It is observed in both Tables 2 and 3 that the 50th and 75th solutions of the base methods often do not improve much over the empirical best. Thank you for pointing this out. This could be one potential venue of focus for our future expansion of the current idea.\n\n**We will address your remaining questions in the next comment.**"
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700223128139,
+                "cdate": 1700223128139,
+                "tmdate": 1700283625658,
+                "mdate": 1700283625658,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Mqe0tZaajs",
+                "forum": "XCVuT5Stl5",
+                "replyto": "BCPnzGBR8a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (cont.)"
+                    },
+                    "comment": {
+                        "value": "**4. Tuning hyper-parameters of the proposed regularizer.** To fine-tune the hyper-parameters of our regularizer, we can use the surrogate of the base method (which was trained on the offline data) as a pseudo-oracle, which helps evaluate design proposals generated by each specific configuration of the regularizer. For example, we can leverage the surrogate model of COMs as a pseudo-oracle to evaluate design proposals generated by the gradient ascent method (GA). \n\nTo demonstrate this, we conducted three experiments that mirrored those in our ablation studies in Section 5.3 with the key difference being the use of a pseudo-oracle in place of the true oracle. The results are promising, showing that this technique can successfully discover the same optimal hyperparameters as those determined using the true oracle. \n\nThis is visualized in the plots below, \n\n**(a)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_alpha.png \n\nwhich shows that the value of sensitivity threshold $\\alpha = 0.1$ (GA-0.1) is the best, as previously demonstrated using true oracle in Figure 2b. Likewise, the plots at \n\n**(b)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_n_gamma.png\n\nand\n\n**(c)** https://github.com/abcdefghhgfedcba/SIRO/blob/main/rebuttals/hyperparameters_selection/coms_oracle_change_omega_bound.png\n\nalso show that the best hyperparameters are: \n\nNo. of perturbation sample $m=100$ as the corresponding regularized baseline GA-100 is best among those in plot (b) and the bounds on mean and variance of the perturbation distribution are $([-10^{-3},10^{-3}],[10^{-5},10^{-2}])$ as the corresponding regularized baseline GA-0 is best among those in plot (c). These are the same tuning results found by the oracle in our ablation studies in Figure 2c and Figure 2d.\n\nPlease note that we only use the true oracle in the ablation studies (Section 5.3) which is necessary to show the isolated effect of each of the component. Our other experiments do not use the true oracle for hyper-parameter tuning.\n\nPlease also note that the indexing of baseline in plots (a) and (b) correspond to different indexing systems of the tuning parameter candidates.\n\n**5. Does regularizing for smoothness make the trained parametric surrogates behave more similarly to Gaussian processes with standard kernels?** Although the Gaussian process (GP) is a prior over a space of smooth functions, its prediction is sensitive to the kernel\u2019s length-scales (one per input component) which are learned based on the offline data, and might not match the actual length-scale in an out-of-distribution regime. This is especially the case in non-static environments where the length-scales tend to vary across the input space. As such, a non-regularized GP will not necessarily behave similarly to a regularized parametric model using our notion of sensitivity in Definition 1 which applies to the entire output space. That being said, we want to emphasize that our proposed regularizer is model-agnostic and can be applied to regularize a GP-based surrogate too. Although it is beside the main point of this paper, it would indeed be interesting to inspect how a regularized GP surrogate performs in an offline optimization context. We will explore this in our follow-up work. \n\n**Thank you again for your suggestion. We really appreciate your insightful comments. We are looking forward to hearing back from you soon. Please also let us know if you have any follow-up questions for us. We will be very happy to discuss further.**"
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700223633719,
+                "cdate": 1700223633719,
+                "tmdate": 1700226043979,
+                "mdate": 1700226043979,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "oRv27V50zQ",
+                "forum": "XCVuT5Stl5",
+                "replyto": "BCPnzGBR8a",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_kNdc"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7087/Reviewer_kNdc"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to rebuttal"
+                    },
+                    "comment": {
+                        "value": "Thank you for the detailed response. I appreciate the thoughts re. my comments that may have been slightly out of the scope of the original contribution. Though I still have some concerns about the general applicability of the method (e.g., the authors acknowledge performance could be improved at the 50/75 percentiles), I believe the added results improve the contribution of the work. My favorable impression of this paper remains, and I have increased my 'Contribution' score accordingly."
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7087/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700657325339,
+                "cdate": 1700657325339,
+                "tmdate": 1700657325339,
+                "mdate": 1700657325339,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

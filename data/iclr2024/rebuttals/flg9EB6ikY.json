@@ -1,0 +1,988 @@
+[
+    {
+        "title": "Selective Prediction via Training Dynamics"
+    },
+    {
+        "review": {
+            "id": "ADv3hCHdHg",
+            "forum": "flg9EB6ikY",
+            "replyto": "flg9EB6ikY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_2hdK"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_2hdK"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes SPTD (Selective Prediction based on neural network Training Dynamics), a new approach to selective prediction problem. In this approach, SPTD captures the final model along with many intermediate models learned during the SGD style training method. SPTD runs these intermediate models and find the disagreement between the final model prediction and the intermediate model predictions. With some weighting scheme, a threshold based gating function is introduced to estimate the selection region. Given that this method introduces no architectural changes, it has no train-time impact (the intermediate checkpoint storage is an additional overhead). This also means that such an approach can be utilized for not only classification tasks, but other tasks such as regression."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- No architectural changes implies no training time changes \n- Applicable for not only selective classification problems but other tasks such as regression and time-series forecasting"
+                },
+                "weaknesses": {
+                    "value": "- Added storage overhead for the intermediate models\n- Added inference cost for the prediction using the intermediate models compared to other selective prediction models that only require one forward pass through the architecture and the gating mechanism.\n- It is unclear which of the many intermediate checkpoints should be used for the inference stage."
+                },
+                "questions": {
+                    "value": "-  Have you plotted other baselines for the Figure 2 to see what impact these baselines have compared to SPTD?\n-  How do you select which of the intermediate checkpoints should be used for the inference stage? It is possible to design clever selection strategies during training to reduce the storage and inference cost rather than storing intermediate points at fixed checkpoint intervals.\n-  Have you tried other weighting schemes than (t/T)^k? \n-  Have you compared the inference cost of STPD with other methods (which only require one forward pass through the network and some gating mechanism)?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4024/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698764564981,
+            "cdate": 1698764564981,
+            "tmdate": 1699636365215,
+            "mdate": 1699636365215,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "tBOEdMPdqD",
+                "forum": "flg9EB6ikY",
+                "replyto": "ADv3hCHdHg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 2hdK (1)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their feedback on our work and address individual concerns below:\n\n> Added storage overhead for the intermediate models. Added inference cost for the prediction using the intermediate models compared to other selective prediction models that only require one forward pass through the architecture and the gating mechanism.\n\nThe reviewer is right that our approach requires storage of additional models and also has an increased inference time cost due to forward-propagating inputs through all models. However, deep ensembles, the best competing approach to date, also requires storage of multiple models as well as an increased inference time cost. Many past works from the selective classification domain [1,2,3,4] do not consider Deep Ensembles explicitly as a competing method. In summary, we observe that the added storage and inference time cost do contribute to better selective prediction performance.\n\n**References**\n\n[1]  Feng, Leo, et al. \"Towards Better Selective Classification.\" The Eleventh International Conference on Learning Representations. 2022.\n\n[2] Huang, Lang, Chao Zhang, and Hongyang Zhang. \"Self-adaptive training: beyond empirical risk minimization.\" Advances in neural information processing systems 33 (2020): 19365-19376.\n\n[3] Liu, Ziyin, et al. \"Deep gamblers: Learning to abstain with portfolio theory.\" Advances in Neural Information Processing Systems 32 (2019).\n\n[4] Geifman, Yonatan, and Ran El-Yaniv. \"Selectivenet: A deep neural network with an integrated reject option.\" International conference on machine learning. PMLR, 2019.\n\n> It is unclear which of the many intermediate checkpoints should be used for the inference stage.\n\nSee discussion below.\n\n> Have you plotted other baselines for the Figure 2 to see what impact these baselines have compared to SPTD?\n\nWe provide this extended experiment as part of the updated PDF in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png). We see that all methods reliably improve over the SR baseline. At the same time, we notice that SAT and DE still assign higher confidence away from the data due to limited use of decision boundary oscillations. SPTD addresses this limitation and assigns more uniform uncertainty over the full data space.\n\n>  How do you select which of the intermediate checkpoints should be used for the inference stage? [...]\n\nOur method relies on first computing a very detailed approximation of the training dynamics and then subsampling (see *Checkpoint Selection Strategy* on page 8) and weighting the subsampled checkpoints using $v_t = (\\frac{t}{T})^k$. You can think of the weighting as a prioritization to which part of the training dynamics to pay attention to. As we show below, our weighting is an appropriate choice for the problems we consider and outperforms alternative non-convex or uniform weighting strategies. We agree with the reviewer that other weighting strategies with potentially stronger performance might exist. However, these weightings might require deliberate distributional assumptions. Our work demonstrates that $v_t = (\\frac{t}{T})^k$ with a flexible choice of $k$ enables SOTA selective classification performance across a wide range of datasets without much hyper-parameter tuning.\n\n> Have you tried other weighting schemes than (t/T)^k? \n\nWe have experimented with other weightings beside $v_t = (\\frac{t}{T})^k$ with $k \\in [0,\\infty)$ but found that our choice of $v_t$ performs best across our experimental panel. This weighting encourages us to be particularly sensitive to late disagreements while at the same time incorporating diversity from models across the full training spectrum. We have updated the submission with a new experiment shown in [Figure 13](https://transfer.sh/u9s4eb2GXl/fig13.png) in which we also consider concave weightings $k \\in (0,1]$ as well as a uniform weighting assigning the same weight to all checkpoints. It is evident that our weighting choice performs better than other approaches. Finally, we want to remind the reviewer that, as described in Section 3.2, our choice for $v_t$ is not arbitrary but inspired by recent results from sample difficulty [1,2,3].\n\n**References**:\n\n[1] Baldock, Robert, Hartmut Maennel, and Behnam Neyshabur. \"Deep learning through the lens of example difficulty.\" Advances in Neural Information Processing Systems 34 (2021): 10876-10889.\n\n[2] Zhang, Chiyuan, et al. \"Understanding deep learning (still) requires rethinking generalization.\" Communications of the ACM 64.3 (2021): 107-115.\n\n[3] Jiang, Ziheng, et al. \"Characterizing structural regularities of labeled data in overparameterized models.\" arXiv preprint arXiv:2002.03206 (2020)."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700082105855,
+                "cdate": 1700082105855,
+                "tmdate": 1700082105855,
+                "mdate": 1700082105855,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7ZxnmHUtAD",
+                "forum": "flg9EB6ikY",
+                "replyto": "ADv3hCHdHg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 2hdK (2)"
+                    },
+                    "comment": {
+                        "value": "> Have you compared the inference cost of STPD with other methods (which only require one forward pass through the network and some gating mechanism)?\n\nAs is typical for ensemble-based methods, our method naturally incurs a higher inference-time cost compared to models that do not require access to multiple models. While an ensemble consisting of $M$ models incurs approximately $M$ times the inference cost of a model only relying on a single forward pass, we remark that ensemble-based methods (Deep Ensembles, Selective Prediction Training Dynamics, as well as their combination) provide significantly stronger selective accuracy at a fixed coverage level than single forward pass methods (see Table 1).\n\n---\n**We hope that we have addressed the reviewer\u2019s concerns and that the reviewer considers raising their score as a result.**"
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700082153293,
+                "cdate": 1700082153293,
+                "tmdate": 1700082153293,
+                "mdate": 1700082153293,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "CdKKMH79eu",
+                "forum": "flg9EB6ikY",
+                "replyto": "7ZxnmHUtAD",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_2hdK"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_2hdK"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to author rebuttal"
+                    },
+                    "comment": {
+                        "value": "Thank you for the rebuttal. I feel like this still does not answer the associated cost of inference and storage of the proposed scheme. Since it is clear that these costs are significantly larger than the schemes that utilize single forward pass, it is imperative that such metrics be clearly plotted and discussed in the context of this work."
+                    }
+                },
+                "number": 26,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700679695701,
+                "cdate": 1700679695701,
+                "tmdate": 1700679695701,
+                "mdate": 1700679695701,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "vez4oBYVMg",
+            "forum": "flg9EB6ikY",
+            "replyto": "flg9EB6ikY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_jRFU"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_jRFU"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new metric for selective predictions -- SPTD. The metric is based on training dynamics of the sample. It is applicable to classification, regression and time-series forecasting. It is an inference time method -- does not need any specialized training. although, it needs some checkpoints to be stored -- which makes it compatible in combination with existing selective prediction methods."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The method is novel in terms of it doesnt need a specialized training, and it can be applied on top of existing methods.\n- Reasonable baseline and ablations (i especially like the analysis on checkpoint granularity)"
+                },
+                "weaknesses": {
+                    "value": "- Fail to cite some very related works on training dynamics (e.g., https://arxiv.org/pdf/2009.10795.pdf) as well as using training dynamics to analyze test sample (https://proceedings.mlr.press/v163/adila22a/adila22a.pdf)\n- Considering the two works mentioned above, the novelty of the work seems less now. If the authors can come with a convincing argument on this, I would not be opposed to raising my score\n- The numerical improvement over baseline (Table 1) seems very small.\n- Distribution on g evaluation (Figure 4) is only done for the proposed method. If other baselines have the same pattern, the relative efficacy of the method becomes questionable"
+                },
+                "questions": {
+                    "value": "- Check Weakness\n- Have the authors try the method on OOD datasets? Can it reliably reject OOD samples?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Reviewer_jRFU",
+                        "ICLR.cc/2024/Conference/Submission4024/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4024/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698785319087,
+            "cdate": 1698785319087,
+            "tmdate": 1700327076480,
+            "mdate": 1700327076480,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "8z7ZYwfJzO",
+                "forum": "flg9EB6ikY",
+                "replyto": "vez4oBYVMg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer jRFU (1)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their feedback on our work and address individual concerns below:\n\n> Fail to cite some very related works on training dynamics (e.g., https://arxiv.org/pdf/2009.10795.pdf) as well as using training dynamics to analyze test sample (https://proceedings.mlr.press/v163/adila22a/adila22a.pdf)\n\nWe thank the reviewer for pointing us to these works. Here we clarify that while both suggested papers look at \u201ctraining dynamics\u201d, the quantities we are using are different: in both of the referenced papers the authors use variability while our metrics focus on convergence rates. Furthermore, note that variability is defined with respect to the correct label, whereas in selective prediction we do not know the ground truth label (and need to measure convergence in label prediction. To further set our method apart, we also demonstrate the applicability of our approach beyond classification and its composability with other selective classification approaches including composing on top of common ensembling techniques. Due to these key differences, we are confident that our work continues to be a valuable contribution to the selective prediction and uncertainty quantification communities. We have updated our related work section with a paragraph discussing this and other related training-dynamics specific works.\n\n> Considering the two works mentioned above, the novelty of the work seems less now. If the authors can come with a convincing argument on this, I would not be opposed to raising my score\n\nThe novelty in our method is the specific training dynamics metric we propose for selective prediction as well as our evaluation in conjunction with other approaches and on tasks beyond classification. The cited work uses variance of the logit output for the true label; while we do not have access to the true label, we can use the final predicted label as a proxy. Doing so, we present results in [Figure 14](https://transfer.sh/axsNnqOO0D/fig14.png) along with additional discussion in Appendix D.2.6 which shows that our metric (which emphasizes convergence) is more performative than the training dynamics metrics proposed in the cited work.\n\n> The numerical improvement over baseline (Table 1) seems very small.\n\nWe understand the reviewer\u2019s concern about the small improvements shown in Table 1. At the same time, we would ask the reviewer to put the presented results into context: \n- Many past works from the selective classification domain [1,2,3,4] do not consider Deep Ensembles explicitly as a competing method. Since we mainly consider our method as an alternative to DE, these improvements can appear small. \n- Moreover, many past works [2,3] do not explicitly accuracy-align models at full coverage which can give the proposed methods an unfair head-start and as a result overestimate the method\u2019s effectiveness. We make sure to compare all methods on an equal footing by disentangling selective prediction performance from gains in overall utility. We highlight the presence of accuracy alignment in the caption of Table 1.\n- Finally, we highlight that our method\u2019s advantages extend beyond the SPTD results reported in Table 1. This includes (i) ambiguity w.r.t the training stage; (ii) retroactive applicability; as well as (iii) composability with existing SC approaches.\n\n**References**\n\n[1]  Feng, Leo, et al. \"Towards Better Selective Classification.\" The Eleventh International Conference on Learning Representations. 2022.\n\n[2] Huang, Lang, Chao Zhang, and Hongyang Zhang. \"Self-adaptive training: beyond empirical risk minimization.\" Advances in neural information processing systems 33 (2020): 19365-19376.\n\n[3] Liu, Ziyin, et al. \"Deep gamblers: Learning to abstain with portfolio theory.\" Advances in Neural Information Processing Systems 32 (2019).\n\n[4] Geifman, Yonatan, and Ran El-Yaniv. \"Selectivenet: A deep neural network with an integrated reject option.\" International conference on machine learning. PMLR, 2019.\n\n> Distribution on g evaluation (Figure 4) is only done for the proposed method. If other baselines have the same pattern, the relative efficacy of the method becomes questionable\n\nWe provide an extended study on all methods in [Figure 10](https://transfer.sh/T4s7BpVbov/fig10.png). Since all methods are designed to address the selective prediction problem, they all manage to separate correct from incorrect points (albeit at varying success rates). We see that SPTD spreads the scores for incorrect points over a wide range with little overlap. We observe that for SR, incorrect and correct points both have their mode at approximately the same location which hinders performative selective classification. Although SAT and DE show larger bumps at larger score ranges for incorrect points, the separation with correct points is weaker as correct points also result in higher scores (i.e. longer blue tail) more often than for SPTD."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700080710552,
+                "cdate": 1700080710552,
+                "tmdate": 1700080710552,
+                "mdate": 1700080710552,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "bRfwND3SVZ",
+                "forum": "flg9EB6ikY",
+                "replyto": "vez4oBYVMg",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer jRFU (2)"
+                    },
+                    "comment": {
+                        "value": "> Have the authors try the method on OOD datasets? Can it reliably reject OOD samples?\n\nThe reviewer is right that the field of OOD detection is an important discipline in trustworthy ML related to SC. We therefore have already provided preliminary evidence in [Figure 15](https://transfer.sh/emelUeYzsw/fig15.png) in the Appendix that our method can be used for detecting OOD examples (and also adversarial examples). While these results are already encouraging, we remark that adversarial and OOD samples are less well defined as incorrect data points and can come in a variety of different flavors (i.e., various kinds of attacks or various degrees of OOD-ness). As such, we strongly believe that future work is needed to determine whether a training-dynamics-based approach to SC can be reliably used for OOD and adversarial sample identification. In particular, a study of the exact observed training dynamics for both types of samples seems vital to ensure improved detectability.  We remark that in our extended synthetic experiments in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png), we observe that SAT and DE assign higher confidence away from the data due to limited use of decision boundary oscillations. SPTD addresses this limitation and assigns more uniform uncertainty over the full data space, enabling better OOD detectability.\n\n---\n**We hope that we have addressed the reviewer\u2019s concerns and that the reviewer considers raising their score as a result.**"
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700080858515,
+                "cdate": 1700080858515,
+                "tmdate": 1700080858515,
+                "mdate": 1700080858515,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Xs2TElqp83",
+                "forum": "flg9EB6ikY",
+                "replyto": "bRfwND3SVZ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_jRFU"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_jRFU"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the detailed response to th review! The authors have addressed my main concern on novelty. I have increased my score."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700327134730,
+                "cdate": 1700327134730,
+                "tmdate": 1700327134730,
+                "mdate": 1700327134730,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "EIQlxqN0sJ",
+            "forum": "flg9EB6ikY",
+            "replyto": "flg9EB6ikY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a new approach to selective prediction, which is a learning setup that allows the model to abstain from making prediction. The main idea is to keep a set of checkpoint models during training and compute a weighted average of the prediction discrepancy between checkpoint and final models. The entire process can be described concisely as follow:\n\ng(x) = sum_(t in S) (t/T)^k * L(f_t(x), f_T(x)) where S is the set of checkpoint indices and L is a distance function, such as 0-1 loss for classification or mean absolute error for regression; k is a hyper-parameter\nif g(x) >= tau: abstain; otherwise, use f_T to make prediction\n\nThis is a simple but interesting idea. It seems to provide strong empirical results too. However, despite the presence of extensive experiment results, the fundamental reason why this method has an advantage over methods that calibrate uncertainty directly is still not clear to me. Furthermore, I have some practical concerns regarding the proposed approaches as well.\n\nOverall, I believe this is an interesting work but it still lacks a deep insight into why this machinery is expected to work better than prior approaches. This is why I currently rate this paper a bit below the acceptance bar but surely, if the authors address my concerns convincingly, I will be happy to upgrade my rating -- it is possible that I might have missed something important here."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "Looking at the training dynamic to gauge the prediction reliability at a test point is a refreshingly interesting idea. Despite its simple formulation, I consider the idea novel -- in fact, simplicity in implementation is a plus to me.\n\nThe paper is also reasonably well-written. It is a pleasant to read this paper. All discussion points & experiment highlights are well-organized, which makes the core idea very digestible. \n\nI also appreciate the extensive results with a lot of ablation studies. There are also some pretty interesting theoretical results in the appendix. I think some of these results do provide some theoretical insights into how the variation of certain performance metric across checkpoint models can be related to the probability of correct classification, which could help strengthen the discussion in the main text if the corresponding assumptions is well-justified.\n\nI like that part of the appendix also provides interesting discussion points relating the proposed approach to other lines of research."
+                },
+                "weaknesses": {
+                    "value": "Despite the above strengths, I still have a few doubts regarding the practicality of this paper:\n\nFirst, the results are presented in a way that gives the impression that one can control the coverage. \n\nHow is it possible in practice? I understand that the threshold can be adjusted to meet a certain coverage level on the training set but I am not sure how we could do that for the unseen test set. \n\nIn other words, I feel that setting tau algorithmically should be part of the solution. \n\nSecond, if I understand the main point correctly, the exploitation of the checkpoint model is mainly to help with uncertainty calibration. Then, what makes it perform better than methods that do so explicitly? I think we need a more insightful discussion here.\n\nThird, does the tuning of the parameter k depend on test data? \n\nFourth, part of the claim is the proposed method can be applied on top of existing models. But is it always effective? Could we demonstrate such synergy between SPTD and other baselines? Furthermore, I wonder how well a simple probabilistic method with explicit prediction uncertainty, such as Bayesian Neural Net or Gaussian process would fare against SPTD -- we can either do that experiment or point out previous finding in the literature that already sheds light on this.\n\nLast, will SPTD still be robust regarding checkpoint resolution if the model complexity increases? ResNet18 is probably not a SOTA model for hard classification task such as CIFAR-100 -- how does SPTD work on larger model, such as ViT?"
+                },
+                "questions": {
+                    "value": "I have raised some questions in the Weakness section. In addition, I also have a few other minor questions:\n\nHow do you set the threshold? In your experiment, was it set with respect to the training or test set?\n\nI find this statement confusing: \"checkpoint each model after processing 50 mini-batches of size 128. All models are trained over 200 epochs\" -- by this statement alone, it means if you are making 200 passes over the entire training set & for CIFAR-10, that means looping over a total of 50K * 100 / 128  batches -- so if you checkpoint every 50 batches, approximately > 1K checkpoint needs to be stored -- this seems a bit too extravagant\n\nThat being said, I feel like I have missed something here since the later context clearly points out that the no. of checkpoint models used in the experiment is between 25-50\n\nIn addition, I wonder whether an explicit probabilistic method (such as BNN & GP) would be over-confident in the synthetic experiment. Can we do a quick check on this?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4024/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698912129760,
+            "cdate": 1698912129760,
+            "tmdate": 1699636365072,
+            "mdate": 1699636365072,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "OpqdpYycvQ",
+                "forum": "flg9EB6ikY",
+                "replyto": "EIQlxqN0sJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer ux7A (1)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their detailed assessment of our work and address individual concerns below:\n\n> First, the results are presented in a way that gives the impression that one can control the coverage. [...]\n\nAs part of our evaluation, we directly compute the accuracy/coverage tradeoff on the test set. This is consistent with how prior works evaluate their selective classification approaches [1,2,3,4] and allows us to highlight relative performance improvements of our method over competing works.\n\n**References**\n\n[1]  Feng, Leo, et al. \"Towards Better Selective Classification.\" ICLR. 2022.\n\n[2] Huang, Lang, Chao Zhang, and Hongyang Zhang. \"Self-adaptive training: beyond empirical risk minimization.\" NeurIPS 33 (2020).\n\n[3] Liu, Ziyin, et al. \"Deep gamblers: Learning to abstain with portfolio theory.\" NeurIPS 32 (2019).\n\n[4] Geifman, Yonatan, and Ran El-Yaniv. \"Selectivenet: A deep neural network with an integrated reject option.\" ICML, 2019.\n\n> Second, if I understand the main point correctly, the exploitation of the checkpoint model is mainly to help with uncertainty calibration. [...]\n\nThe reviewer is right that our method helps with uncertainty calibration. Although we think that the precise reason for the effectiveness of our particular method (in particular theoretical guarantees) should be part of future work, we do have some evidence that our method provides improved results due to diversity ensembling. Note that while model ensembling can be achieved in various different ways, many past works have found that a key ingredient to well-performing ensembling is sufficient diversity between ensemble members [1,2,3]. We do provide some empirical evidence for this connection in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png) where we see that the decision boundaries considered by SPTD are significantly more diverse than the boundaries derived by DE or SAT.  \n\n**References**\n\n[1] Kuncheva, Ludmila I., and Christopher J. Whitaker. \"Measures of diversity in classifier ensembles and their relationship with the ensemble accuracy.\" Machine learning 51 (2003): 181-207.\n\n[2] Sollich, Peter, and Anders Krogh. \"Learning with ensembles: How overfitting can be useful.\" NeurIPS 8 (1995).\n\n[3] Morishita, Terufumi, et al. \"Rethinking Fano\u2019s Inequality in Ensemble Learning.\" ICML, 2022.\n\n> Third, does the tuning of the parameter k depend on test data?\n\nAlthough the parameter $k$ can be tuned on a per-dataset basis, we found that on the datasets we consider the particular choice of $k$ is robust in the interval $[1,3]$ (see [Figure 12](https://transfer.sh/03R3gwjBBR/fig12.png)). Ablating the parameter in this interval delivers comparable performance. We also consider even more choices for the weighting $v_t$ in [Figure 13](https://transfer.sh/u9s4eb2GXl/fig13.png) and find that concave and uniform weighting schemes do not outperform the convex choice proposed in the main section of the paper. \n\n> Fourth, part of the claim is the proposed method can be applied on top of existing models. But is it always effective? Could we demonstrate such synergy between SPTD and other baselines? [...] Furthermore, I wonder how well a simple probabilistic method with explicit prediction uncertainty [...]\n\nTable 1 already provides evidence that employing SPTD on top of DE yields improved performance. We also experiment with using SPTD on top of SAT and find that SPTD also improves performance in combination with SAT (see [Figure 11](https://transfer.sh/3gC2n3yyut/fig11.png)). This result reinforces our claim that applying SPTD on top of existing approaches yields improved performance across various methods.\n\nWe are skeptical that additional results using BNNs or GPs would provide insightful alternate baselines. The reason for this is that Deep Ensembles, for which we provide results, have been found to dominate these methods [1,2]. Bayesian Neural Networks only allow for unimodal uncertainty quantification (approximate a single mode in the loss landscape) while Deep Ensembles allow for multimodal uncertainty estimation (approximate multiple modes in the loss landscape). Moreover, to the best of our knowledge, Gaussian Processes are rarely used as an uncertainty quantification method for high-dimensional image classification with large amounts of data. Inverting the Gram matrix is typically intractable in these use cases and approximations of the Gramm Matrix and its inversion reduce the quality of the provided uncertainty.\n\n**References**\n\n[1] Fort, Stanislav, Huiyi Hu, and Balaji Lakshminarayanan. \"Deep ensembles: A loss landscape perspective.\" arXiv preprint arXiv:1912.02757 (2019).\n\n[2] Ovadia, Yaniv, et al. \"Can you trust your model's uncertainty? evaluating predictive uncertainty under dataset shift.\" NeurIPS 32 (2019)."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700079781257,
+                "cdate": 1700079781257,
+                "tmdate": 1700079781257,
+                "mdate": 1700079781257,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "9szzDHQNI5",
+                "forum": "flg9EB6ikY",
+                "replyto": "EIQlxqN0sJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer ux7A (2)"
+                    },
+                    "comment": {
+                        "value": "> Last, will SPTD still be robust regarding checkpoint resolution if the model complexity increases? [...]\n\nWe have previously experimented with VGG architectures and have found our results to be consistent independent of the chosen architecture. We remark that ViT models have not yet shown to consistently provide better utility compared to ResNets on the datasets we consider [1] and hence opted against ViT experimentation in our work. To still showcase our method with larger model complexity, we show results for CIFAR-100 on a Resnet-50 architecture in [Table 3](https://transfer.sh/L4SUbqq224/tab3.png). We observe that the effectiveness of SPTD carries over to this larger architecture.\n\n**References**\n\n[1] Zhu, Haoran, Boyuan Chen, and Carter Yang. \"Understanding Why ViT Trains Badly on Small Datasets: An Intuitive Perspective.\" arXiv preprint arXiv:2302.03751 (2023).\n\n> How do you set the threshold? [...]\n\nAcross all experiments, $\\tau$ is chosen to achieve a desired targeted coverage level. This is done by first computing the selection score $g$ across all data points, ranking the data points based on $g$ (effectively sorting them in ascending order), and then picking $\\tau$ such that the first c% of test points are accepted. We don\u2019t report these values for our experiments as they are method-dependent (different methods have different selection score distributions and therefore different thresholding values) and typically less interpretable than a specific targeted coverage level (for example, \u201caccept 90% of data points\u201d is often easier to understand than \u201caccept all data points with selection score smaller than 0.5\u201d). As described above and as is consistent with prior work, we compute the threshold on the test set directly.\n\n> I find this statement confusing: \"checkpoint each model after processing 50 mini-batches of size 128. All models are trained over 200 epochs\" [...]\n\nThe reviewer is right that we do indeed initially approximate the training dynamics on a very granular scale, leading to more than 1k checkpoints per dataset. As forward-propagating through > 1k checkpoints is evidently prohibitive, we show in the *Checkpoint Selection Strategy* paragraph on page 8 that subsampling 50, 25, or even 10 checkpoints still leads to strong selective classification. Especially for high targeted coverage (>50%), the performance across all checkpointing resolutions is indistinguishable from each other (Figure 5). This insight allows us to reduce the computational overhead of our method to the same cost as Deep Ensembles at test time while having a considerably less expensive training stage. Note that there is no need to compute the fine-grained trajectory and subsequently downsample to fewer checkpoints; this was merely done for our experiment to understand the limiting behavior of our approach. Practical implementations of our method can directly store checkpoints at a more coarse-grained resolution.\n\n> In addition, I wonder whether an explicit probabilistic method (such as BNN & GP) would be over-confident in the synthetic experiment. [...]\n\nWe provide an extended experiment as part of the updated PDF in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png). We see that all methods reliably improve over the SR baseline. At the same time, we notice that SAT and DE still assign higher confidence away from the data due to limited use of decision boundary oscillations. SPTD addresses this limitation and assigns more uniform uncertainty over the full data space. We also provide a result using Bayesian linear regression in [Figure 9](https://transfer.sh/3OyOMS4bfV/fig9.png) which gives results comparable to deep ensembles.\n\n---\n**We hope that we have addressed the reviewer\u2019s concerns and that the reviewer considers raising their score as a result.**"
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700079948574,
+                "cdate": 1700079948574,
+                "tmdate": 1700079948574,
+                "mdate": 1700079948574,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ZGbdyNlvTx",
+                "forum": "flg9EB6ikY",
+                "replyto": "EIQlxqN0sJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Re: Follow-up"
+                    },
+                    "comment": {
+                        "value": "Thank you for the detailed response. Your response has addressed many of my points but some remains. \n\nFirst, I still think the authors' response to the uncertainty calibration is a bit weak given that it is one of the main point of the paper. Please do consider generate more diverse experiments to support this point in the next revision of this paper. But, I meant this as a constructive feedback only and I can take the current response under the scope of this rebuttal.\n\nSecond, I am now quite concerned with the statement that \"As described above and as is consistent with prior work, we compute the threshold on the test set directly\" -- if I understand this correctly, that means the authors have peeked into the test set to configure the learning algorithm. This seems to align with my point earlier that ultimately, we actually do not have a way to control the coverage. I suppose this has to be computed based on some statistics on the training set somehow.\n\n**Can the authors please elaborate more on this without deferring to prior work? It would even be better if the authors can explain the rationale here & highlight particularly how this algorithm will be used in a scenario where we do not know the test set in advance?**\n\n**In addition, what will be the result if the authors use a threshold computed on the training dataset instead?**\n\nIn a different discipline, it is generally not acceptable to configure the prediction algorithm based on statistics of the test set so I really have to press on this. Please address the above points."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700372670267,
+                "cdate": 1700372670267,
+                "tmdate": 1700372719789,
+                "mdate": 1700372719789,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "FPnH8OsgfT",
+                "forum": "flg9EB6ikY",
+                "replyto": "FsSvmQyl23",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_ux7A"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for the response"
+                    },
+                    "comment": {
+                        "value": "The authors said that:\n\n**We first clarify that the learning algorithm has no access to the test set. That is, model training is not influenced by any test data points. We do however specify the threshold on the test set which happens at evaluation time.**\n\nBut then, that threshold will be given to the model? In a perfectly non-leaking scenario, I tend to think that you would still have to use the threshold that you computed on either the training or the validation set.\n\nI think your experiment where 50% of the samples from the test set is used to compute the threshold and the model is evaluated on the remaining 50% is a step in the right direction. But, your following statement might over-generalize a bit: the indistinguishable results could be because you are computing the statistics from the same test distribution. \n\nWhy wouldn't you use a fraction of the training data instead? \n\n--\n\nOverall, the key experiments should have been remade with the threshold computed from only training data. That would have been the best response to me. \n\nOtherwise, the response seems to both agree (the 2nd part) and disagree (the 1st part) with my point that the test set has been leaked & the concluding experiment attempts to prove that the leak had not had any strong impact on the performance, which is over-generalizing as I mentioned above.\n\nAs such, I still cannot increase my score but this is not my final score yet. \nI will also consult with the other reviewers during the discussion to see what they think of this issue & will adjust my score accordingly."
+                    }
+                },
+                "number": 25,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700636362640,
+                "cdate": 1700636362640,
+                "tmdate": 1700636362640,
+                "mdate": 1700636362640,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "YpkKjKL0kk",
+            "forum": "flg9EB6ikY",
+            "replyto": "flg9EB6ikY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_GEsV"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_GEsV"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work introduces SPTD, a novel selective prediction method that relies on measuring---for a test sample $x$---the disagreement between predictions obtained from multiple checkpoints of the model. More precisely, the disagreement measures $a_t(x)$ for checkpoint $t$, $1\\leq t \\leq T$ are combined with weights $v_t$:\n$$g(x) = \\sum_{t \\in [T]} v_t a_t(x)$$\nThey propose simple formulations of $a_t(x)$ and $v_t$ which work for both the classification and regression cases. They test their approach on $4$ vision datasets and $3$ regression tasks. On all of those tasks, they show that their method can---alone or in combination with deep ensemble---outperform other baselines in providing a better utility/coverage tradeoff."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "I find the paper well written, clearly presenting each relevant concept and experiment. The method is simple, which facilitates its adoption by ML practitioners. The experiments are convincing."
+                },
+                "weaknesses": {
+                    "value": "- The novelty of the method is limited, the ideas of re-using past checkpoints to form an ensemble can be found in e.g. [1]\n- The results for SPTD and Deep Ensemble (DE) are both relatively close to one another and it would be nice to derive conditions under which one method is expected to be better than the other.  \n- It is unclear how the performance of SPTD is tied to optimization noise. Especially, regression experiments use full-batch gradient descent, how would the results evolve when using smaller batches? \n- The values for $v_t=(\\frac{t}{T})^k$ seem a bit arbitrary. \n\nReferences:\n\n[1] Checkpoint Ensembles: Ensemble Methods from a Single Training Process"
+                },
+                "questions": {
+                    "value": "- See above.\n- How would your method compare to using conformal-based selective prediction [2, section 5.5]? \n\nReferences:\n\n[2] A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Reviewer_GEsV",
+                        "ICLR.cc/2024/Conference/Submission4024/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4024/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699029435331,
+            "cdate": 1699029435331,
+            "tmdate": 1700398039691,
+            "mdate": 1700398039691,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "dJ9B6TcPVk",
+                "forum": "flg9EB6ikY",
+                "replyto": "YpkKjKL0kk",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer GEsV (1)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their positive assessment of our work and address individual concerns below:\n\n>The novelty of the method is limited, the ideas of re-using past checkpoints to form an ensemble can be found in e.g. [1]\n\nWe thank the reviewer for alerting us to this relevant work! We remark that past work on ensembling (including [1]) considers averaging the predictions (and/or computing second moments) to get a better estimator of a model\u2019s prediction (and/or uncertainty). Instead we investigate using checkpoints/ensembles as a means to check if a datapoint follows temporal patterns typical of datapoints we should accept from an example difficulty viewpoint, leading to novel aggregation schemes for ensembles. To state in other words, although [1] also uses training dynamics implicitly by constructing an average checkpoint ensemble, the goal in [1] is not selective prediction but boosting overall accuracy. Our approach focuses on selective prediction which requires us to derive a different aggregation scheme than [1]. We also demonstrate the applicability of our approach beyond classification and its composability with other selective classification approaches including composing on top of common ensembling techniques. Due to these key differences, we are confident that our work continues to be a valuable contribution to the selective prediction and uncertainty quantification communities. We have updated our related work section with a paragraph discussing this and other related training-dynamics specific works.\n\n> The results for SPTD and Deep Ensemble (DE) are both relatively close to one another and it would be nice to derive conditions under which one method is expected to be better than the other. \n\nWe understand the reviewer\u2019s concern about the small improvements shown in Table 1. We also agree with the reviewer that deriving theoretical conditions for the effectiveness of SPTD would be interesting future work. At the same time, we would ask the reviewer to put the presented results into context: \n- Many past works from the selective classification domain [1,2,3,4] do not consider Deep Ensembles explicitly as a competing method. Since we mainly consider our method as an alternative to DE, these improvements can appear small. \n- Moreover, many past works [2,3] do not explicitly accuracy-align models at full coverage which can give the proposed methods an unfair head-start and as a result overestimate the method\u2019s effectiveness. We make sure to compare all methods on an equal footing by disentangling selective prediction performance from gains in overall utility. We highlight the presence of accuracy alignment in the caption of Table 1.\n- Our current intuition for the strong performance of SPTD (and DE+SPTD) is based on increased diversity. Note that while model ensembling can be achieved in various different ways, many past works have found that a key ingredient to well-performing ensembling is sufficient diversity between ensemble members [5,6,7]. We do provide some empirical evidence for this connection in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png) where we see that the decision boundaries considered by SPTD are significantly more diverse than the boundaries derived by DE or SAT.\n- Finally, we highlight that our method\u2019s advantages extend beyond the SPTD results reported in Table 1. This includes (i) transparency w.r.t the training stage; (ii) retroactive applicability; as well as (iii) composability with existing SC approaches.\n\n**References**\n\n[1]  Feng, Leo, et al. \"Towards Better Selective Classification.\" The Eleventh International Conference on Learning Representations. 2022.\n\n[2] Huang, Lang, Chao Zhang, and Hongyang Zhang. \"Self-adaptive training: beyond empirical risk minimization.\" Advances in neural information processing systems 33 (2020): 19365-19376.\n\n[3] Liu, Ziyin, et al. \"Deep gamblers: Learning to abstain with portfolio theory.\" Advances in Neural Information Processing Systems 32 (2019).\n\n[4] Geifman, Yonatan, and Ran El-Yaniv. \"Selectivenet: A deep neural network with an integrated reject option.\" International conference on machine learning. PMLR, 2019.\n\n[5] Kuncheva, Ludmila I., and Christopher J. Whitaker. \"Measures of diversity in classifier ensembles and their relationship with the ensemble accuracy.\" Machine learning 51 (2003): 181-207.\n\n[6] Sollich, Peter, and Anders Krogh. \"Learning with ensembles: How overfitting can be useful.\" Advances in neural information processing systems 8 (1995).\n\n[7] Morishita, Terufumi, et al. \"Rethinking Fano\u2019s Inequality in Ensemble Learning.\" International Conference on Machine Learning. PMLR, 2022."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700077214034,
+                "cdate": 1700077214034,
+                "tmdate": 1700077276221,
+                "mdate": 1700077276221,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "43J8RJ3WFs",
+                "forum": "flg9EB6ikY",
+                "replyto": "YpkKjKL0kk",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer GEsV (2)"
+                    },
+                    "comment": {
+                        "value": "> It is unclear how the performance of SPTD is tied to optimization noise. Especially, regression experiments use full-batch gradient descent, how would the results evolve when using smaller batches? \n\nAs per the reviewer\u2019s suggestion, we have run our regression experiments using mini-batches and find that the results were statistically indistinguishable from the results with full-batch gradient descent. Although the results are the same for the regression experiment, we do hypothesize that the randomness added by SGD is helpful in yielding more diverse intermediate models. As discussed above, diversity is a desirable property for ensemble models which in turn enables improved selective prediction performance.  \n\n> The values for $v_t = (\\frac{t}{T})^k$ seem a bit arbitrary.\n\nWe note that the weighting $v_t$ is chosen to reflect sample difficulty patterns as described by past work [1,2,3]. As we already describe in Section 3.2, prior work has found that easy-to-optimize samples are learned early in training and converge faster. Our convex weighting is inspired by this insight as well as the convergence patterns derived in Figure 6. We have experimented with other weightings beside $v_t = (\\frac{t}{T})^k$ with $k \\in [0,\\infty)$ but found that our choice of $v_t$ performs best across our experimental panel. This weighting encourages us to be particularly sensitive to late disagreements while at the same time incorporating diversity from models across the full training spectrum. We have updated the submission with a new experiment shown in [Figure 13](https://transfer.sh/u9s4eb2GXl/fig13.png) in which we also consider concave weightings $k \\in (0,1]$ as well as a uniform weighting assigning the same weight to all checkpoints. It is evident from this experiment that our weighting choice performs better than other approaches.\n\n**References**:\n\n[1] Baldock, Robert, Hartmut Maennel, and Behnam Neyshabur. \"Deep learning through the lens of example difficulty.\" Advances in Neural Information Processing Systems 34 (2021): 10876-10889.\n\n[2] Zhang, Chiyuan, et al. \"Understanding deep learning (still) requires rethinking generalization.\" Communications of the ACM 64.3 (2021): 107-115.\n\n[3] Jiang, Ziheng, et al. \"Characterizing structural regularities of labeled data in overparameterized models.\" arXiv preprint arXiv:2002.03206 (2020).\n\n> How would your method compare to using conformal-based selective prediction [2, section 5.5]?\n\nThe conformal-based selective prediction method in [2] is equivalent to softmax response (SR); they pick a threshold on $\\hat{P}(x) = \\max(\\hat{f}(x))$. In particular, following typical conformal prediction methods, they use a calibration set to pick the threshold, while we (aligning with past selective prediction work) picked the threshold that gave a specific coverage/accuracy on the test set (as to compare this with other methods). In other words, conformal prediction in [2] deals with how to pick the threshold for softmax response, while our work shows there is a metric that gives a better signal for correctness than SR. Future work could try to apply conformal prediction to our SPTD metric as a means to pick the threshold.\n\n---\n**We hope that we have addressed the reviewer\u2019s concerns and that the reviewer considers raising their score as a result.**"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700077715087,
+                "cdate": 1700077715087,
+                "tmdate": 1700077715087,
+                "mdate": 1700077715087,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "cKTKFa7Dva",
+                "forum": "flg9EB6ikY",
+                "replyto": "43J8RJ3WFs",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_GEsV"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_GEsV"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for your rebuttal"
+                    },
+                    "comment": {
+                        "value": "I thank the authors for their rebuttal. I appreciate the additional experiments. Overall, I do believe the method has its merits, being a simple approach offering good performance. I feel my score is adequate, but I raise my confidence."
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700398021109,
+                "cdate": 1700398021109,
+                "tmdate": 1700398021109,
+                "mdate": 1700398021109,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "OftFXE4g4i",
+            "forum": "flg9EB6ikY",
+            "replyto": "flg9EB6ikY",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents SPTD, a new method for Selective Prediction (SP) based on an ensemble approach using checkpoints from the training dynamics. Unlike several of the recent methods, the proposed approach works for several tasks including classification, regression, and time series. The paper presents a comparison between SPTD and different recent state-of-the-art methods."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The points of strengths include: \n\n1- The method works for several tasks including classification, regression, and time series.\n\n2- The method seems to outperform the previous state-of-the-art selective classification methods.\n\n3- Several experimental results presented"
+                },
+                "weaknesses": {
+                    "value": "The points of weaknesses include:\n\n1- The proposed idea lacks novelty as it is very similar to using ensembles of models. The difference here is that the ensembles are generated on a fixed schedule from the training dynamics. \n\n2- Checkpoints are chosen based on a fixed schedule which can correspond to models of bad performance. A better approach is to follow the approach from [Huang et al. 2017] which constructs an ensemble by choosing points of good performance using a cyclic learning rate. Using good checkpoints removes the need for the complicated weighted aggregation of the disagreement functions as all the snapshots are good models.\n\n3- The proposed method has several hyperparameters including the number of checkpoints and the weights to calculate the selection function $g$ from the disagreement function $a$. \n\n4- Several choices are not clear as described in the following section.\n\nHuang, Gao, et al. \"Snapshot ensembles: Train 1, get m for free.\" ICLR 2017."
+                },
+                "questions": {
+                    "value": "1- How was $\\tau$ chosen?\n\n2- \"Checkpoint each model after processing 50 mini-batches of size 128\", how many checkpoints are chosen?\n\n3- In Table 1, the name of the baseline is SAT but in the text, it is mentioned that the baseline is SAT with Entropy Regularization (ER) and Softmax Response (SR) Selection from [Feng et al. 2023]. Which one is the baseline? If the latter, then please update the table as SAT and SAT+ER+SR are 2 different methods.\n\n4- Why not add SelectiveNet as a baseline for the regression task?\n\n5- How were $g$ and $\\tau$ chosen for the Deep Ensembles (DE)?\n\n6- What is the intuition of SPTD performing better than DE for some coverages? It seems counter-intuitive as DE consists of high-performing models vs SPTD which has fixed checkpoints that do not have to be high-performing.\n\n7- How are the disagreement function, g, and $\\tau$ chosen for DE+SPTD?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                    ]
+                }
+            },
+            "number": 5,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4024/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699084427271,
+            "cdate": 1699084427271,
+            "tmdate": 1700708337540,
+            "mdate": 1700708337540,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "twmu4Y99fp",
+                "forum": "flg9EB6ikY",
+                "replyto": "OftFXE4g4i",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Review Response (1)"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their feedback on our work and address individual concerns below:\n\n> The proposed idea lacks novelty as it is very similar to using ensembles of models. The difference here is that the ensembles are generated on a fixed schedule from the training dynamics. \n\nSee discussion for next point.\n\n> Checkpoints are chosen based on a fixed schedule which can correspond to models of bad performance. A better approach is to follow the approach from [Huang et al. 2017] which constructs an ensemble by choosing points of good performance using a cyclic learning rate. Using good checkpoints removes the need for the complicated weighted aggregation of the disagreement functions as all the snapshots are good models.\n\nWe thank the reviewer for alerting us to [Huang et al. 2017]! We remark that past work on ensembling (including [Huang et al. 2017]) considers averaging the predictions (and/or computing second moments) to get a better estimator of a model\u2019s prediction (and/or uncertainty). Instead we investigate using checkpoints/ensembles as a means to check if a datapoint follows temporal patterns typical of datapoints we should accept from an example difficulty viewpoint, leading to novel aggregation schemes for ensembles. To state in other words, although [Huang et al. 2017] also uses training dynamics implicitly by constructing an average checkpoint ensemble, the goal in [Huang et al. 2017] is not selective prediction but boosting overall accuracy. Our approach focuses on selective prediction which requires us to derive a different aggregation scheme than [Huang et al. 2017]. We also demonstrate the applicability of our approach beyond classification and its composability with other selective classification approaches including composing on top of common ensembling techniques. Due to these key differences, we are confident that our work continues to be a valuable contribution to the selective prediction and uncertainty quantification communities. We have updated our related work section with a paragraph discussing this and other related training-dynamics specific works.\n\n> The proposed method has several hyperparameters including the number of checkpoints and the weights to calculate the selection function $g$ from the disagreement function $a$. \n\nWe want to clarify that our method operates in the same number of hyper-parameters (checkpointing resolution, weighting parameter $k$) as other competing approaches. While SR is a hyper-parameter free method, Deep Gamblers (reward, pre-training duration), SAT (pre-training duration, SAT momentum for moving average), as well as Deep Ensembles (number of members, aggregation weighting) require tuning 2 hyperparameter, just like SPTD.  \n\n> Several choices are not clear as described in the following section.\n\nWe address these concerns below.\n\n> How was $\\tau$ chosen?\n\nAcross all experiments, $\\tau$ is chosen to achieve a desired targeted coverage level. This is done by first computing the selection score $g$ across all data points, ranking the data points based on $g$ (effectively sorting them in ascending order), and then picking $\\tau$ such that the first c% of points are accepted. We don\u2019t report these values for our experiments as they are method-dependent (different methods have different selection score distributions and therefore different thresholding values) and typically less interpretable than a specific targeted coverage level (for example, \u201caccept 90% of data points\u201d is often easier to understand than \u201caccept all data points with selection score smaller than 0.5\u201d). Note that this procedure of reporting coverage instead of $\\tau$ is the default way to evaluate selective prediction approaches [1,2,3,4].\n\n**References**\n\n[1] Feng, Leo, et al. \"Towards Better Selective Classification.\" The Eleventh International Conference on Learning Representations. 2022.\n\n[2] Huang, Lang, Chao Zhang, and Hongyang Zhang. \"Self-adaptive training: beyond empirical risk minimization.\" Advances in neural information processing systems 33 (2020): 19365-19376.\n\n[3] Liu, Ziyin, et al. \"Deep gamblers: Learning to abstain with portfolio theory.\" Advances in Neural Information Processing Systems 32 (2019).\n\n[4] Geifman, Yonatan, and Ran El-Yaniv. \"Selectivenet: A deep neural network with an integrated reject option.\" International conference on machine learning. PMLR, 2019."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700074814925,
+                "cdate": 1700074814925,
+                "tmdate": 1700074814925,
+                "mdate": 1700074814925,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "JwQICRxSIo",
+                "forum": "flg9EB6ikY",
+                "replyto": "OftFXE4g4i",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Review Response (2)"
+                    },
+                    "comment": {
+                        "value": "> \"Checkpoint each model after processing 50 mini-batches of size 128\", how many checkpoints are chosen?\n\nLike $\\tau$, the total number of checkpoints is also dataset-dependent and we report the exact values for the different datasets in Table 2 in the Appendix. Note that in the paper we first aim to derive a very detailed characterization of the training dynamics, leading to hundreds of checkpoints for each model, but then downsample from this full set of checkpoints to obtain a more tangible algorithm that is still performative. We discuss this selection in our *Checkpoint Selection Strategy* paragraph on page 8. As discussed there, subsampling 10-25 checkpoints is enough for performative selective prediction on the datasets we consider. Moreover, when particularly targeting the high coverage spectrum (>50%), we find that SPTD provides SOTA selective classification performance across a wide range of checkpointing resolutions.   \n \n> In Table 1, the name of the baseline is SAT but in the text, it is mentioned that the baseline is SAT with Entropy Regularization (ER) and Softmax Response (SR) Selection from [Feng et al. 2023]. Which one is the baseline? If the latter, then please update the table as SAT and SAT+ER+SR are 2 different methods.\n\nWe thank the reviewer for their attention to detail and have updated our draft with their suggestion.\n\n> Why not add SelectiveNet as a baseline for the regression task?\n\nWe have not benchmarked SelectiveNet on neither the classification nor the regression task since ensemble-based methods (which we do include in our comparison) dominate SelectiveNet in our classification experiments. We have now also ran SelectiveNet (SN) on the regression task and observe in our updated [Figure 7](https://transfer.sh/9hOJrLkwTx/fig7.png) that SelectiveNet outperforms parametric outputs but does not reach selective utility levels obtained by DE or SPTD.\n\n> How were $g$ and $\\tau$ chosen for the Deep Ensembles (DE)?\n\nConsistent with the Deep Ensembles paper [1], we choose $g(x) = \\frac{1}{M} \\sum_{m \\in [M]} \\max f_m(x)$. Note that $f_m(x)$ corresponds to the full $C$-class logit output and $\\max f_m(x)$ extracts the maximum logit value. $\\tau$ is chosen as described above.\n\n**References**\n\n[1] Lakshminarayanan, Balaji, Alexander Pritzel, and Charles Blundell. \"Simple and scalable predictive uncertainty estimation using deep ensembles.\" Advances in neural information processing systems 30 (2017).\n\n> What is the intuition of SPTD performing better than DE for some coverages? It seems counter-intuitive as DE consists of high-performing models vs SPTD which has fixed checkpoints that do not have to be high-performing.\n\nAlthough we believe that future work should discuss this question in more detail, our current intuition for the strong performance of SPTD (and DE+SPTD) is based on increased diversity. Note that while model ensembling can be achieved in various different ways, many past works have found that a key ingredient to well-performing ensembling is sufficient diversity between ensemble members [1,2,3]. We do provide some empirical evidence for this connection in [Figure 8](https://transfer.sh/91kwPXIxRw/fig8.png) where we see that the decision boundaries considered by SPTD are significantly more diverse than the boundaries derived by DE or SAT. \n\n**References**\n\n[1] Kuncheva, Ludmila I., and Christopher J. Whitaker. \"Measures of diversity in classifier ensembles and their relationship with the ensemble accuracy.\" Machine learning 51 (2003): 181-207.\n\n[2] Sollich, Peter, and Anders Krogh. \"Learning with ensembles: How overfitting can be useful.\" Advances in neural information processing systems 8 (1995).\n\n[3] Morishita, Terufumi, et al. \"Rethinking Fano\u2019s Inequality in Ensemble Learning.\" International Conference on Machine Learning. PMLR, 2022.\n\n> How are the disagreement function, $g$, and $\\tau$ chosen for DE+SPTD?\n\nFor DE+SPTD, we first compute SPTD for multiple models $m \\in [M]$ as follows: $g_{m}(x) = \\sum_{t} v_t a_{m,t}(x)$. Note that $a_{m,t}(\\cdot)$ now corresponds to the disagreement at time $t$ for model $m$. In a second step, we combine all SPTD scores into a single DE+SPTD score: $ \\frac{1}{M} \\sum_{m \\in [M]} g_{m}(x)$. This procedure is informally described in the *Accuracy/Coverage Trade-off* paragraph on page 7. Once again, $\\tau$ is chosen as described above.\n\n---\n**We hope that we have addressed the reviewer\u2019s concerns and that the reviewer considers raising their score as a result.**"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700074950095,
+                "cdate": 1700074950095,
+                "tmdate": 1700074950095,
+                "mdate": 1700074950095,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "A2nfGBO3sw",
+                "forum": "flg9EB6ikY",
+                "replyto": "OftFXE4g4i",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "content": {
+                    "title": {
+                        "value": "RE: Author Response"
+                    },
+                    "comment": {
+                        "value": "I would like to thank the reviewers for their detailed responses to all the comments and their additional experimental results. \nI still have concerns about the paper. \n\n## Regarding the General Response \n\n> Reason for better performance (especially compared to ensembles): Being an ensemble method, our work benefits from diversity between individual members. Preliminary experimentation confirms that our approach yields models that are significantly more diverse than fully converged models from Deep Ensembles.\n\nI do not agree with the authors that SPTD is likely to have more diversity compared to DE. One missing point here is how the checkpoints are chosen. If there are 25 checkpoints, are those generated from the last 25 epochs of training? Or are those selected at random by subsampling the large number of checkpoints? If the former, then the models will be similar. If the latter, then there are no guarantees on the quality of the checkpoints. On the other hand, DE and  Snapshot Ensembles (SE) [Huang et al. 2017]   rely on visiting different parts of the search space by either using random restarts (for DE) or by increasing the learning rate close to local optima (for SE). This should yield more diverse models than SPTD that uses models that are close in the optimization landscape.\n\n> Choice of $v_t$ : We note that our proposed convex weighting is inspired by results from example difficulty as well as our observed convergence patterns.\n\nDE uses uniform weighting and there is no need to choose neither the functional form of the weights nor the hyper-parameters $k$. This makes DE (and other ensembles methods) more practical to use.\n\n## Regarding the response to my questions:\n\n>  the total number of checkpoints is also dataset-dependent and we report the exact values for the different datasets in Table 2 in the Appendix. \n\nFor SPTD, only $T$ and $k$ are reported, not the number of checkpoints. Could you please clarify how many checkpoints were used?\n\n> We want to clarify that our method operates in the same number of hyper-parameters\n\nThere is also the choice of the weighting function which is arbitrary.  The results shared in [Figure 13](https://transfer.sh/u9s4eb2GXl/fig13.png) confirms the importance of the weighting function which can be dataset dependant.\n\n\n## Additional questions:\n\n\n1- Why do all the methods have identical performance at 100% coverage when the performance at 100% should only depend on the training method used and should not affected by the selection criteria.\nFor example, SR and SAT+SR+ER both score 77.6% accuracy for StandfordCars, although they should have different training mechanisms. [Feng et al. 2023, Table 3] reported a 5% performance gap for the 100% coverage between SR and SAT+SR+ER.\n\n2- Based on the question above, could you please explain how  the SR baseline was implemented? Which training method was used, loss function,...,etc?\n\n\n3- For regression (Figure 7), could you please share the Mean Square Errors comparison?\n\n\n\n### References\n- Huang, Gao, et al. \"Snapshot ensembles: Train 1, get m for free.\" ICLR 2017.\n- Feng, Leo, et al. \"Towards Better Selective Classification.\" The Eleventh International Conference on Learning Representations. 2023."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700434690809,
+                "cdate": 1700434690809,
+                "tmdate": 1700435269883,
+                "mdate": 1700435269883,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "YfEJz3QOz3",
+                "forum": "flg9EB6ikY",
+                "replyto": "z647HIzF5q",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "content": {
+                    "title": {
+                        "value": "RE: Additional clarification"
+                    },
+                    "comment": {
+                        "value": "Thank you for the clarification. I still have concerns regarding: \n\n>  Our main results use the full training trajectory, i.e. the number of checkpoints reported in Table 2. As forward-propagating through\n\nIf I understand correctly, $T$ is the number of checkpoints. Does this mean that you used 1600 checkpoints for CIFAR, 2200 for Food101, and 800 for StanfordCars for the results in Table 1?\nIf yes, then this makes SPTD very expensive to run. Moreover, it gives SPTD an unfair advantage over DE which only uses 10 models. Also the gains over STA+ER+SR is small so if such large number of checkpoints is required, then it will be hard to use SPTD in practice.  I understand that Figure 5 shows the effect of the number of checkpoints, and there are some small differences in performance for CIFAR and StandfordCars, so why report the results in Table 1 with very large number of checkpoints?\n\n\n> This is due to us explicitly aligning the base accuracy of all models. [......]\n\n> This is done by early stopping model training when the accuracy of the worst performing model is reached. \n\nI am very concerned about this point. In practise, the goal is to use the best possible model. Training all the methods, till the best possible accuracy is achieved, will give a clearer picture of the performance. If the concern is SAT+ER+SR provides a strong baseline at 100% coverage, this should not hurt SPTD in any way as SPTD can use the training checkpoints from SAT+ER+SR for the selection process on the best final model achieved by SAT+ER+SR. Similarly, if DE has a very strong performance, we should not evaluate it at a lower performing point."
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700525203001,
+                "cdate": 1700525203001,
+                "tmdate": 1700525203001,
+                "mdate": 1700525203001,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "6X5dzBAp5A",
+                "forum": "flg9EB6ikY",
+                "replyto": "SqmsvyhfYy",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4024/Reviewer_MGKy"
+                ],
+                "content": {
+                    "title": {
+                        "value": "RE: Additional clarification"
+                    },
+                    "comment": {
+                        "value": "I would like to thank the authors for their detailed clarification.\n\n\nThe difference in performance between SAT+SR+ER and SPTD in Table 1 ranges from 0.2% to 1.5% across different datasets. On the other hand, in Figure 5, the difference in performance between SPTD Full and SPTD-10 can reach 1%. This is why the evaluation in Table 1 is not providing the full picture regarding the performance of SPTD vs. the other cheaper baselines.\n\nAlthough the idea is interesting, has potential, and the authors have put efforts into running several experiments, I believe the paper requires more work on the experimental analysis to fully understand the benefits that SPTD brings and the costs required.\n\nMy main concerns are:\n \n1- The large number of checkpoints (which requires multiple forward passes as well as storing all the model weights) used in Table 1 is not justified by the small improvements achieved compared to the other baselines. \n2- The accuracy normalization issue which does not provide a clear understanding of the best performing method. In practise, if we want to deploy a selective model, we will be looking for the model that achieves the best performance for a specific coverage not the model that achieves the best selective classification performance compared to the 100% coverage.\n\nConsequently, I am lowering my score."
+                    }
+                },
+                "number": 29,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4024/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700708300131,
+                "cdate": 1700708300131,
+                "tmdate": 1700708300131,
+                "mdate": 1700708300131,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

@@ -1,0 +1,274 @@
+[
+    {
+        "id": "iJ0vju6qNt",
+        "forum": "17BA0Tl2Id",
+        "replyto": "17BA0Tl2Id",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_CPjL"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_CPjL"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a benchmark for studying the ability of learning agents (in particular, multiagent RL learners) to learn compositional learning behaviors. The benchmark uses a meta-learning variant of referential games to instantiate this idea. The authors propose a \"symbolic continuous stimulus\" (SCS) representation to encode the semantic symbolic information in a domain-agnostic way, and then construct the datasets by drawing samples directly in this SCS space. The experimental evaluation shows that current approaches struggle to learn compositional learning behaviors."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "######## Strengths ########\n- The overview of the problems of systematicity/compositionality, lingustic compositionality, and compositionality of Sec 2 is valuable and interesting \n- The problem of compositionality and compositional generalization is of interest to a large portion of the AI/ML community. Benchmarks in this direction are potentially highly impactful\n- The experimental evaluation appears to be complete and useful (though some discussion is missing)"
+            },
+            "weaknesses": {
+                "value": "######## Weaknesses ########\n- The description of the SCS is convoluted and hard to follow\n- The overall evaluation protocol of the meta-referential games is not sufficiently clear\n\n######## Recommendation ########\n\nI recommend accepting the paper. The technical quality of the submission is high, the problem is of interest, and the benchmarking results demonstrate that existing methods struggle to solve the benchmark. I do have several suggestions for improvement which I hope the authors take. \n\n######## Arguments ########\n\nThe main technical contribution of the paper is the problem formulation of meta-referential games and a synthetic benchmark that studies the setting. The idea is that, given a sufficient number of systematic generalization training problems, the listener/speaker agents should be able to learn a compositional learning behavior, such that they can generalize compositionally _in a new systematic generalization problem_. One additional technical contribution is the SCS, which is a domain-agnostic representation of a symbolic space. Unlike one-hot encodings, whose size depends on the number of values that each dimension can take, the SCS has a fixed size given a chosen dimensionality. For the benchmark, this implies that the different \"tasks\" can use varying semantic structures and the agents should still be able to meta-learn a compositional behavior.\n\nI also appreciate the discussion of systematicity and disentanglement, though I have some comments/questions about that. \n\nI have a few suggestions for improvement, which I think are necessary in order for the paper to be a complete technical contribution, which I summarize below:\n\n- Details of the SCS\n    - It's unclear what the tuple (d(i))_i... means. The authors then say that the \"shape of a stimulus ... is a vector over [-1,+1]^N_dim\". Is the shape a vector or is the representation a vector? If the vector is over [-1,+1] on every input, where does the d(i) the tuples factor in? The authors themselves state that the shape doesn't depend on the d(i)'s. \n    - The later description says l(i) \\in [1; d(i)] -- what does [1; d(i)] mean? is it the same as [1, dim(i)]? It seems that the authors might be using the two notations interchangeably\n    - My understanding is that for every dimension i, l(i) picks an \"index\" from 1 to d(i), which is precisely the value of the stimulus at dimension i. Then, a Gaussian is sampled around that index with a small enough variance such that all samples fall near l(i) and are not confused with l(i)-1 or l(i)+1. If this is the case (which I think Fig. 3 confirms), the authors should attempt to make their textual description a bit clearer. As it stands, it is a bit convoluted. \n    - The authors should carefully incorporate the answers to these questions and a cleaner explanation of the SCS in text.\n- Evaluation protocol of the meta-RGs\n    - My understanding of the first few lines is that generating \"differently semantically structured\" spaces is akin to generating many SCAN datasets. So each generated space is 1 SCAN dataset, and our goal will be to meta-learn a strategy that enables solving the ZSCT of a new SCAN dataset?\n    - \"a meta-referential game is composed of two phases\" -- I'm confused by this. Isn't each RG itself composed of two phases, and the meta-RG a wrapping process that presents the two agents with many such RGs?\n    - The authors put considerable efforts toward explaining the overall evaluation/training process, but it still doesn't appear to come through clearly. There are RGs and meta-RGs, shots and episodes. Each shot is a series of RGs. It is unclear exactly how all these pieces interact. I think the manuscript would leverage from one algorithm block that summarizes the overall process. For example:\n```\nAlgo: Meta-RG evaluation process\n\n    Meta-training phase:\n    for episode in NumberOfEpsiodes // loop over tasks=episodes\n        draw semantic structure\n        for shot in NumberOfShots   // loop over ...\n            draw component values\n            for RG in ...\n                draw stimulus\n                ...\n    Meta-testing phase:\n    freeze speaker\n    ...\n```\n    - The textual description is just too complex to come across clearly. Having an algorithmic description (and relying on it by referencing it in the textual description) might make things a lot clearer. \n    - But overall, my understanding is that the agent faces a set of meta-training settings, each of which fixes one symbolic space and consists of many training RGs and zero-shot RGs. Then the agent faces meta-testing RGs, which presumably have little data?"
+            },
+            "questions": {
+                "value": "######## Additional feedback ########\n\nThe following points are provided as feedback to hopefully help better shape the submitted manuscript, but did not impact my recommendation in a major way.\n\nIntro\n- I'm not really sure I follow how the authors' view of online/offline relates to the RL view\n\nSec 2\n- Fig. 1 -- why does the receiver also observe the state? Is it just a \"noisy\" version of the state w distractor stimuli?\n- My understanding: the sender receives 1 input and communicates (potentially back-and-forth) with the listener, who additionally receives a set of inputs (potentially including the speaker's input or the same \"object\"). The task is for the receiver to determine, given messages from the sender, whether any of its observed stimuli match the speaker's. Some of this isn't explicitly stated, so it required looking at the figure. If there is such a 1-sentence explanation, I encourage the authors to include it at the beginning of their explanation before diving into the specific properties/variations. \n- This section is a perhaps too philosophical discussion of the relations between disentanglement and compositionality, but I don't think that's necessarily a bad thing\n\nSec 3\n- Authors state that in step N+2 the listener observes the input of the listener \"rather than an object-centric samples with the same semantic meaning\" --- but according to the definition, it's not _always_ the same semantic meaning, right? The game is to determine precisely whether the meaning is the same?\n- \"we propose a rule-based speaker\" -- At this point, it seems that the only learning agent is the listener. But then (in Sec 4) the authors apparently clarify that this is only an ablative test to see how well the listener can learn CLBs given a fixed (linguistically compositional) speaker. This should be either omitted from this section or stated more clearly\n\nSec 3.2\n- Vocabulary permutation: I wonder if it would be possible to construct a different stimulus representation that _doesn't_ require permutation to guarantee no cheating. Any insight from the authors on this? (In an ideal world, we would get a proof that no such representation exists, but an intuitive description of why that's difficult would also be valuable.)\n\nSec 4\n- The authors report only results of the test/zero-shot performance. While this is the metric of interest, I wonder if it's possible, because of the difficulty of RL/MARL training, that even training performance is low? That would conflate the standard RL issues witht he issues of CLB.\n\nSec 4.1\n- How is EoA measured? What about topsim/posdis/bosdis? What values should we expect for them? Is higher or lower better?\n- Generally, I would expect a discussion that goes beyond just the zero-shot accuracy\n\nTypos/style/grammar\n- Fig. 1 (and others): authors should use a vector version of the image, not PNG or JPEG -- the size is small and zooming in blurs all letters/symbols\n- Sec 2, \"Compositionality...\" -- \"...the work ofHupkes et al. (2019)\" --> missing space\n- Sec 2, \"Compositionality...\" -- \"... related contents\"(Fodor et al., 1988).\" --> missing space\n- Sec 2, \"Compositionality...\" -- topographic similarity (topsim) vs. posdis (positional disentanglement) -- maintain consistency of abbreviations and parentheses\n- Sec 2, \"Compositionality...\" -- I was initially confused by \"and interchangeably compositional behaviors and systematicity...\" because I thought you would use either of those two interchangeably with \"linguistic compositionality\". It would be clearer to write \"and compositional behaviors and systematicity interchangeably to ...\"\n- Once the authors define the RG acronym, they should avoid going back and forth between RG and referential game\n- Sec 3 -- \"Figure 4(left)\" --> missing space\n- Sec 3.1 -- \"relies on gaussian kernels\" --> capitalize Gaussian (throughout the manuscript)\n- Sec 3.1 -- \"Figure 4(right)\" --> missing space\n- Sec 3.2 -- \"an meta-referential game\" --> \"a meta...\"\n- \"we bring the readers attention on\" --> \"we bring the reader's attention to\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698415842529,
+        "cdate": 1698415842529,
+        "tmdate": 1699636603961,
+        "mdate": 1699636603961,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xA9x3xVKxa",
+        "forum": "17BA0Tl2Id",
+        "replyto": "17BA0Tl2Id",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_Hoy7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_Hoy7"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a emergent communication benchmark/game called the\nmeta-referential game.  It is based on the familiar referential game from the\nEC literature but is posed in a meta-learning framework which requires the\nagents to establish communicative conventions within an episode of iterated\nreferential games.  Such a game requires agents to learn to dynamically acquire\nlanguage (i.e., over the course of an episode) rather than simply learn\na static mapping as happens in the standard referential game.  Empirical\nanalysis adds some context to how baseline approaches fare in different\nhyperparameter settings of the benchmark/game."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- (major) The benchmark introduces this concepts of receptivity and\n  constructivity (i.e., the ability to establish linguistic conventions within\n  an episode) into emergent language.  These are indeed present in human\n  language behavior but not often (if at all) discussed in the context of\n  emergent language.\n- (major) The meta-referential game is largely an appropriate extension to the\n  referential game which introduces the necessary concepts for intra-episode\n  learning without making too many changes (i.e., which could introduce too\n  many confounding factors)."
+            },
+            "weaknesses": {
+                "value": "- (major) The empirical results are difficult to interpret in a meaningful way\n  since the main ones are negative, and there are not many clear trend in the\n  rest.  While the primary contribution of this paper is the benchmark, it is\n  tough to see whether or not it will be of practical use based on the\n  empirical results presented.\n- (minor) On the level of clarity, the paper uses a lot of jargon that is a bit\n  distracting.  Even if most of these terms are defined, it makes for\n  a difficult read.  This could just be a background mismatch is I come from an\n  NLP/RL/emergent communication background.  Technical terms do make things\n  clearer and more precise in moderation, but when they proliferate, it\n  obscures instead.  Some terms I'm referring to:\n  - binging problem (\"binding\" itself is never actually defined, I think)\n  - compositional learning behavior\n  - reflexivity and constructivity\n  - object-centric versus stimulus-centric\n  - Chaa-RSC and Hill-RSC\n  - shape invariance property and semantically structured symbolic spaces\n  - Symbolic Continuous Stimulus\n- (minor) The \"Symbolic Continuous Stimulus\" seems to be a bit more complicated\n  than it needs to be; namely with the many layers of sampling (i.e., the\n  number of partition, the size of the partitions, the parameters of the\n  Gaussian, then the Gaussian itself) that just create the data distribution.\n  I do see how some of this is necessary to prevent confounding factors, but\n  I think preemptively ramping the complexity of the benchmark when it is not\n  even clear that current models can do much better than random chance might\n  not be the right move."
+            },
+            "questions": {
+                "value": "What do the empirical results show?  And how do these findings support the\nbenchmark?\n\n### Misc comments\n\n- It is a little confusing with all of the parameters \"shots\", \"steps\",\n  \"games\", \"meta games\" (although I understand why these are necessary).  To\n  alleviate this somewhat, it might be worthwhile to include a table that just\n  lists a sample set of interactions, observations, etc. in a table format\n  (which could definitely could be hand written/not real) to give a sense of\n  what the parameters correspond to.\n\n- Page 1\n  - \"In this work, we will primarily...\": don't use a \"respectively\" sentence structure here, it makes it very difficult to read this important sentence.\n- Page 2\n  - The definition of the binding problem is not clear at all since what \"binding\" actually is never defined -- it's somewhat circular\n  - \"(Lazaridou and Baroni, 2020)\" - use `\\citet`\n- Page 4\n  - \"semantical\" -> \"semantic\"\n  - \"S2B\" -> \"SB2\"? The postfix two usually represents a superscript.\n- Page 5\n  - \"segregated\" -> \"segregate\"\n  - First paragraph of Sec 3.1 was difficult to understand on the first\n    read-through.  It was clearer reading it a second time (after reading\n    through the whole paper), and think the reason is because SCS is not\n    discussed in detail until after this paragraph despite the fact that the\n    nature of SCS is important to understanding this paragraph.  This is\n    coupled with the fact that the \"binding problem\" is never full defined\n    (i.e., what \"binding\" is in the first place).\n  - Figure 2: what is the difference between the \"object-centric target\n    stimulus\" and the \"target stimulus\"?\n  - \"but not larger than the size of the partition section it should fit in\":\n    not possible since Gaussian distributions have infinite support for any\n    non-zero standard deviation.  Does SCS use rejection sampling to ensure\n    that out-of-bound samples do not get passed along?\n  - maybe just have uniform sampling from the partitions or just have Gaussian\n    sampling from a list of means\n  - how are the spaces partitioned?\n  - What is the structure of a semantic space, just the layout of partitions?\n- Page 6\n  - What is the \"shape invariance property\"?\n  - \"an meta-referential\" -> \"a meta-referential\"\n  - Figure 2: maybe referring to a \"referential game\" as a \"round\" would be\n    clearer\n  - \"attention on the fact\" -> \"attention to the fact\"\n  - Not clear what a \"random permutation of the vocabulary symbols\" means.\n- Page 7\n  - 4.Agent Architecture - It would be best to at least give a 2-sentence\n    summary of the arch.\n  - Adding this auxiliary loss definitely merits discussion in the overall\n    context of the benchmark, i.e., how it might affect what the benchmark\n    would and would not show.\n  - \"make emerge a new language\": rephrase; maybe \"invent a new language\"?\n  - \"resolution approach\": rephrase\n  - \"K = 0\": Seems out of place to parameterize a value when it is just going\n    to result in a binary task.\n  - \"goads us to think\" -> \"leads us to think\"\n  - Sec 4.2.1 - It is difficult to tell here if the results are showing\n    anything significant."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698529166768,
+        "cdate": 1698529166768,
+        "tmdate": 1699636603855,
+        "mdate": 1699636603855,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "5XKLmRCevv",
+        "forum": "17BA0Tl2Id",
+        "replyto": "17BA0Tl2Id",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_qdfE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_qdfE"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes the Symbolic Behaviour Benchmark (S2B) to evaluate compositional learning behaviors (CLBs), especially the domain-agnostic binding problem (BP) instantiated by Symbolic Continuous Stimulus (SCS) representation.\nIt proposes a framework of Meta-Referential Games, a meta-learning extension of referential games (RGs).\nThe baseline results and error analysis show it is a compelling challenge.\nIt helps to make artificial agents collaborate with humans."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The benchmark evaluates compositional behavior and binding problems, which are important problems in artificial intelligence.\n\n- It proposes the Symbolic Continuous Stimulus instead of using the one-hot or the multi-hot encoded schemes.\n \n- It proposes the Meta-Referential Games framework, which extends common referential games."
+            },
+            "weaknesses": {
+                "value": "The main concern is that the benchmark may lack novelty.\nCompared with common referential games, the proposed benchmark has SCS stimuli representation and the meta-learning extension.\n\n(1) **Is the selection of representation essential for the benchmark of compositional generalization?**\n\nThe SCS representation has the advantage over one-hot or multi-hot representation.\nHowever, it might not be essentially very important for the game framework.\nFor compositional generalization, the core point is that the test data has new combinations of stimuli.\n\n(2) **The Meta-Referential Game framework and common referential games seem to have a similar protocol, so why only one of them is meta-learning?**\n\nIn the Meta-Referential Game framework, a game (episode) has a training phase and a test phase.\nDo common referential games also have these two phases?\nIf so, it seems strange to say the Meta-Referential Game framework is a \"meta-learning \" extension to common referential games.\n\nIn the proposed framework, the stimuli in test RGs are recombined in novel ways, different from common referential games. Still, this difference seems not related to whether it is a meta-learning framework or not."
+            },
+            "questions": {
+                "value": "(3) Does the SCS still have the advantage when used in general compositional generalization problems? How about in i.i.d. problems?\n\n(4) It might be more reader-friendly to increase the size of the figures or the font size in the figures."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698766890162,
+        "cdate": 1698766890162,
+        "tmdate": 1699636603739,
+        "mdate": 1699636603739,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "6AgJgVHw1g",
+        "forum": "17BA0Tl2Id",
+        "replyto": "17BA0Tl2Id",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_3drE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5753/Reviewer_3drE"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a referential game benchmark to investigate the agent's ability to solve a domain-agnostic binding problem and exhibit compositional learning behaviors."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+ Originality: \n\n    The proposed Symbolic Continuous Stimulus (SCS) and the meta-referential games benchmark built upon it are novel and interesting.\n\n+ Significance:\n\n    Probing and investigating the compositional learning behaviors are important for various machine learning communities."
+            },
+            "weaknesses": {
+                "value": "- Quality & Clarity:\n    \n    i) I am a bit confused about the claim that the proposed SCS is *shape invariant*. What does this specifically mean in the context of this paper? Would be great if the authors can give a clear definition of this property.\n\n\n   ii) Can the authors provide more insights and explanations about why SCS is a domain-agnostic representation?\n\n\n   ii) What is the architecture used for the Recall task experiment in appendix C.1? Is it possible that the performance gap is caused by the choice of implementation of the agents? My concern is whether the proposed SCS is universally more effective than OHE in terms of BP, regardless of the network architectures. Is there any theoretical evidence of this claim?\n\n  iv) How does the shape invariance property of the SCS representation translate into the meta-referential games?\n\n   v) The description of the meta-referential games is a bit abstract to me. It's also unclear to me how the compositionality is examined through the games. It would be great if the authors can provide an algorithm table to summarize the game procedure and show some game instances to facilitate understanding."
+            },
+            "questions": {
+                "value": "See the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5753/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5753/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5753/Reviewer_3drE"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698783551559,
+        "cdate": 1698783551559,
+        "tmdate": 1699636603609,
+        "mdate": 1699636603609,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

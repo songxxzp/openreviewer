@@ -1,0 +1,567 @@
+[
+    {
+        "title": "Multi-View Representation is What You Need for Point-Cloud Pre-Training"
+    },
+    {
+        "review": {
+            "id": "MyhYUZ9De5",
+            "forum": "imZcqOrbig",
+            "replyto": "imZcqOrbig",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_1Vvn"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_1Vvn"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a pre-training method for 3D point clouds that leverages 2D pre-trained foundation models. The method performs multiview consistency pre-training with a distillation loss from 2D pre-trained model. The experiments show the effectiveness of this method on several tasks on point cloud data."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The major strength of the paper is the effectiveness and simplicity of the method. Although I think the paper does not have a big technical contribution, since knowledge distillation from 2D foundation models is becoming a common approach, I like the paper since it is simpler than other concurrent works [1] and shows significant improvements. \n\n[1] Bridging the Domain Gap: Self-Supervised 3D Scene Understanding with Foundation Models, Chen and Li 2023"
+                },
+                "weaknesses": {
+                    "value": "Although I like the concept, I think the evaluation should be improved. In particular, I am concerned about the weight initialization scheme used. The paper states that only the weights of the encoder are re-used for initialization since it leads to better performance. However, all previous approaches have used the pre-trained weights from the encoder and decoder. Therefore, it is difficult to assess if this pre-training setup improves over previous work. Since this work uses the same backbone as previous pre-training works and these methods provide pre-trained weights, it would be easy and necessary to provide a comparison of fine-tuned models for previous works where only the encoder is reused. Moreover, numbers for a fine-tuned model with the proposed method where the decoder weights are also reused should be provided. With this experiment, we will be able to assess if this is only necessary for the proposed pre-training method or if all pre-training strategies suffer from it. More importantly, we will be able to assess if the described improvement on the paper really comes from the pre-training strategy or from the fine-tuning setup used. I would rate the paper as marginally above acceptance and I would change my rating after rebuttal when these numbers are available.\n\nMoreover, it is not clear the masking ratio ablation experiment. There is no description in the methods section of any masking applied during pre-training, so I think it will be necessary to clarify how this masking is applied during pre-training."
+                },
+                "questions": {
+                    "value": "See weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission716/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698400502642,
+            "cdate": 1698400502642,
+            "tmdate": 1699635998980,
+            "mdate": 1699635998980,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "sLgISI2RpS",
+                "forum": "imZcqOrbig",
+                "replyto": "MyhYUZ9De5",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We sincerely appreciate the reviewer's insightful feedback and positive comments. In response to the concerns raised, we offer the following clarifications and additional information.\n\n**Q: All previous approaches have used the pre-trained weights from the encoder and decoder.**\n\nWe thank the reviewer for raising this question. We would like to clarify this question here for different downstream tasks.\n\nIn the shape classification task, only the encoder is employed across all pre-training methods. This is because the classification task does not necessitate a decoder.\n\nSimilarly, for the object detection task, pre-training methods exclusively utilize the encoder. The detection decoder is typically custom-designed and differs significantly from those used in pre-training.\n\nRegarding the semantic segmentation task, while the decoder could theoretically be reused, some recent pre-training methods like DepthContrast[1] do not incorporate a decoder during pre-training. Consequently, these methods do not offer a decoder component that can be initialized for downstream tasks. \n\nIn our experimental analysis, we observed that the encoder weights play a pivotal role. As demonstrated in the table below, when transferring pre-trained decoder weights, our model consistently outperforms the second-best method on semantic segmentation tasks.\n\n| Method              | Backbone | S3DIS Area 5 mIoU | S3DIS 6-Fold mIoU | ScanNet mIoU |\n| ------------------- | -------- | ----------------- | ----------------- | ------------ |\n| Train from scratch  | SR-UNet  | 68.2              | 73.6              | 72.2         |\n| SceneContext        | SR-UNet  | 72.2              | -                 | 73.8         |\n| Ours (encoder only)        | SR-UNet  | **73.8**          | **78.3**          | **75.6**     |\n| Ours (encoder and decoder) | SR-UNet  | 73.5              | 78.0              | 75.4         |\n\n**Q: Masking ratio ablation experiment.**\n\nWe express our gratitude to the reviewer for the meticulous attention in pointing this out. We intend to provide a more detailed explanation in our revised manuscript. Our method involved masking the input point cloud guided by the corresponding RGB image. Following the conventional practice in masked autoencoder-based pre-training [2], we divided the image into regular non-overlapping patches. Then we sample a subset of patches and mask (i.e., remove) the remaining ones. The remaining part is projected onto the point cloud, forming the input for our method. We employ this masking operation as a data augmentation technique, which assists in the development of more robust features during pre-training. As evidenced in Table 4(b) (referenced below), an appropriate masking operation during pre-training could enhance performance in downstream tasks.\n\n| Mask Ratio (%) | ScanNet  |\n| -------------- | -------- |\n| 10             | 74.8     |\n| 30             | **75.6** |\n| 60             | 74.2     |\n| 80             | 73.5     |\n\n[1] Zhang, Zaiwei, et al. \"Self-supervised pretraining of 3d features on any point-cloud.\" In ICCV 2021.\n\n[2] He, Kaiming, et al. \"Masked autoencoders are scalable vision learners.\" In CVPR 2022."
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700523230281,
+                "cdate": 1700523230281,
+                "tmdate": 1700523230281,
+                "mdate": 1700523230281,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "3YlTveXWC0",
+                "forum": "imZcqOrbig",
+                "replyto": "sLgISI2RpS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_1Vvn"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_1Vvn"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Post-rebuttal assessment"
+                    },
+                    "comment": {
+                        "value": "I would like to thank the authors for the additional experiments. All my concerns have been addressed and therefore I will keep my positive rating."
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700643519216,
+                "cdate": 1700643519216,
+                "tmdate": 1700643519216,
+                "mdate": 1700643519216,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "FtmE3IogJT",
+            "forum": "imZcqOrbig",
+            "replyto": "imZcqOrbig",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_JZVU"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_JZVU"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes to leverage the pre-trained 2D **networks** instead of data for 3D point cloud pretraining. Specifically, a 3D network is first applied to extract 3D feature volumes that are then projected into image-level embeddings with the help of depth information. Next, the key idea is to make the projected image features close to their counterparts that are pretrained using powerful 2D vision foundation models such as Dinov2, CLIP, SAM. Additionally, to realize multi-view consistency, another module is adapted to maintain the point correspondences across different views, yielding the whole proposed method called MVNet. For verifying the effectiveness of MVNet, experiments are conducted on various benchmarks and tasks."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1.\tThe paper is well-organized, well-written, and easy to follow.\n2.\tThe key idea to leverage the pre-trained 2D networks and learn the 3D-2D correspondence at the feature level is interesting and effective. Such pretext task design provides a new direction for future research on 3D pretraining.\n3.\tThe proposed method achieves **superior results** on various benchmarks and tasks.\n4.\tThe supplementary material provides more experimental results and states the broader impacts. Additionally, the qualitative results of multi-view consistency predictions further prove the effectiveness of the proposed method.\n5.\tSome possible limitations and future potentials are also discussed."
+                },
+                "weaknesses": {
+                    "value": "1.\tThe **masking ratio** is *only discussed* in the ablation study, which is very confusing. Some more details about this masking operation should be discussed in the method section. For example, why do you use this operation? Why can it benefit the proposed method?\n2.\tThere are several **important recent related works** [1, 2] that should be discussed in Related Works and compared in the tables in the main paper.\n3.\tThe proposed method introduces two modules, thus the **#params and FLOPs** during pretraining (all the parts that need to be trained online in Fig. 2 should be counted) need to be provided and compared with other methods to show the efficiency of the proposed method.\n4.\tThe proposed method requires the **pre-processing** on RGB-D scans to generate point clouds. This operation may bring extra processing time and disk usage. How long will it take? How much extra storage will this need? This should be at least discussed in the supplementary material.\nAlso, this may be a limitation of the proposed method, which should be mentioned in the limitation section.\n5.\tSome **qualitative/visualization results** of different tasks such as 3D segmentation, and detection should be provided in the supplementary material.\n\n**Refs**:     \n[1] Mask3D: Pre-training 2D Vision Transformers by Learning Masked 3D Priors. CVPR 2023.    \n[2] MM-3DScene: 3D Scene Understanding by Customizing Masked Modeling with Informative-Preserved Reconstruction and Self-Distilled Consistency. CVPR 2023."
+                },
+                "questions": {
+                    "value": "This work shows great potential to serve as a new pretraining method for 3D point cloud processing. Hope the code and the pretrained models could be public upon the acceptance of this paper.\n\nThe major concerns are detailed in the weaknesses part. The missing discussions, experimental results and qualitative results are expected to be provided during the rebuttal."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Reviewer_JZVU"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission716/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698575177742,
+            "cdate": 1698575177742,
+            "tmdate": 1699635998913,
+            "mdate": 1699635998913,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "3zU3aclFWb",
+                "forum": "imZcqOrbig",
+                "replyto": "FtmE3IogJT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "We are deeply grateful to the reviewer for their insightful feedback and positive comments. In addressing the concerns raised, we offer the following clarifications and additional information.\n\n**Q: Masking ratio ablation experiment.**\n\nWe express our gratitude to the reviewer for the meticulous attention in pointing this out. We intend to provide a more detailed explanation in our revised manuscript. Our method involved masking the input point cloud guided by the corresponding RGB image. Following the conventional practice in masked autoencoder-based pre-training [1], we divided the image into regular non-overlapping patches. Then we sample a subset of patches and mask (i.e., remove) the remaining ones. The remaining part is projected onto the point cloud, forming the input for our method. We employ this masking operation as a data augmentation technique, which assists in the development of more robust features during pre-training. As evidenced in Table 4(b) (referenced below), an appropriate masking operation during pre-training could enhance performance in downstream tasks.\n\n| Mask Ratio (%) | ScanNet  |\n| -------------- | -------- |\n| 10             | 74.8     |\n| 30             | **75.6** |\n| 60             | 74.2     |\n| 80             | 73.5     |\n\n**Q: Important recent related works.**\n\nWe are thankful to the reviewer for bringing these related works to our attention. We will include a comprehensive discussion of these works in our revised manuscript. Mask3D introduces a method of pre-training in 2D by harnessing 3D priors, with the aim of enhancing 2D task performance. Our approach, conversely, seeks to apply 2D knowledge to augment 3D tasks, establishing a reversed transfer of knowledge. Given the differing objectives, a direct comparison with Mask3D is not straightforward.\n\nMM-3DScene has proposed an innovative masking model for point cloud pre-training. We have conducted a comparative analysis with their method on the object detection task, and the results are presented in the table that follows. Our method outperforms MM-3DScene in most cases.\n\n| Method             | Architecture | ScanNet mAP @0.25 | ScanNet mAP @0.5 | SUN RGB-D mAP @0.25 | SUN RGB-D mAP @0.5 |\n| ------------------ | ------------ | ---------------- | --------------- | ------------------ | ----------------- |\n| Train from scratch | VoteNet      | 58.7             | 35.4            | 57.7               | 32.9              |\n| MM-3DScene         | VoteNet      | 63.1             | **41.5**        | 60.6               | 37.3              |\n| MVNet              | VoteNet      | **64.0**         | **41.5**        | **62.0**           | **39.6**          |\n\n\nWe also compare our method with MM-3DScene on the semantic segmentation task. Since MM-3DScene employs Point Transformer as the encoder backbone, we ensured a fair comparison by implementing Point Transformer as the backbone during our method's pre-training phase. The results, which are presented in the subsequent table, demonstrate that our method outperforms MM-3DScene under the same experimental setting.\n\n| Method             | Backbone          | ScanNet mIoU | S3DIS Area5 mIoU |\n| ------------------ | ----------------- | ------------ | ---------------- |\n| Train from scratch | Point Transformer | 70.6         | 70.4             |\n| MM-3DScene         | Point Transformer | 72.8         | 71.9             |\n| MVNet              | Point Transformer | **75.2**     | **73.5**         |\n\n**Q: The number of params and FLOPS.**\n\nWe are grateful to the reviewer for highlighting this matter. During pre-training, our model comprises a total of 110M parameters and operates at 31 GFLOPs. As a comparison, a preivous state-of-the-art method, 4DContrast, contains 71M parameters. It is important to note that while contrastive learning-based methods typically necessitate large batch sizes, our method does not require this. Consequently, our approach offers greater flexibility across various hardware configurations.\n\n**Q: Pre-processing discussion.**\n\nWe extend our gratitude to the reviewers for bringing this to our attention. We acknowledge the significance of this point and will address it, adding a corresponding note to the limitations section in our revised manuscript. The process of projecting RGB-D scans to point clouds requires approximately 10 hours on a 64-core CPU machine. Storaging the generated point cloud would require  ~600G extra space.  \n\n**Q: Qualitative/visualization results.**\n\nWe are thankful to the reviewer for the suggestion. In response, we have included additional qualitative results for the semantic segmentation task in the updated supplementary material.\n\n[1] He, Kaiming, et al. \"Masked autoencoders are scalable vision learners.\" In CVPR 2022."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700536942875,
+                "cdate": 1700536942875,
+                "tmdate": 1700536942875,
+                "mdate": 1700536942875,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "BYm2Eo8KwF",
+                "forum": "imZcqOrbig",
+                "replyto": "FtmE3IogJT",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_JZVU"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_JZVU"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I appreciate the detailed response from the authors.\n\nMost of the responses addressed my concerns, so I will keep my score of 6.\n\nPlease also note that, the qualitative results shown in the supplementary material are still not enough, more results are expected to be provided in the final version.\n\nTo summarize, I lean to accept this paper under the condition of **providing more qualitative results and adding the missing discussions of related works and experimental results listed in the rebuttal**."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700630905940,
+                "cdate": 1700630905940,
+                "tmdate": 1700630927818,
+                "mdate": 1700630927818,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "CbKwpOagvh",
+            "forum": "imZcqOrbig",
+            "replyto": "imZcqOrbig",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_GBMb"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_GBMb"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduces a 3D representation learning approach that involves projecting 3D dense features into 2D images. This method employs multi-level feature maps for cross-modal knowledge distillation and employs coordinate mapping as a pretext task for achieving multi-view consistency learning. Extensive experiments demonstrate the effectiveness of both modules in various downstream tasks, including 3D shape classification, part segmentation, 3D object detection, and semantic segmentation."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The proposed method exhibits a high degree of applicability, yielding favorable results across indoor scene-level datasets such as ScanNet and S3DIS, as well as at the object level dataset such as ScanObjectNN.\n\n2. The approach of projecting 3D features to 2D and learning consistency through point mapping aligns with physical intuition.\n\n3. The paper is well-written and ablation experiments are well-designed."
+                },
+                "weaknesses": {
+                    "value": "1. Given that the model can generate dense features containing rich semantics, I strongly recommend incorporating zero-shot experiments, including zero-shot classification experiments on datasets such as ModelNet and LVIS, as well as zero-shot semantic segmentation experiments on ScanNet and S3DIS.\n\n2. The classification experiments at the object level lack references and comparisons to recent works, such as ULIP-2 [Liu et al., 2023] and ReCon [Qi et al., 2023]. Furthermore, MVNet is trained on Objaverse and includes multiple versions with different parameters, making the comparisons in Table 3 unfair in terms of both the training dataset and model parameters.\n\n3. Some papers are repeatedly cited in the bib, such as: \"Charles R. Qi, Or Litany, Kaiming He, and Leonidas J. Guibas. Deep hough voting for 3d object detection in point clouds. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), October 2019a.\"\n\n4. The result of ScanObjectNN in Figure 1 is different from the result in Table 3.\n\n[Qi et al., 2023] Contrast with Reconstruct: Contrastive 3D Representation Learning Guided by Generative Pretraining. In ICML.\n\n[Liu et al., 2023] ULIP-2: Towards Scalable Multimodal Pre-training for 3D Understanding. arXiv preprint."
+                },
+                "questions": {
+                    "value": "1. Why not directly use the transformation matrix of two views as training targets within the multi-view consistency module?\n\n2. Is voting strategy employed in the classification of object point clouds? \n\n3. I am curious to understand why SAM yields inferior performance as a 2D encoder compared to DINOv2."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Reviewer_GBMb"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission716/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698779014867,
+            "cdate": 1698779014867,
+            "tmdate": 1699635998830,
+            "mdate": 1699635998830,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "g7AuLucriA",
+                "forum": "imZcqOrbig",
+                "replyto": "CbKwpOagvh",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Official Comment by Authors (Part 1)"
+                    },
+                    "comment": {
+                        "value": "We extend our heartfelt thanks to the reviewer for the positive feedback. In addressing the concerns raised, we are pleased to provide the following clarifications and additional information.\n\n**Q: Zero-shot experiments.**\n\nWe extend our thanks to the reviewer for highlighting this aspect. Our method, not being designed to align learned features with the language domain, faces challenges in direct application to zero-shot experiments like PointCLIP [1] or ULIP [2]. Nevertheless, to demonstrate the effectiveness of our approach, we have included results from few-shot learning experiments conducted on ModelNet40. These results can be found in Table 3 of the Supplementary Material. The table below also presents additional results pre-trained on ShapeNet for a comprehensive view.\n\n| Model        | Pre-train dataset | 5-way 10-shot  | 5-way 20-shot  | 10-way 10-shot | 10-way 20-shot |\n| ------------ | -------------- | -------------- | -------------- | -------------- | -------------- |\n| Transformer\u2020 | - | 87.8 \u00b1 5.2     | 93.3 \u00b1 4.3     | 84.6 \u00b1 5.5     | 89.4 \u00b1 6.3     |\n| OcCo         | ShapeNet | 94.0 \u00b1 3.6     | 95.9 \u00b1 2.3     | 89.4 \u00b1 5.1     | 92.4 \u00b1 4.6     |\n| PointBERT    | ShapeNet | 94.6 \u00b1 3.1     | 96.3 \u00b1 2.7     | 91.0 \u00b1 5.4     | 92.7 \u00b1 5.1     |\n| MaskDiscr    | ShapeNet | 95.0 \u00b1 3.7     | 97.2 \u00b1 1.7     | 91.4 \u00b1 4.0     | 93.4 \u00b1 3.5     |\n| PointMAE     | ShapeNet | 96.3 \u00b1 2.5     | 97.8 \u00b1 1.8     | 92.6 \u00b1 4.1     | 95.0 \u00b1 3.0     |\n| MVNet-B       | ShapeNet | 96.9 \u00b1 1.9 | 98.1 \u00b1 1.7 | 93.1 \u00b1 3.5 | 95.4 \u00b1 3.4 |\n| MVNet-B       | Objaverse | 97.2 \u00b1 1.8 | 98.3 \u00b1 1.8 | 93.4 \u00b1 3.4 | 95.8 \u00b1 3.2 |\n\nTo further prove the efficacy of our method, we conducted the label-efficient learning experiments on the scene-level SUN RGB-D object detection task. During these experiments, we trained our model using varied proportions of the dataset, specifically 20%, 50%, and 100%, and subsequently evaluated the performance on the same test dataset. We reported the mAP @0.5 results in the table below. Our observations indicate that our pre-training method yields more significant gains with reduced amounts of labeled training data. Notably, with only 50% of the training data, our method surpasses the performance achieved by training from scratch using the full 100% dataset.\n\n| Method             | 20%      | 50%      | 100%     |\n| ------------------ | -------- | -------- | -------- |\n| Train from scratch | 18.8     | 24.7     | 32.9     |\n| PointContrast      | 24.5     | 29.2     | 37.5     |\n| 4DContrast         | 26.3     | 31.5     | 38.2     |\n| MVNet              | **28.5** | **33.2** | **39.6** |\n\nWe hope that these relevant experiments will effectively address the reviewer's concerns.\n\n[1] Zhang, Renrui, et al. \"Pointclip: Point cloud understanding by clip.\" In CVPR 2022.\n\n[2] Xue, Le, et al. \"ULIP: Learning a unified representation of language, images, and point clouds for 3D understanding.\" In CVPR 2023."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700530573035,
+                "cdate": 1700530573035,
+                "tmdate": 1700530573035,
+                "mdate": 1700530573035,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "G9MoioluEJ",
+                "forum": "imZcqOrbig",
+                "replyto": "ZSdABwY1eq",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_GBMb"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_GBMb"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I thank the authors for their great efforts in this work, which address my concerns to some extent. I will keep my positive rating."
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700710484131,
+                "cdate": 1700710484131,
+                "tmdate": 1700710484131,
+                "mdate": 1700710484131,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "mzVv4n6QaZ",
+            "forum": "imZcqOrbig",
+            "replyto": "imZcqOrbig",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_RdJt"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission716/Reviewer_RdJt"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new learning framework for point cloud pre-training. The core motivation is to learn a view-consistent 3D feature representation. To enhance the pre-training effectiveness, the authors introduce pre-trained 2D image learning networks for knowledge transfer and also develop an auxiliary task of building pixel-space correspondences. Experiments on various downstream tasks demonstrate the effectiveness of the proposed pre-training method."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "(1) The paper is well-written and easy to follow. The working mechanism and motivation of each module is clearly explained. \n\n(2) The proposed learning pipeline and pretext task are technically sound. \n\n(3) The resulting supervised fine-tuning performances are encouraging."
+                },
+                "weaknesses": {
+                    "value": "(1) In practice, we may adopt various backbone models for point cloud learning. This requires a generic pre-training scheme that can be used to enhance the feature extraction capability of various point cloud backbones. However, in the manuscript, only the SR-UNet backbone is involved. Hence, the authors should explore more types of backbones for pre-training to validate the proposed method. Note that it is not convincing enough to only give a few results in Table 2 of the supplementary material without detailed explanations and more comprehensive experiments. \n\n(2) Furthermore, the experimental comparison with previous point cloud pre-training approaches is problematic because the adopted backbone models differ. To evaluate the effectiveness of the proposed pre-training framework, the authors should make sure that the performance gains are not from the stronger backbone. \n\n(3) For scene-level experiments, the authors perform pre-training on ScanNet and fine-tune on ScanNet, S3DIS, and SUN RGB-D. In fact, the pre-training dataset and the fine-tuning datasets are all indoor room data, with small domain gaps. Therefore, the actual transferability, which is known to be a key consideration factor for a pre-training method, is questionable. Some cross-domain verifications are needed, such as fine-tuning on some outdoor datasets.\n\n (4) For object-level experiments, the pre-training dataset Objaverse (with 800K objects) is much larger than ShapeNet/ModelNet used in previous pre-training methods. Therefore, the performance comparison is unfair."
+                },
+                "questions": {
+                    "value": "For different experiments, the authors are also suggested to report their results of training from scratch, such that readers can better observe the relative gains after pre-training the backbone using the proposed method."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission716/Reviewer_RdJt"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission716/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698801053449,
+            "cdate": 1698801053449,
+            "tmdate": 1700657782094,
+            "mdate": 1700657782094,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Er89ZAvCaM",
+                "forum": "imZcqOrbig",
+                "replyto": "mzVv4n6QaZ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Official Comment by Authors (Part 1)"
+                    },
+                    "comment": {
+                        "value": "We express our sincere gratitude to the reviewer for the insightful feedback. In response to the concerns raised, we offer the following clarifications and additional information.\n\n**Q: Adopt various backbone models for point cloud learning.**\n\nWe deeply appreciate the reviewer for the insightful suggestion. We totally agree that a generic pre-training scheme should have the ability to enhance feature extraction in various point cloud backbones. In our paper, we have employed SR-UNet as the primary backbone for scene-level experiments and Transformer for shape-level tasks. We contend that this demonstrates the adaptability of our pre-training scheme to at least two different point cloud backbones.\n\nTo further validate the efficacy of our method, we have conducted additional experiments incorporating other encoder backbones for the rebuttal. We selected two point cloud encoders for this purpose:\n\n1. PointNet++-based encoder: For this encoder type, network features are aggregated through multiple set abstraction levels. We utilized PointNeXt [1] as the representative encoder backbone in this category, which is an advanced version of PointNet++.\n2. Graph-based encoder: In this approach, each point in a point cloud is treated as a graph vertex. Directed edges are generated based on the neighboring points. For this category, we selected the commonly-used DGCNN [2] as our test encoder backbone.\n\nThe results, as detailed in the following table, clearly demonstrate significant improvements in both encoder backbones when pre-trained using our method. \n\n| Method             | Backbone  | S3DIS Area 5 mIoU | S3DIS 6-Fold mIoU | ScanNet mIoU |\n| ------------------ | --------- | ----------------- | ----------------- | ------------ |\n| Train from scratch | DGCNN     | 47.9              | 56.1              | 50.2         |\n| MVNet              | DGCNN     | **61.5**          | **66.2**          | **63.0**     |\n| Train from scratch | PointNeXt | 70.8              | 74.9              | 71.5         |\n| MVNet              | PointNeXt | **73.1**          | **78.0**          | **75.2**     |\n| Train from scratch | SR-UNet   | 68.2              | 73.6              | 72.2         |\n| MVNet              | SR-UNet   | **73.8**          | **78.3**          | **75.6**     |\n\n[1] Qian, Guocheng, et al. \"Pointnext: Revisiting pointnet++ with improved training and scaling strategies.\"  In NeuIPS 2022\n\n[2] Wang, Yue, et al. \"Dynamic graph cnn for learning on point clouds.\" *ACM Transactions on Graphics (tog)* 38.5 (2019): 1-12."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700532607775,
+                "cdate": 1700532607775,
+                "tmdate": 1700532607775,
+                "mdate": 1700532607775,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ixKFx4LakI",
+                "forum": "imZcqOrbig",
+                "replyto": "c88JwkvV6w",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_RdJt"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission716/Reviewer_RdJt"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the authors' detailed explanations and extensive experiments. My raised concerns have been basically addressed in the response. I will correspondingly update my rating."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission716/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700657736567,
+                "cdate": 1700657736567,
+                "tmdate": 1700657736567,
+                "mdate": 1700657736567,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

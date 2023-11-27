@@ -1,0 +1,213 @@
+[
+    {
+        "id": "jDW7FklGUy",
+        "forum": "Gny0PVtKz2",
+        "replyto": "Gny0PVtKz2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_TxzE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_TxzE"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper challenges the conventional approaches surrounding token mixers in sequential user modeling. It highlightes that the self-attentive token mixer of the Transformer architecture is outperformed by simpler strategies, particularly in this domain. The authors identify and emphasize three key empirically validated criteria for effective token mixers - order sensitivity, a large receptive field, and a lightweight architecture. Based on that, they introduce ConvFormer, a straightforward yet effective modification to the Transformer. The approach combines depth-wise and channel-wise convolution layers, which yields performance improvements. The results offer insights into the design principles that enhance the efficacy of token mixers in the realm of recommender systems.\n\nThe paper is generally well-structured, it contains rich literature survey and a lot of experimental results. However, it is not always easy to read. While all parts of the text are logically connected, the content within each part often refers the reader across the entire text and even into the appendix. This is especially critical in the introductory parts where the authors outline their ideas and try to convey the main message. This also leads to several major issues that are explained in more detail below."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- the topic of finding alternatives to self-attention mechanism is interesting and important, the paper can be viewed as a good overview of the related literature\n- the work contains a lot of empirical studies that allow greater granularity in analyzing the sequential learning process \n- the idea of replacing self-attention with convolutional mechanisms has the potential to become a valuable contribution into the field"
+            },
+            "weaknesses": {
+                "value": "- the description of the main experiments outlining key insights of the paper lack clarity\n- the design of the experiments and the methodology seem contradictory to the main claims of the paper\n- some straightforward baselines are missing from comparisons, which makes conclusion on superiority less convincing"
+            },
+            "questions": {
+                "value": "### **Causality**\nThe most obscure part of the work is the experimental setting for devising the key three principles pertinent to the construction of effective and efficient sequential recommenders. Section 3 is devoted to this description and deserves more accurate wording and rich explanations. For some reason, there are no illustrations provided in Section 3 for the considered SAR-O, SAR-P, and SAR-R models. There is a footnote referring to the appendix A.4 section, which also doesn't contain the figures. The most critical part that is missing in the explanation of these models is how the sequential order is taken into account and how the causal structure of learning is preserved (so that the leaks from future are avoided). For example, there are two contradicting statements in the description of the SAR-O approach: the authors claim that it's independent of the input sequence and then one sentence later comes \"SAR-O is directly sensitive to the order of the input items\". The same problem goes for SAR-P and SAR-R models. In the case of SAR-P each input element for the sequence is handled independently via MLP, how can it directly depend on the order? In the case of SAR-R, the item-to-item mixing matrix is random, so how is it \"order-sensitive\"? Explanation probably requires more than a few sentences. Graphical representation along with mathematical formulation in this section would help to convince the reader and minimize confusion.\n\nHaving a more coherent explanation is especially critical for supporting the corresponding claims on superiority of those simpler mixers over the original SASRec model. Moreover, there's another issue related to these claims. The authors use a simple leave-last-out holdout sampling scheme to hide test items, which is subject to \"recommendations from future\" type of leaks (see [Ji at el 2023]). Combined with non-causal item-to-item mixer this would create an unfair advantage to the proposed modifications of the SASRec, which employs strictly triangular mask and ensures causal learning. So, seeing the superiority would be no surprise in this case, but it would not address the sequential learning task anymore. Hence, modifying the experimentation scheme that excludes the \"recommendations from future\" leaks is particularly important as well. One can also run a simple pre-check by lifting the triangular mask from SASRec. Most likely it will outperform the proposed modifications, which will also reveal the general problem with the setup.\n\nThe related issue arises with receptive field size experiments in Section 3.2. When K nearest neighbors are selected, the simple symmetric distance is used |i-j|\\<K. So, no causal mask is used here either, which only reaffirms suspicions regarding the possible leaks in the training.\n\nThere also seems to be a contradiction with the ways SASRec is represented in the text.  In section 4, the authors outline three key components of an effective sequential learner and state that SASRec does not correspond to the two of them: order sensitivity and large receptive field. However, both properties are ingrained into the sequential self-attention mechanism: it does preserve information on the order via successive learning of hidden states over the sequence via triangular mask (positional embeddings also count but their contribution is marginal), and it operates over all preceding items at any step within an input sequence. Maybe something different was meant by the authors, but it requires careful wording and more clarification.\n\nContinuing on the topic of information leakage, the proposed solution also raises concerns. Specifically, the depth-wise convolution that operates within each hidden component, meaning it blends in information across entire sequence, and therefore loses the causal structure and allows capturing information from future elements. A careful analysis of the leaks would help resolve the concerns.\n\n### **Baselines**\nEven though the authors claim to only modify the attention mechanism, the proposed solution  also deviates from the original SASRec implementation in terms of the loss function. Changing the loss function can have a significant impact on the quality of SASRec even without changing its architecture, see e.g. [Klenitskiy and Vasilev 2023], [Frolov et al. 2023], [Petrov and Macdonald 2023].\nSo, the comparison of the proposed approach (as an alternative to SASRec) is unfair unless either the same loss is used in the proposed model or the SASRec's loss function is also modified to employ the proposed pairwise objective. Otherwise, the claimed contribution of the architectural changes is not convincing. \n\n### **Other issues**\nThe authors mention computational cost of long sequences, however, most of the real applications in recommender systems have relatively short sequences (comparing to e.g. NLP applications). Having the table with datasets statistics including average sequence lengths (like the one in the SASRec paper) would help to see that. Even length 50 is rarely attainable in most datasets. Applying FFT to compute convolutions is a logical step but it is only remotely related to the problem of long sequences. It is ubiquitously used to compute convolutions and should not be presented as a particular contribution by the authors.\n\n### **References**\n\nJi Y, Sun A, Zhang J, Li C. A critical study on data leakage in recommender system offline evaluation. ACM Transactions on Information Systems. 2023 Feb 7;41(3):1-27.\n\nKlenitskiy, A. and Vasilev, A., 2023, September. Turning Dross Into Gold Loss: is BERT4Rec really better than SASRec?. In\u00a0_Proceedings of the 17th ACM Conference on Recommender Systems_\u00a0(pp. 1120-1125).\n\nFrolov E., Bashaeva L., Mirvakhabova L., Oseledets I. Hyperbolic Embeddings in Sequential Self-Attention for Improved Next-Item Recommendations. Under review at https://openreview.net/forum?id=0TZs6WOs16.\n\nPetrov, A.V. and Macdonald, C., 2023, September. gSASRec: Reducing Overconfidence in Sequential Recommendation Trained with Negative Sampling. In\u00a0_Proceedings of the 17th ACM Conference on Recommender Systems_\u00a0(pp. 116-128)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698688160924,
+        "cdate": 1698688160924,
+        "tmdate": 1699636858167,
+        "mdate": 1699636858167,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wFT91Ud4H8",
+        "forum": "Gny0PVtKz2",
+        "replyto": "Gny0PVtKz2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_DKuE"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_DKuE"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper summarize the key ingredient to build a good user modeling architecture. The three components are: 1) order sensitive, 2) large receptive field 3) Light weight. They provide experiment to prove their argument. They propose ConvFormer with the fourier transformation and achieves SOTA performance on the offline dataset."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Identify the problem of self-attentive transformer when it was applied in user modelling\n2. Good performance"
+            },
+            "weaknesses": {
+                "value": "No online real experiment\nOnly the ID feature was considered"
+            },
+            "questions": {
+                "value": "1. What's the relationship between the optimal K (kernel size) and the dataset sequence length?\n2. How would you choose the input sequence length?\n3. Will adding more block improve performance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Reviewer_DKuE"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7216/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698814280061,
+        "cdate": 1698814280061,
+        "tmdate": 1699636857956,
+        "mdate": 1699636857956,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "VOiQ6ibQ4A",
+        "forum": "Gny0PVtKz2",
+        "replyto": "Gny0PVtKz2",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_dYvo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7216/Reviewer_dYvo"
+        ],
+        "content": {
+            "summary": {
+                "value": "Despite the great success of transformer models in the research community of machine learning, this paper argues that such an architecture is not better than other simpler baselines (like MLP) on sequential user modeling tasks.  To develop optimal architectures, the authors identify three key factors for sequential models: sensitivity to the order of input sequences, lightweight model size, and large receptive field.  Based on these criteria, this paper proposes ConvFormer, which replaces self-attention modules with convolutional layers in the transformer models.  The authors demonstrate consistent performance gain on four sequential user modeling datasets with the proposed architectures."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "1. The paper demonstrates consistent performance gains on most benchmark datasets"
+            },
+            "weaknesses": {
+                "value": "Overall, the proposed method is obsolete.  This paper does not follow recent progress in the machine learning community.  The followings are the weaknesses.\n\n---\n\n### Insufficient literature review\n\n1. The formulation of permutation-variant (or order-sensitive) self-attention is outdated.  There are enormous ways to equip self-attention with the sensitivity to input sequence order.  Just to name few of them:\n\n    * **Learnable absolute embedding**: Training data-efficient image transformers & distillation through attention, Touvron et al, ICML 2021\n    * **Sinusoidal absolute embedding**: Attention is All You Need, Vaswani et al, NeuRIPS 2017.\n    * **Rotary relative embedding**: RoFormer: Enhanced Transformer with Rotary Position Embedding, Su et al, arXiv 2021\n    * **Learnable relative embedding**: Swin Transformer V2: Scaling Up Capacity and Resolution, Liu et al, CVPR 2022.\n\nAll these modelings have shown superior performance in NLP, CV, and Robotics.\n\n2. Eqn (1) should cite `Vaswani et al.`, which is the seminal work for proposing the self-attention formulation\n\n3. Eqn (2) should cite `Vasani et al.` and `Dosovitskiy et al` (An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale).  Summing input tokens with position encodings is a common procedure in transformer models.\n\n4. The author does not cite `Mathieu et al` (Fast Training of Convolutional Networks through FFTs), which proposes to accelerate convolutional operator using FFT in 2013.\n\n---\n\n### Odd formulations\n\n5. The formulation of SAR-P seems not sensitive to the order of input sequence but the features of the input token $R[l]$\n\n6. The formulation of window-masked self-attention is odd.  One key component in self-attention is to fix the numerical scale of aggregated features $S = A(RW^{(V)})$, where the summation of each row in $A$ is constrained to be $1$.  To apply window masking, a common practice is to set the entries, outside the window, in $A$ to $-\\inf$ (see Sec 3.2.3 in `Vasani et al.`).\n\nHowever, the formulation in Sec 3.2 of this paper does not guarantee scale invariance of feature aggregation.  In extreme cases, where $A$ has very small attention within the window, the scales of aggregated features become $0$.\n\n7. The ablation of receptive field in Fig 1 is weird.  Existing works usually study the effect of receptive field with convolutional models `Liu et al.` (A ConvNet for the 2020s)\n\n---\n\n### Overclaims\n\n8. This paper proposes to replace self-attention modules with convolutional layers.  The idea is not novel, as the final model becomes Residual Network `He et al.` (Deep Residual Learning for Image Recognition).  In fact, there are papers comparing transformer architectures with convolutional UNet for sequential modeling tasks, like `Chi et al.` (Diffusion Policy: Visuomotor Policy Learning via Action Diffusion).  Moreover, there are also works integrating unify both sides in a single model `Rombach et al.` (High-Resolution Image Synthesis with Latent Diffusion Models)\n\n9. The idea of using convolution in sequential user modeling tasks is already explored in `Zhou et al., 2022`"
+            },
+            "questions": {
+                "value": "See above weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "1: strong reject"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7216/Reviewer_dYvo"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7216/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1700935463099,
+        "cdate": 1700935463099,
+        "tmdate": 1700935553850,
+        "mdate": 1700935553850,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

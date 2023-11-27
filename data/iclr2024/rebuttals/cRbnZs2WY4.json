@@ -1,0 +1,494 @@
+[
+    {
+        "title": "SelfClean: A Self-Supervised Data Cleaning Strategy"
+    },
+    {
+        "review": {
+            "id": "lfENs8xalK",
+            "forum": "cRbnZs2WY4",
+            "replyto": "cRbnZs2WY4",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_psYA"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_psYA"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper considers the problem of cleaning up large datasets used for training and evaluation. The paper considers three kinds of imperfections: (1) samples which are irrelevant, (2) samples which are near duplicates of other samples, and (3) samples with incorrect labels. The proposed approach is to use self-supervised learning methods to learn an embedding of the data and then compute scores for each of the imperfection categories above based on these embeddings. Then, samples are deemed to be flawed based on either a threshold-based criterion or human review. The method is evaluated using datasets with artificially injected flaws, as well as \"in the wild\" datasets (in which metadata and human review are used as ground truth). \n\nI liked this paper because of the problem it considers and the ambition and thoroughness of its approach. However, there are some technical issues and some issues with framing. If tweaked to be a bit more thoughtful along a few axes, it could be a great contribution to ICLR. \n\nI will flag the fact that I don't know the related work well enough to know whether all key baselines are included. On this, I will defer to more knowledgeable reviewers. \n\n# References (used later)\n\n@article{xiao2020should,\n  title={What should not be contrastive in contrastive learning},\n  author={Xiao, Tete and Wang, Xiaolong and Efros, Alexei A and Darrell, Trevor},\n  journal={arXiv preprint arXiv:2008.05659},\n  year={2020}\n}\n\n@inproceedings{cole2022does,\n  title={When does contrastive visual representation learning work?},\n  author={Cole, Elijah and Yang, Xuan and Wilber, Kimberly and Mac Aodha, Oisin and Belongie, Serge},\n  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},\n  pages={14755--14764},\n  year={2022}\n}"
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "* The paper is generally well written and interesting to read. \n* Very polished - I didn't spot one typo!\n* The task under consideration - cleaning up datasets for training and evaluation - is a timely and important topic. \n* The proposed methodology seems reasonable enough - see below for some caveats. \n* The experiments are thorough and thoughtful. \n* The paper includes a limitations section, which is always helpful for the reader. \n* Ample supporting details and examples can be found in the appendix."
+                },
+                "weaknesses": {
+                    "value": "I have a few technical concerns:\n* The paper is built on augmentation-driven SSL methods. The representations learned by these methods are driven by the augmentations they use, which generally need to be chosen in a domain-specific way [xiao2020should]. These seems like a liability for the proposed method, and should be addressed. In practice, how is someone supposed to pick? \n* The SSL encoders which are the foundation of this paper are all trained with default or near-default parameters. Given that those parameters were tuned for ImageNet in the original papers, why shouldn't we worry that the encoders in this work are trained to varying levels of quality, confounding the results? \n\nThe paper's goals can seem a bit detached from real use cases, despite being framed in a very practical way. For instance:\n* One of the three types of data fault considered in the paper is *near duplicates*. Given that the paper considers many medical use cases, this seems potentially problematic. What about adjacent B-scans in an OCT volume? Or adjacent tissue sections in an H&E block? Or longitudinal X-rays from a patient? All of these should be near-duplicates, but may be quite important. \n* One of the three types of data fault considered in this paper is *irrelevance*. This seems like a loaded and insufficiently defined term. Isn't relevance in the eye of the beholder? When does it make sense to have a sample that is correctly labeled but \"irrelevant\" to the classification task at hand? Wouldn't it be obvious from the label that such a sample is irrelevant?\n* Adding X-ray images to a dataset of images from a different domain seems like a contrived task of low difficulty. (One could probably tell an X-ray image from a photograph of a skin lesion using classical image processing methods.) It seems like the \"real\" use case would be more like adding X-ray images of one disease to a dataset consisting of X-ray images from a very different disease. More broadly, it seems like concept granularity is an important missing piece in this work - see e.g. the granularity-depending usefulness of SimCLR features described in [cole2022does]. \n\n## Minor comments\n* This is not an accurate definition for SSL in general: \"...self-supervised learning (SSL), which produces meaningful latent spaces by training features to be invariant to augmentations.\" Consider, say, BYOL or MAE.\n* The text discussing the merging strategy for irrelevant samples is a bit hard to follow. \n* It would be nice if e.g. the metrics in Table 1 could be translated into an estimate of how much human effort is saved. This would help us understand what percentage improvement is necessary to make a meaningful difference between two methods. \n* The \"Comparison with human annotators\" section was a little hard to parse for me. Consider making the metrics and outcomes clearer. Also, \"more often than random\" is a pretty low bar - if something stronger can be said, it should be said. \n* It might be mentioning in the main paper that all of the experiments are done on ViTs (and are therefore confounded with architecture)."
+                },
+                "questions": {
+                    "value": "0. See \"weaknesses\" section. \n1. Why should we not be concerned about the choice of augmentations underlying the self-supervised learning used in this paper? \n2. Does the synthetic case of adding X-ray images to a dataset of images from a different domain model a realistic use case? \n3. The paper notes that \"the batch size cannot be large\" for SimCLR - why is this? \n4. Table 1 shows that sometimes SimCLR and DINO lead to very different performance and sometimes they do not. Is there any insight to be had into why this is? \n5. Why shouldn't we worry about the proposed method removing difficult but important images or groups of images, especially in a medical context?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5292/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698449633530,
+            "cdate": 1698449633530,
+            "tmdate": 1699636529826,
+            "mdate": 1699636529826,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "kNhVERyrTV",
+                "forum": "cRbnZs2WY4",
+                "replyto": "lfENs8xalK",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer psYA"
+                    },
+                    "comment": {
+                        "value": "**Questions:**\n\n> Q1: Why should we not be concerned about the choice of augmentations underlying the self-supervised learning used in this paper?   \n> W1: The paper is built on augmentation-driven SSL methods. The representations learned by these methods are driven by the augmentations they use, which generally need to be chosen in a domain-specific way [xiao2020should]. These seems like a liability for the proposed method, and should be addressed. In practice, how is someone supposed to pick?\n\nWe appreciate this question which is valid and well formulated. \nBefore answering it, there are two things to be observed. \nFirst, SSL methods that are not based on augmentations are a valid alternative for data cleaning, and their evaluation in the context of SelfClean is an interesting future direction. \nSecond, in our analysis the same standard settings were effective on 10 image datasets of different sizes and semantics, which suggests the method is quite robust to the choice of augmentation. \nUnfortunately, we used different augmentations compared to the original papers as these provided too weak of a learning signal for small datasets. \n\nThat said, the choice of augmentations is an important inductive bias as it establishes semantic equivalence, and in general requires domain knowledge. \nFor instance, in a dataset of X-ray scans, a flipped image may be considered problematic for data quality or not. \nTherefore this step cannot, in our opinion, be automated - although luckily, in practice, there are very generic settings which lead to good results in a broad range of situations.\nIn general, with more specific augmentations we expect our competitive results to improve even further.\n\n> Q2: Does the synthetic case of adding X-ray images to a dataset of images from a different domain model a realistic use case?\n\nYes, unfortunately this is encountered often in the medical domain as some datasets are extracted from atlases.\nThese atlases are however usually used for educational purposes and thus not only feature a single modality such as e.g. dermoscopy, but also complementary ones such as histopathology or X-rays of the patient.\nOur synthetic augmentations were heavily influenced by examples of real noise we encountered in the medical domain, and by domain knowledge of medical practitioners.\nPlease consult our answer to W3.1 of reviewer zncP for more information.\n\n> Q3: The paper notes that \"the batch size cannot be large\" for SimCLR - why is this?\n\nBecause in some of our experiments, the whole dataset has fewer examples than the usual batch size chosen for SimCLR.\n\n> Q4: Table 1 shows that sometimes SimCLR and DINO lead to very different performance and sometimes they do not. Is there any insight to be had into why this is?\n\nThe dataset size seems to be crucial for SimCLR to obtain good performance, as we note in passing towards the end of section 5.1.\n\n> Q5: Why shouldn't we worry about the proposed method removing difficult but important images or groups of images, especially in a medical context?\n\nSelfClean is meant as a tool to identify potential issues. \nThe action to be taken remains in the responsibility of the user, which we argue is in a better position to decide with the additional knowledge provided by our method. \nWe added a comment in the Recommended use paragraph of section 6 to highlight this, and included a preliminary study on biases for minority groups in Appendix G.3.\n\n**Weaknesses:**\n\n> W2: The SSL encoders which are the foundation of this paper are all trained with default or near-default parameters. Given that those parameters were tuned for ImageNet in the original papers, why shouldn't we worry that the encoders in this work are trained to varying levels of quality, confounding the results?\n\nThat is a very fair observation, which we purposefully neglected as our goal was not to show the optimal performance that can be achieved with significant time spent on hyperparameter tuning. \nHowever, we expect the quality of the encoders to positively correlate with the performance of SelfClean, thereby suggesting that even better results may be achieved by tuning hyper-parameters in a dataset-specific way.\nThis is now noted in the Limitations paragraph of section 6."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700084889458,
+                "cdate": 1700084889458,
+                "tmdate": 1700084889458,
+                "mdate": 1700084889458,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "k0mz55hku0",
+                "forum": "cRbnZs2WY4",
+                "replyto": "lfENs8xalK",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Reviewer_psYA"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Reviewer_psYA"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to authors"
+                    },
+                    "comment": {
+                        "value": "I appreciate your detailed response to my comments! \n\nAt present, my rating is unchanged (weak accept). That is, I still think the paper is likely to be of interest at ICLR. However, I also still think it's not a clear accept in its current form because of:\n* ongoing concerns about confounding in the experiments, due to the use of default hyperparameters in training the encoders (W2);\n* concerns about how practically useful the method is, due to somewhat contrived tasks (W5); and\n* a lack of empirical insight into the relationship between encoder quality / invariances and SelfClean performance (Q1/W1)."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700618705732,
+                "cdate": 1700618705732,
+                "tmdate": 1700618705732,
+                "mdate": 1700618705732,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "09vC0uaKbL",
+            "forum": "cRbnZs2WY4",
+            "replyto": "cRbnZs2WY4",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_N64F"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_N64F"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes an data label noise detection and removal technique based on self-supervised trained embeddings and three basic heuristics to identify potential outliers, near duplicates with conflicting labels and other labeling errors using agglomerative clustering, pairwise distance comparisons (thresholding) and \"intra/extra\" class distance ratios. The method is evaluated on 10 different datasets including popular computer vision benchmarks (such as ImageNet, Food101, CelebA) and seven other medical image datasets, mainly through synthetic experiments. The results are compared to some other known methods such as pHash, SSIM, FastDup."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "- Investigates label noise detection and removal on ten different images datasets including from both computer vision and medical imaging domains."
+                },
+                "weaknesses": {
+                    "value": "- Lack of novelty. The described methods of clustering, distance thresholding and intra/extra class distance ratios in the embedding space trained on the target dataset have been widely known and applied in the space. Combining these approaches is not sufficient for justifying novelty. \n- Lack of proper evaluation setup. The experiments are primarily performed using the synthetic label noise which is also devised by the paper. \n- Lack of proper baselines. \n- The paper is hard to follow."
+                },
+                "questions": {
+                    "value": "- Dataset size and data distribution would largely impact the hyper-parameters (alpha, q etc) used for identifying near duplicates, outliers etc. It is not clear how well the proposed heuristics would generalize for other datasets or other applied settings. \n- Page 9: \"Recommended use\" section. The paper's proposal is to use SelfClean to identify the errors and fix them using human in the loop. However, the process would still introduce sampling bias originating from SelfClean. This should be noted. \n- What was the rationale for choosing the current baselines? Below is the suggested baseline which uses pre-trained embeddings and vector similarity to identify label noise using Markov Random Fields (most similar to the proposed approach) \nSharma et al, \"NoiseRank: Unsupervised Label Noise Reduction with Dependence Models\", ECCV, 2020\n-  The paper is way too dense and hard to follow. Proposed novelties also needs to be clearly noted in the abstract."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "1: strong reject"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5292/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698821834898,
+            "cdate": 1698821834898,
+            "tmdate": 1699636529725,
+            "mdate": 1699636529725,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "LDEfDTVQuY",
+                "forum": "cRbnZs2WY4",
+                "replyto": "09vC0uaKbL",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer N64F"
+                    },
+                    "comment": {
+                        "value": "**Summary and Strengths:**\n\n> S1.1: The paper proposes a [...] technique [...] to identify potential outliers, near duplicates with conflicting labels and other labeling errors [...].\n\nThis remark is not completely accurate. \nIn fact, we identify near duplicates irrespective of whether they have conflicting labels and argue that this is useful in general.\nThe case of near duplicates with conflicting labels is however particularly relevant as it essentially results in data poisoning.\n\n> S1.2: Investigates label noise detection and removal [...].\n\nWhile formally correct, this statement is incomplete. \nIndeed, we do not simply consider label noise but also two other types of data quality issues that are not related to labels.\n\n**Questions:**\n\n> Q1: Dataset size and data distribution would largely impact the hyper-parameters (alpha, q etc) used for identifying near duplicates, outliers etc. It is not clear how well the proposed heuristics would generalize for other datasets or other applied settings.\n\nThis is a very valid point, which however we address by considering 10 datasets spanning different sizes (from 200 to 300,000 samples) and domains (from dermatology to X-ray scans to food and celebrity faces). \nWe demonstrate that the same heuristics yield good rankings for candidate issues across all of these datasets. \nFurthermore, we are able to fix the hyper-parameters mentioned in the question, which are only used for fully automatic cleaning, to the same values throughout. \nAdditionally, we report a detailed study on the influence of these hyper-parameters in Appendix H, sections H.3 and H.4.\nThus, there is evidence that the proposed heuristics generalize to several different domains and settings.\n\n> Q2: Page 9: \"Recommended use\" section. The paper's proposal is to use SelfClean to identify the errors and fix them using human in the loop. However, the process would still introduce sampling bias originating from SelfClean. This should be noted.\n\nWe fully agree with the observation that bias is not entirely eliminated, even in our recommended use. \nWe touch on this theme in the mentioned \"Recommended use\" section (\"The conflict between resolving data quality issues and the veto against the examination of evaluation data, mentioned in the introduction, has no easy resolution. We suggest the following compromise [...] as an improvement to the current situation.\"). \nTo highlight the point even more, the paragraph now includes a dedicated remark.\n\n> Q3.1: What was the rationale for choosing the current baselines?\n\nWe included methods from other frameworks that address multiple types of data quality issues, i.e. FastDup. \nAdditionally, for each of the three noise types we selected one or more recent competitive baselines with open-source implementations. \nFurthermore, as Confident Learning has compared their methodology against seven other techniques for label error detection and showed their superiority, there is reason to believe that by outperforming Confident Learning in our experiments our approach is also competitive with those.\nIt is almost impossible to exhaustively evaluate against other approaches, so despite all of our efforts, we may still have missed some that are particularly relevant for SelfClean.\n\n> Q3.2: Below is the suggested baseline which uses pre-trained embeddings and vector similarity to identify label noise using Markov Random Fields (most similar to the proposed approach) Sharma et al, \"NoiseRank: Unsupervised Label Noise Reduction with Dependence Models\", ECCV, 2020\n\nWe are grateful for this suggestion and have included NoiseRank in our comparison.\nIn Appendix G.1, you can find the results of the method in our synthetic scenario, and in Table 6 of Appendix G.2 the results of the comparison with metadata.\n\n> Q4.1: The paper is way too dense and hard to follow.\n\nWe are sorry about this finding and keep this comment in mind during revision.\nAs the other reviewers (97xm, zncP, psYA) unanimously agree that the paper is well written, we kindly ask you to point out specific parts that would in your opinion profit from a better formulation.\n\n> Q4.2: Proposed novelties also needs to be clearly noted in the abstract.\n\nThank you very much for raising this point. \nWe reformulated the abstract to make it clear that features are learned in the context of the dataset only, that the combination of simple heuristics we identify is surprisingly effective, and that we perform a thorough evaluation which shows competitive results and practical utility."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700084708299,
+                "cdate": 1700084708299,
+                "tmdate": 1700084708299,
+                "mdate": 1700084708299,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "PznloC7WDc",
+                "forum": "cRbnZs2WY4",
+                "replyto": "ktg2UJFqDW",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Reviewer_N64F"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Reviewer_N64F"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Sincere thanks to the authors for the discussions. The use of SSL-based models for feature extraction alone is not sufficient enough to claim novelty and meet the paper acceptance bar. The absence of such baselines does not necessarily make the contributions significant enough to meet the acceptance bar.  At least one more reviewer stated a similar concern (citing below), I am not in favor of accepting the paper at this time. Not changing the initial rating. \n\nReviewer (zncP): \"My primary reservation concerns the novelty of the cleaning approach. The main contribution is the use of SSL-based models for feature extraction. Beyond this, I struggle to identify other novel aspects.\""
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700697113864,
+                "cdate": 1700697113864,
+                "tmdate": 1700697113864,
+                "mdate": 1700697113864,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "8htp9Bmwyn",
+            "forum": "cRbnZs2WY4",
+            "replyto": "cRbnZs2WY4",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_zncP"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_zncP"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors of this work introduce a new dataset cleaning strategy. They utilize in-domain self-supervised learning to address challenges associated with human biases/errors, task biases, and issues present in other methods that use supervised learning e.g. semantic collapse. Their primary focus is on eliminating irrelevant examples, near duplicates, and correcting labeling errors. They benchmark their approach on an array of datasets and tasks, showing that their method outperforms previous works, by a large margin in some cases while they also provide valuable insights."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The authors of this paper set out to tackle the prominent, and always relevant, problem of dataset cleaning. I find myself in agreement with the authors' narrative and intuition about the use of self-supervised features, which I believe address several issues encountered by past methods.  The authors benchmark their approach primarily on medical datasets but they also provide valuable insights on the application of their method to mainstream natural datasets. In general, the paper is well written and easy to go through."
+                },
+                "weaknesses": {
+                    "value": "My primary reservation concerns the novelty of the cleaning approach. The main contribution is the use of SSL-based models for feature extraction. Beyond this, I struggle to identify other novel aspects.\n\nWhile the experiments are detailed, they appear somewhat limited in scope. The authors mainly concentrate on dermatology datasets and their experiments to natural images or other domains seems rather limited. Based on the novelty of the paper I would expect a stronger experimental section.\n\nThe first and second contamination strategies, while intuitive and useful, don't seem to address real-world noise. In the context of medical images, irrelevant examples often include images that are out-of-focus, images with doctor\u2019s annotations, or images with parts from an apparatus. They do not contain random ImageNet examples, PowerPoint slides or data from a different medical modality. Similarly for the duplicates, a simple rotation, resizing etc. is a rather a simplification of real-world duplicates.\n\nThe impact of dataset cleaning appears to be less significant than anticipated. While there are instances where cleaning the evaluation set boosts performance, there are equally instances where has a negative impact on the results.  Most importantly, when the training set gets cleaned, the performance decreases in 3 out of 5 cases. In the remaining 2 out of 5 cases, the gains in performance are rather small. This is important especially considering real-world applications \u2013 dataset cleaning is not only for benchmarking. Only the training set is accessible. The test set remains unknown and probably contains corrupted data.\n\nWhen k-NN evaluation is used, cleaning the training set seems to help consistently (although marginally in most cases). However, this is rather expected given the nature of k-NN evaluation.  However, in reality we care about the performance of linear classifiers and not k-NN. Most importantly, a fine-tuning step, which is a standard expectation in real-world scenarios, seems to be missing from this analysis."
+                },
+                "questions": {
+                    "value": "A significant challenge in medical diagnosis is that of intra-observer variability, which complicate thing further when comes to labeling errors. How does one address this complexity when it is nearly impossible to define a ground truth?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5292/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698832493469,
+            "cdate": 1698832493469,
+            "tmdate": 1699636529617,
+            "mdate": 1699636529617,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "X73tATFbMP",
+                "forum": "cRbnZs2WY4",
+                "replyto": "8htp9Bmwyn",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer zncP"
+                    },
+                    "comment": {
+                        "value": "**Questions:**\n\n> Q1: A significant challenge in medical diagnosis is that of intra-observer variability, which complicate thing further when comes to labeling errors. How does one address this complexity when it is nearly impossible to define a ground truth? \n\nWe agree that intra-observer variability, i.e. the difference in repeated measurements by the same observer, is an important issue especially in the medical domain.\nIn cases where the opinion of an expert shows significant variations over time, or even if multiple experts cannot reach a consensus, it is desirable to get another source of truth (e.g. other diagnostics, follow ups). \nIf the truth is not positively defined for a sample, it does not meet our definition of a label error, and should rather be considered an ambiguous sample. \nIntegrating a notion of ambiguity in the SelfClean framework is a very interesting future direction of research.\n\n**Weaknesses:**\n\n> W1: My primary reservation concerns the novelty of the cleaning approach. The main contribution is the use of SSL-based models for feature extraction. Beyond this, I struggle to identify other novel aspects.\n\nThe main novelty of SelfClean is that we describe precisely how to combine self-supervised learning with simple indicators to detect data quality issue competitively across different types of noise, while many alternatives do not work as effectively.\nNotably, we suggest dataset-specific SSL to learn concepts of data quality issues in the context of the collection at hand and demonstrate that this works for three types of noise.\nWe also demonstrate that not all SSL strategies work equally well in low-data regimes and suggest DINO as a general baseline.\nAs to the simple strategies to find issues, they share the same extendable principle and perform consistently well.\nFor instance, using hierarchical clustering allows for joint treatment of isolated and grouped irrelevant samples, and is for this reason much more efficient than e.g. the local outlier factor.\nOr again, the average intra-/extra-class distance ratio is not nearly as good as the more local single-neighbor ratio we suggest.\n\n> W2: While the experiments are detailed, they appear somewhat limited in scope. The authors mainly concentrate on dermatology datasets and their experiments to natural images or other domains seems rather limited. Based on the novelty of the paper I would expect a stronger experimental section.\n\nIn the paper we representatively include ImageNet, Food-101N, and CelebA for natural images, plus CheXpert and PatchCamelyon for other medical domains.\nThe main reason why our evaluation mostly focuses on small specific datasets is the challenge in finding standard image collections that are truly clean.\nNevertheless, to address this concern, we are running the synthetic mixed-contamination experiment both for subsets of both ImageNet and CheXpert.\nMoreover, the comparison with metadata (including CelebA, ImageNet-1k, and Food-101N) is now performed also for other baselines, which better highlights the effectiveness of SelfClean. \nWe agree that it would be nice to have more, but we believe the empirical evidence to be sufficient for publication of the method."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700084170692,
+                "cdate": 1700084170692,
+                "tmdate": 1700084170692,
+                "mdate": 1700084170692,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "IqSQKPgJpE",
+            "forum": "cRbnZs2WY4",
+            "replyto": "cRbnZs2WY4",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_97xm"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5292/Reviewer_97xm"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors present a method to curate datasets by finding near duplicates, bad labeled and out of distribution images.\nTo do so, they first train a self-supervised DINO model on the dataset to filter and then use distance and clustering based methods for each kind of anomaly detection.\nThey compare their method against multiple baseline both on synthetic and real anomaly detection benchmarks."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- Clear explanation of the method\n- Simple method that use the properties of SSL models to capture all factor of variations, which means that they don't require labels\n- Lot of ablation studies\n- The method seems robust to hyperparameter changes\n- Good evaluation setup of a ill posed problem"
+                },
+                "weaknesses": {
+                    "value": "All the methods are based on the notion that distance between images represents meaningful factors of variation. The closer the images are in the latent space, the more similar they should be, both in term of appearance but also semantically.\nHowever, while SSL probably captures most factor of variations (and usually more than with supervised learning), it is still not possible to control the hierarchy in term of distance in the latent space between the factors. Meaning that if an image is a sketch of a dog, it is hard to tell if it will match more a real picture of a dog or a sketch of a cat using self-supervised features.\nThis means that images from under represented groups or from rare classes will be removed or wrongly flagged as anomaly which is a big issue in medical imaging."
+                },
+                "questions": {
+                    "value": "1) Could you ablate the weakness I'm talking about, for exemple by looking at the proportion of images removed from the clean version of the dataset wrt. the frequency of their labels, or grouped by multiple metadata such as demographics, device etc. (CheXpert demographics: https://github.com/biomedia-mira/chexploration https://stanfordaimi.azurewebsites.net/datasets/192ada7c-4d43-466e-b8bb-b81992bb80cf)\n\nOptional: \n2) We can see on Table 2 that the gains are higher with kNN than with linear evaluation with a clean train set. This seems to be because kNN eval is directly based on distance, such as your filtering method. Given that zero shot evaluation of CLIP is based on the distance between the text and image encoder, it is possible that your method can enhance zero-shot evals of CLIP model.\nCould you test it in a zero-shot setup such as CLIP image/text cosine similarity matching ?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5292/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5292/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5292/Reviewer_97xm"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5292/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698839629923,
+            "cdate": 1698839629923,
+            "tmdate": 1699636529531,
+            "mdate": 1699636529531,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "HX9DJOJ8lO",
+                "forum": "cRbnZs2WY4",
+                "replyto": "IqSQKPgJpE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5292/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Reviewer 97xm"
+                    },
+                    "comment": {
+                        "value": "**Questions:**\n\n> Q1: Could you ablate the weakness I'm talking about, for exemple by looking at the proportion of images removed from the clean version of the dataset wrt. the frequency of their labels, or grouped by multiple metadata such as demographics, device etc.\n\nThank you for suggesting this experiment which you can now find in Appendix G.3.\nBefore delving into the details, it is important to note that the danger of systematically removing underrepresented groups is considerably higher in the fully automatic mode.\nFully automatic mode must be used with a lot of care to avoid undesired effects such as the ones you describe.\nThis is in line with our recommendation in Section 6, where we suggest to rely on the manual cleaning mode to mitigate these effects and highlight important features such as minority groups.\n\nIn Appendix G.3, we investigate if rare attributes of a dataset are systematically considered more likely to be irrelevant.\nAs suggested, we include some demographic attributes of CheXpert but also consider skin types in DDI and Fitzpatrick17k.\nWe compare the alignment of these features with the irrelevant sample ranking using AP and AUROC, similar to the comparison with metadata in Appendix G.2.\nThe results show that overall no systematic bias driving underrepresented groups in the earlier rankings is present, as the average precision is very close to the non-informed baseline i.e. the group's prevalence.\nWhile this is by no means conclusive proof that biases are prevented, it illustrates that at least in a few example situations, irrelevant samples can be detected without disfavoring minority groups.\n\n> Q2: We can see on Table 2 that the gains are higher with kNN than with linear evaluation with a clean train set. This seems to be because kNN eval is directly based on distance, such as your filtering method. Given that zero shot evaluation of CLIP is based on the distance between the text and image encoder, it is possible that your method can enhance zero-shot evals of CLIP model. Could you test it in a zero-shot setup such as CLIP image/text cosine similarity matching ?\n\nWe appreciate the valuable suggestion and agree that this experiment would be very interesting.\nHowever, considering the other experiments to be performed during the rebuttal phase, we think we will be able to carry out this analysis only after the discussion period.\nFurthermore we would like to point out that, although kNN is more strongly influenced by our cleaning as it is also distance-based, it is a standard evaluation protocol for measuring the quality of latent spaces.\nPlease also see our comment to W5.1 of reviewer zncP.\n\n**Weaknesses:**\n\n> W1: [...] It is not possible to control the hierarchy in term of distance between factors. Meaning that if an image is a sketch of a dog, it is hard to tell if it will match more a real picture of a dog or a sketch of a cat using self-supervised features.\n\nWe agree with this comment.\nIndeed, in a related project, we observe that pictograms of dermatological diseases can be used to retrieve real skin lesion images by exploiting the learned embedding space.\nHowever, we would like to stress that in our case the hierarchy is built in the specific context of the dataset at hand.\nThus, we expect samples that are easily distinguishable from the majority to be separated from them by a greater distance."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5292/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700084014841,
+                "cdate": 1700084014841,
+                "tmdate": 1700084014841,
+                "mdate": 1700084014841,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

@@ -1,0 +1,209 @@
+[
+    {
+        "id": "p9wGGmVNJ2",
+        "forum": "BC4AUywMow",
+        "replyto": "BC4AUywMow",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_ysCV"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_ysCV"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces an encoder/decoder neural network designed to predict Signed Distance Functions (SDFs). This network is trained using the Eikonal equation, eliminating the need for ground truth SDF supervision. The pipeline takes a 3D meshe as input and subsequently outputs the SDF value at any specified query point."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "No training ground truth SDFs are required, which saves a bit of preprocessing computations. The network is trained using the Eikonal equation, eliminating the need for densely-sampled and accurate signed distances during training (which can nonetheless be obtained very easily, see weaknesses).\n\nThe new encoder architecture uses a unique multi-scale hybrid system that combines graph-based and voxel-based components, integrating both mesh and grid convolutions with projections from the mesh to the grid, at multiple scales.\n\nThe paper provides a solution for cases where surface normals are not well-defined, which is a common challenge in 3D geometry: simply using an unoriented cosine similarity.\n\nWriting is very clear."
+            },
+            "weaknesses": {
+                "value": "My central and huge concern is about the utility of such a pipeline: it inputs a mesh, outputs its SDF. This function (computing an SDF) can quickly be performed without any learning based technique, using standard geometric computing librairies like IGL or trimesh.\nAll the information is already present in the mesh! Why use a network to learn it?\nOverall, using a neural network for this introduces computational overhead (the network needs to be trained), complexity, un-explainability, approximations, and has no clear motivation. \n\nFrom this stems another weakness: the comparison with other baselines is unfair, since Convoccnet, IFNet and ONet take pointclouds as inputs, not meshes. In other words, they reconstruct a surface from an incomplete input, while the proposed pipeline has access to a full mesh.\n\nIf the method was about robustly getting an SDF out of a poorly triangulated mesh, then the whole paper needs to be rewritten with this target in mind. This means that the introduction should clearly set this goal, and the experiment sections needs to be reworked in order to include experiments on broken meshes with different defects, on which standard libraries fail.\n\nAlternatively, if the method is about a novel mesh encoder network, then the task and decoder need to be changed to something else than regressing an SDF - part segmentation, classification\u2026.\n\nFinally, if the point is about demonstrating that an SDF can be learned without explicit supervision, only by solving the Eikonal equation: this has already been demonstrated in SAL and SAL++ (Atzmon et al., these references are missing). For the cases shown in this submission, this is a made up problem, since ground truth SDF values can easily be computed, and are even used in the network evaluation. In other words, this does not enable new applications."
+            },
+            "questions": {
+                "value": "Mostly: Why use a neural network to replace a traditional pipeline?\n\nHow does the proposed method perform in scenarios with noisy or incomplete data (pointclouds instead of meshes)?\nHow does the computational efficiency of the proposed method compare to traditional methods, especially in large-scale applications?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697547980196,
+        "cdate": 1697547980196,
+        "tmdate": 1699636331598,
+        "mdate": 1699636331598,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "bsDIwzV0FZ",
+        "forum": "BC4AUywMow",
+        "replyto": "BC4AUywMow",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_Msao"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_Msao"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes to represent 3D geometry using neural networks, using an encoder-decoder architecture. Using this design, it primarily addresses the task of 3D shape reconstruction from meshes. \nThe major technical contribution is the \"hybrid\" encoder architecture. Given a mesh, the method uses (1) a graph convolutional encoder to extract per-vertex features; (2) a multi-resolution grid structure to accumulate features from the vertices on grid nodes.\nThe authors also leverages the Eikonal loss to learn the neural signed distance field, obviating the need for pre-computing the SDF values in the training data. Although this is also claimed as a major contribution, it has been widely used in the neural shape modeling literature as of 2023.\nExperiments have validated some of the design choices (such as the interpolation scheme when aggregating the grid features), and have compared to a few recent baselines. In general, the proposed method does show superior performance in terms of local geometric details. However, quantitative results do not consistently surpass certain baselines and some more recent work should have been considered as baselines."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The hybrid encoder architecture is an intuitive design that makes sense, and is clearly demonstrated. Since the input are meshes, leveraging the graph convolution to extract features is a clever design which can (intuitively) bring extra information about the surface than only using the grid structures as in previous work (e.g. ConvONet and IFNet).\n\n- The reconstructed surfaces have good quality especially in terms of local geometric details. On the airplane examples (as in the supplementary video), the model also shoes good performance reconstructing thin and (pontentially non-manifold) structures such as the fin and wings."
+            },
+            "weaknesses": {
+                "value": "- Motivation: First of all, I'm wondering what's the practical application of the proposed method. The method assumes a mesh as input and aims to reconstruct a signed distance function from it, which also represents the geometry. If we already have the geometry well represented by a mesh, why is it necessary to reconstruct an SDF from it at a cost of losing certain surface details? On the other hand, given a mesh, one can directly compute the (signed) distance function by computing the distance from the query point to the surface. What's the benefit of introducing a neural network?\n\n- Technical technical contribution: \n   - The Eikonal loss is considered as a major technical novelty, but it has been proposed for learning 3D shapes in (Gropp et al. 2020) \n \"Implicit Geometric Regularization for Learning Shapes (IGR)\", and widely adopted for rendering implicit geometry (e.g. NeuS [Wang et al. NeurIPS 2021], VolSDF [Yariv et al. NeurIPS 2021]) and other downstream tasks such modeling deformable shapes (e.g. SCANimate [Saito et al. 2021]). This hurts a major technical contribution of this paper. At least the IGR paper by Gropp et al. should be cited and discussed. \n   - While the hybrid encoder is interesting, the whole pipeline is more of a straightforward combination of standard modules (as of 2023) such as the graph convolution encoder, the multi-resolution features (as in IF-Net and NGLOD), and Siren decoder (as in the SIREN paper by Sitzmann et al). While admittedly this shouldn't be a major weakness per se, it is crucial to have more thorough ablation experiments to validate the intuitive combination. Most importantly, the graph conv + grid conv encoder is the key contribution. What would happen if the graph conv is shut down and one only uses the traditional point-encoder by densely sampling points from the input mesh surface? What if one doesn't use grid projection+interpolation at all, and simply uses the interpolated feature at the query point's nearest point on the mesh surface? To me, such experiments are critical in validating the technical contributions, but are missing. \n\n- Experiments. \n   - First of all, all baseline methods are from 2020 and do not represent the state-of-the-art performance. For example, POCO (Boulch et al., CVPR 2022) can be considered as a stronger baseline model for reconstructing shapes. \n   - In terms of model performance, the proposed method has significantly higher \"relative error\" than IFNet on all datasets and there lacks a sound explanation supported by experiments. Again, given a mesh, computing the *accurate* SDF is straightforward, but from table 1, the proposed method cannot reproduce this property, which thus undermines its potential in the applications.\n   - (minor) Table 2 only reports numbers on the Dragons and states 'results on other datasets are similar' -- I'd recommend showing all the results to make this statement more convincing."
+            },
+            "questions": {
+                "value": "- For the baselines in Sec. 4.3, how many points are sampled from the mesh surface before sending into the encoder?\n- In page 6, \"Competing methods\" paragraph, it is stated that the baseline methods are equipped with the same SIREN decoder as used in the proposed method. Does this yield a better performance than the original version of these models using their own decoder?\n- In page 5, paragraph below Eq. 2 states that the last two terms in Eq. 2 are redundant but can improve training. Is there experimental results that support this argument?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I do not have ethical concerns about this submission."
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3753/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3753/Reviewer_Msao",
+                    "ICLR.cc/2024/Conference/Submission3753/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698678019794,
+        "cdate": 1698678019794,
+        "tmdate": 1700705294552,
+        "mdate": 1700705294552,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "NugdJvBwDN",
+        "forum": "BC4AUywMow",
+        "replyto": "BC4AUywMow",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_ruBo"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3753/Reviewer_ruBo"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an efficient encoder-decoder architecture to encode 3D shapes as implicit neural signed distance fields. The core idea is to combine graph and voxel-based encoders coupled with an implicit decoder that can be trained using the Eikonal equation enforced on the shape boundary using surface samples without the need for computing signed distance values on the ground truth data. A modified loss function is also presented for handling meshes that are not watertight or have unoriented normals."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The ability to fit a neural network to a shape without having access to ground truth signed distances values is a big strength.\n- The method is conceptually simple and easy to understand, while being effective and efficient. It has been demonstrated on various datasets where it outperformed other chosen related work.\n- The hybrid graph and voxel based encoder is interesting and novel, and could be significant for future research involving mesh encoding in general."
+            },
+            "weaknesses": {
+                "value": "- One the main contributions of the paper is the hybrid graph and voxel based encoder, but it is not evaluated comprehensively.  An ablation study on completely removing the graph and voxel based components of the encoder would be useful in understanding the importance of this contribution.\n- Some very relevant papers are missing in comparisons and related work. These works can also encode a shape into a neural field without having access to ground truth SDF values at the sample points:\n  - SAL: Sign Agnostic Learning of Shapes from Raw Data (CVPR 2020)\n  - Implicit Geometric Regularization for Learning Shapes (ICML 2020)\n  - SALD: Sign Agnostic Learning With Derivatives (ICLR 2021)"
+            },
+            "questions": {
+                "value": "- How important are the individual graph and voxel components of the proposed encoder network, and the encoder network itself as a whole? An ablation study would be helpful to understand this contribution better.\n- How does the proposed method compare against the missing related work listed above in the Weaknesses section? While not all of these works are encoder-decoder models, a comparison is necessary since they too share the advantage of the proposed method of not requiring ground truth SDF values at samples."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3753/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698897547082,
+        "cdate": 1698897547082,
+        "tmdate": 1699636331422,
+        "mdate": 1699636331422,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

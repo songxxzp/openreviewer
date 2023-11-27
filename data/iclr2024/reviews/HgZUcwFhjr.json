@@ -1,0 +1,354 @@
+[
+    {
+        "id": "LzHjpDBO0W",
+        "forum": "HgZUcwFhjr",
+        "replyto": "HgZUcwFhjr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_ubwR"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_ubwR"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the task of spatial relation prediction. The paper observes that prior works have focused on semantic relationships that may not be physically grounded and which can be ambiguous. To alleviate this issue, they define more precise and physically grounded definitions for relationships and reannotate an existing dataset (SpatialSense) to provide an improved test bed. Furthermore, the propose a new architectural choice that performs well on both existing synthetic datasets as well as the newly annotated benchmark."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper is very well motivated with a clear explanation of how the proposed analysis and method fits within the larger scope of the field.\n- The paper identifies a very interesting and nuanced ambiguity in existing annotations and provides clear examples of such issues. \n- The paper provides a good explanation for the different subtasks that a model needs to do and the corresponding architectural components that do it in Sec 4.1. \n- I appreciated that the authors included the very strong performing naive baselines and elaborated on why they perform well. \n- The paper has a nice flow where the proposed architecture follows logically from the analysis and design considerations presented in the work."
+            },
+            "weaknesses": {
+                "value": "I found three weaknesses in the paper: (1) it is unclear if the newer annotation provide a better evaluation or a simpler task; (2) ablations are not very clear; (3) several statements are not supported by the results. I have listed the major concerns below. I also included some minor concerns that should be dealt with as extra suggestions, and do not need to be addressed in the rebuttal.\n\n\n- The paper very nicely motivates language ambiguity as an issue for obtaining spatial relations. However, it is unclear if the newer annotation scheme results in more accurate annotation or simply annotation that is better correlated with a relative location prior. \n    - Comparing Tables 4 and 11, one finds that all methods achieve a higher absolute score on the newer dataset, while the bbox baselines and the proposed method seeing stronger gains. Furthermore, Table 7 shows that the new annotation seems more specific regarding annotations being done in the labelers point of view or gravity to minimize ambiguity. As a result, while it is possible that the new definitions are more precise and a better evaluation, it is also possible that they are more strongly correlated with the relative locations in the image, which would introduce a strong prior. \n    - Some of the definitions in Table 7 support the point above. For example, \"A in front of B\" is defined as A is closer to the camera than B. While this is a less ambiguious definition, it is a much easier one than the typical usage of \"in front of\" which often also requires reasoning about the subject and object's relative orientation. For example, if two people are facing away from the camera, the further away person would be in front of the person closer to the camera. This is still unambiguous, but the prediction would be more difficult as it requires the model to both reason about relative depth as well as orientation of each person. \n    - Said differently, the newer annotation scheme reduces the ambiguity but it also makes the relationships less dependant on context for cases like front/behind where the RelatiViT shows greatest performance improvements on the baseline (Table 6). This can be shown by the great improvements in performance of the bbox-only baseline. It would be nice to provide some qualitative analysis or quantitative comparisons that address this. \n\n- The ablations are not very clear and the conclusions drawn do not seem supported by the results. \n    - It is unclear how the method works without Pair Interaction, Context Aggregation, or Feature Extraction. For example, pair interaction is stated as the MLP that combines the two features, how is the prediction made without it? Additionally, how does one make predictions without feature extraction? is it based on pixel values, patch embeddings, something else? I think it is very important to explain exactly what each ablated model looks like. \n    - The ablations are additive, so that the feature extraction ablation is applied to an already ablated model. While this is valid experiemntal choice, it makes it difficult to understand the most critical modules as they are not ablated independatly of each other. This is more important in this problem where we know that feature extract is not actually very important since bbox baselines perform very well, as shown in the paper. \n\n- Several statements or claims are not fully supported/substantiated.\n    - The statement `it is difficult for CNN backbones to extract relation-grounded representations` (sec 5.4) is strongly confounded by the use of positional embeddings. Specifically, based on the description, it seems that all methods (ViTs) have access to positional embeddings, while the CNN-Transformer baseline doesn't. While I understand that this is a common choice for CNNs, it seems like a strong confounder here due to the strong performance of bbox-only baseline. It is possible that ViTs outperform CNNs due to the explicit inclusion of positional embeddings rather than due to attention explicitly modeling pairwise relationships as suggested in Sec 4. While I think that attention is playing a strong role here, I think providing the CNN model with some positional embeddings, eg, through CoordConv (Liu et al, NeurIPS 2018), would help clairfy this point and explain whether CNNs are still poor feature extractors even if another model performs context aggregation afterwards (following the design axes in sec 4.1). \n    - The paper states that `[prior methods] are prone to simply predict the relationships based on the bounding box coordinates rather than learn the intended solutions by referring to the RGB input.` (Sec 5.4) but that statement is not supported by the results. Most methods are consistently outperformed by the bbox-only baseline sugguestion that they are probably doing something other than predicting relationships baseline on bounding box coordinates. While I agree that those models are likely learning shortcuts, it seems odd that this shortcut would be using the bounding box coordinates if they are all underperforming the bounding-box baseline. Without conducting some further analysis, it is difficult to make such statements about what those models are doing. \n    - The description under Table 6 doesn't match the results. The paper states `Bbox-only performs better on \u201cto the right of\u201d than RelatiViT because according to the relation definition proposed in Section 3.2` which is not true. All methods achieve the same mean performance on the `right` relationship, while bbox outperforms RelatiViT on `Next` and `Above`.\n\n- I believe that there is a typo in the equation in Sec 3.1. I think you want to minimize the negative log likelihood, while the current term minimizes the log likelihood, as for $y{=}1$ the term would be minimized by estimating $\\hat{y}$ to be 0. If I am wrong, could you please clarify why this is the desired objective?\n\n\n\n\n------------\n**Minor concerns and suggestions:** Those are just things that I thought would improve the paper or minor issues I noticed. You do not need to address any of them and I did not factor them into any ratings. \n\n- While the authors do not have to fully explain every prior method used as a baseline, I think it would have been good to explain DRNet as it is used as the other baselines in the detailed comparisons presented in Table 6. \n- I think the conclusion of `In summary, RelatiViT successfully extracts effective visual representations for SRP` (sec 5.5) doesn't seem well supported. While it is great that a method can outperform such baselines and I appreciate the authors making such baselines very prominent in the paper, the results further showcase that we still do not have any methods that perform well on this task as their performance is still very close to models that only get bounding boxes. I think the paper is a good step towards better modeling and evaluation, but it is unclear if we have any methods that extract good feature for SRP.\n- Table 4: I think that adding some columns to clarify the difference between the methods would be useful. Speficially, Sec 4.1 did a nice job at clarifying the main modules for this task, and I thought that clarifying them in Table 4 would improve it.\n- Figure 4: A little bit of white space or gap between the plots would make the figure a lot more easier to parse especially since the attention maps meld into each other."
+            },
+            "questions": {
+                "value": "- Are the newer annotations simplifying the task or providing a stronger evaluation? I would appreciate it if the authors commented on the points raised in the weaknesses and provided some quantitative or qualitative results supporting it. I want to note that I think the paper is still valuable even if it was simplifying the annotation, it is just a matter of better explaining the contributions and limitations of the proposed dataset as an evaluation for this task. \n- How are the ablations conducted? I would appreciate it if the authors could explain what the model looks like under each ablations. As noted above, I think it would be stronger if the ablations are conducted independantly. If this is not possible (due to some reliance on each other), it would be good to explain that.\n- Do positional embeddings explain the difference between CNN and Transformers in Table 3?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1945/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698351409729,
+        "cdate": 1698351409729,
+        "tmdate": 1699636125999,
+        "mdate": 1699636125999,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ElMRUlhHrK",
+        "forum": "HgZUcwFhjr",
+        "replyto": "HgZUcwFhjr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_hAXs"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_hAXs"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper investigates the ability of current computer vision systems to recognize physically grounded spatial relations between objects. The authors propose precise relation definitions that allow for consistent annotation of a benchmark dataset and find that existing approaches perform poorly on this task. They propose new approaches that exploit the long-range attention capabilities of transformers and evaluate key design principles. The authors identify a simple \"RelatiViT\" architecture that outperforms all current approaches and demonstrate that it is the first method to convincingly outperform naive baselines on spatial relation prediction in in-the-wild settings. The findings have important implications for the development of computer vision systems and their ability to recognize spatial relations."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The paper proposes precise relation definitions that permit consistently annotating a benchmark dataset. \n2. the paper identifies a simple \"RelatiViT\" architecture that outperforms all current approaches and convincingly outperforms naive baselines on spatial relation prediction in in-the-wild settings.\n3. The paper evaluates key design principles and provides insights into the effectiveness of different approaches for recognizing physically grounded spatial relations between objects."
+            },
+            "weaknesses": {
+                "value": "1. The spatial relationships examined in this paper are rather straightforward, as they do not encompass interactions between humans and objects or comparative relationships among multiple objects. This limitation might confine the applicability of the proposed method.\n2. This paper would benefit from a more extensive examination of the reasons behind the superior performance of \"RelatiViT\" compared to the \"bbox-only\" baseline. Current methods utilizing image features do not match the simplicity and effectiveness of the \"bbox-only\" baseline. What sets \"RelatiViT\" apart?\n3. As illustrated in Table 6, \"RelatiViT\" does not consistently outperform the \"bbox-only\" baseline across various categories of spatial relations. The potential advantages of \"RelatiViT\" might not be evident when taking into account the higher computational demands it imposes for image feature processing.\n4. The paper fails to elucidate the reasons why \"RelatiViT\" exhibits superior performance in the \"left\" category as opposed to the \"bbox-only\" baseline, while displaying subpar performance in the \"right\" category.\n5. Although it is good to unveil that the current methods and datasets have limitations on this new task, it is still imperative to do a thorough study on each proposed component to show why such a design is essential to the performance improvements. It is hard to be convinced about the significance of the contribution based on the current form."
+            },
+            "questions": {
+                "value": "Please refer to the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Reviewer_hAXs"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1945/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698466851797,
+        "cdate": 1698466851797,
+        "tmdate": 1699636125904,
+        "mdate": 1699636125904,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "YOZlyPAqjB",
+        "forum": "HgZUcwFhjr",
+        "replyto": "HgZUcwFhjr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_MUvq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_MUvq"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper sets out to study transformers' capability of understanding spatial relations in a scene. The authors strictly define spatial relations and refine previous datasets accordingly. The authors propose several transformer-based models to tackle spatial relation prediction task."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- It is interesting to delve into whether transformers could understand spatial relations in a scene instead of simply exploiting spatial biases.\n\n- The linguistic biases during annotation brought up by this paper are reasonable.\n\n- The proposed models are reported to be effective on refined datasets. The discussion on design axes is informative.\n\n- Attention map visualization is insightful as it shows that the proposed model captures meaningful contextual information when making a prediction."
+            },
+            "weaknesses": {
+                "value": "- Although resolving linguistic biases in annotations is a well-motivated aspect of this work, I am not sure if these issues are nontrivial. It would be great if there were a quantitative bias analysis of previous datasets.\n- Besides linguistic biases during the annotation process, the statistics of spatial relations are biased, which could lead spatial relation detection to simply object classification. Rel3D addressed it by employing minimally contrastive construction, I would like to see authors' discussion on SpatialSense+. \n- Despite being titled as \"Can Transformers Capture Spatial Relations between Objects\", all prior baselines are CNN-based methods, it would be great to see authors include more advanced transformer-based models [1].\n\n[1] SGTR: End-to-end Scene Graph Generation with Transformer, Li et al, 2021."
+            },
+            "questions": {
+                "value": "Please see weaknesses above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Reviewer_MUvq",
+                    "ICLR.cc/2024/Conference/Submission1945/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1945/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698659627205,
+        "cdate": 1698659627205,
+        "tmdate": 1700722801916,
+        "mdate": 1700722801916,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "aWPMo135xx",
+        "forum": "HgZUcwFhjr",
+        "replyto": "HgZUcwFhjr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_XTRZ"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_XTRZ"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper studies how to understand spatial relationship between objects within a single image. GIven that the current benchmarks are synthetic (Rel3D) or ambiguous (SpatialSense), it starts with a re-annotation of SpatialSense with precise relation definitions and calls the new dataset SpatialSense+. Since existing state-of-the-art methods perform poorly on this benchmark, the paper proposes a RelatiViT, which is a ViT based network to resolve the problem. This is the first approach which outperforms naive baseline significantly on multiple benchmarks."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Overall, I think this is a solid paper, and recommend accepting the paper.\n\n- The paper discusses limitations of current spatial relationship benchmarks. That makes a lot of sense to me.\n- The paper did an extensive study of different network architectures to capture the spatial relationship between objects.\n- Experiments suggest the proposed RelatiViT has strong performance on multiple benchmarks.\n- The writing is clear and easy to follow."
+            },
+            "weaknesses": {
+                "value": "- The paper mainly compared RelatiViT with ConvNet and ViT based networks. However, some of current multimodal Large language models (e.g. LLaVA [1], or even GPT-4V) seem be to capable of handling some spatial relationships. But I think it's acceptable to ignore these literature as they are very recent works and are not specially designed for this task.\n- The annotation of SpatialSense+ can be very hard to scale, since it requires annotators to understand precise definition of spatial relationships.\n\n\n[1] Haotian Liu, Chunyuan Li, Qingyang Wu, Yong Jae Lee. Visual Instruction Tuning. NeurIPS 2023."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission1945/Reviewer_XTRZ"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1945/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698779523278,
+        "cdate": 1698779523278,
+        "tmdate": 1699636125737,
+        "mdate": 1699636125737,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "dev9JIBRAa",
+        "forum": "HgZUcwFhjr",
+        "replyto": "HgZUcwFhjr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_Jenr"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission1945/Reviewer_Jenr"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper investigates the task of spatial relation classification on a single 2D image. Given two objects bounding boxes, the authors uses the nine predicates proposed in the SpatialSense dataset and correct some of its ambiguous labels. To solve the task, the authors present different architectures and promote a simple transformer based model. Experiments are also conducted on REL3D dataset with ablation studies."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The authors propose a more accurate definition of the problem of spatial relation, although the limitations of this definition is not completely covered.\n\nThe motivation to use transformers to model object relation is sensible, as relation modelling this is one of the main motivations over CNNs baselines.\n\nThe proposed architecture is validated with different baselines and ablation studies. In particular, I appreciate that the author also report the results of naive baselines. Experiments confirmed the usefulness of the proposed transformer mechanism to model relations."
+            },
+            "weaknesses": {
+                "value": "The current superiority of backbone transformers over CNNs and the ability of transformers to model object relations are commonly admitted. So in this aspect, this downgrade the insights brought by the results of the paper. \n\nThe claim of the authors to provide \"a precise and unambiguous definition\" seems a bit exaggerated. There are natural ambiguities in the task of spatial relationships. For instance, even for humans, it is difficult to judge on same natural images the relations \"above\" if the objects are very distant and that it is not easy to judge if they are on the same plane. For instance, between a car and a mountain in the background (this is one of the examples provided in the supplementary material).\n\nThe definition provided by the authors include subjective (which seems naturally inevitable for this task) appreciations in the supplementary material. For instance, the relation \"behind\" is ignored if the objects are \"in different directions\" and the relation \"in front of\" is ignored \"if the distance is too large\". This definition is not provided by the author, and in practice, it might even depend on the application and the image context. In the case of robotic application, which is the motivation suggested in the introduction of the paper, the definition of \"next\" could applied to all objects belonging to the same group. \n\nLastly, the author reuse the same predicates as the previous dataset. This limits their contribution to making corrections on an existing dataset.\n\nIn general, the paper does not bring a lot of new insights about the method as the modelling power of transformer is well known. This work do bring an improvement to an existing dataset, enabling researchers to better evaluate their method in the task of spatial relations, but I am not sure whether this in itself would be of interest to the ICLR community. Maybe this paper would be a better fit for a more vision or robotic dedicated conference."
+            },
+            "questions": {
+                "value": "in section 5.4, the author wrote \"bbox-language cannot beat bbox-only, indicating that we have successfully removed the language bias in our benchmark.\"\n\nHowever, in Table 11 where there is an evaluation on the original SpatialSense, where the bbox-only is also superior to bbox-language. Then, how the author can conclude to the relations between these two baselines and the language bias ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission1945/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698835061669,
+        "cdate": 1698835061669,
+        "tmdate": 1699636125670,
+        "mdate": 1699636125670,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

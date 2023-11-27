@@ -1,0 +1,419 @@
+[
+    {
+        "title": "Sparser, Better, Deeper, Stronger: Improving Sparse Training with Exact Orthogonal Initialization"
+    },
+    {
+        "review": {
+            "id": "9VPoLr9JC9",
+            "forum": "3mY9aGiMn0",
+            "replyto": "3mY9aGiMn0",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduces a new method to achieve exact (and not approximated) orthogonal sparse initialization for the weights of a (deep) neural net.  \nThe method relays on a straightforward idea of using givens rotations, which apply an orthogonal transform on two dimensions (essentially, a 2D rotation) out of the feature dimensions. This process is repeated on random pair of dimensions, with random rotation angle, until the desired sparsity (or, density) is achieved.\nThe authors provide an exact formula for the expected density after a given number of rotation, which allows a precise design of the resulting initialization.\n\nThe authors provide a thorough evaluation of the method for different activation functions, under different static sparse training methods, and show compelling results when compared to *approximate* initialization.\nAnother comparison in done over a 1000 layer MLP with no residual connections nor normalization layers.\nWhen trained on MNIST and CIFAR10 the proposed method achieves performance comparable to a dense network with only 12% of the weights.\nFinally, the authors perform a comparison of several modern architectures on the mini-imagenet. \nWith the sole exception of EfficientNet, the proposed method supersedes the existing sparse approaches, and narrows the gap to dense training with only 10% of the weights."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper was very easy to follow and understand, the main idea is straightforward but with a clear impact.\nExpected density formulation makes this method more appealing for practical usage.\nThe experimental section positions the method well w.r.t. existing methods."
+                },
+                "weaknesses": {
+                    "value": "While the impact is clear, it leave some questions about the price to pay for sparse networks.\nFor example, the reader might enjoy an analysis of the price (in performance) on the mini-imagenet for different sparsity levels."
+                },
+                "questions": {
+                    "value": "* Are some rotation angles better than others? I can't imagen that using only 1 degree Givens will perform similarly to using only 80 degree Givens\n* How can one gain sense of the price (in performance) for a given sparsity level?\n* One may assume that some sparsity patterns result in better performance - is that true? if so, can one guide the Givens dimensions to such a pattern"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4859/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698002916764,
+            "cdate": 1698002916764,
+            "tmdate": 1699636469341,
+            "mdate": 1699636469341,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "p46fKKBEpl",
+                "forum": "3mY9aGiMn0",
+                "replyto": "9VPoLr9JC9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review - Part [1/2]"
+                    },
+                    "comment": {
+                        "value": "We express our gratitude to the Reviewer for the positive feedback regarding our work. We are delighted that the Reviewer acknowledges the clear impact of our main idea and appreciates the analysis concerning the expected density of matrices generated by our algorithm. Additionally, we were pleased to note that the Reviewer finds that our experimental section effectively positions our algorithm in comparison to existing methods. Below, we provide responses to the raised questions and suggestions:\n\n>While the impact is clear, it leave some questions about the price to pay for sparse networks. [...]\n\nThank you for this suggestion. In order to better understand how different sparsity levels affect our algorithm, we conduct an experiment on the ResNet56 architecture in which we compare the performance of ERK-Base, ERK-AI, and ERK-EOI schemes for varying densities. We include the description and results of this experiment in Appendix K in the revised pdf. We observe that across different densities, the best performance is given by ERK-EOI, with other methods either performing visibly worse or not holding a clear advantage. We also notice that the benefit of using EOI is the largest for the lowest densities. This is expected when compared with the results from Figure 3, where we see that the signal propagation suffers the most in the high sparsity regime and that only EOI is able to maintain good statistics of the singular values for sparsities larger than 0.8. \n\n**Questions:**\n\n>Are some rotation angles better than others? I can't imagine that using only 1 degree Givens will perform similarly to using only 80 degree Givens \n\nThis is a great question. In order to answer it, we run an experiment on the ResNet32 with three different distributions of Givens matrices: In the first one, we always pick 1-degree angle rotations; in the second one, we always pick 80-degree angle rotations, and in the third one, we sample the angle uniformly at random (the default method). Please see Figure 9 and the newly added Appendix G. We notice that the learning curves at the beginning of the training are indeed worse for the 1-degree rotations. This indicates that such a degenerated distribution of Givens rotations isn't preferred and that larger values of rotation angles are beneficial for efficient training.\n\n>How can one gain sense of the price (in performance) for a given sparsity level?\n\nThe question of the price of performance for a given sparsity level is indeed a very interesting one. In other to assess how the performance of our algorithm is influenced by the sparsity level, we include an experiment for different densities on the ResNet56 model in Appendix K (please see also our response above). In addition, let us also note that a general intuition of how sparsity affects performance can be gained by looking into other research works in sparse training. From the empirical point of view, it has been shown that contemporary networks can be pruned up to 80% without a significant drop in performance, while for sparsity of 50% even random pruning achieves surprisingly good performance [1,2]. From the theoretical perspective, the maximal sparsity is also explored by the strong lottery ticket hypothesis, which sets limits on how large a network needs to be to have a smaller, well-performing subnetwork[3,4]. However, we would like to note that the study into empirical or theoretical limitations of sparsity was not the focus of our paper."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700230783450,
+                "cdate": 1700230783450,
+                "tmdate": 1700230783450,
+                "mdate": 1700230783450,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "A6BF0yz67Z",
+                "forum": "3mY9aGiMn0",
+                "replyto": "JW7AVXZmQw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thank you for a detailed reply"
+                    },
+                    "comment": {
+                        "value": "The authors have addressed all of my questions, including some very interesting results (especially Figure 9).\nFigure 13 show the proposed method is consistently better on several sparsity levels, even if not by much. \n\nI stand by my positive score."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700335102909,
+                "cdate": 1700335102909,
+                "tmdate": 1700335102909,
+                "mdate": 1700335102909,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "LfABPufn0o",
+                "forum": "3mY9aGiMn0",
+                "replyto": "9VPoLr9JC9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_4iab"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I understand the authors' desire to increase the score, and remind that the final decision is not simply based on an arithmetic mean of the scores.\nI aim to faithfully represent my opinion during the reviewer/AC discussion period, and will consider increasing the score."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700633337680,
+                "cdate": 1700633337680,
+                "tmdate": 1700633367348,
+                "mdate": 1700633367348,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "YrQRdcDok4",
+            "forum": "3mY9aGiMn0",
+            "replyto": "3mY9aGiMn0",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_7ET6"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_7ET6"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Authors have proposed a method to achieve exact orthogonal initialization for training very deep neural models with sparsity constraints. The approach is built upon recent advancements achieved via tools from the Random Matrix theory to improve initialization and achieve training acceleration."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The proposed method is simple, mathematically grounded, and addresses an important issue of sparsity-aware training in DNNs.\nThe flow of the paper is nice and structured."
+                },
+                "weaknesses": {
+                    "value": "Overall, the paper is well-written, but often, critical details are missing, which might make it difficult for a new reader to understand and appreciate the ideas discussed and their connection to prior art. For instance, the majority of readers will not be able to under the SAO method. The paper should be self-contained.\n\nThe link between sparse training and sparse initialization is not clear. It is well understood that within a larger dense network, a small subnet is usually contributing the most. This contribution is different for different settings, e.g., one might want individual subnetworks to perform a task within a multi-tasking/meta-learning setting.\n\nI request authors to support the claim that post-pruning performance is better than sparse initialization-based training. IMHO, if the parameter mask is learned or adaptive during training, the performance is usually better. The depth and architecture of the network also play a significant role in deciding up to what levels a network can be pruned, which essentially connects to the idea of effective dimension/degree of freedom given the constraint local structure imposed by the architecture. \n\nOrthogonal initialization (sparse/non-sparse) just ensures effective signal propagation and not generalization. In the end, if the goal is effective training and achieving the best performance, how crucial is Exact Orthogonality? Unless we regularize the network, which might impact the stability, memory requirements and compute complexity."
+                },
+                "questions": {
+                    "value": "Literature:\nA few missing references\n- Sun et. al, Low-degree term first in ResNet, its variants and the whole neural network family\n- Thukur et. al, Incremental Trainable Parameter Selection in Deep Neural Networks\n- Larsson et. al, Fractalnet: Ultra-deep neural networks without residuals\n- Shulgin et al, Towards a better theoretical understanding of independent subnetwork training\n\nWhat are indices ijkk on page 4 in the top paragraph? A diagram of how H is embedded in a convolutional kernel of shape BxCinxCoutxHxW would help the readers.\n\nDelta orthogonalization assumes cyclic consistency for the convolutional layer. This assumption is not discussed in the paper and might mislead the readers.\n\nWith respect to sparse static training methods, please clarify whether the pruned connections/nodes that are not updated during backward pass are used for forward pass calculation or not. In addition, it seems Masks in GraSP/Synflow are adaptive over iterations, contrary to the setting introduced by the authors. \n\n\nThe construction of EOI for conv kernels using random entries in the mask to achieve the desired density is not explained in detail. Is it guaranteed to be exactly orthogonal in this case, too?\n\nMost results are empirical, and I wish authors have focused on theory to derive expressions for Dynamical Isometry in the proposed setting. Currently, the paper has half theory half numerical aspects, with both being incomplete.\n\nTable 1: which numbers belong to MNIST and CIFAR-10?\n\nIt will be good to show the exact parameter count of each model to get a sense of how much the 10% parameters? \nThen, a fair comparison would be models of the same size with different width and depth configurations.\n\nAlso, I would encourage authors to consider the full imagenet benchmark or consider a multi-task/meta-learning setting for establishing the practical benefits of the method.\nIn general, it looks like only the favourable experimental settings have been chosen to show the effectiveness of the approach. This is not a major issue if the main focus of paper was on theoretical aspects on the proposed initialization (which is not the case.)"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4859/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698470553707,
+            "cdate": 1698470553707,
+            "tmdate": 1699636469260,
+            "mdate": 1699636469260,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "iNKd1JNMep",
+                "forum": "3mY9aGiMn0",
+                "replyto": "YrQRdcDok4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review - Part [1/3]"
+                    },
+                    "comment": {
+                        "value": "We thank the Reviewer for the time taken to assess our work. We appreciate that the Reviewer describes our approach as simple and mathematically grounded and considers our paper well-written and structured.\n\nBefore moving into answering the Reviewer's comments, we would like to clarify that the goal of our paper was to study the static sparse training setting. In such a setup, the network is already pruned (using typically unstructured methods) at initialization, and the pruning mask remains fixed throughout the training (see Section 3.3). This means that the removed connections do not take any part in the computations. In consequence, the network is sparse not only during inference (as it happens for post-pruning, including iterative pruning approaches) but also during the training. Static sparse training is also sometimes referred to as Pruning at Initialization (Frankle et al., 2020; Evci et al., 2020). We have slightly updated the paper where the terminology could have been ambiguous. Please find our responses to individual concerns below. \n>Overall, the paper is well-written [...] readers will not be able to under the SAO method. The paper should be self-contained. \n\nThank you for pointing out the missing details. Due to the space limits, we only describe SAO briefly in the main paper, but following the Reviewer\u2019s suggestion, we added Appendix H with a detailed description of this method and a link to this Appendix in the main paper.\n>The link between sparse training and sparse initialization is not clear. \n\nWe would like to again emphasize that in this paper, we focused on the static sparse training setup (see the second paragraph of the Introduction and Section 3.3 for the definition of this setup). The goal of static sparse training is to train a sparse subnetwork by pruning a larger model before the training (see e.g. (Lee et al., 2018; Lee et al., 2019; Frankle et al., 2020; Tanaka et al., 2020; Wang et al., 2020)), and keeping the pruning mask fixed throughout the whole optimization. Therefore, every static sparse training method that computes a pruning mask M automatically defines a sparse initialization, which is simply the element-wise multiplication of the weights with their corresponding masks: $W \\odot M$. We apologize, we realized we had not introduced the notion of sparse initializations clearly, which may have been a source of confusion for the Reviewer.  We have updated Section 3.3 to include the above-mentioned information (see the updated pdf, changes in red). \n>It is well understood that within a larger dense network [...] one might want individual subnetworks to perform a task within a multi-tasking/meta-learning setting.\n\nThe typical setup used in the literature while comparing different static sparse training methods is a single-task problem (most often, it is a classification task (Lee et al., 2018; Lee et al., 2019; Frankle et al., 2020; Tanaka et al., 2020; Wang et al., 2020)). In order to be directly comparable with those works, as well as to be able to use the same models and datasets,  we investigated the performance of EOI in the same setups. We leave extending our results to multi-task or meta-learning setups as an interesting direction for future work\n\n>I request authors to support the claim that post-pruning performance is better than sparse initialization-based training. IMHO, if the parameter mask is learned or adaptive during training, the performance is usually better. \n\nThe observation that post-pruning (i.e., pruning after training) often exceeds static sparse training (i.e., pruning at initialization) has been shown in the work of (Frankle et al., 2020). We have updated paragraph 3 of the introduction with this citation to avoid further confusion. At the same time, we would like to point out that post-training pruning and standard iterative pruning require dense training (i.e. they start with a dense model). In contrast, sparse training focuses on training architectures that are sparse (i.e. pruned) already at initialization and maintains this sparsity throughout the whole training. \nHowever, motivated by your comment, we also conducted an additional experiment in which we consider  an extension of static sparse training -- the dynamic sparse training. In dynamic sparse training (DST), the initial mask is allowed to change during the training, but the total density is kept fixed. We compare our EOI approach with two most common methods in DST: SET(Mocanu et al, 2020) and RigL(Evci et al., 2020). We observe that DST methods obtain better test accuracy, but our method is only slightly worse (within the bounds of the standard deviation of the DST methods) and has much lower variance.  This suggests that EOI could also be used as an initialization scheme in DST - we are eager to investigate this in the future. Please refer to Appendix I for the results and a detailed description of the experimental setting."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700230504600,
+                "cdate": 1700230504600,
+                "tmdate": 1700230504600,
+                "mdate": 1700230504600,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "hhztVMTvQJ",
+            "forum": "3mY9aGiMn0",
+            "replyto": "3mY9aGiMn0",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_s3UF"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission4859/Reviewer_s3UF"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In this work, the authors propose a novel approach to sparse training, a technique aimed at training models with sparse structures from the beginning. The key element in sparse training is the sparse initialization, which determines which parts of the model are trainable through a binary mask. Existing methods often rely on predefined dense weight initialization to create these masks. However, such an approach might not efficiently harness the potential impact of these masks on the training process and optimization.\n\nInspired by research on dynamical isometry, the authors take an alternative route by introducing orthogonality into the sparse subnetwork. This orthogonality helps mitigate issues related to the vanishing or exploding gradient signal, ultimately making the backpropagation process more reliable.\n\nThe authors introduce their novel method called Exact Orthogonal Initialization (EOI). Unlike other existing approaches, EOI provides exact orthogonality, avoiding approximations. It also allows for the creation of layers with various densities."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "The paper is well-written with a clear structure, making it easily readable for the audience."
+                },
+                "weaknesses": {
+                    "value": "However, it appears that the authors are more dedicated to highlighting the advantages of sparsity and orthogonality than proposing and demonstrating an efficient algorithm. There is a shortage of comparisons with similar algorithms in the experiments. The EOI algorithm does not seem to exhibit a significant advantage. The comparison results in Figure 3, along with the author's analysis, raise questions about whether the AI method could replace EOI. It's not clear where the innovation lies.\n\nIn Figure 5, it's unclear if the time curves represent that EOI significantly underperforms the SAO algorithm as matrix size and density increase. \n\nIn summary, the paper is well-structured and easy to read, but it lacks extensive comparisons with similar algorithms in the experiments, and the advantages of the EOI algorithm are not convincingly demonstrated. Clarity is needed in the interpretation of the results, especially in Figures 3 and 5. The meaning of bold and underlined entries in Table 3 requires clarification."
+                },
+                "questions": {
+                    "value": "P4L3: Is the k of W_{ijkk} same as the k from dimension 2k+1?\nThe meaning of bold and underlined entries in Table 3 is unclear, such as why some values in the 'VGG-16-GraSP-LReLU' column are bold in the middle."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4859/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4859/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission4859/Reviewer_s3UF"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission4859/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698632873637,
+            "cdate": 1698632873637,
+            "tmdate": 1699636469160,
+            "mdate": 1699636469160,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "cbhWlo4WkE",
+                "forum": "3mY9aGiMn0",
+                "replyto": "hhztVMTvQJ",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Review - Part [1/2]"
+                    },
+                    "comment": {
+                        "value": "We thank the Reviewer for the feedback. We appreciate that the Reviewer finds our paper clear and easy to follow. Below, we address the raised concerns.\n\n> However, it appears that the authors are more dedicated to highlighting the advantages of sparsity and orthogonality than proposing and demonstrating an efficient algorithm.\n\nWe kindly ask the reviewer to consider that explaining the motivation behind the need of introducing a new algorithm is a crucial part of a researcher\u2019s task. Only by understanding why we need orthogonality and what advantages it brings to sparsity can we design algorithms that effectively leverage those benefits. Note that orthogonality is commonly known to increase the stability of the training and provide better signal propagation in the network. At the same time, static sparse initializations suffer from poor gradient flow or may result in non-optimal performance (Lee et al., 2019; Evci et al., 2022). By marrying in our algorithm the good signal propagation properties stemming from orthogonality, with the reduced parameter size of static sparse training, we are able to propose a novel sparse initialization scheme that provides a boost of performance over other pruning-at-initialization methods. We do focus on demonstrating the effectiveness of our algorithm through Sections 5.2 and Sections 5.3, where EOI is able to outperform other sparse initialization approaches. It is also the most efficient one for the high sparsity regime setup (Appendix B), which lies at the core of static sparse training research.   Finally, note that since EOI produces initializations that are both sparse and orthogonal, any advantages of sparsity and orthogonality that we highlight so crucially in our work are also naturally inherited by our method. \n\n> There is a shortage of comparisons with similar algorithms in the experiments. \n\nPlease note that in our work, we always include a comparison with 5 most popular static sparse training algorithms (Uniform, ERK, SNIP, GraSP, Synflow - see Section 3.3). In Table 1 and Table 2, each such method is indicated by the \u201c<Method Name> Base\u201d entries. Due to the findings of (Evci et al., 2022) we can also treat such methods as density-per-layer distributions for the orthogonal initialization schemes of AI and EOI (see Section 3). In consequence, for each of the 5 static sparse training methods, we can either directly use the produced by them initialization (\u201cBase\u201d), or treat them as a source of density-per-layer distributions for the AI and EOI algorithm, entries (\u201cAI\u201d and \u201cEOI\u201d). Moreover, for the experiments in Table 1 we also consider SAO, which has its own density distribution. Each combination of these steps yields a different variant of a sparse initialization algorithm. In summary, in Section 5.2 we evaluate in total 14 sparse algorithms, and in Section 5.3 we evaluate 15. We believe it to be a large comparison set. Let us also note that, to the best of our knowledge, AI and SAO are the only other sparse orthogonal approaches to sparse training in the literature.\n\nWe recognize that our explanation of that setup might have been vague and might have been a source of confusion for the Reviewer. We have updated Sections 5.2 and 5.3 in the revised paper (changes in text in red) to include this information. In addition, we also corrected the captions of Table 1 and Table 2 to explain the meaning of the \u201cbold\u201d and \u201cunderscore\u201d lines. We also encourage the Reviewer to look into our Appendix, in which we conduct additional experimental setups."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700230227058,
+                "cdate": 1700230227058,
+                "tmdate": 1700230227058,
+                "mdate": 1700230227058,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "x6TbDb0DnM",
+                "forum": "3mY9aGiMn0",
+                "replyto": "cGeM4FerGe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_s3UF"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission4859/Reviewer_s3UF"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for your efforts in addressing my concerns during the rebuttal phase. While I appreciate your detailed responses, I must convey that I am unable to modify my opinions at this time."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission4859/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700671756285,
+                "cdate": 1700671756285,
+                "tmdate": 1700671756285,
+                "mdate": 1700671756285,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

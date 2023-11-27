@@ -1,0 +1,271 @@
+[
+    {
+        "id": "xne17xImrv",
+        "forum": "ph04CRkPdC",
+        "replyto": "ph04CRkPdC",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_cnas"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_cnas"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a method to inject pause tokens into language models during pretraining and fine-tuning, such that the language model can spend more tokens/compute before outputting the final answer. Specifically, pause tokens are randomly injected into sequence during pretraining and appended to questions during fine-tuning. Extensive experiments on several datasets demonstrate the robust gain induced by this method."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The paper is well written and easy to follow.\n- The method is novel and interesting.\n- The experiments are extensive and demonstrate clear gains."
+            },
+            "weaknesses": {
+                "value": "- It seems mysterious and problematic that sometimes more pause tokens can lead to worse performance."
+            },
+            "questions": {
+                "value": "- How does one randomly inject pause token during pretraining? Could there be more than one pause token in a row during pretraining? Is there an upperbound on how many pause tokens can be in a row?\n- Have you tried to prompt LLM with filler words that typically represent pause or thinking? Like \"let me think a bit ....\" etc?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6107/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698643025177,
+        "cdate": 1698643025177,
+        "tmdate": 1699636659767,
+        "mdate": 1699636659767,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3KelV0MmaE",
+        "forum": "ph04CRkPdC",
+        "replyto": "ph04CRkPdC",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_zLe3"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_zLe3"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper presents and analyzes Pause Training - a technique for training transformer language models while inserting virtual \"pause\" tokens between real tokens. The model is then trained normally, except that the training loss does not apply to predictions at pause tokens, essentially letting the model do whatever it wants as long as it predicts the next true token correctly. The intent behind pause training is to let the model do additional computation (\"thinking\") before predicting the next real token. Authors consider several scenarios where pause tokens are introduced during pretraining or finetuning, for a range of 130M-1B model sizes, and evaluate several alternatives such as introducing extra real tokens (e.g. dots). Overall, authors observe the greatest gains from pause training when it is introduced at both pretraining  and finetuning stage, and find significantly smaller effect for finetuning only. The paper reports several additional experiments, including an ablation analysis of how many pause tokens are needed. Finally, authors draw several parallels to modern prompting and PEFT methods such as chain of thought and prompt tuning."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "1. The paper presents a comprehensive experimental analysis of a (relatively simple) phenomena. Authors consider multiple downstream tasks, multiple model sizes, and tries several baselines. Overall, I believe that the quality of experiments is one of the stronger sides of this paper.\n\n2. The paper focuses on a very simple algorithm, meaning that it can be easily implemented in most frameworks and libraries.\n\n3. The paper is generally well written , both conceptual explanations and experiments were easy to follow. Discussions and parallels drawn were interesting to read."
+            },
+            "weaknesses": {
+                "value": "My main problem with the paper is that it ignores several very similar works from the early years of Transformer.\n\nProbably the closest idea to pause tokens is adaptive computation time (ACT) [1]. ACT was originally proposed for recurrent neural networks with the exact same motivation: to let the model \"think\" before generating a difficult token. The idea of ACT translates easily to Transformers, and many subsequent works in the last 7 years (e.g. [2,3]) use ACT for various transformer types, in both sequence and depth dimensions. If authors choose to also overview ACT in related work (and I encourage them to), please note that there are *many* more studies on adaptive computation time and I only referenced a few of them from the top of my head. Furthermore, unlike Pause Tokens, ACT offers a way of teaching model to automatically decide how many extra turns it needs to solve a problem.\n\nWith that in mind, I believe that a proper analysis of Pause Training should at least compare it to a temporal (regular) ACT for the same model with equivalent tuning budget.\n\n* [1] https://arxiv.org/abs/1603.08983\n* [2] https://arxiv.org/abs/1807.03819\n* [3] https://arxiv.org/abs/2109.11745\n\nAnother related (but less similar) study is [4], that introduces additional learnable tokens for attention layers. The paper itself uses attention-only architecture, while subsequent works use the same idea for regular transformers, including a notable implementation[5]. To the best of my understanding, [4] proposes a mathematically similar idea that is likely to have similar effects to pause training, therefore there is no reason it shouldn't be a baseline for comparison. Additionally, [6-7] (and others) also propose to augment language models with attention to additional virtual tokens to improve language model quality. These other works pursue different goals from this paper, but, to the best of my knowledge, they are no less related than PEFT methods discussed on page 9.\n\n* [4] https://arxiv.org/abs/1907.01470\n* [5] https://github.com/lucidrains/x-transformers#augmenting-self-attention-with-persistent-memory\n* [6] https://arxiv.org/abs/1911.00172\n* [7] https://arxiv.org/abs/1612.04426\n\n\nOverall, I believe that the paper presents an interesting idea which could offer a simpler and more efficient alternative to ACT-related methods, but it could also be inferior to them, and there is no way of knowing that from the experiments in the submitted draft. I would recommend authors to consider adressing the following questions for revised version of the paper:\n- how does PT compare to ACT variants in terms of quality?\n- how does PT compare to learned extra tokens (e.g. [4])?\n- which approach is better at deciding where to put extra tokens?\n- for modern language models, PT appears more efficient than a reasonably optimized ACT. How much faster is it in terms of training speed?\n- which method is better for very few vs very many pause tokens?\n(and similar)\n\nUnfortunately, in the current form, I believe that answering those questions would require authors to reformulate too much of the paper content and message, and therefore neccesitate a full additional review. Therefore, I currently recommend rejection, but I encourage authors to resubmit a revised version once they can properly analyze how PT compares to earlier methods.\nThere are two circumstances in which I could raise the score within this review cycle:\n\n1. authors prove that I misunderstood a significant chunk of the paper content and it is NOT in fact related to ACT family & others\n2. authors prove that all of those questions can be answered trivially, without running many additional experiments or changing much of the paper"
+            },
+            "questions": {
+                "value": "On page 7, authors found that the optimal number of pause tokens depends on the specific task, e.g. GSM8k or SQuAD. Did you try to train the model to dynamically decide the number of pause tokens? Essentially, allowing model to predict  pause tokens at a certain penalty (like ACT) or spread a certain fixed budget of pause tokens between different positions (like CTC traning)?\nThe reason I'm asking is that, since the baselines are able to do the same thing, it would be curious to check which approach (PT or ACT or CTC) is better at deciding where to put the pause tokens.\n\n\n\nMinor typo: authors use SquAD as a dataset name. To the best of my knowledge, the original paper[8] refers to this dataset as SQuAD, with uppercase Q.\n\n[8] https://arxiv.org/abs/1606.05250"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6107/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698839686820,
+        "cdate": 1698839686820,
+        "tmdate": 1699636659666,
+        "mdate": 1699636659666,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wml6FzLMiq",
+        "forum": "ph04CRkPdC",
+        "replyto": "ph04CRkPdC",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_orpq"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_orpq"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces an approach to the training and inference of language models by incorporating a concept of learnable \"pause tokens.\" Language models generate responses token-by-token, where each subsequent token is influenced by the preceding ones. However, this research explores the impact of allowing the model to manipulate more hidden vectors by adding a sequence of learnable \"pause\" tokens to the input prefix before outputting the answer. The key idea is to allow the model extra computation time before committing to an answer. Experiments were conducted on models with different parameters and various tasks, which suggest that incorporating delays during inference time shows gains when the model is pre-trained and fine-tuned with these delays. Notably, significant gains were observed in tasks like question-answering on the SQuAD dataset, CommonSenseQA, and reasoning tasks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. This paper offers an intriguing exploration into the behavior of language models by increasing computation at the level of hidden states, rather than at the text level, like Chain-of-Thought. It presents the concept of the language model \"thinking\" through the generation of intermediate hidden states. \n2. The introduction of a \"pause token\" is a novel approach that enables this deeper computational process to enhance the model\u2019s performance on various tasks. There are a few useful observations. One is that pause tokens are necessary for both pre-training and fine-tuning stages. \n3. The comprehensive experimentation involving various models and tasks contributes to the robustness of the paper. A strong aspect of the paper is its detailed ablation studies, which effectively dissect the influence of the \"pause\" token, thereby providing valuable insights into delayed next-token prediction."
+            },
+            "weaknesses": {
+                "value": "1. Regardless of the empirical gains, we need more theoretical insights into why and how \"pause tokens\" work during pre-training and fine-tuning. There is not enough motivation behind this trick. We need to understand why we need to \"delay a model's answer generation.\" There are a few intuitions, but are not well-articulated and convincing enough. The reason to answer this question is necessary because the community can benefit if the pause tokens are so important to replace normal autoregressive LLMs. \n2. Adding the \"pause token\" brings new challenges and headaches. A limitation of the \"pause token\" approach lies in its necessity to be integrated into both the pre-training and fine-tuning phases, potentially hindering its broader applicability. The introduction of the \"pause\" token consumes a significant portion of the model\u2019s input window space\u2014approximately 10% of the sequence length\u2014resulting in a loss of some training data information. Additionally, the number of \"pause\" tokens acts as a hyperparameter, exerting a considerable influence on task performance. This number is not consistent but varies across different tasks, adding a layer of complexity and variability to the model's application and performance.\n3. The introduction of pause tokens undoubtedly adds a computational overhead to the training and inference processes. The paper could benefit from a more detailed analysis of this trade-off, especially in terms of computational resources and time. Assessing the scalability of this approach in larger models or in resource-constrained environments would be beneficial. Providing benchmarks on computational costs and suggesting ways to optimize this aspect could enhance the practicality of the approach."
+            },
+            "questions": {
+                "value": "1. How do you determine the number of \u201cpause\u201d tokens?\n2. How is the generalization ability of \u201cpause\u201d tokens, for example, pretraining with \u201cpause\u201d tokens and inference on tasks without fine-tuning? Are these tokens tasks specific?\n3. The title doesn't convey any meaningful information, \"Think before you speak\" is too casual and just for eye-catching, and \"Pause tokens\" are not obviously justified in the title."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6107/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6107/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6107/Reviewer_orpq"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6107/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698946895111,
+        "cdate": 1698946895111,
+        "tmdate": 1699636659562,
+        "mdate": 1699636659562,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ObpCr3lUcj",
+        "forum": "ph04CRkPdC",
+        "replyto": "ph04CRkPdC",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_SV1s"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6107/Reviewer_SV1s"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper shows that pretraining and tuning are necessary for consistent gains with pause tokens, which give transformers the ability to slightly decouple the amount of FLOPs from the number of tokens. The method inserts pause tokens at random positions during pretraining, and appends $M_{ft}$ and $M_{inf}$ pause tokens at fine-tuning and inference.\n\nExperiments show that pause tokens improve performance for a variety of tasks.\nAblations show that, surprisingly, more pause tokens is not always better."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The paper successfully gets pause tokens working, which were previously thought not to work. The writing and presentation are clear, as are the experiments and results."
+            },
+            "weaknesses": {
+                "value": "The paper is convincing and demonstrates some gains can be found via pause-token training. One weakness is that the method does not compare directly to Chain of Thought (CoT).\n\nIn contrast to pause tokens, which require both pretraining and fine-tuning, CoT is an inference-time only method that potentially requires extra human annotations. Another difference is that CoT has the ability to perform variable-length computation, as opposed to the fixed number of pause tokens added at inference time."
+            },
+            "questions": {
+                "value": "Typos\n1. Section 3.1: tokenresiding, the this\n2. 4.3: standard-pretraing\n\nComments\n1. A recent paper [1], that shows that extra scratch space improves the computational power of transformers, could help motivate this paper.\n\n[1] Merrill, W., & Sabharwal, A. (2023). The Expressive Power of Transformers with Chain of Thought. ArXiv, abs/2310.07923."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6107/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699424951275,
+        "cdate": 1699424951275,
+        "tmdate": 1699636659461,
+        "mdate": 1699636659461,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

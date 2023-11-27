@@ -1,0 +1,598 @@
+[
+    {
+        "title": "Data De-Duplication and Semantic Enhancement for Contrastive Language-Image Pre-training"
+    },
+    {
+        "review": {
+            "id": "werjNRZnLE",
+            "forum": "gqjEhvUC6H",
+            "replyto": "gqjEhvUC6H",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_xVnC"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_xVnC"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper explores several tricks to enhance the CLIP model.\nThese tricks include cluster-based data de-duplication, text augmentation with LLM and VLM, and image augmentation.\nThe pre-training is performed on the large-scale Laion400M dataset.\nWith the experimental results on a wide variety of downstream tasks, we can observe that the proposed method achieves improved performance over the plain CLIP model."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The paper is well-written and well-organized.\nMost parts of this paper are easy to follow and understand.\n\n- The proposed method achieves consistent improvements on diverse downstream tasks and datasets when compared to the vanilla CLIP model.\n\n- The authors conducted detailed ablation studies of the proposed method."
+                },
+                "weaknesses": {
+                    "value": "- The biggest concern for this paper is the key intuition and motivation of the proposed method.\nThe data de-duplication is leveraged to reduce the training samples, which is useful for training efficiency.\nHowever, the other three tricks mostly focus on augmentation, thus introducing more data for training.\nThis mix-up makes the readers follow the key contribution of this paper.\n\n- The novelty of the proposed method is somewhat limited.\nAll these approaches look like tricks that have been well-explored by existing literature.\n\n- The first approach, i.e., data de-duplication is also limited by the pre-trained vision model.\nIf we use another model rather than DINO, the sampled images could be different, which may lead to different conclusions.\n\n- There are many notational errors (for example, N or B for the number of pairs?) in the descriptions of Sec. 3.1. Please carefully revise them."
+                },
+                "questions": {
+                    "value": "- Eqn.1 seems not right.\nNormally the NCE contrastive loss only holds one positive label.\nBut for this approach, there could be at least three positive labels.\nMaybe some theoretical analysis helps address this concern.\n\n- Have the authors also considered generating images as augmentation?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2280/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697543693299,
+            "cdate": 1697543693299,
+            "tmdate": 1699636161018,
+            "mdate": 1699636161018,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "NGl7BnyzdK",
+                "forum": "gqjEhvUC6H",
+                "replyto": "werjNRZnLE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to xVnC"
+                    },
+                    "comment": {
+                        "value": "Thank you for your insightful advice and valuable questions, we will respond to your concerns point by point.\n\n> **Q1: The key intuition and motivation of the proposed method. Explanation of the contradiction between the effectiveness of ($\\text{D}^3$) and the other three modules e.g. text augmentation, DCTM, and MSTM.**\n\nThe key intuition and motivation of the proposed method is that construct a semantically diverse multimodal dataset and present an efficient training algorithm for better representation learning.\n\nThe generated texts are completed by one-time processing, which can be reused to train other models, the time does not require double-counting. The efficient training algorithm is proposed to utilize semantically enriched datasets. We also provide the specific calculation time for each module.\n\nSpecifically, as Q4 of review Fx4U, we counted the time for all modules. It takes about 175 hours to rewrite one text from LLaMA for the entire Laion400M dataset on 32 A100 GPU machines, and it takes only 75 hours to generate texts from LLaVA with batch inference. Training baseline CLIP on LAION-400M with large ViT-L/14 almost takes 550 hours on 32 A100 GPU machine. Training with half of the clustered augmented data can achieve comparable performance but its training time is reduced by half. Clustering time is negligible as compared to text generating, it only takes a few hours on one A100 GPU machine. The total training cost has decreased a little overall (550 vs 525) on 32 A100 GPU machines.\n\n\n> **Q2: The limination of novelty.**\n\n\nPlease refer to General Response.\n\n> **Q3: The effect of the pre-trained model e.g. DINO in data de-duplication.**\n\n###### \t\t\t\t\t\tTab.7: Ablation study for clustering pre-trained model on ImageNet(IN) datasets for Zero-shot image classification (%), \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tall experiments are used 50% clustered data.\n\n| Evaluation Type | Clustering Pre-trained Model | IN |\n| :-: | :-: | :-: |\n| Zero-shot | Dino | 34.6 |\n| Zero-shot | MAE | 34.2 |\n\n\nAs per your suggestion, we explored the use of different models to extract image features for clustering e.g. MAE and Dino.\n\nAs shown in the above table, there is no big gap in classification performance between using pre-trained model MAE to extract image features and using Dino to extract image features for clustering. As long as with a well-pre-trained model, the image feature for clustering has little impact, all of which can produce better clustering results.\n\n> **Q4: Corrected notational errors.**\n\n\nThanks for your kind suggestion, we have modified the paper in detail.\n\n> **Q5: Normally the NCE contrastive loss only holds one positive label. But for this approach, there could be at least three positive labels. Analysis of Eqn.1.**\n\n\nThe NCE contrastive loss only holds one positive label. According to SE in DS-CLIP, one image has $M+1$ multiple generated texts represented as in Eqn.1, which constructs $M+1$ image-text pairs. In Eqn.1, for each image corresponding to $M+1$ multiple texts, we calculate the mean of contrastive loss of $M+1$ image-text pairs during training. In all, Eqn.1 can be interpreted as the mean of multiple NCE contrastive losses.\n\n> **Q6: Generating images as augmentation is used for DS-CLIP.**\n\n\nThe pre-trained dataset for DS-CLIP is YFCC15M, whose text description is too short and unable to adequately describe the image content. The image generated according to the description of the short text is quite different from the original image, which leads to the inconsistency of the sample being self-supervised during the training. The generated images are shown in the following link. [generate_img](https://clip-multimodal.oss-cn-beijing.aliyuncs.com/siyang/paper/ICLR2024/generated_image.png?OSSAccessKeyId=LTAI5tGRJ62Fo4Ly48B8Zd1g&Expires=5300205749&Signature=udAeVnUz2UwM8MQBhNmkudbTRXU%3D)\n\nTraining with the generated images in DS-CLIP instead of the augmented image through a transformer, and other modules and parameters are the same with Experiment ID 6 in Table 1 in the paper, the performance decline is more serious(from 39.3% to 30.1%)."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700320862809,
+                "cdate": 1700320862809,
+                "tmdate": 1700320862809,
+                "mdate": 1700320862809,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "vEv1Uj8SEE",
+            "forum": "gqjEhvUC6H",
+            "replyto": "gqjEhvUC6H",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_Fx4U"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_Fx4U"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a novel training strategy called DS-CLIP to improve the traditional contrastive language-image pre-training (CLIP) model. It introduces two components - Data De-Duplication (D3) and Semantic Enhancement (SE) to reduce training costs and enhance dataset diversity. D3 employs data clustering and sampling to reduce scene redundancy without losing diversity. SE uses large language models to generate diverse, semantically enriched captions to address image-text misalignment. Furthermore, this paper proposes Diverse Captions Training and Modality Self-enhancement Training for effective learning. Extensive experiments show DS-CLIP achieves state-of-the-art on various downstream tasks, including classification, retrieval, detection and segmentation."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "(1)\tThis paper addresses the efficiency problem of CLIP pre-training by proposing Data De-Duplication (D3) and Semantic Enhancement strategies, which first clusters and re-samples noisy multi-modal data to ensure a balanced semantic distribution without reducing the scene diversity, then employ powerful LLM and VLLM to enrich semantic information of text and mitigate the issue of text-image misalignment.\n\n(2)\tThis paper presents a one-to-multiple mapping among image and text as the Diverse Captions Training Mechanism (DCTM) and Modality Self-enhancement Training Mechanism (MSTM), which effectively reduces training time and alleviates data redundancy and misalignment.\n\n(3)\tThis paper is clearly written and easy to follow. The problems and limitations of previous CLIP training are clearly explained. The method section has explained technical details well. The related tables and figures also are presented clearly.\n\n(4)\tExtensive experiments have shown that the DS-CLIP significantly outperforms traditional CLIP on various vision-language tasks, especially fine-grained classification datasets, and various patch-level downstream tasks from 0.2% to 23.9%, with ONLY half of the training time."
+                },
+                "weaknesses": {
+                    "value": "(1)\tThe core contributions of this paper are the D3 and SE modules, which belong to the data augmentation and data cleaning essentially. The clustering, re-sampling, and text re-generation are all very common strategies in recent work, e.g., BLIP [1], and BLIP-2[2]. Hence the technical contribution is weak.\n\n(2)\tThe previous contrastive loss function can deal with the multi-positive image-text pairs during training. However the experiments lack ablation studies or theoretical justification, more analysis can help prove the effectiveness of the proposed loss function.\n\n(3)\tThe CLIP is a famous multi-modal pretraining model. However, this paper only contains pure vision-understanding tasks and lacks sufficient experiments on various multi-modal tasks and datasets, e.g., image-text matching, video-text retrieval, and image captioning. \n\n[1] Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation, ICML, 2022\n\n[2] BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models, 2023"
+                },
+                "questions": {
+                    "value": "(1)\tThis paper has claimed that the DS-CLIP only needs half the training time compared with traditional CLIP. But the D3 and SE modules also need large computational costs, e.g., the clustering operation, and the inference process of LLM/VLLM. It is necessary to report related time costs since the extra data augment is an important part of the proposed method.\n\n(2)\tThe Data De-Duplication (D3) relies on the clustering algorithm to converge unlabeled data. However, the K-means is not a good choice for large amounts of data, in which the runtime and memory cost are non-negligible with multiple iterations. Have you tried any other clustering algorithms, e.g., spectral clustering? Besides, why not cluster the texts?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Reviewer_Fx4U"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2280/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698219584196,
+            "cdate": 1698219584196,
+            "tmdate": 1700549492387,
+            "mdate": 1700549492387,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "8KvngURZJy",
+                "forum": "gqjEhvUC6H",
+                "replyto": "vEv1Uj8SEE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Fx4U (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your insightful advice and valuable questions, we will respond to your concerns point by point.\n\n> **Q1: The clustering, re-sampling, and text re-generation are all very common strategies in recent work,e.g., BLIP [1], and BLIP-2[2]. Hence the technical contribution is weak.**\n\n**BLIP[1]** proposes an efficient utilization method of web noisy data. It is first trained with noisy data, and then BLIP is used to generate a series of subtitles through a pre-trained Captioner, moreover, the generated subtitles are filtered through a pre-trained Filter, deleting the noisy subtitles from the original web and synthetic texts to get clean data. Finally, BLIP is trained again with clean data. The re-sampling in BLIP is filtered and text re-generation is iteratively updated as model training. \n\n**In contrast to the BLIP**, our method uses the rich knowledge of LLM/VLLM to enhance the text data and rewrite the data semantically and structurally without repeated model training. We pay more attention to constructing a more diverse and semantic dataset from the web noisy dataset rather than the training strategy. The re-sampling is without filtering data and keeps the diversity of the dataset at each training epoch. Additionally, we conducted experiments comparing the training approaches of initializing the model with the backbone of the VLLM itself and training the multimodal representation model using the data generated by the LLM and VLLM. We find that utilizing the augmented data from a well-trained LLM and VLLM yields superior performance, further confirming the importance of LLM and VLLM in data construction. We hope our augmented dataset will help further research and pay more attention to the data construction by LLM and VLLM.\n\n**BLIP-2[2]** proposes an efficient pre-trained algorithm through training Q-Former to align a visual model and a Large Language Model (LLM) of freezing parameters. The Q-Former connects an image encoder of a visual model and an LLM encoder. In BLIP-2, the data is not extended or augmented from source, and the training parameters are reduced from the model perspective for efficient training.\n\n**The essential difference with our method** is that we start from the misaligned between image and text, and use the rich knowledge of LLM/VLLM to enrich text representation. We focus on the problem of data noise from the source rather than the training strategy. We utilize Data De-Duplication ($\\text{D}^3$) based on augmented diverse data to achieve superior performance with fewer computing resources. $\\text{D}^3$ is different from data cleaning, we do not filter data during training but sample a certain percentage of data points from each pre-clustered center. The text re-generated and sampling strategy are quite different from BLIP[1] and BLIP-2[2]. Extensive experiments show that the constructed dataset is helpful in improving the performance of the current modal e.g. DeCLIP, LaCLIP. Please refer to the question 6 of review YX2M.\n\n**Reference:**\n\n[1] Li J, Li D, Xiong C, et al. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation[C]//International Conference on Machine Learning. PMLR, 2022: 12888-12900.\n\n[2] Li J, Li D, Savarese S, et al. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models[J]. arXiv preprint arXiv:2301.12597, 2023.\n\n> **Q2: The previous contrastive loss function can deal with the multi-positive image-text pairs during training. More analysis to verify the effectiveness of the proposed loss function.**\n\nThe previous contrastive loss function deals with the multi-positive image-text pairs during training as follows.\n\n**In BLIP[1]**, each batch ensures only one positive sample during training. \n\n**In ALBEF[3]**, if there are K-positive samples in batch, then the gt at the corresponding position of contrastive loss is $1/K$. \n\n**In our DS-CLIP**, for each image corresponding to $M+1$ multiple texts, we calculate the mean of contrastive loss of all $M+1$ image-text pairs.\n\nIn our ablation study as shown in Experiment ID 4 in Table 1, only one text is sampled from multiple generating texts with the standard text-image contrastive loss as same as BLIP[1]. \u00a0Experiment ID 5 in Table 1 shows that multiple text embeddings for DCTM bring a +0.6% improvement in the accuracy of classification. We add an experiment using the contrastive loss in ALBEF[3] instead of DCTM, other parameters are kept the same. The performance with contrastive loss in ALBEF[3] is 38.0% on image classification, which has a comparable result with BLIP[1] as Experiment ID 4 in Table 1. This analysis is presented in Sec4.2.\n\n**Reference:**\n\n[3] Li J, Selvaraju R, Gotmare A, et al. Align before fuse: Vision and language representation learning with momentum distillation[J]. Advances in neural information processing systems, 2021, 34: 9694-9705."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700320692192,
+                "cdate": 1700320692192,
+                "tmdate": 1700320692192,
+                "mdate": 1700320692192,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "n7ZhT5yY3U",
+                "forum": "gqjEhvUC6H",
+                "replyto": "vEv1Uj8SEE",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_Fx4U"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_Fx4U"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Comments by Reviewer Fx4U"
+                    },
+                    "comment": {
+                        "value": "Thanks to the author for the reply. I carefully read the author's response and the comments of other reviewers. My main concern, similar to reviewer AY1m's, was not well addressed. Current explanations about novelty are still weak. So I changed my rating to 5."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700549468510,
+                "cdate": 1700549468510,
+                "tmdate": 1700549468510,
+                "mdate": 1700549468510,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "CNQgbAUOhO",
+            "forum": "gqjEhvUC6H",
+            "replyto": "gqjEhvUC6H",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper introduces a new training framework for CLIP-like models, aiming to 1) reduce training costs and 2) mitigate the misalignment issues stemming from noisy image-text pairs. For this, the authors propose following components:\n\n1. Data De-duplication (D3) enables fast training without losing the diversity of sampling by leveraging pre-clustered prototypes which enables.\n\n2. Semantic Enhancement (SE) mitigates the noisy image-text correspondence issues by generating more descriptive captions with powerful pre-trained Large Language Models (LLMs) and Vision-Language Large Models (VLLMs) \n\n3. Diverse Captions Training Mechanism (DCTM) and a Modality Self-enhancement Training Mechanism (MSTM) : DCTM utilizes diverse captions, while MSTM employs a combination of uni-modal contrastive learning.\n\n As a result, it achieves state-of-the-art performance over various downstream tasks with half of the training time compared with original CLIP."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The paper is well-written and figures are easy to understand.\n2. The motivation of paper (efficient pre-training by mitigating mis-alignment in image-text papers and scene redundancy) is solid.\n3. The experimental results are strong."
+                },
+                "weaknesses": {
+                    "value": "Despite  strong experimental results and motivation, the novelty of the proposed methods appears to be limited:\n    \n   1) In SE: The effectiveness of synthetic captions from VLP models for mitigating noisy image-text alignment has already been demonstrated by BLIP.  Therefore, it is somewhat straightforward that more descriptive captions from recent LLaVA models would be effective. Furthermore, as the authors themselves pointed out, the concept of using LLM-generated captions has already been proposed in LaCLIP. Moreover, the effectiveness of using both LLaVA and LLaMA is unclear. See question 2.\n\n   2) In DCTM: Previous works like OSCAR [1], ALBEF [2], and BLIP have empirically shown that diverse captions (one image with multiple captions) from sources like COCO and Flickr are effective in enhancing performance. These works treat each image-caption pair as unique; for instance, if one image comes with five captions as in the COCO setting, they construct five distinct pairs. The difference in the current approach is the use of diverse captions with a multi-positive contrastive loss. However, it remains unclear where the benefits of this approach specifically originate from. See question 1.\n\n   3) In MSTM: The utility of uni-modal contrastive losses in improving performance has already been showcased by ERNIE-VIL 2.0 [3].\n\n\n[1] Li, Xiujun, et al. \"Oscar: Object-semantics aligned pre-training for vision-language tasks.\" Computer Vision\u2013ECCV 2020: 16th European Conference, Glasgow, UK, August 23\u201328, 2020, Proceedings, Part XXX 16. Springer International Publishing, 2020.\n\n[2] Li, Junnan, et al. \"Align before fuse: Vision and language representation learning with momentum distillation.\" Advances in neural information processing systems 34 (2021): 9694-9705. \n\n[3] Shan, Bin, et al. \"ERNIE-ViL 2.0: Multi-view Contrastive Learning for Image-Text Pre-training.\" arXiv preprint arXiv:2209.15270 (2022)"
+                },
+                "questions": {
+                    "value": "1)  The benefits from DCTM comes from the data augmentations (use multiple captions) or from multi-positive contrastive loss? Moreover, what is the difference between multi-positive contrastive loss and supervised contrastive loss [4]? What is the advantage of using multi-positive contrastive loss? \n\n2)  Does it have to use both LLaVA and LLaMA? In table 2 (c), the gap between LLaVA only and LLaVA/LLaMA seems very marginal. Isn't it possible to use LLaVA only to generate diverse captions with proper prompts?\n\n3) In Figure 3 and Figure5, it seems that the boundaries are still indistinguishable.\n\n[4] Khosla, Prannay, et al. \"Supervised contrastive learning.\" Advances in neural information processing systems 33 (2020): 18661-18673."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2280/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698765734238,
+            "cdate": 1698765734238,
+            "tmdate": 1699636160799,
+            "mdate": 1699636160799,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "AAClMrHSkp",
+                "forum": "gqjEhvUC6H",
+                "replyto": "CNQgbAUOhO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to  AY1m (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thank you for your insightful advice and valuable questions, we will respond to your concerns point by point.\n\n> **Q1: Limitation of the novelty of the proposed methods. Different contributions of our method compared with BLIP and LaCLIP.**\n\n**BLIP[1]** proposes an efficient utilization method of noisy web data. It is first trained with noisy data, and then BLIP is used to generate a series of subtitles through a pre-trained Captioner, next, the generated subtitles are filtered through a pre-trained Filter, deleting the noisy subtitles from the original web and synthetic texts to get clean data. Finally, BLIP is trained again with clean data. \n\n**In contrast to the BLIP**, our method uses the rich knowledge of LLM/VLLM to enhance the text data and semantically and structurally rewrite the data without repeated model training. We pay more attention to constructing a more diverse and semantic dataset from the web noise dataset rather than the training strategy. Additionally, we conducted experiments comparing the training approaches of initializing the model with the backbone of the VLLM itself and training the multimodal representation model using the data generated by the LLM and VLLM. We find that utilizing the augmented data from a well-trained LLM and VLLM yields superior performance, further confirming the importance of LLM and VLLM in data construction.\n\n**LaCLIP[2]** rewrites and changes the structure of text from the original text using LLaMA and chatbots but maintains semantic information of the text. Text rewritten in LaCLIP only ensures the semantics associated with the corresponding original text but it does not address the misalignment problem of image and text.\n\n**We can supplement the shortcomings of LaCLIP** from the aspects of text augmented via VLLM. We combine our generated data with LaCLIP, and the average mAP on 10 image classification datasets is improved by 0.6% with our augmented data. Please refer to question 6 in the review YX2M.\n\n**Reference:**\n\n[1] Li J, Li D, Xiong C, et al. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation[C]//International Conference on Machine Learning. PMLR, 2022: 12888-12900.\n\n[2] Fan L, Krishnan D, Isola P, et al. Improving CLIP Training with Language Rewrites[J]. arXiv preprint arXiv:2305.20088, 2023.\n\n> **Q2: Explanation of the effectiveness of using both LLaVA and LLaMA. Verify that it is possible to use LLaVA only to generate diverse captions with proper prompts.**\n\nThanks for your suggestion. The pre-trained dataset for DS-CLIP is YFCC15M in our experiments, whose text description is too short, and the generated texts according to LLaMA have fewer variations. Using LLaMA to generate text has less improvement on YFCC15M.\n\n1. We also pre-train DS-CLIP based on ViTB/16 on CC3M with SE as shown in the following table. The text description of CC3M is longer and more abundant. The improvement is respectively 4.7% and 5.8% based on LLaMA and LLaVA. On the basis of LLaVA, the performance continues to increase by 1.6% combined with LLaMA.\n\n2. We design several proper prompts for LLaVA to generate texts such as ''Can you explain this image in detail?'', ''Tell me in detail what is main object description in this picture.'' and ''What happened in the picture?'' Using these proper prompts to generate three texts for each image with LLaVA on the CC3M dataset, we conduct an experiment named LLaVA+ in the following table. The performance improves by 0.4% from 21.6% to 22.0% compared with text augmented from LLaVA, but it is still lower than text augmentation from LLaVA and LLaMA. The generated text from LLaVA has already described the image content in as much detail as possible, with more prompts to generate texts has fewer improvements.\n\n###### \t\t\t\t\t\t\t\tTab.3: Ablation study with text augmentation on ImageNet(IN) for zero-shot image classification (%)\n\n| LLaMA | LLaVA | LLaVA+ | Top-1 |\n| :-: | :-: | :-: | :-: |\n| \u2717 | \u2717 | \u2717 | 15.8 |\n| \u2713 | \u2717 | \u2717 | 20.5 |\n| \u2717 | \u2713 | \u2717 | 21.6 |\n| \u2713 | \u2713 | \u2717 | 23.2 |\n| \u2717 | \u2717 | \u2713 | 22.0 |"
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700320185958,
+                "cdate": 1700320185958,
+                "tmdate": 1700320185958,
+                "mdate": 1700320185958,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "TEDK5YskPY",
+                "forum": "gqjEhvUC6H",
+                "replyto": "CNQgbAUOhO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to author"
+                    },
+                    "comment": {
+                        "value": "Thanks for detailed explanation.\n\nComparison with BLIP\n\n\n--> In my review, my main point was that the concept of leveraging synthetically generated captions is the same as BLIP. \n      In their setup, since they did the first work to use generated captions, it is natural to require a training phase for captioner. \n      It is not author's contribution which do not require repetition step since authors simply assume that pre-trained model like LLaVA is available. \n      Moreover, it is really straightforward leveraginng captions from more recent LLaVA which can generate more descriptive captions (which leverages the power of LLM) is much more effective than captions from BLIP. Since the performance increase is mainly comes from SE, my main concern about novelty and contribution is not resolved yet."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700543271588,
+                "cdate": 1700543271588,
+                "tmdate": 1700545031243,
+                "mdate": 1700545031243,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "s3pc7QpMnR",
+                "forum": "gqjEhvUC6H",
+                "replyto": "cpufSbT4kS",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to author"
+                    },
+                    "comment": {
+                        "value": "Thanks for the explanation,\n\nI'm not sure that \"our best model achieves an impressive accuracy of 78.7% on ImageNet zero-shot classification, surpassing the performance of LLaVA-initialized CLIP methods (76.0%) by a significant margin.\" is a fair setting.\n\nFirst of all, isn't it that LLaVA freezes CLIP in training? Thus, the CLIP from LLaVA is almost the same as the original CLIP except for the linear layer.\n\nSecondly, what does it mean that COCO and Flickr have a significantly smaller number of categories? Do you mean cluster? Since they do not have class information, each instance corresponds to a distinct class. \n\nThirdly, as the authors pointed out, the experimental results from BLIP are absent in your experiment. We cannot be sure whether their approach is effective or not.  \n\nFinally, I'm not sure that \"whether synthetic data can improve model performance on large vocabulary recognition tasks, such as ImageNet zero-shot classification\" is a critical question. It seems a natural extended task of retrieval and captioning tasks."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700553238427,
+                "cdate": 1700553238427,
+                "tmdate": 1700553238427,
+                "mdate": 1700553238427,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "zldqYDGIsJ",
+                "forum": "gqjEhvUC6H",
+                "replyto": "WBUCB2bUIx",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_AY1m"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "First of all, I appreciate the time and effort you have put into addressing my concerns.\n\nThe main claim of authors was that \"the use of noisy captions is the problem in VLP\" (which is the same claim with BLIP). It is already shown in BLIP that more descriptive (more aligned) captions are helpful.\nAccording to additional replies from authors, the main contribution of paper is then summarized as:\n\"Instead of using less descriptive captions (original noisy captions or BLIP-generated captions), if more descriptive captions from recent LVLM (LLaVA-generated captions) is used, the recognition ability of model could be significantly increased, allowing for the representation of a wider range of categories.\"\n\n\nWhile this finding seems new, I remain cautious about the novelty and contribution about this paper since it seems straight-forward applications of LLaVA-generated captions, which are better than other variants. \n(As we all know, the captions from LLaVA, which leverages LLM, generates much more powerful captions than others. )\nMoreover, since the core ability of LLaVA lies in generating diverse captions (with frozen ViT, LLM) and authors experiment with the frozen ViT, I'm not sure it is a valid experiment to show \"LLaVA synthetic data and original data can recognize more categories than LLaVA itself\". I rather think it is some kind of fine-tuning step of LLaVA (exclusively for ViT) to apply for other downstream tasks like image recognition and retrieval tasks. \n\n\nTo show this is a novel application (to show why descriptive captions are helpful in recognizing ability, especially in terms of encompassing a broader range of categories. ), I believe more detailed explanations and back-up experiments should be required. \n\n\nTherefore, I have chosen to maintain my reservation on this point. However, I am still open to reconsidering my stance if other reviewers find the novelty and contributions to be substantial enough for acceptance."
+                    }
+                },
+                "number": 22,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700720775959,
+                "cdate": 1700720775959,
+                "tmdate": 1700720775959,
+                "mdate": 1700720775959,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "5EUapX5e6A",
+            "forum": "gqjEhvUC6H",
+            "replyto": "gqjEhvUC6H",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_YX2M"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission2280/Reviewer_YX2M"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposed DS-CLIP for vision-language pre-training, which contains several techniques to improve original CLIP. 1) Data De-Duplication (D^3) is used for data sampling. 2) Diverse Captions Training Mechanism (DCTM) and Modality Self-enhancement Training Mechanism (MSTM) for improving the quality of the original caption. They show the proposed techniques can improve the training efficiency and final performance of zero-shot evaluation."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "1 poor"
+                },
+                "strengths": {
+                    "value": "1. The authors conducted extensive experiments with various setups. \n2. The overall performances on several benchmarks are stronger than the original CLIP."
+                },
+                "weaknesses": {
+                    "value": "1. I think the presentation is really bad and confusing. a) There are several abbreviations are introduced in the abstraction and introduction, e.g., D^3, SE, DS-CLIP, DCTM, and MSTM. Additionally, those abbreviations seem to have a hierarchical structure, DS-CLIP is for SE and D^3, SE is for DCTM and MSTM, which is really confusing. b) Some parts of the presentation are unclear. What's Image-to-Text\nMulti-Positive Contrastive Loss and Text Multi-Positive Self-Supervised Loss in Fig. 2? What's the hyper-parameter choice for K, $\\alpha$ and $\\beta$? c) Some illustrations can be improved. In Fig. 2(a) the original image and the augmented image are reversed and the spacing between letters is different. d) Several dataset abbreviations are introduced in Sec. 4.1. However, those abbreviations are used in Sec. 4.3. You'd better define them when used. e) The ablation results in Tab. 1 are hard to read. What's your default setting and final setting for those experiments? \n2. While there are several techniques are introduced in this paper, many of them are already proposed in prior arts. DCTM has been proposed in LaCLIP (Fan et al.). MSTM was introduced in DeCLIP (Li et al.). I can't find the main contribution of this paper. If those techniques are not your contribution, do not claim it. What's your main point and how does your main contribution affect the final performance?"
+                },
+                "questions": {
+                    "value": "See the weakness part."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "3: reject, not good enough"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission2280/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698926618236,
+            "cdate": 1698926618236,
+            "tmdate": 1699636160713,
+            "mdate": 1699636160713,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ZFJq6fyCKD",
+                "forum": "gqjEhvUC6H",
+                "replyto": "5EUapX5e6A",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to YX2M (Part 1)"
+                    },
+                    "comment": {
+                        "value": "Thanks for your insightful advice and valuable questions, we will respond to your concerns point by point.\n\n> **Q1: Confusing about abbreviations $\\text{D}^3$, SE, DS-CLIP, DCTM, and MSTM in abstract and introduction.**\n\n\nI'm sorry that these abbreviations have confused you.\n\nIn this abstract and introduction, **DS-CLIP** is a simple and efficient training algorithm for multimodel representation learning.\n\n**Data De-Duplication ($\\text{D}^3$)** is proposed to reduce training costs without lossing data diversity.\n\nSpecifically, we uniformly sample a certain percentage of data points from each pre-clustered center, producing a small subset of the dataset. Therefore, the duplicate data were reduced according to the above re-sampling at each training epoch.\n\n**Semantic Enhancement (SE)** is proposed to address the issue of image-text misalignment and enrich textual diversity. Different from LaCLIP only with generated texts from LLM, we augment texts from the Large Language Model (LLM) and Visual Large Language Model (VLLM).\n\nWith generated multiple texts, we utilize the Diverse Captions Training Mechanism (DCTM) and Modality Self-enhancement Training Mechanism (MSTM) to learn a superior representation model.\n\n**DCTM** is proposed to use all the generated captions simultaneously, this is shown to improve the performance in experiments. Concretely, it calculates the mean of the contrastive loss for the image to each corresponding text, and standard contrastive loss for the original text to the original image as shown in Eqn (1) and Eqn (2).\n\n**MSTM** leverages self-supervision within each modality for self-enhancement, the purpose is the same with DCTM. Similar to DCTM, MSTM calculates the mean of the self-supervision loss for the multiple text pairs, and standard self-supervision loss for the image and its augmented image as shown in Eqn (3) and Eqn (4).\n\nWe add more explanation and remodify the logic of these representations of motivation. The revised motivation, core idea, and contributions about these abbreviations are shown in General Response.\n\n> **Q2: Unclear presentation about Image-to-Text Multi-Positive Contrastive Loss and Text Multi-Positive Self-Supervised Loss in Fig.2 and hyper-parameter choice.**\n\n\nThank you for your suggestions.\n\n1. The calculated processing of **Image-to-Text Multi-Positive Contrastive Loss** is as follows: one image has $M+1$ multiple texts and each image with one corresponding text calculates a standard contrastive Loss, then the mean of $M+1$ Multiple Contrastive Losses is the final loss as shown in the second one on the left in Fig.2(c).\n\n   **Text Multi-Positive Self-Supervised Loss** is as follows: $M$ pairwise text pairs in the multiple texts calculate the standard Self-Supervised Loss, and then the mean of Multiple Self-Supervised Loss is the final loss as shown in the first one on the right in Fig.2(c).\n\n   We have already modified Fig.2 and added these explanations in the revised paper.\n\n2. The hyper-parameter of clustered number $K$ is discussed in the ablation study in Appendix.D, we explore three experiments of different clustering numbers (1000, 10000, 100000). We observed a small improvement in classification accuracy as the number of clusters increased (34.2%, 34.6%, 34.7%), which had little impact. We choose the number of clustering (10000) as default.\n\n   The hyper-parameter of $\\alpha$ and $\\beta$ are equal to 1 in training loss as presented in Training Settings of Appendix.B.\n\n> **Q3: Improved representation of Fig.2. e.g. the original image and the augmented image are reversed and the spacing between letters is different.**\n\nThank you for your suggestions. The term \"enhancement\" in our context refers to the augmentation techniques used in self-supervised training of images. The reversed augmented image is transformed by ''FLIP'' as an example. The details of Fig.2. is modified in the revised version. We also upload the modified Fig.2 to the following link. [Figure 2](https://clip-multimodal.oss-cn-beijing.aliyuncs.com/siyang/paper/ICLR2024/figure2.png?OSSAccessKeyId=LTAI5tGRJ62Fo4Ly48B8Zd1g&amp;Expires=3601700205795&amp;Signature=4oPO76e0VqMxZThzOfCvBUeXzVg%3D)\n\n\n> **Q4: Defined Several dataset abbreviations in Sec4.3 rather than Sec4.1.**\n\nWe appreciate your constructive advice. We move these dataset abbreviations from Sec4.1 into Sec4.3 in the revised paper as follows. ''Evaluations are conducted on 10 widely used visual recognition benchmarks including ImageNet (IN), ImageNetV2 (INV2), CIFAR10 (C10), CIFAR100 (C100), Caltech101 (Cal101), Oxford Pets, SUN397 (S397), Food101 (F101), DTD and Stanford Dogs.''"
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700319429034,
+                "cdate": 1700319429034,
+                "tmdate": 1700319429034,
+                "mdate": 1700319429034,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "VbfJ4x1e03",
+                "forum": "gqjEhvUC6H",
+                "replyto": "nkxHPflpc4",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_YX2M"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission2280/Reviewer_YX2M"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the reply regarding my concerns. I appreciate the detailed reply. I have carefully read them and choose to keep my original score."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission2280/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700661276839,
+                "cdate": 1700661276839,
+                "tmdate": 1700661276839,
+                "mdate": 1700661276839,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

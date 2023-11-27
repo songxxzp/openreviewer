@@ -1,0 +1,967 @@
+[
+    {
+        "title": "Differentially Private Synthetic Data via Foundation Model APIs 1: Images"
+    },
+    {
+        "review": {
+            "id": "pUUhaW3Xbz",
+            "forum": "YEhQs8POIo",
+            "replyto": "YEhQs8POIo",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_vg5F"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_vg5F"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This work targets the problem of differentially private image synthesis. Unlike prior related works that need full model access in the training, this work chooses to utilize large foundation models, with only the access to APIs (without knowing model weights or even without the need of training).  The PE algorithm is inspired by the evolutionary algorithm, which essentially iteratively refines the generation result so that the generation is close to the private set. The FID and some downstream tasks show its effectiveness."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. Large foundation models have attracted unprecedented attention in recent years. The authors give an example of how to apply the foundation APIs to a real problem.\n2. The experimental results look good.\n3. The writing is generally easy to follow."
+                },
+                "weaknesses": {
+                    "value": "1. This method is not generic, which only applies to powerful generative AI. If the foundation model is not good enough, I highly doubt the quality of the generation.\n2. Though the result looks nice, I am so unconvinced it is true. A generative model basically learns the training distribution, so that it can generate something similar to the training set. However, if the training distribution is different from what you want to generate, how is it possible? Sec 5.1.1 looks reasonable, because the distribution of CIFAR10 has a large overlap with (or maybe is even covered by) ImageNet. However, CAMELYON17 is totally different from ImageNet, why is a diffusion pretrained on ImageNet able to generate CAMELYON17 images? The authors did not give any formal or intuitive explanations on this point.\n3. Based on the second concern, it would be more clear and intuitive to highlight samples that are used to update the histogram in each iteration. For example, in Figure 19, iteration=0, what generative samples (I believe not all of them) are closer to the private set and thereby used to update the histogram? \n4. By reading Alg. 2, it looks to me that it is possible that the histogram will be more and more concentrated on some samples when the overlap between the generation set and the private set is small, thus implying that the variation of the generation can be low."
+                },
+                "questions": {
+                    "value": "1. I find it hard and a bit confusing to track the pretrained model information in the paper. The term \"pretrained model\" and \"API\" seem to be interchangeably used, but you have two APIs. For example, in App. I, you mentioned only one pretrained model, is that your random_API? In  API implementation, you mention both APIs, and the variation_API is SDEdit. Is it also pretrained on ImageNet?\n2. It makes no sense to compare the performance at different $(\\epsilon, \\delta)$-DP, such as the comparison in Sec 5.1.2. Why not targeting the same DP guarantee?\n3. In App. H - \"Conditional pre-trained networks/APIs\", it says that \"In the subsequent VARIATION API calls (Line 6), for each image, we will use its associated class label or text prompt as the condition information to the API, and the output samples from VARIATION API will be associated with the same class label or text prompt as the input sample.\" Do you use this strategy in Sec 5.1.2 experiment? If so, how did the label of ImageNet guide the generation of Camelyn17?\n4. Fig. 19(a) is the output of random_API (iteration=0), but some images look weirdly pink-ish, e.g. col 1 row 7, col 7 row 6, col 8 row 10, while the rest looks gray-ish. This is weird if the random_API is well pretrained. Do the authors have any interpretations?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7090/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7090/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7090/Reviewer_vg5F"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7090/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1697923437339,
+            "cdate": 1697923437339,
+            "tmdate": 1699636836533,
+            "mdate": 1699636836533,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "BjLzreGeBN",
+                "forum": "YEhQs8POIo",
+                "replyto": "pUUhaW3Xbz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (Q1, Q2)"
+                    },
+                    "comment": {
+                        "value": "Thank you so much for the great suggestions and comments! Please see the answers to all your questions below.\n\n**Q1: This method is not generic, which only applies to powerful generative AI. If the foundation model is not good enough, I highly doubt the quality of the generation.**\n\n**A1:** We respectfully disagree with this assessment. \n\nFirstly, we want to clarify that, in our main experiments (CIFAR10 and Camelyon17), we used a relatively old diffusion model (Nichol & Dhariwal, 2021), which is far from the current state-of-the-art. Secondly, we carefully designed the experiments so that PE uses similar pre-trained models to the ones used in the SOTA DP-fine-tuning method (Ghalebikesabi et al., 2023) for fair experimental comparisons. In particular, their numbers of parameters are similar, and they are pre-trained on the same dataset (ImageNet) (see Section 5.1). Therefore, we do not think that there is evidence suggesting that PE needs more powerful pre-trained foundation models than DP-fine-tuning approaches. \n\nMoreover, as the foundation models are quickly evolving and the most powerful ones are mostly closed-source, API-based methods could potentially be more applicable in the future. \n\n**Q2: Though the result looks nice, I am so unconvinced it is true. A generative model basically learns the training distribution, so that it can generate something similar to the training set. However, if the training distribution is different from what you want to generate, how is it possible? Sec 5.1.1 looks reasonable, because the distribution of CIFAR10 has a large overlap with (or maybe is even covered by) ImageNet. However, CAMELYON17 is totally different from ImageNet, why is a diffusion pretrained on ImageNet able to generate CAMELYON17 images? The authors did not give any formal or intuitive explanations on this point.**\n\n**A2:** Even though the diffusion model is trained on natural images, the support of the generated distribution could be very large due to the formulation and the large latent space (same size as images). More concretely, let\u2019s look at two examples: score-based models (https://arxiv.org/abs/1907.05600, closely related to diffusion models) and the diffusion model we used (Nichol & Dhariwal, 2021). For score-based models, its modeling target is a distribution perturbed by Gaussian noise, and therefore, the generated distribution spans the entire sample space. For diffusion models (Ho et al., 2020), the latent space has the same size as the image, and the last denoising step is modeled as a distribution derived from a Gaussian distribution that spans the entire pixel space (see Section 3.3 of Ho et al. (2020)). Therefore, the generated distribution of diffusion models also spans the entire sample space.\n\nIn other words, for any (trained) score-based models or diffusion models, it is theoretically possible to generate images similar to the private dataset (or in fact, generate any images). The problem is that the probability of generating such images is small if there is a large distribution shift from the pre-training data to the private data. PE is effective in guiding the diffusion model to generate samples from the region that is low-density in the original pre-trained distribution but high-density in the private distribution.\n\nTo make it more concrete, we have provided how the generated images evolve from natural images to Camelyon17 dataset in Figure 19 in the original submission (Figure 23 in the revision) and the selected/filtered samples by PE in Figure 26 in the revision. At every iteration, PE selects the set of images that are most similar to the Camelyon17 dataset (Figure 26 in the revision). Those images might still appear different from Camelyon17 in early iterations. However, as long as we get images that are more similar to Camelyon17 through VARIATION_API at every iteration, we will make progress, and finally, we can get images similar to Camelyon17 (Figure 17 in the original submission or Figure 21 in the revision).\n\nWe added brief explanations in Section 5.1.2, and an expanded version in Appendix J in the revision. We also want to note that (1) we have provided *theoretical* justification of why PE works in Section D in the original submission, and (2) we have provided the source code for reproducing the experiments in the supplementary material."
+                    }
+                },
+                "number": 11,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700350718084,
+                "cdate": 1700350718084,
+                "tmdate": 1700350718084,
+                "mdate": 1700350718084,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "r1h4WhLOwd",
+                "forum": "YEhQs8POIo",
+                "replyto": "pUUhaW3Xbz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer vg5F,\n\nThank you again for your valuable time in reviewing our paper! Have we adequately addressed all your concerns? According to your suggestions, we visualized the images with the highest and the lowest counts in the DP NN Histogram, the distribution of the counts in DP NN Histogram, and added PE results with epsilon=10 on the Camelyon17 dataset. We also addressed your other concerns in the rebuttal and the revision.\n\nIf you have any further questions, please kindly inform us, and we will be happy to elaborate further before the Nov. 22 deadline.\n\nThank you!\n\nThe authors"
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700510526894,
+                "cdate": 1700510526894,
+                "tmdate": 1700510526894,
+                "mdate": 1700510526894,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "IddG5FZINh",
+                "forum": "YEhQs8POIo",
+                "replyto": "pUUhaW3Xbz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_vg5F"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_vg5F"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Final response"
+                    },
+                    "comment": {
+                        "value": "Thank the authors for all the effort in additional experiments! The newly added figure 26 is very useful. \n\nAs a summary:\n\nThe technical novelty for achieving DP (adding noise to histogram) is limited by prior works, but I do acknowledge that the authors have done a smart application of foundation API in DP image synthesis. \n\nMoreover, I still remain suspicious about the generation if there is great distribution shift between pretrained public dataset and private dataset. Figure 26 can possibly explain the success of generation on Camelyn17, i.e. the pretrained ImageNet contains a class **honeycomb**, which happens to look similar to the texture in Camelyn17 images, and the later iterations simply generate increasingly more pink-ish honeycombs, which moves closer to the samples in Camelyn17. \n\nPlus, by saying that \"this method only applies to powerful generative AI\", I mean a well-pretrained model on a largely spanned public dataset. If your pretrained dataset is not diverse enough, this method is not going to work.\n\nI will keep my score, because my original score would be 4 but there is no such option. Thanks again for authors' effort in addressing my questions."
+                    }
+                },
+                "number": 24,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700602971209,
+                "cdate": 1700602971209,
+                "tmdate": 1700603027573,
+                "mdate": 1700603027573,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Q3Lt0BMFHd",
+                "forum": "YEhQs8POIo",
+                "replyto": "pUUhaW3Xbz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply to Reviewer vg5F"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer vg5F,\n\n\nWe very much thank the reviewer for reading our rebuttal and sharing your thoughts! These discussions are very helpful for the paper. We understand that the reviewer has marked it as a \u201cfinal response\u201d. But we would like to post our response here in case the reviewer expect one.\n\n* **Novelty about \u201cadding noise\u201d.** It was shown that any non-constant deterministic algorithm cannot be DP [1], so **any DP algorithm has to introduce randomness**. Adding noise, proposed back in 2006 [2], is used in many popular DP frameworks such as DP-SGD, PATE, etc. Therefore, we respectively disagree that *\"our technical novelty diminishes because we add noise\"*. The key novelty/difference between these different algorithms is *where they add noise*. As we explained to Reviewer eX7J, we add noise to the Nearest Neighbor Histogram, which is new in this work. \n\n  We also want to thank the reviewer for acknowledging that \u201cthe authors have done a smart application of foundation API in DP image synthesis\u201d.\n\n* **Requiring a well-pretrained model on a largely spanned public dataset.** Thank you for clarifying the question. We agree with the reviewer that a more diverse pretrained dataset is beneficial for PE. We illustrated this intuition in Figure 2 (left). This requirement accords with the current trend in foundation models, which are trained on larger and larger datasets. Please see the post \u201c To AC, Reviewers, and Public Readers\u201d for more discussions about this point.\n\n* **How PE works in Camelyon17**. Firstly, we would like to thank the reviewer for pointing out honeycomb class in ImageNet, which is very helpful in providing more insights about this experiment. According to the suggestion, we checked our results again. We found that the existence of this class is indeed helpful, but PE does more than just picking this class.\n\n  * **Finding 1: The ImageNet labels of generated samples contain other further-away categories.** The ImageNet labels and their associated number of generated images are: \u201choneycomb\u201d (164647), \u201cvelvet\u201d (83999), \u201cnematode, nematode worm, roundworm\u201d (35045), \u201chandkerchief, hankie, hanky, hankey\u201d (14495), \u201cbib\u201d (3102), \u201chead cabbage\u201d (934), \u201cbubble\u201d (142), \u201cstole\u201d (72). 54.4% images are indeed with label \u201choneycomb\u201d, but others are from further away classes.\n  * **Finding 2: Simply picking images from honeycomb yields bad fidelity.** We compute the FID between honeycomb images and CIFAR10. The FID score is 162.86, which is much higher than the FID score of the final generated images we get (10.66). Indeed, although honeycomb has a similar a \u201cnet-like\u201d pattern as Camelyon17, the details, colors, and structures are still different (see https://images.cv/dataset/honeycomb-image-classification-dataset for a quick visualization of honeycomb images). Figure 26 (a) also suggests that the initial generated diffusion models from ImageNet are still very different from Camelyon17 and the final generated samples in Figure 21.\n\nThese findings are very interesting and are deeper than what we understood, and they add a lot value to the paper (thanks to the reviewer). We added the above findings to Appendix J. But we do not see contradictions between these findings and the messages we conveyed in the paper\u2014if the reviewers notice any contradiction, please let us know and we are happy to modify them. Note that this Camelyon17 experiment follows the same experiment setting as the SOTA DP-fine-tuning work (Ghalebikesabi et al., 2023), i.e., both methods use the same pre-training data (ImageNet) and private data (Camelyon17) so they encounter the same challenge (large distribution shift) and the same advantage (the existence of honeycomb). Here, the wording \u201csignificant distribution shift\u201d comes from Ghalebikesabi et al. (2023), and we just follow their terminology when describing this experiment (which refers to the large distance between the distributions of the pre-training data and private data).\n\nThank the reviewer again for this great insight!! Feel free to ping us with any more questions. If we have addressed your final questions satisfactorily, please consider raising the score.\n\n[1] See page 16 of: Dwork, C. and Roth, A., 2014. The algorithmic foundations of differential privacy. Foundations and Trends\u00ae in Theoretical Computer Science, 9(3\u20134), pp.211-407.\n\n[2] Dwork, Cynthia, Frank McSherry, Kobbi Nissim, and Adam Smith. \"Calibrating noise to sensitivity in private data analysis.\" In Theory of Cryptography: Third Theory of Cryptography Conference, TCC 2006, New York, NY, USA, March 4-7, 2006. Proceedings 3, pp. 265-284. Springer Berlin Heidelberg, 2006."
+                    }
+                },
+                "number": 26,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700648690268,
+                "cdate": 1700648690268,
+                "tmdate": 1700728757229,
+                "mdate": 1700728757229,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "ShZvTD5Hun",
+            "forum": "YEhQs8POIo",
+            "replyto": "YEhQs8POIo",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_wkXZ"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_wkXZ"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper introduces a novel approach to generate differentially private (DP) synthetic data via API calls to a foundation model, focusing on image data. The authors present a framework named Private Evolution (PE) -- each evolution iteration involves building a privatized histogram, bootstrapping the distribution, and calling the API to generate more similar images. Experiments on CIFAR10 and a medical image dataset demonstrates compelling results."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The paper introduces a novel approach to generating DP synthetic data without the need for training, which is a significant departure from traditional methods.\n2. The utilization of the foundation model APIs allow for easier deployment and the exploitation of the capability obtained in large-scale pre-training.\n3. The paper presents strong experimental results, particularly the improvement in privacy cost while achieving competitive FID scores on CIFAR10."
+                },
+                "weaknesses": {
+                    "value": "1. **Privacy guarantee**: 1) The query at each iteration depends on the output of the last iteration; such adaptive queries lead to correlated outputs. This may potentially amplify the privacy loss. 2) If the underlying model of the API memorizes information from the queries (and can even update the model based on user interactions, such as what OpenAI does for GPT-4), there could be long-term privacy implications, especially that at later iterations, the data fed back to the API are highly similar to the private data.\n2. **Generalization beyond images**: The algorithm in this paper is highly dependent on the capability of the API. In this work the authors only focused on the image data. Can the authors comment on the generalizability of the method on other data types, e.g., text data, tabular data, etc.?\n3. **Conditional generation**: The authors treat the conditional generation as unconditional generation for each class. This is a valid approach, but think about the scenario where there are many classes and only a few images per class (e.g., CelebA dataset with 10k classes and ~20 images per class), it may be better for the algorithm to not limit itself to one class of data. Can the authors comment on how they would adapt the algorithm for such type of data, and the utility? (One might expect that the threshold needs to be low to accommodate for the few number of images per class, but this means more noise).\n4. **Monetary cost of the algorithm**: The authors mentioned the foundation models \"including GPT4, Bard, and DALLE2 (that) only provide API access without releasing model weights or code\". For those models: 1) often the API calls are not inexpensive; 2) they may support fine-tuning access. Can the authors discuss the costs of the two routes (DPSDA vs. DP finetuning)? \n5. **Diversity-utility trade-off**: I'm curious about whether calling more VARIATION_API will hurt the utility. Apparently the diversity increases because there's no longer constraints in producing nearest neighbor images. But without this constraint, and without the knowledge of how the foundation model API produces a \"similar\" image, how can we be sure about retaining similar level of data utility? The results in Fig. 5 are encouraging results, but I'd appreciate more evaluation to directly corroborate the argument, e.g., using the initial 50k images to train a classifier, and compare with another 50k after calling the API for a few times.\n6. **Missing related work**: A few published works on DP synthetic data are missing, to name a few, [1,2,3].\n7. **Evaluation**:\n   1. Fig. 6 presented generated Camelyon17 images with (9.92, 3x10^{-6})-DP. I wonder why the authors didn't report the accuracy on this generated dataset while instead reported the numbers for the \\epsilon=7.58 dataset? Clearly it's more fair to compare the \\epsilon=9.92 results with the \\epsilon=10 results from the prior work. I appreciate it if the authors can add the result.\n   2. More details on ensemble in the main paper is appreciated. Are the 5 classifiers trained on disjoint datasets each of 0.2M samples? Is this the same setup as Ghalebikesabi et al.? (because 0.2M samples for a CIFAR classifier seem a lot.) \n   3. I appreciate the effort of the authors putting up their own private dataset for evaluation. However, I have reservations about the experimental setting in Sec 5.2. In its current form, Sec 5.2 only serves the visual demonstration purpose. But one dataset with datapoints contributed all by one single identity makes little sense when talking about DP. A dataset with e.g. 5 cats and 20 images each would be better. It would be possible to further evaluate the utility of the synthesized data then.\n8. **Minor**\n   1. Grammar issue: Sec 4.1, \"the (privatized) number of private numbers whose\"\n   2. The position and the order of the footnotes are messed up\n   3. It is not appropriate to use \"Cat Cookie\" and \"Cat Doudou\" in a research paper. Use Cat A and Cat B instead \n\n**References**\n\n[1] Vinaroz, M., Charusaie, M. A., Harder, F., Adamczewski, K., & Park, M. J. (2022, June). Hermite polynomial features for private data generation. In International Conference on Machine Learning (pp. 22300-22324). PMLR.\n\n[2] Hu, Y., Wu, F., Li, Q., Long, Y., Garrido, G., Ge, C., ... & Song, D. (2023, October). SoK: Privacy-Preserving Data Synthesis. In 2024 IEEE Symposium on Security and Privacy (SP) (pp. 2-2). IEEE Computer Society.\n\n[3] Cao, T., Bie, A., Vahdat, A., Fidler, S., & Kreis, K. (2021). Don\u2019t generate me: Training differentially private generative models with sinkhorn divergence. Advances in Neural Information Processing Systems, 34, 12480-12492."
+                },
+                "questions": {
+                    "value": "Most of the points in weaknesses are presented as questions. I'd appreciate it if the authors can provide corresponding responses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7090/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission7090/Reviewer_wkXZ",
+                        "ICLR.cc/2024/Conference/Submission7090/Senior_Area_Chairs"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7090/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698605738927,
+            "cdate": 1698605738927,
+            "tmdate": 1700724134002,
+            "mdate": 1700724134002,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "RNHOGIXKgZ",
+                "forum": "YEhQs8POIo",
+                "replyto": "ShZvTD5Hun",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (Q1)"
+                    },
+                    "comment": {
+                        "value": "Thank you so much for the great suggestions and comments! Please see the answers to all your questions below.\n\n**Q1.1: The query at each iteration depends on the output of the last iteration; such adaptive queries lead to correlated outputs. This may potentially amplify the privacy loss.** \n\n**A1.1:** We want to clarify that our privacy analysis already takes the adaptive queries into account. The related discussions are in Step 3 and Step 4 of the privacy analysis in Section 4.3. \nIt is well known that differential privacy satisfies the adaptive composition theorem (see [1]), i.e., if $M_1$ and $M_2$ are two DP algorithms, then first running $M_1$ on database $D$ to get $M_1(D)$ and then running $M_2$ on $D$ as well as the output of $M_1$, i.e., $M_2(D,M_1(D))$ is still differentially private. (Here we need that $M_2(D,z)$ is DP for all values of z, which is true in our case.) This is how we can care of any correlations that arise.\n\n\nIn particular, in Step 3, we mention that PE can be regarded as $T$ (adaptive) compositions of the Gaussian mechanism. Then, in Step 4, we use the property that such composition can be regarded as one Gaussian mechanism with noise multiplier $\\sigma/\\sqrt{T}$. It is a standard result from Dong et al. (2022) (see Corollary 3.3 therein).\n\nPlease let us know if it is unclear, and we are happy to clarify further!\n\n[1] Dwork, Cynthia, and Aaron Roth. \"The algorithmic foundations of differential privacy.\" Foundations and Trends\u00ae in Theoretical Computer Science 9.3\u20134 (2014): 211-407.\n\n**Q1.2: If the underlying model of the API memorizes information from the queries (and can even update the model based on user interactions, such as what OpenAI does for GPT-4), there could be long-term privacy implications, especially that at later iterations, the data fed back to the API are highly similar to the private data.**\n\n**A1.2:** We want to clarify that releasing all the (intermediate) generated sets $S_1,\\dots,S_T$ also satisfies the same DP guarantees as the final generated dataset. Note that the API only sees $S_1,\\dots,S_T$ during the interaction. Therefore, even if the API memorizes all the previous queries and feeds them back at later PE iterations, it does not violate the DP guarantee. We discussed this point in Section 4.3; please let us know if you have further questions.\n\n---\n**(Please see the last block for Q2)**"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700350064902,
+                "cdate": 1700350064902,
+                "tmdate": 1700369540041,
+                "mdate": 1700369540041,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7rPkZHBQz9",
+                "forum": "YEhQs8POIo",
+                "replyto": "ShZvTD5Hun",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer wkXZ,\n\nThank you again for your valuable time in reviewing our paper! Have we adequately addressed all your concerns? According to your suggestions, we added the results of PE on text, and PE results with epsilon=10 on the Camelyon17 dataset. We also addressed your other concerns in the rebuttal and the revision.\n\nIf you have any further questions, please kindly inform us, and we will be happy to elaborate further before the Nov. 22 deadline.\n\nThank you!\n\nThe authors"
+                    }
+                },
+                "number": 17,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700510499059,
+                "cdate": 1700510499059,
+                "tmdate": 1700510499059,
+                "mdate": 1700510499059,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "mEkwmFwQrH",
+                "forum": "YEhQs8POIo",
+                "replyto": "t3Uiepz82s",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_wkXZ"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_wkXZ"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "The authors\u2019 response has addressed most of my questions, and I will increase my score by 1. On the other hand, I do believe some of the concerns raised by Reviewer vg5F are valid, and should be taken into consideration when the AC makes the final decision.\n\nI am taking the thanksgiving holiday and I apologize for not responding promptly."
+                    }
+                },
+                "number": 31,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700724067253,
+                "cdate": 1700724067253,
+                "tmdate": 1700724067253,
+                "mdate": 1700724067253,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "JYAXKB7Oxe",
+            "forum": "YEhQs8POIo",
+            "replyto": "YEhQs8POIo",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper focuses on the problem of generating differentially private synthetic data. In particular, this paper proposes a DP Synthetic Data via APIs method to generate a DP synthetic dataset whose distance to private dataset is minimized by utilizing foundation model inference APIs while protecting privacy of private samples. The proposed method mainly works as follows: \n1) Calling RANDOM API to initialize the population through randomly generating samples; \n2) Differentially private evaluation of the usefulness of each sample in the population by computing the the noisy number of private samples whose nearest neighbor in the population is this particular sample; and\n3) Calling VARIATION API to generate variants of the useful samples."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1)  A novel way of addressing the problem of generating differentially private synthetic data through iteratively using private samples to vote for the most similar samples generated from the blackbox model and ask the blackbox models to generate more of those similar samples;\n\n2) A nice application of leveraging the power of large foundation models;\n \n3) Providing theoretical analysis proving the convergence of the distribution of generated samples by the proposed method to the private distribution\n\n4) Very clear presentation and easy-to-follow\n\n5) Proposing a training-free approach while matching or even outperforming state-of-the-art (SOTA) methods that they need a customized training process and significant ML engineering efforts"
+                },
+                "weaknesses": {
+                    "value": "1) Can you discuss the effect of the size of the private dataset on the performance of the proposed method?\n2) Incomplete downstream classification accuracy v.s. privacy. Figure 5 compares the downstream classification accuracy of the proposed method versus another DP synthetic data generation approach. Can you compare the proposed method with SOTA DP training models on raw data to see which one is better for the downstream classification tasks? \n3) Overclaim. Section 4 starts by saying \"Data type. While our framework above and our algorithms in \u00a7 4 are general for any data type, we focus on images in our experiments.\" However, it is not clear how this can be done for example for text because of the complexity of textual information and also for audio because of the lack of speech-based APIs. I would either remove this statement or try to discuss how this extension can be done.\n4) As this paper says in Section 4 \"Foundation models have a broad and general model of our world from their extensive training data.\" so how do you make sure the images that you consider as private (for example CIFAR-10 in your case) are not used in the training of foundation models of used APIs? I think this somehow affects the practicality of the proposed method in practice. After reading the experiment section, it seems this paper does not use real-world APIs and instead, this paper tries to simulate this in a controlled environment by considering pre-trained models.\n5) The claim of the proposed method being easier to deploy than existing methods is not supported. I would at least empirically validate this by measuring its costs in comparison to existing ones.\n6) It would be good to also talk about the limitations of DP synthetic data in general especially when data is distributed across users and cannot be centralised in one place."
+                },
+                "questions": {
+                    "value": "I have made some suggestions in the Weaknesses box. I am already happy with this submission, but willing to increase my score further if the authors can address those suggestions."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7090/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698836265820,
+            "cdate": 1698836265820,
+            "tmdate": 1699636836301,
+            "mdate": 1699636836301,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "PxsX7xFYGz",
+                "forum": "YEhQs8POIo",
+                "replyto": "JYAXKB7Oxe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (Q1, Q2)"
+                    },
+                    "comment": {
+                        "value": "Thank you so much for the great suggestions and comments! Please see the answers to all your questions below.\n\n**Q1: Can you discuss the effect of the size of the private dataset on the performance of the proposed method?**\n\n**A1:** In our experiments, the number of private samples varies widely, ranging from 100 (for the cat dataset) to 50,000 (for CIFAR10) and 302,436 (for Camelyon17). We observe that PE works reasonably well across all these cases. \n\nCompared to the number of private samples ($N_{priv}$), the ratio between the number of generated samples ($N_{syn}$) and the number of private samples, i.e., $N_{syn}/N_{priv}$, is more important for the performance of PE. Note that $N_{priv}$ determines the total of the votes from the private samples in the DP NN histogram (Line 2-4 in Algorithm 2), and Gaussian noise is added to all positions in the DP NN histogram of size $N_{syn}$ (Line 5 in Algorithm 2). Therefore, if $N_{syn}/N_{priv}$ is too large, the true votes in the DP NN histogram will be destroyed by the Gaussian noise. In all our experiments, we set $N_{syn}/N_{priv}=1$ and it works well empirically across all datasets. Note that it does not mean that PE can only generate as many samples as the private dataset; as we illustrated in Sections 4.2 and 5.1.3, PE can generate unlimited (useful) samples in CIFAR10 by calling VARIATION_API on these N_{syn} samples. \n\n\n**Q2: Incomplete downstream classification accuracy v.s. privacy. Figure 5 compares the downstream classification accuracy of the proposed method versus another DP synthetic data generation approach. Can you compare the proposed method with SOTA DP training models on raw data to see which one is better for the downstream classification tasks?**\n\n**A2:** The SOTA DP classifier pre-trained on ImageNet (without DP) and fine-tuned on CIFAR10 (with DP) [1] achieves 94.8% and 95.4% accuracies with epsilon=1 and 2 respectively. It is not surprising that DP classifiers outperform PE (and other DP synthetic data approaches as well) on classification tasks, as DP classifiers are targeted at and optimized for a single task whereas DP synthetic data is general-purpose. See similar discussions in Section 5.2 of the SOTA DP Diffusion work (Ghalebikesabi et al., 2023).\n\nWe added the numbers and discussions in Section 5.1.1 of the revision.  \n\n[1] De, Soham, et al. \"Unlocking high-accuracy differentially private image classification through scale.\" arXiv preprint arXiv:2204.13650 (2022)."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700349656432,
+                "cdate": 1700349656432,
+                "tmdate": 1700349656432,
+                "mdate": 1700349656432,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "6SF1rTxGxz",
+                "forum": "YEhQs8POIo",
+                "replyto": "JYAXKB7Oxe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (Q4, Q5, Q6)"
+                    },
+                    "comment": {
+                        "value": "**Q4: As this paper says in Section 4 \"Foundation models have a broad and general model of our world from their extensive training data.\" so how do you make sure the images that you consider as private (for example CIFAR-10 in your case) are not used in the training of foundation models of used APIs? I think this somehow affects the practicality of the proposed method in practice. After reading the experiment section, it seems this paper does not use real-world APIs and instead, this paper tries to simulate this in a controlled environment by considering pre-trained models.**\n\n**A4:** It is a great point! Your understanding is correct. We added the following discussions to Section 7 of the revision.\n\nAs PE does **not** provide DP guarantees for the pre-training data of the foundation models, one should be careful that data considered private is not used in pre-training. Depending on whether the APIs are from *black box models*, which can only be accessed through APIs  (e.g., DALLE3), or *local models*, whose weights and architectures are accessible by the users (e.g., Stable Diffusion), it has different implications.\n* *Using APIs from black box models.* Since most black box models do not reveal their training dataset, it is safer to only consider private data that was never been shared or posted online. This includes scenarios where hospitals generate synthetic medical images using their proprietary patient records.\n* *Using APIs from local models.* For local models, we have full control over the model weights and architectures. We can pre-train the models on data that surely has no overlap with the private data. In all experiments of the paper, we use local models including Improved Diffusion and Stable Diffusion. We directly take the pre-trained models from prior work, and we make sure that the private data and the pre-training data have no overlap.\n\n\n**Q5: The claim of the proposed method being easier to deploy than existing methods is not supported. I would at least empirically validate this by measuring its costs in comparison to existing ones.**\n\n**A5:** In Appendix O of the original submission and the revision, we provide experimental results showing that the **computational cost** of PE can be smaller than training-based methods under the same setting (e.g., using the same pre-trained model, generating the same number of generated samples). This means that if practitioners want to run the APIs locally (i.e., downloading the foundation models and running the APIs locally without using public API providers), PE provides computational benefits.\n\n**Q6: It would be good to also talk about the limitations of DP synthetic data in general especially when data is distributed across users and cannot be centralised in one place.**\n\n**A6:** Thanks for the great point. We agree that decentralized settings are more challenging to solve. In Section 6 of the original submission, we list it as one future work: \u201cSolving DPSDA in the Local/Shuffle DP model and in federated learning settings.\u201d We believe it is interesting to study how to extend PE to federated learning settings,\nIn fact, PE is quite amenable to adapting to decentralized settings. Suppose each client/user has one private sample for simplicity. If we share the current iteration of generated samples with each user (these are differentially private anyway), then the user can vote for the nearest sample. These votes can be aggregated by a central server either by employing Differentially Private Frequency Estimation under Local Differential Privacy (such as in [1]) or by using frequency estimation under the shuffle-DP model which further amplifies the privacy guarantees as shown in [2].\n\n\n[1] Private Frequency Estimation via Projective Geometry. Feldman et al. ICML 2022. \n\n[2] Hiding Among the Clones: A Simple and Nearly Optimal Analysis of Privacy Amplification by Shuffling. Feldman et al. FOCS 2021."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700349901717,
+                "cdate": 1700349901717,
+                "tmdate": 1700369153522,
+                "mdate": 1700369153522,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "7mo1ZIabSo",
+                "forum": "YEhQs8POIo",
+                "replyto": "JYAXKB7Oxe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer yzwb,\n\nThank you again for your valuable time in reviewing our paper! Have we adequately addressed all your concerns? According to your suggestions, we added the results of PE on text, and the results of the DP fine-tuning baseline. We also addressed your other concerns in the rebuttal and the revision.\n\nIf you have any further questions, please kindly inform us, and we will be happy to elaborate further before the Nov. 22 deadline.\n\nThank you!\n\nThe authors"
+                    }
+                },
+                "number": 16,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700510481599,
+                "cdate": 1700510481599,
+                "tmdate": 1700510481599,
+                "mdate": 1700510481599,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "GO5iazH84p",
+                "forum": "YEhQs8POIo",
+                "replyto": "6SF1rTxGxz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reviewer yzwb follow up on Q5 (concerns regarding computational cost)"
+                    },
+                    "comment": {
+                        "value": "Thanks for pointing me to the computational costs of your method and the existing ones in Appendix O.\n\nAfter looking at your results and discussion in Appendix O, I have a couple of concerns.\nIt is difficult to understand Figure 42 as there is no detailed analysis of the setting/results and the computational time of each method is represented differently:\n1. As shown in Figure 42, the generation time of DP-Diffusion is very small. Does this mean once the DP-Diffusion is fine-tuned you can generate unlimited samples very fast?  \n2. Is the generation time of your method equal to the total time of all colours? \n3. How does the running time of your method scale with the number of generated samples?\n4. Why is it fair to compare the timing of your method with finetuning+generation time of DP-Diffusion as opposed to only its generation time if the fine-tuning needs to be done one time only?\n5. The running time of your method should be computed based on using real-world APIs and take into account the delay/corruption that might happen. But it seems you again simulate it locally (?)"
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700512496018,
+                "cdate": 1700512496018,
+                "tmdate": 1700512496018,
+                "mdate": 1700512496018,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ROZlA6QpZj",
+                "forum": "YEhQs8POIo",
+                "replyto": "GO5iazH84p",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reviewer yzwb follow up on Q4 (concerns regarding your claim of using APIs)"
+                    },
+                    "comment": {
+                        "value": "> **Using APIs from black box models. Since most black box models do not reveal their training dataset, it is safer to only consider private data that was never been shared or posted online.** \n\n> **Using APIs from local models. For local models, we have full control over the model weights and architectures. We can pre-train the models on data that surely has no overlap with the private data.** \n\n> **In all experiments of the paper, we use local models including Improved Diffusion and Stable Diffusion. We directly take the pre-trained models from prior work, and we make sure that the private data and the pre-training data have no overlap.**\n\nThanks for confirming that you use local models in all experiments instead of real-world APIs and confirming that one should be careful that data considered private is not used in pre-training. Therefore, I would suggest toning down and removing most of your claims regarding using real-world APIs as 1) you did not provide a strong application/example where using APIs do not violate your privacy guarantees (I do not think this is the case in your hospital example); 2) you have not done any experiments using APIs."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700513075833,
+                "cdate": 1700513075833,
+                "tmdate": 1700513075833,
+                "mdate": 1700513075833,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "J9IcdoK0m6",
+                "forum": "YEhQs8POIo",
+                "replyto": "PxsX7xFYGz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reviewer yzwb follow up on Q1 (concerns regarding the effect of the number of private samples)"
+                    },
+                    "comment": {
+                        "value": "> **In our experiments, the number of private samples varies widely, ranging from 100 (for the cat dataset) to 50,000 (for CIFAR10) and 302,436 (for Camelyon17). We observe that PE works reasonably well across all these cases.**\n\nThis is a bit surprising. Can you please elaborate on why the performance of PE is independent of the number of samples? Also ideally we need to fix a dataset and vary its number of samples instead of seeing its effects across different datasets. For example, is it possible to vary the number of samples in your CIFAR-10 dataset and measure the performance of your method for each chosen number of samples?"
+                    }
+                },
+                "number": 21,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700513368842,
+                "cdate": 1700513368842,
+                "tmdate": 1700513368842,
+                "mdate": 1700513368842,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "5Z2Mse0dii",
+                "forum": "YEhQs8POIo",
+                "replyto": "JYAXKB7Oxe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply to follow-up questions (Q4, Q1)"
+                    },
+                    "comment": {
+                        "value": "**Q4:** Firstly, please allow us to deviate a bit and clarify what we meant by \u201cAPIs\u201d. When saying \u201cAPIs\u201d, we do not exclusively refer to APIs of the black box models (e.g., DALLE2), but also include the APIs of local models. For example, Stable Diffusion is a local model, but it provides a bunch of APIs that users can directly use https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/overview. PE applied on these local APIs also provides the benefit that users do not need to train a model.\n\nNow, we go back to the question. We agree with the reviewer that we should clarify earlier in the paper that we only experimented with APIs of local models instead of public APIs. We added a clarification in the introduction and fixed relevant statements that may create confusion.\n\nWe also want to clarify the point \u201cyou did not provide a strong application/example where using APIs do not violate your privacy guarantees\u201d. Does the reviewer refer to the \u201cprivacy guarantees\u201d about the pre-training data of the foundation model, or the private data used to run the PE algorithm? If it is the latter, we want to clarify that, for the private data used to run the PE algorithm, we provide DP guarantees even from the API provider. See Section 4.3 and A1.2 to Reviewer wkXZ for the discussions.\n\n\n\n**Q1:** When setting $N_{syn}/N_{priv}=1$, a smaller number of private samples $N_{priv}$ would mean that the number of generated samples from PE $N_{syn}$ is also smaller. These $N_{syn}$ samples could be of high quality, but there are fewer of them. That being said, the performance of PE is NOT *independent* of the number of samples. To generate more samples, we would then need to rely on the approach in Section 4.2, where we pass the samples through VARIATION_API to \u201daugment\u201d these $N_{syn}$ samples (See Section 5.1.3 for the results).\n\nWe agree with the reviewer that it would be interesting to see how the results of PE change with respect to different numbers of private samples $N_{priv}$ *of the same dataset*. We launched the experiments and will update the results here once they are done. In the meantime, if the reviewer has other concerns and/or suggestions about this question/experiment, please let us know!"
+                    }
+                },
+                "number": 23,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700525279956,
+                "cdate": 1700525279956,
+                "tmdate": 1700529040005,
+                "mdate": 1700529040005,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "SffgsGcq0u",
+                "forum": "YEhQs8POIo",
+                "replyto": "JYAXKB7Oxe",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Dear Reviewer yzwb,\n\nHave we addressed your final questions sufficiently? The discussion phase ends in 3.5 hours. If we have addressed your concerns satisfactorily, please consider raising the score.\n\nThank you again for your valuable time and suggestions!\n\nThe Authors"
+                    }
+                },
+                "number": 33,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700728238181,
+                "cdate": 1700728238181,
+                "tmdate": 1700728698122,
+                "mdate": 1700728698122,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "a1uqTKqeZt",
+                "forum": "YEhQs8POIo",
+                "replyto": "SffgsGcq0u",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_yzwb"
+                ],
+                "content": {
+                    "title": {
+                        "value": "I read all your responses, and this is my final response"
+                    },
+                    "comment": {
+                        "value": "Glad to hear my suggestions were helpful.\n\nI think the main two limitations of this work are: 1) using local APIs instead of real APIs as it is almost impossible to understand whether data considered private is not used in the pre-training of models behind real APIs; 2) you need to always go through at least a subset of steps to generate images as opposed to existing training-based ones that we just need to run inference."
+                    }
+                },
+                "number": 35,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700736578618,
+                "cdate": 1700736578618,
+                "tmdate": 1700736578618,
+                "mdate": 1700736578618,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "QHf7Ar03gp",
+            "forum": "YEhQs8POIo",
+            "replyto": "YEhQs8POIo",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_eX7J"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission7090/Reviewer_eX7J"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper studies the differentially private (DP) generation of image data through the black-box usage, namely via APIs, of pre-trained foundation generative models like Stable Diffusion. In particular, this work proposes using evolutionary algorithms that progressively refine the synthetic dataset/distribution to better align with the real private distribution. The real private distribution is represented as a histogram, , which quantifies how frequently each current synthetic sample is the nearest neighbor (determined by l2 distance in an embedding space) to real data samples from the private dataset. To achieve DP, noise is added to the histogram. Experimental evidence shows that the suggested application of pre-trained generative APIs yields noticeable improvements compared to previous methods that either do not use public data or utilize it within a pre-training & fine-tuning setup."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The paper is generally well-written and easy to follow. \n- The idea of exploiting pre-trained foundation model APIs is natural and practical\n- The experimental findings are mostly encouraging and show promising results. The results are extensive and cover various key aspects regarding the usage of the proposed approach."
+                },
+                "weaknesses": {
+                    "value": "- The core DP component of the approach (i.e., adding DP noise to the histogram) is largely an existing idea/mechanism, which slightly diminishes the overall technical contribution of this submission.\n\n- While the proposed approach demonstrates encouraging results on Camelyon17 dataset where the distribution shifts between the public and private distribution is relatively large, its performance may start to fall short compared to the more straightforward pre-training and fine-tuning paradigm (as the curves look not saturating and only one privacy level is presented).  A more in-depth exploration of the limits (in terms of tolerance to distribution shifts) of the pure API method (potentially by considering other medical datasets) and a discussion on potential refinements or extensions of the proposed approach would further strengthen the submission."
+                },
+                "questions": {
+                    "value": "- Several hyperparameters appear to be crucial for the proposed approach, including the threshold for DP NN and the lookahead degree. It would be helpful to provide further discussion on the selection of these hyperparameters. Specifically, insights into their transferability across different datasets and any computational trade-offs in practical scenarios would be beneficial.\n\n- I appreciate the qualitative results, such as the generated samples and their NN among real data. However, I would expect additional quantitative evaluation, perhaps in the form of histograms or average results, for the NN distances (both from real to closest generated and from generated to closest real). This may help provide critical insights into the fidelity of the generated samples, the approximated data likelihood, and the empirical privacy leakage."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission7090/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698842037925,
+            "cdate": 1698842037925,
+            "tmdate": 1699636836173,
+            "mdate": 1699636836173,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ySjHN1NRhW",
+                "forum": "YEhQs8POIo",
+                "replyto": "QHf7Ar03gp",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Rebuttal (Q1, Q2)"
+                    },
+                    "comment": {
+                        "value": "Thank you so much for the great suggestions and comments! Please see the answers to all your questions below.\n\n\n**Q1: The core DP component of the approach (i.e., adding DP noise to the histogram) is largely an existing idea/mechanism, which slightly diminishes the overall technical contribution of this submission.**\n\n**A1:** We agree with the reviewer that \u201cadding DP noise to the histogram\u201d is an existing idea. But we also want to mention that it is only one step among the other components we proposed, and the way we construct the histogram (using private samples to vote for the nearest generated samples) is different from the usual application of this idea (e.g., DP density estimation where the histogram is constructed by binning the private samples). Overall, our contributions are not on \u201cadding DP noise to the histogram\u201d, but on the following aspects:\n* **New problem:** We highlight the importance of studying DP Synthetic Data via foundation model APIs.\n* **New framework:** We propose Private Evolution, a new framework for generating DP synthetic data, that only requires APIs of the foundation models and does not need any model training.\n* **Promising results:** Private Evolution can even outperform the SOTA DP-fine-tuning-based approaches on the privacy-utility trade-off in the CIFAR10 experiments.\n\n**Q2: While the proposed approach demonstrates encouraging results on Camelyon17 dataset where the distribution shifts between the public and private distribution is relatively large, its performance may start to fall short compared to the more straightforward pre-training and fine-tuning paradigm (as the curves look not saturating and only one privacy level is presented). A more in-depth exploration of the limits (in terms of tolerance to distribution shifts) of the pure API method (potentially by considering other medical datasets) and a discussion on potential refinements or extensions of the proposed approach would further strengthen the submission.**\n\n**A2:** Following your suggestion, we conducted a new experiment showing how PE performs under different levels of distribution shifts. To do that, we take the Camelyon17 dataset and modify the *saturation* of the images to create a sequence of datasets, each with a different saturation change. This way, we create a sequence of datasets with different levels of distribution shifts from ImageNet. We decided to use this methodology because it is: (1) more controllable, as we can use saturation change to control the level of the distribution shifts, (2) more comparable, as these datasets are derived from the same base dataset, and (3) comprehensive, as we can show the performance under *multiple* levels of distribution shifts.\n\nThe results are shown in Figure 30 in the revision. We can see that among all levels of distribution shifts we test here, the FID scores decrease with more PE iterations. This means that PE is effective in pushing the generated distribution towards private data. At the time we post the rebuttal, the FID scores are still decreasing and have not converged yet; we will keep updating this figure as the experiment continues.\n\nHowever, as we discussed in Section 5.1.2 and Section 6, larger distribution shifts do make the convergence slower and the results tend to be worse compared to the DP fine-tuning approaches. One possible improvement is to consider better variation degree ($v$ in Section 3.3) choices. Currently, we use a single variation degree in each step. As the theoretical analysis in Section D suggested, using multiple variation degrees (so that the variations can cover the entire space no matter whether the distribution shift is large or small) benefits convergence. It would be interesting to explore this direction in future work."
+                    }
+                },
+                "number": 2,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700349468517,
+                "cdate": 1700349468517,
+                "tmdate": 1700349468517,
+                "mdate": 1700349468517,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "Mx4TyNn6u4",
+                "forum": "YEhQs8POIo",
+                "replyto": "QHf7Ar03gp",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Follow-up"
+                    },
+                    "comment": {
+                        "value": "Dear Reviewer eX7J,\n\nThank you again for your valuable time in reviewing our paper! Have we adequately addressed all your concerns? According to your suggestions, we added the experiments of PE with various distribution shifts, and distribution plots of the nearest neighbor distances. We also addressed your other concerns in the rebuttal and the revision. \n\nIf you have any further questions, please kindly inform us, and we will be happy to elaborate further before the Nov. 22 deadline.\n\nThank you!\n\nThe authors"
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700510454885,
+                "cdate": 1700510454885,
+                "tmdate": 1700510454885,
+                "mdate": 1700510454885,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "lO0m7RjAmO",
+                "forum": "YEhQs8POIo",
+                "replyto": "QHf7Ar03gp",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Dear Reviewer eX7J,\n\nHave we addressed your concerns sufficiently? We have not heard back from you since we posted the rebuttal 4 days ago, and the discussion phase ends in 5 hours. If we have addressed your concerns, please consider raising the score. \n\nThank you again for your valuable time and suggestions!\n\nThe Authors"
+                    }
+                },
+                "number": 30,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700723381586,
+                "cdate": 1700723381586,
+                "tmdate": 1700728639177,
+                "mdate": 1700728639177,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "m7UqGrCrP2",
+                "forum": "YEhQs8POIo",
+                "replyto": "lO0m7RjAmO",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_eX7J"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission7090/Reviewer_eX7J"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Dear Authors,\n\nThank you for your detailed rebuttal and the additional experimental results. Your response has addressed most of the questions I initially raised. \n\nThe approach to investigating distribution shift, although it differs from what I had expected (I anticipated an analysis more focused on the concept/semantic shift, which might also resonate with the concerns of other reviewers), still presents a valuable perspective. Furthermore, I perceive a potential limitation in the real-world applicability of your approach, especially concerning private data that significantly deviates in distribution from the pre-training data of foundation models. Despite this, I believe that your paper offers a viable potential solution and provides valuable insights that could propel future research. Consequently, I consider this submission to be above the acceptance threshold for ICLR from my perspective."
+                    }
+                },
+                "number": 34,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission7090/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700735348801,
+                "cdate": 1700735348801,
+                "tmdate": 1700735348801,
+                "mdate": 1700735348801,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

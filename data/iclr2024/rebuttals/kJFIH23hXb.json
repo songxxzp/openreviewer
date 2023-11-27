@@ -1,0 +1,598 @@
+[
+    {
+        "title": "SE(3)-Stochastic Flow Matching for Protein Backbone Generation"
+    },
+    {
+        "review": {
+            "id": "DdZb67zqC1",
+            "forum": "kJFIH23hXb",
+            "replyto": "kJFIH23hXb",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper presents FoldFlow models, extensions of Riemannian flow matching objective for distributions over $SE(3)^N$ with applications to protein backbone generation. Specifically, FoldFlow-Base leverages Riemannian FM defined on $SO(3)$. FoldFlow-OT further enhances the approach by Riemannian optimal transport. FoldFlow-SFM introduces stochasticity into the flow model. The models have been comprehensively benchmarked on protein backbone generation tasks and achieved strong performance compared with the diffusion-based baselines."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The method is very well motivated as an application of flow matching on data with the form of $SE(3)^N$, e.g., protein backbones.\n\n2. The presentation is very clear and the paper is well prepared.\n\n3. The experimental evaluations are interesting and the results are promising."
+                },
+                "weaknesses": {
+                    "value": "1. It would be better if some detailed results on the generation process are presented (see Q1).\n\n2. Ablation studies could be improved to provide a full picture on the proposed techniques/tricks (see Q2)."
+                },
+                "questions": {
+                    "value": "1. Is it possible to analyze how the sampling steps affect the quality of the generated samples? Presenting such results would give the readers better insight how the generation process works for this flow-matching based model, especially compared with diffusions (e.g., FrameDiff).\n\n2. For the ablation study, it would be great to have the ablate the four parts (Stochas., OT, Aux loss, inf. annealing) on top of the full version, besides the incremental approach adopted in this paper. That is, it would be interesting to see how the performance would be if we remove  one of the four parts respectively from the full version with all four techniques."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3838/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698623186499,
+            "cdate": 1698623186499,
+            "tmdate": 1699636341856,
+            "mdate": 1699636341856,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "mOLYFfUXAD",
+                "forum": "kJFIH23hXb",
+                "replyto": "DdZb67zqC1",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "We are grateful to the reviewer for their time and encouraging comments regarding our manuscript. In particular, we are heartened to hear the reviewer found our work \u201cvery well motivated\u201d with a \u201cvery clear\u201d presentation. We also value that the reviewer felt that the experimental evaluation is \u201cinteresting\u201d and contains \u201cpromising\u201d results. We next address the main questions raised by the reviewer.\n\n## Insight into sampling\n\nThis is a great question. We first note that FoldFlow-Base and FoldFlow-OT learn deterministic flows which are ODEs while FoldFlow-SFM and FrameDiff are stochastic and thus correspond to SDEs. However, the SDEs learned during training differ between FoldFlow-SFM and FrameDiff. In a nutshell, FrameDiff centers the diffusion process at the origin and adds time-scaled Brownian noise while FoldFlow-SFM constructs a path between two endpoints where the mean of the IGSO(3) distribution is the McCann (optimal transport) interpolant. Thus, during (sampling) inference, the learned vector field between FoldFlow-SFM and FrameDiff is different and is one of the reasons for the differences in their performance.\n\nFurthermore, when visually inspecting the frames as we move in time during inference we noticed that for large parts of the trajectory, the generated protein lacked a coherent structure. Furthermore, noticeable protein structures\u2014e.g. Helices, sheets\u2014appear near the end of the trajectory. Such visual inspection motivated us to consider our inference annealing trick of $i(t) = ct$ which has the intended effect of speeding up the inference path at the beginning\u2014i.e. when we are starting from noise\u2014and slowing (because of the $t$ factor) near the end of inference. The impact of slowing down allows the model to \u201cdwell\u201d longer near the exact data distribution which helps create higher fidelity samples. We also note that inference annealing helps control the norm on the rotation flow such that it does not explode near the end of inference. \n\n\nWe thank the reviewer for their interesting idea of analyzing the performance of the models at different sampling steps. We are currently running experiments to obtain quantitative results on the performance and will update the manuscript with the results as soon as they become available.\n\n ## Ablation study\n\nWe appreciate the reviewer's comment regarding the value of including ablation studies with all the combinations of the 4 features of the model (Stochasticity, OT, Aux. loss, Inf. Annealing). We politely refer the reviewer to our global response regarding the additional ablation experiments we are now including. In summary, we observe that, as expected, OT improves designability, Stochasticity improves robustness and generalization, and inference annealing improves the overall performance of all of the models. The results of our ablation experiments are included in Table 5 in the appendix. We are also now re-training our models without the auxiliary loss and will include those results in the final manuscript as well. \n\nWe thank the reviewer again for their suggestions that helped us strengthen our ablation study. We hope that our rebuttal responses fully addressed all the important questions raised by the reviewer and we kindly ask the reviewer to potentially upgrade their score if the reviewer is satisfied with our responses. We are also more than happy to answer any further questions that arise."
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700353079346,
+                "cdate": 1700353079346,
+                "tmdate": 1700353079346,
+                "mdate": 1700353079346,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "F9PVPi9Mpd",
+                "forum": "kJFIH23hXb",
+                "replyto": "mOLYFfUXAD",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "Thank the authors for the response. I remain my positive score for the paper, while strongly recommending the authors include the suggested additional ablation studies as promised."
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700513217448,
+                "cdate": 1700513217448,
+                "tmdate": 1700513217448,
+                "mdate": 1700513217448,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "ffsUekUPdT",
+                "forum": "kJFIH23hXb",
+                "replyto": "lxfoFdByBb",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_Nm3A"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "I thank the authors for providing the complete results. Good work."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700618819684,
+                "cdate": 1700618819684,
+                "tmdate": 1700618819684,
+                "mdate": 1700618819684,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "wQjnqYQD6B",
+            "forum": "kJFIH23hXb",
+            "replyto": "kJFIH23hXb",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_zh9j"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_zh9j"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors extend previous work on conditional flow matching on Riemannian manifolds and apply it to generate protein backbones. Their theoretical results lead to fast and stable training, and they empirically generate more diverse and designable structures than non-pretrained denoising diffusion probabilistic models of protein backbone. \n\nIn general, I think this is an interesting and strong paper. Most of my concerns (detailed below) are around specifics of the evaluation, and I believe that they are addressable"
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "4 excellent"
+                },
+                "strengths": {
+                    "value": "- \\[originality\\] This is in the first cohort of work applying conditional flow matching to generate protein backbones. The paper makes a number of theoretical contributions, such as proving the existence of a Monge map on $SE(3)_0^N$ and a closed-form expression of the target conditional vector field for SO(3). \n- \\[significance\\]  Conditional flow matching is a family of generative models that relaxes many of the constraints of normalizing flows, and extending them to SE(3) enables many applications in biology, chemistry, and materials. The specific application studied here is of great importance and interest. \n- \\[quality\\] The theoretical results seem sound, although I did not carefully check the proofs. Empirically, FoldFlow does generate more designable, diverse, and novel structures than previous comparable methods. The comparisons between FoldFlow-Base, OT, and SFM are thorough and sound. \n- \\[clarity\\] The paper is generally well-written, the contributions are clear, and the empirical results are easy to follow. Despite an obvious need to compress a lot of material into the page limit, the paper is well-cited and well-situated in the current literature."
+                },
+                "weaknesses": {
+                    "value": "The main empirical claim in this paper is that using flow matching instead of diffusion results in better generated protein structure backbones. Therefore, the major weaknesses of the paper are in explaining why we see this result and in showing, with as many other parameters held constant as possible, that the flow matching objective is responsible for improvements in generation quality. In addition, the section on conformation generation lacks the proper ablations to support the claim that flow matching is helpful there, as well as a justification for why this is a useful task. \n\nI will now try to detail these weaknesses in clarity and quality and suggest ways to address them where applicable. Within each section, I will move from more important to less important. \n\n### Clarity\n\n- While the theoretical contribution lies in enabling stochastic flow matching for protein backbone generation, there is no theoretical or qualitative discussion of why flow matching should result in more efficient training and higher-quality generations. \n- In general, the authors have the unenviable task of explaining the background for both protein generation and Riemannian flow matching within the page limit. I think people from outside the fields will have a lot of trouble following the more technical parts of the exposition, but I'm not sure it's possible to do much better given the depth of material and the page limit. \n- Is generating from the equilibrium distribution over conformations after training on data from molecular dynamics useful? I can see how this would be useful if it generalized to new structures, but it seems that if you've already done the MD for that particular model, using another model to sample from the distribution is superfluous. \n- There is some information relegated to the supplement that should be in the main text. For example, that the authors use the same neural architecture as FrameDiff but a slightly different training set is very important for interpreting the empirical results. \n- The two paragraphs beginning \"Our approach\" and the final list of main contributions at the end of the introduction are fairly redundant, with several sentences of repeated content. Given how much theory, experiment, and background the authors need to cover, reducing redundancy here could help clarify other parts of the paper. \n- In section G.1.1, I think \"Here we find that FOLDFLOW is over 2x faster than FoldFlow-Improved per step\" should be \"Here we find that FOLDFLOW is over 2x faster than FrameDiff-Improved per step.\"\n\n\n### Quality\n\n- The claim that FoldFlow outperforms FrameDiff in particular and diffusion in general would be stronger if the training set and other train compute were matched between FrameDiff-improved and FoldFlow. As it is, they are very similar, but the slight discrepancy in train sets and hyperparameters such as batching weaken the comparison. \n- The section on equilibrium conformation generation doesn't make a strong case that FoldFlow is better than (1) diffusion from a simple prior trained on the same data or (2) flow matching from a simple prior trained on the same data. \n- In Table 2, the numbers for Diversity and novelty should include uncertainties. It would also be nice to have scRMSD in this table. \n- Ablations of FoldFlow-OT and -SFM without the Aux loss or inference annealing would strengthen the case that the auxiliary loss and inference annealing are universally helpful. \n- FoldFlow-Base and FoldFlow-SFM do poorly on designability for longer proteins. This may be because the deduplicated dataset does not have very many longer proteins."
+                },
+                "questions": {
+                    "value": "- Are there applications for the arbitrary starting distribution other than trying to sample from the conformational ensemble via generation?\n- Is there a reason to prefer scRMSD instead of scTM, as was seen in some earlier work? \n- Is DP vs DDP something intrinsic to the models, or could, for example, FrameDiff be trained with DDP?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Reviewer_zh9j"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3838/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698695869538,
+            "cdate": 1698695869538,
+            "tmdate": 1700508686030,
+            "mdate": 1700508686030,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "5z0YPjYH90",
+                "forum": "kJFIH23hXb",
+                "replyto": "wQjnqYQD6B",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response Part 1/3"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their detailed review and constructive feedback. We appreciate that the reviewer has found our work \u201coriginal\u201d and the protein design application that we tackle \u201csignificant\u201d and of great importance. Below, we provide a detailed response to the questions raised by the reviewer.\n\n## Points raised under \u201cClarity\u201d:\n**Flow matching vs. Diffusion**\n\nWe thank the reviewer for their interesting question regarding the motivation behind using flow matching. We have extended our Appendix H to further discuss the theoretical and practical advantages of flow matching over diffusion and have also further motivated the OT and stochastic approaches in sections 3.2 and 3.3. We provide a summary of these points below:\n- Flow matching-based approaches enjoy the property of transporting any source distribution to any target distribution. This is in contrast to diffusion where one typically needs a Gaussian-like source distribution.\n- Flow matching approaches are readily compatible with optimal transport due to the same property of being able to transport and source to any target. Optimal transport which itself has the advantage of providing faster training with a lower variance training objective and reducing the numerical error in inference due to straighter paths. Diffusion models by themselves are not amenable to optimal transport but instead one can do entropic regularized OT. In Euclidean space, this corresponds to a Schrodinger bridge but this is not an optimal transport path as it is stochastic. However, we note that SDEs can leverage OT formulations in the form of entropy-regularization.\n- In general, simulating an ODE is much more efficient than simulating an SDE during inference. Conditional flow-matching and OT-conditional flow matching [3, 4] both learn ODEs as the learned flow corresponds to a continuous normalizing flow. Diffusion models on the other hand are SDEs and while being more robust to noise in higher dimensions require more challenging inference.\nIn addition to the points above, an advantage of all of our models over the diffusion approach is that it does not rely on the costly calculation of the pdf of the IGSO(3) distribution, which FrameDiff requires for sampling and computing the score. FoldFlow simply needs to sample from the IGSO(3) which is fast to do.\n\n**Background and Theory** \n\nWe understand the reviewer\u2019s point regarding the amount of complex background and theory that we had to cover in this paper. We tried our best to make the information as accessible as possible, especially by including more background material in the appendix and adding references to seminal textbooks on Lie groups and Riemannian geometry. We would be more than happy to include additional details on any of the sections that the reviewer found lacking. Finally, we thank the reviewer for pointing out the potential redundancy between our \u201cmain approach\u201d section and contribution list. We have combined and shortened these sections in the updated PDF.\n\n**Utility of Generative Models for MD Simulations** \n\nWe acknowledge the reviewer's comment regarding the utility of a generative model for simulating trajectories for proteins. Indeed, as the reviewer correctly points out ideally, the generative model should generalize to MD trajectories of new proteins, which is an active part of our research. We further note that we compare our inference against MD frames not in the training set as well. Nevertheless, considering how expensive MD simulations are, the ability to cheaply simulate such trajectories with a generative model trained on relatively few frames is still of great interest. There has been a substantial amount of work in the Botlzmann generator community on this particular problem (e.g. see [1, 6]), and reducing the cost has practical applications for computational biologists. This also dovetails with the larger goal of AI4Science which seeks to amortize the cost of running expensive simulations with AI-accelerated approximations to achieve faster inference. \n\n**Architecture and training set compared to FrameDiff**\n\nWe thank the reviewer for their comment. To enable the fairest comparison possible, we have now retrained FrameDiff using this new training set (which we call FrameDiff-Retrained) and have included the updated results in the main text. In section 4 under Architecture, we mention that we follow Yim et al. (2023b) in our architecture. We have further highlighted this by explicitly mentioning FrameDiff in the text. \n\n**Typo** We thank the reviewer for pointing out the typo in G.1.1. It has been fixed.\n\nPart 1/3"
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700352903030,
+                "cdate": 1700352903030,
+                "tmdate": 1700352903030,
+                "mdate": 1700352903030,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "hhDjfATaYt",
+                "forum": "kJFIH23hXb",
+                "replyto": "wQjnqYQD6B",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_zh9j"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_zh9j"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to authors"
+                    },
+                    "comment": {
+                        "value": "The additional baselines and comparisons, especially to their version of FrameDiff trained on the same dataset, greatly strengthen the empirical claims in the paper. It's very interesting that training on their dataset substantially increases sample quality at the expense of diversity and novelty. Adding scRMSD to Table 2 also highlights the large lead RFdiffusion has here, but I think the paper is better off being upfront here about room for further improvements. I'm also surprised that Genie and FrameDiff use DP instead of DDP, and I commend the authors on using the recommended parallelization framework in PyTorch. The new ablations resolve my concerns about soundness. \n\nI would prefer to see some of the intuition behind using flow matching instead of diffusion in the main paper. However, I understand that space is very limited, and that this is not my paper, and I will leave that decision to the authors. I'm not convinced that the dynamics results are useful as is, but with the new ablations and text, I do believe that they are clearly communicated, sound, and an improvement over previous work. \n\nOverall, I have changed my scores from: \n\nSoundness: 2 fair\nPresentation: 3 good\nContribution: 4 excellent\nRecommendation: 5\n\nto:\n\nSoundness: 4 fair\nPresentation: 3 good\nContribution: 4 excellent\nRecommendation: 8"
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700509330527,
+                "cdate": 1700509330527,
+                "tmdate": 1700509330527,
+                "mdate": 1700509330527,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "gDUXwEL2jz",
+            "forum": "kJFIH23hXb",
+            "replyto": "kJFIH23hXb",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Flow matching, and OT flow matching are applied to the problem of learning generative models of protein backbones. Three variants of the method are provided (1) train a CNF via flow matching, (2) train a CNF via conditional flow matching with minibatch optimal transport, and (3) they replace the deterministic flow model with a model that learns to map between the base and target sources via stochastic dynamics. Strong empirical results are shown when training on structures from the PDB:\n- The OT version shows significant improvement above the base model\n- They improve upon FrameDiff substantially. \n- Their model does not rely on a pretrained model, and is substantially cheaper to train than RosettaDiff\n\nAdditionally, the flow matching paradigm allows for an arbitrary base distribution to be used - and this is demonstrated in an experiment on conformer generation of the BPTI protein where noised samples from pre-trained models are used as the base distribution."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "4 excellent"
+                },
+                "strengths": {
+                    "value": "- Well motivated: The presentation of the method is clear, the method (flow matching/OT flow matching) is well suited to the problem of protein generation, and is the first to explore this. The ability to use arbitrary base distributions is well suited to confomer generation where we can choose informed base distributions (e.g. using cheminformatics methods, or with existing models e.g. AlphaFold). \n- Strong experimental section: The results (improving upon the FrameDiff model) look really good. The models are trained for substantially less time than the RFDiffusion alternative, and do not rely on pre-training. Good baselines are presented, showing the benefit of the OT-flow over the flow trained with vanilla flow matching."
+                },
+                "weaknesses": {
+                    "value": "- The FOLDFLOW-SFM does not have much motivation provided (besides empirical results e.g.  noting that they have higher novelty). \n- The experiment on equilibrium confomer generation utilizing the informed base distribution does not compare against an uninformed base distribution. Thus, it is hard to judge exactly how helpful this is (although intuitively it seems like it would be very helpful!)."
+                },
+                "questions": {
+                    "value": "- What is the advantage of the FOLDFLOW-SFM over the other models in theory? \n- I find the term \u201cstochastic flow\u201d a bit confusing as typically flow refers to deterministic dynamics - could the authors please clarify?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "8: accept, good paper"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3838/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698740566454,
+            "cdate": 1698740566454,
+            "tmdate": 1699636341689,
+            "mdate": 1699636341689,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "KmHNea2RpB",
+                "forum": "kJFIH23hXb",
+                "replyto": "gDUXwEL2jz",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their time, detailed review, and positive appraisal of our work. We are glad that the reviewer finds our paper \u201cwell-motivated\u201d, and believes that flow matching is \u201cwell suited\u201d to tackle protein backbone generation and our method FoldFlow is the \u201cfirst to explore this.\u201d We also appreciate that the reviewer felt that our paper had a \u201cstrong experimental section\u201d with \u201creally good\u201d results improving over FrameDiff and other strong baselines which also highlight the benefit of \u201cOT-flows\u201d. We now address the key clarification points raised by the reviewer.\n\n\n\n\n\n\n## FoldFlow-SFM\nWe value the reviewer's concern regarding the insufficient motivation for FoldFlow-SFM in comparison to FoldFlow-Base and FoldFlow-OT. We would like to point the reviewer to our global response to all reviewers in which we give a detailed motivation on the utility of FoldFlow-SFM, and note that we have also highlighted the motivation behind the stochastic approach in section 3.3 of the paper. In summary, as previous research suggests, we expect stochasticity to help with robustness, particularly in high dimensions. This expectation is validated by our updated inference and new results, which demonstrate FoldFlow-SFM\u2019s superior performance in novelty, compared to the deterministic variants of FoldFlow. \n\n## Equilibrium conformer generation\nWe thank the reviewer for their great suggestion regarding the use of an uninformed (random) prior distribution as a baseline for FoldFlow. We have now included new baselines with FoldFlow-Rand and FrameDiff in Table 3 of the main paper. We kindly point the reviewer to our global response for a detailed discussion of these results but in summary, our quantitative numbers (calculated using 2-Wasserstein distance) convincingly show the importance of starting from an informed prior and the continued superiority of FoldFlow over FrameDiff in this new experimental setting. \n\n\n## Stochastic Flow Terminology\nWe appreciate the reviewer's feedback regarding the usage of the term stochastic flow for our FoldFlow-SFM model. Our naming choice is motivated by the fact that FoldFlow-SFM utilizes the (OT) geodesic path between two samples $r_0 \\sim \\rho_0$ and $r_1 \\sim \\rho_1$. This path is the OT Flow between these two points and is also the mean of the IGSO(3) distribution. By sampling a noisy point from this IGSO(3) distribution we get a stochastic path which we dub as the $\\textit{stochastic flow}$. Note the flow is still the mean of the distribution and the stochasticity simply refers to the injection of IGSO(3) noise to the mean path (flow). We hope this helps clear up our name choice.\n\n\nWe thank the reviewer for their time and effort in reviewing our work, and we hope our efforts to clarify the main points along with the global response allow the reviewer to consider improving their score. We are also more than happy to answer any other questions that arise."
+                    }
+                },
+                "number": 6,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700352777859,
+                "cdate": 1700352777859,
+                "tmdate": 1700352777859,
+                "mdate": 1700352777859,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "R4dzu5WR4E",
+                "forum": "kJFIH23hXb",
+                "replyto": "KmHNea2RpB",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for the clarification and further experiments - overall I think this is a good paper and recommend acceptance. \n\nFor the equilibrium conformer generation experiments it is not very clear to me how significant the improvement relative to the FoldFlow-rand is. Would it be possible to add more evaluation metrics to compare the different methods? For example, (1) I think plotting the Ramachandran plots for the various models may be more intuitive to interpret than the raw Wasserstein metrics, (2) would it be possible to compare the NLL of a test set with the different models?"
+                    }
+                },
+                "number": 12,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700503663905,
+                "cdate": 1700503663905,
+                "tmdate": 1700503663905,
+                "mdate": 1700503663905,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "2EdlMBeIAH",
+                "forum": "kJFIH23hXb",
+                "replyto": "oZ1hjEvKaw",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Reviewer_PWT4"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thank you for adding these results - they are informative and the FoldFlow does indeed look better (although FoldFlow-Rand does seem to also be capturing both modes, albeit less well). I am going to stick with my score of 8 - although I do strongly endorse this paper and think it has made a very significant contribution."
+                    }
+                },
+                "number": 18,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700569056664,
+                "cdate": 1700569056664,
+                "tmdate": 1700569056664,
+                "mdate": 1700569056664,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "LINjKZhUZ9",
+            "forum": "kJFIH23hXb",
+            "replyto": "kJFIH23hXb",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_4M3T"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3838/Reviewer_4M3T"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper introduces a series of novel generative models called FoldFlow, which are designed to accurately model protein backbones. The models are based on the flow-matching paradigm over rigid motions, allowing for the construction of stable and fast training methods.\nThe first model introduced is FoldFlow-Base, a simulation-free approach that learns deterministic continuous-time dynamics and matches invariant target distributions. This model is then improved upon by incorporating Riemannian optimal transport, resulting in FoldFlow-OT, which creates more simple and stable flows.\nLastly, the authors design FoldFlow-SFM, which combines Riemannian optimal transport and simulation-free training to learn stochastic continuous-time dynamics."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "The paper introduces a novel approach called FoldFlow for generative modeling of protein structures. This approach is based on the flow-matching paradigm over rigid motions. The authors claim that incorporation of Riemannian optimal transport and simulation-free training techniques improves the stability and efficiency of the models compared to diffusion-based approaches.\nThe authors present a series of models within the FoldFlow framework, each with increasing modeling power."
+                },
+                "weaknesses": {
+                    "value": "The work raised a couple of questions.\n\n1. Why should optimal transport be a good prior for protein backbone generation? Section 3.2 on FoldFlow-OT provides little explanation why this should overall improve the quality of the generated samples. Could you elaborate on that? Similarly, it would be great if you could provide an intuition for motivating the introduction of the stochastic version. The results (Table 2) also do not suggest that there is any benefit in introducing three variants.\n\n3. Studying Table 2, the authors confirm that FoldFlow significantly underperforms RFDiffusion. Also, as raised in Question 1, there is no pattern of improvement between each method of FoldFlow. My main concern regards the stability of the results? You seem to report a single value, is this a lucky single shot. I would suggest to align the analysis to previous literature, i.e., as conducted in FrameDiff, and report results on several runs and examples. It would also be important to also extend Figure 4b to include a comparison to RFDiffusion, FrameDiff, and Genie in terms of scRMSD. Similarly, why not repeat the analysis in Figure 5 with the considered baselines?\n\n3. You claim that FoldFlow models are designed to be fast, stable, and efficient training. Why are the runtimes of the baselines in Table 2 missing? Regarding Table 3, what are the time differences between -base, -OT, and -SFM? What does FoldFlow in Table 3 refer to? You claim in Appendix B that you \"want to get straighter flows for faster inference and more stable training\". Is this something you observe?\n\n4. Using flow matching methods on protein structures is not new. It would be important to cite previous work here and highlight the differences [1].\n\nI very much enjoyed reading the paper and the direction is exciting. The current experimental validation, however, raises several concerns that need to be addressed. This in particular concerns the absence of a pattern in performance of different FoldFlow variants and chosen reported metrics and comparisons.\n\n[1] Somnath, Vignesh Ram, et al. \"Aligned Diffusion Schr\u00f6dinger Bridges.\" Conference on Uncertainty in Artificial Intelligence (UAI), 2023."
+                },
+                "questions": {
+                    "value": "See above. If my concerns are addressed, I am willing to increase my score."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3838/Reviewer_4M3T"
+                    ]
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3838/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699465724625,
+            "cdate": 1699465724625,
+            "tmdate": 1699636341615,
+            "mdate": 1699636341615,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "ogVXyHqk3h",
+                "forum": "kJFIH23hXb",
+                "replyto": "LINjKZhUZ9",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3838/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response Part 1/2"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for their detailed review and nuanced comments. We appreciate that the reviewer felt our FoldFlow was a \u201cnovel\u201d approach for modeling protein backbones. We now address the key clarification points raised in the review.\n\n## Motivations for using Optimal Transport\nThe reviewer raises an important question regarding the importance of OT as a prior for protein backbones. There are several theoretical reasons why considering OT paths is interesting in the generative modeling setup. First note, that any coupling that builds paths between two samples $r_0 \\sim \\rho_0$ and $r_1 \\sim \\rho_1$ that minimizes the OT cost necessarily constructs a \u201cshorter\u201d path than a random coupling. Globally, this means the average path length of the flow between $\\rho_0$ and $\\rho_1$ is shorter, and more importantly, none of the paths cross each other. This is a universal property of OT paths and can be applied to any generative modeling problem\u2014including the protein backbone generation problem we consider in this paper. \nIn the specific context of flow matching using OT, existing work in Euclidean space has already demonstrated the empirical benefits of OT paths [1, 2]. Moreover, in the same prior work, OT was shown to lead to faster training with a lower variance training objective in Euclidean spaces [1,2]. This is particularly relevant for protein backbones as we model them as objects in $\\text{SE(3)}$ which is the semi-direct product of $\\mathbb{R}^3$ and $\\text{SO(3)}$. Moreover, for proteins having shorter inference directly corresponds to higher quality and more designable generated samples. Consequently, we wish to inherit and extend the benefits of OT for flow matching in Euclidean space to flow-matching on $\\text{SE(3)}$ which is the providence for our FoldFlow family of models. We hope this helps address the reviewer's concerns regarding the motivations for using OT and we hope this matches expectations given the strong performance of FoldFlow-OT on the designability of proteins.\nWe have further highlighted the benefits of OT in section 3.2 of the paper.\n\n## Motivations for FoldFlow-SFM\nWe appreciate the reviewer's comment regarding the motivation behind the SFM model and how this gets translated into the experiments. We would like to point the reviewer to our global response in which we give a detailed motivation on the utility of FoldFlow-SFM. In summary, as previous research suggests, we expect stochasticity to help with robustness, particularly in high dimensions. This expectation is validated by our updated results, which demonstrate FoldFlow-SFM\u2019s superior performance in both of our novelty metrics, compared to the deterministic variants of FoldFlow. These results firmly establish FoldFlow-SFM as the most novel and designable model which is a key goal in de novo protein design and AI-accelerated drug discovery at large.\nWe have also extended the discussion on the advantages of the stochastic approach in section 3.3 of the paper. \n\nPart 1/2"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3838/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700352519063,
+                "cdate": 1700352519063,
+                "tmdate": 1700352519063,
+                "mdate": 1700352519063,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

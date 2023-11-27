@@ -1,0 +1,214 @@
+[
+    {
+        "id": "bSmbv1IHMk",
+        "forum": "TS8HoIWAPQ",
+        "replyto": "TS8HoIWAPQ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_g8xd"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_g8xd"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a new algorithm for performing time series forecasting under domain shift. It does so by combining the N-BEATS deep learning model for time series forecasting with a feature alignment regularization that is intended to select for robust models across a variety of domains. While both approaches had been previously introduced and popularized in separate bodies of literature, the combination of the two approaches is nontrivial due to the challenges of implementing feature alignment on a stack-like architecture.\n\nConcretely, the authors parameterize the N-BEATS architecture with a collection of feature mappings $\\phi^m$, forecast generators $\\xi_{\\downarrow}$, and backcast generators $\\xi_{\\uparrow}$. Each stack produces a prediction of the forecast $\\hat{y}$ by repeatedly computing residual features and mapping those to forecasts and backcasts, whose residuals are used to generate further features. The predictions of multiple stacks are combined together. The paper introduces a feature alignment regularization term, which is small when the  features extracted by each stack are distributionally similar across domains. While the $\\mathcal{H}$-divergence initially seems like the proper quantity to measure distributional distance, the quantity is extremely computationally expensive to estimate. Instead, the authors use think entropically-regularized Sinkhorn divergence to measure the difference between extracted feature distributions. They package these insights into an training algorithm in Section 3.3 that alternately updates the parameters of different component networks.\n\nThe authors provide some theoretical analysis of the algorithm's properties, without including no new optimization or generalization bounds. Lemma 3.4 bounds the Lipschitz smoothness of each stack's feature extraction map, while Theorem 3.6 bounds the extracted features' maximum of the Sinkhorn divergences by the maximum of the divergence between domain input distributions, which depends on the aforementioned Lipschitz bound.\n\nThey empirically evaluate the performance of the algorithm in Section 4 by comparing the performance of these algorithms with alternatives on time series datasets like FRED and NCEI. They show marked improvements in outside domain generalization over N-BEATS algorithms without feature alignment and post comparable performance among in-domain generalization. They also compare several levels of entropic regularization and demonstrate a sharp improvement in runtime over computing Wasserstein-2 divergences, while maintaining similar performance."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "As far as the reviewer (who is not an expert in either domain shift or time series forecasting) is aware, the paper is a novel and interesting contribution to both fields with compelling empirical results and strong application of optimal transport methods. The crafting of the feature alignment regularization term appears to be original for time series forecasting, as is the application of Sinkhorn divergence. Given the challenges of applying neural networks to time series data and the particularly pressing domain shift challenges posed there, the problem seems relevant, and the paper's introduction does a good job making that clear.\n\nThe paper is easy to read and includes clear explanations of the purposes of each component of the algorithm. Figure 2 is a particularly helpful illustration of the neural network architecture. Notation is clear overall with few mistakes, and the reviewer detected no major mathematical errors.\n\nThe experiments are thorough and compare the method with a wide range of alternatives, considering both runtime and accuracies."
+            },
+            "weaknesses": {
+                "value": "While I am overall satisfied with the contributions of the papers, there are several issues that I would like to see addressed by the authors.\n\nFor ease of understanding, I think that either the Contributions paragraph or a different subsection before Section 2 could be used to more clearly signpost how the algorithm will be presented in Sections 2 and 3. Including something like equation (3.7) earlier to demonstrate the kind of training objective being constructed could be helpful for readers to identify the role played by feature alignment throughout. A large number of parameters are introduced in these sections, such as $\\alpha$, $\\beta$, $\\gamma$, $K$, $M$, and $L$; I think some of these could be better contextualized, so that the reader can know which are expected to be large and which small. (For instance, we should probably think of $L$ and $M$ as relatively small constants, due to their impact on Lipschitzness.)\n\nWhile Table 2 of the empirical results compares the runtime of computing different divergences, I'd be interested in seeing comparisons between the end-to-end runtimes of the methods in Table 1, in order to evaluate whether the computing the regularization term for feature alignment adds a substantial computational cost.  \n\nAs the authors state, the theoretical contributions of the paper are relatively light and focus on bounding the Sinkhorn divergence of extracted features. Future proofs of convergence (or experimental analyses thereof) and generalization bounds for Sinkhorn divergence in the vein of Proposition 2.1 would be valuable, but I do not consider these essential inclusions in this work for publication. \n\n# Minor comments\n- The clause on pg 1 \"the proposed model is built a purely deep learning-based model which is N-BEATS proposed by [42,43]\" parses a little awkwardly.\n- $\\epsilon$ is overloaded as both the entropic regularization parameter and the expected risk in Proposition 2.1, which is never explicitly defined.\n- In Definition 3.1, should $m=1, \\dots, d$ instead end with $M$?\n- The forecasting algorithms N-BEATS-I and N-BEATS-G are seen for the first time in Section 4 without context; a pointer to the first page of the appendix---where they are helpfully disambiguated---would be appreciated.\n- Given the number of entries and small fonts in the tables (like Table 1), bolding the values of the best losses in each row may improve readability."
+            },
+            "questions": {
+                "value": "Are the empirical time series tasks and the formulations of ODG, CDG, and IDG standard and comparable to other works? I noticed that the original N-BEATS paper was evaluated on M3 and M4 competition datasets, as well as a Tourism dataset. To the authors and other reviewers, are there other standard datasets that should be considered for this method to be empirically compelling? \n\nIs there any intuition or experimental results that comment on the smoothness of $\\sigma \\circ g^m$? While the Lipschitzness bound in Lemma 3.4 suggests it could be highly non-smooth, I'd be interested to know more about the gradients were largely well-behaved.\n\nWhat should I take away from Figure 1? It appears that the structure of the embeddings changes little between stacks and blocks, and it's unclear to me whether that should be the case or not. The structural differences between $\\lambda = 1$ and $\\lambda = 3$ are almost undetectable."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Reviewer_g8xd"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4508/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698719058704,
+        "cdate": 1698719058704,
+        "tmdate": 1699636427198,
+        "mdate": 1699636427198,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "cEBvHkOXhl",
+        "forum": "TS8HoIWAPQ",
+        "replyto": "TS8HoIWAPQ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_adrw"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_adrw"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes the advancement of N-BEATs, a pure deep learning based method for time series forecasting. The novelty of the approach is a combination of stack-wise feature alignment (FA) and N-BEATs. The training objective is to minimize the empirical risk and the stack-wise Sinkhorn divergences (Section 3.3) as an approximation of optimal transport measures for feature alignment.\n\nWell written introduction points out that it is not a straightforward combination of the established components but a nontrivial extension of NBEATs that poses several challenges. The paper lays down background on NBEATs and FA in rather technical manner. Never the less it stresses the main challenges nicely and the way presented approach mitigates them, including proofs of the main theoretical steps, Lemma 3.4, Theorem 3.6 (Sinkhorn div.), eventually resulting in the Algorithm 1. The experimental section test the model on two real world datasets (FRED, NCEI) against three domain shift scenarios:  out-domain generalization (ODG), cross-domain generalization (CDG), and in-domain generalization (IDG) with on-par or superior (confidence intervals are not present) results."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "+ A novel practical method with available code supported by theoretical results\n+ Timely taps into lively research field and improves on previous existing results on pure deep learning based time series forecasting interesting to ML community"
+            },
+            "weaknesses": {
+                "value": "- Overall presentation: The main contributions are rather buried in the technical exposition of sections 1-3. The main idea (adding stack-wise FA through minimising Sinkhorn div. added to the N-BEATS loss) could be simply laid out and perhaps visualised while some of the technical details may be put into Appendices. I would consider starting from algorithm and Section 3.3. and than relate it to principles in a backward manner as opposed to a current forward exposition that simply takes too long and has several leaps of faith anyways (see below). Authors are encouraged to lighten the exposition up in the main paper body and increase the rigour int he Appendix. More over, if paper claims \u201cextraordinary results\u201d bringing some results (e.g.,  Fig.4 in Appendix or simplified Fig.1) forward into the Introduction could increase motivation of the readers.\n\n- Due to multitude of approximation and heuristics used, i.e., Sinkhorn instead of H-divergence, Definition 3.5, Remark 3.8,  \u201c... Instead, we conduct the alignment by regularizing exclusively on feature extractors $\\Psi$ ...\u201d the work effectively strongly relies on experimental results. Experimental results seems only marginally better compared to selected alternatives (Tables 1 and 2), however. These should be extended to increase the validity of the results.\n \n- I believe important but unclear computational cost increase compared to alternatives (cost increase is only assumed by me but expected since method adds \u201cFA\u201d and more on top)\n\n- One of the major features that N-BEATS algorithm provides is an Interpretability. The paper avoids any analysis of interpretability after adding FA"
+            },
+            "questions": {
+                "value": "1. Authors proposed stack-wise feature alignment using Sinkhorn divergence (original feature alignment uses KL divergence or Jensen-Shannon divergence). Can authors elaborate on the difference?\n\n2. Would naive feature alignment applied on N-BEATS work? Why not? That is, why should reader consider using proposed method?\n\n3. Paper already suggests using approximation to H-divergence which is computational expensive. So even more importantly, what are computation expenses related to proposed stack-wise approach compared to N-BEATS?\n\n4. Results are only showing visually rather marginal gains (see Weaknesses) against the compared methods with differences on 2nd or even third decimal places (I know, it's percentage mean error, but still ...). Could authors elaborate more on the positive side of the results and put into context increased computational costs? In general I would suggest to discuss limitations and practical usefulness of the method.\n\nSome further suggestions: \n- Consider bringing, possibly simplified, model architecture (Fig 2 from Appendix) to the main body instead of a rather cumbersome technical description Section 2 \n- Focus more on novelty of the proposed approach in Sections 1-3."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4508/Reviewer_adrw"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4508/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698762728084,
+        "cdate": 1698762728084,
+        "tmdate": 1700732401523,
+        "mdate": 1700732401523,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "kyrws9kSIV",
+        "forum": "TS8HoIWAPQ",
+        "replyto": "TS8HoIWAPQ",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_F4wY"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4508/Reviewer_F4wY"
+        ],
+        "content": {
+            "summary": {
+                "value": "* The paper proposes a new time series model \"Feature-aligned N-BEATS\", which is an extension of existing N-BEATS model targeting domain-generalized time series and learning invariant features.\n* The novelty of this model is the introduction of alignment across different stacks using Sinkhorn divergence. The training loss includes both empirical risk minimization from multiple domains and an alignment loss calculated with Sinkhorn divergence to promote invariance.\n* The paper also includes experiments and ablation studies, showing the model's effective forecasting and generalization capabilities\u200b."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "* The paper is well-written and easy to follow.\n* The proposed idea is simple but yet effective given the experimental results.\n* The distance measure choice of Sinkhorn divergence seems promising. It shows non-trivial improvements in the ablation study and also takes much less time compared with standard Wasserstein distance."
+            },
+            "weaknesses": {
+                "value": "I checked the proposed architecture and the experimental results. They look convincing.\n\nMy concern is that the idea is not that \"new\". Imposing penalties on divergence is commonly used to promote model invariances. The novelty might be the application and the extension on N-BEATS model at the stacking level. I am not sure whether this contribution is enough. Another concern is that the analysis (theorem 3.6) seems to be direct extensions of the literature [41] which may diminish the contribution as well.\n\nIn general, I still believe it's a good paper and the proposed method seems working and elegant. However, my review might be superficial given I am not familiar with this domain."
+            },
+            "questions": {
+                "value": "Please see above section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4508/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699442735467,
+        "cdate": 1699442735467,
+        "tmdate": 1699636426937,
+        "mdate": 1699636426937,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

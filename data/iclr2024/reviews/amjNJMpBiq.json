@@ -1,0 +1,280 @@
+[
+    {
+        "id": "m9nDe7zxaw",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_GFuC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_GFuC"
+        ],
+        "forum": "amjNJMpBiq",
+        "replyto": "amjNJMpBiq",
+        "content": {
+            "summary": {
+                "value": "The paper investigates the floating-point soundness of adversarial robustness certificates in two settings: First, a \"weak threat model\" where both the perturbation norm and the certified radius are computed using floating-point arithmetic and second, a \"strong threat model\" where a floating-point sound upper-bound on the perturbation norm is used instead. In the strong setting, the paper shows soundness violations for both random linear models and SVMs trained on the binary distinction of MNIST digits, where the (up to floating-point soundness) exact certified radius can be computed trivially. In the weak setting, the paper additionally shows floating point violations for small (positive) neural networks, analyzed with popular methods. Their attack is based on a PGD variant combined with a random search over neighboring floating-point values. Finally, the paper proposes to address this issue by using interval arithmetic to compute the robustness certificates."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "## Strengths  \n* The tackled issue of (certified) adversarial robustness is of high importance.\n* The paper is mostly easy to understand.\n* To the best of my knowledge, this paper is the first to demonstrate floating point attacks around test-set images on unperturbed networks.\n* While simple, the random floating point neighbour search (Alg. 3) seems effective."
+            },
+            "weaknesses": {
+                "value": "## Weaknesses\n* The proposed ReluPGD (Algorithm 1 and 2) seems to simply recover standard PGD with $\\ell_2$ projections, which the authors do not acknowledge.\n* The literature review is missing key works such as Singh et al. (2018 and 2019), which propose floating-point sound neural network verifiers leveraging interval arithmetic, the exact approach proposed as novel by this paper. Similarly although less crucial, related work on floating-point sound Randomised Smoothing is missing (Vor\u00e1\u010dek and Hein 2022).\n* Experimental details are missing at many points (e.g. 32 vs 64-bit floating-point precision, Gurobi tolerances and precisions) that make it not only hard to reproduce results but even to assess their significance.\n* In many settings, only the \"weak threat model\" is effective, which mostly seems to attack the floating-point soundness of the norm computation (see Figure 2a) and not the network verifier. As success rates for non-random linear classifiers are less than 0.2 % in the strong setting (with no success for non-linear classifiers), this should be communicated clearly.\n* The claim of verifying \"Neural Nets\" with \"conservative\" methods is misleading given that 2 of the 3 considered neural nets are actually linear (positive inputs and positive parameters ensure all ReLUs become identity functions), in which case verification is exact and the last one is only analyzed with MILP, which for a network of such small size should not only theoretically but also practically be exact.\n\n**References**  \n* Vor\u00e1\u010dek, V\u00e1clav, and Matthias Hein. \"Sound randomized smoothing in floating-point arithmetics.\"\u00a0arXiv 2022\n* Singh, Gagandeep, et al. \"An abstract domain for certifying neural networks.\"\u00a0 POPL 2019\n* Singh, Gagandeep, et al. \"Fast and effective robustness certification.\" NeurIPS 2018"
+            },
+            "questions": {
+                "value": "### Questions\n1) It seems that the gradients of the linearized network are identical to those of the standard model. Thus Alg. 1 seems to simply recover the gradient $\\nabla_x F^t(x) - F^l(x)$ and thus, Alg.2 standard gradient descent. Can you comment on this?\n2) Why did you choose $x_i = 3.3 \\times 10^9$ for Figure 2b? From reading just the text, one would assume $x_i \\in [-1, 1]$, making this slightly misleading. This also seems to be the source for the upper bound on floating-point errors cited in the intro. Given that this work mostly claims to be the first to show attacks on unperturbed networks and regions around test-set images, this seems misleading.\n3) Your conclusion that \u201cwith the increasing rounding error, a greater leeway is left between the real certified radius R and the computed certified radius $\\tilde{R}$ for our method to exploit, so the attack success rate increases.\u201d seems to contradict the results of Figure 2a), which show that while the rounding error in computing $||\\delta||$ becomes increasingly more pronounced as dimensionality is increased (Gap between strong and weak threat model), the attackability under the strong threat model (ignoring this error) steadily decreases.\n4) What precision was used to compute the robust radii for linear SVMs? And similarly what precision is used to compute the perturbation norm in Section 4.3? Can you clarify what settings are used for Gurobi, in particular, what precision and feasibility tolerances?\n5) For positive inputs, any ReLU network with positive weights and biases is linear, under these circumstances, linear bound propagation methods such as $\\beta-CROWN$ are exact (up to floating point errors) and should thus not be considered \u201cconservative\u201d. Similarly, for ReLU networks, verification via MILP is complete, thus while the obtained certificate is not \u201ccomplete\u201d using the definition in this work, it should not be considered \u201cconservative\u201d. Does your approach also work for settings where the analysis is actually conservative? E.g. using $\\beta$-CROWN on a network with 2 hidden layers of 20 Neurons each?\n7) Could you discuss why you expect verification (not norm computation) with interval arithmetic to reduce the success rate of your attack to 0% under the weak threat model? It seems that the norm computation should still be attackable in the weak setting (unless interval arithmetic is also used there, which should be clarified). Possibly, analysis with interval arithmetic merely introduces enough conservativeness to prevent this type of attack.\n\n### Comments\n* When using a citation marker as a grammatical element of a sentence, I suggest using \"\\citet\" and otherwise \"\\citep\" to comply with the author guide section 4.1.\n* I would suggest you rewrite the second bullet point in core contributions to more clearly distinguish the two threat models.\n* Typically, a different definition of completeness of robustness verifiers is used in the literature. That is, a method is called complete if it can prove every robustness property that holds (see e.g. your closest related work Jia and Rinard (2021)). I would consider adapting this definition or at least highlighting this difference.\n* Python permits exact rational arithmetic and infinite precision floating point real arithmetic with suitable packages. I would consider this when discussing the strong threat model in Section 3.\n* Should $R$ in the first paragraph of Section 4 not be $\\tilde{R}$ ?\n* I suggest using different line types in Figure 2 a to make W and S easier to distinguish\n* Table captions should be placed above a table not below to comply with the author guide Section 4.4.\n\n### Conclusion\nIn summary, while the goal of this paper to demonstrate the vulnerability of neural network verification methods to floating-point attacks on unmodified networks around test-set samples to be interesting and novel, I believe this claim is not sufficiently substantiated by the conducted experiments. Only a single non-linear neural network is considered and only attacked successfully under the \"weak threat model\" which merely demonstrates that the used norm computation can be attacked. Further, there are substantial questions regarding the novelty of core parts of the paper, with Alg. 1 and 2 seeming to recover standard PGD and the suggestion of using interval arithmetic for verification already being established 5 years ago."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Reviewer_GFuC"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697440729659,
+        "cdate": 1697440729659,
+        "tmdate": 1699636510286,
+        "mdate": 1699636510286,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "285u0xrbfP",
+        "forum": "amjNJMpBiq",
+        "replyto": "amjNJMpBiq",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_musS"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_musS"
+        ],
+        "content": {
+            "summary": {
+                "value": "This manuscript pokes a hole on robustness certificates due to the implementation issue. That  is, the floating point representations could result in unsound certifiable radius for many methods as listed in this paper. In general this is a system bug in the certification process."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This paper is well-motivated and well-written. The problem it identifies is novel and also critical to the application of certifiable robustness in real-world systems. Float32 is probably the standard one we will use, and in the real-world we will have more quantizations for resource constraints. If this bug needs to be gone only with float128 or even more, I don\u2019t think we would actually deploy the certification method."
+            },
+            "weaknesses": {
+                "value": "There are no significant weaknesses in this paper. One minor thing is that it only experiments with linear models and pretty small networks. The impact of this bug could be much more serious if the authors can experiment with larger datasets and larger models. Furthermore, there is no discussion on non-ReLU models and Lipschitz-based certification methods. Does the bug also appear in those models? Can the attack generalize the MinMax models? I did not see real issues why one could\u2019t try to find unsound points for non-ReLU networks. Can the authors explain the blockers here? With that being said, I would appreciate the authors to have a paragraph to discuss what the limit of the attack they find. The family of methods will be affected and the family of methods that won\u2019t be affected. This would add great value to the current paper."
+            },
+            "questions": {
+                "value": "My questions are included in the Weakness part already."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698786136748,
+        "cdate": 1698786136748,
+        "tmdate": 1699636510182,
+        "mdate": 1699636510182,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "zF4cRMh5KK",
+        "forum": "amjNJMpBiq",
+        "replyto": "amjNJMpBiq",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_s866"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_s866"
+        ],
+        "content": {
+            "summary": {
+                "value": "Certified defenses against adversarial attacks for ML classifiers provide a mathematical upper bound $R(x)$ on the amount of corruption needed to misclassify a given input $x$. This paper studies the discrepancy between the radius $\\bar R(x)$ output by an implementation of such defenses on systems supporting finite-precision arithmetic, say $1.0$, and the _real_ radius $R(x)$ guaranteed by the theory, say $0.999999$, demonstrating adversarial perturbations that _break_ such certified defenses by exploiting floating point approximations."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "The paper highlights a potentially overlooked problem with trusting certified defenses too much: the finite precision implementation of such defenses on computers might lead to slightly optimistic certificates. Hence, this paper highlights the fact that practitioners critically relying on such systems must use a marginally lower value of the certified radius than reported."
+            },
+            "weaknesses": {
+                "value": "1.\tRelevance: The greatest weakness of this paper is the lack of relevance of the problem studied. Specifically, it is very well known that computers perform finite-precision arithmetic, and for any computation (much beyond adversarial robustness), the results might have a minuscule margin of error due to the floating point approximations involved. In the light of this, any application that requires exact precision must implement explicit safeguards (e.g. interval arithmetic) to protect against rounding problems. For the case of adversarial examples, it would be good if the authors could provide examples of applications where an application would care about getting the certified radius exactly right (this is not true for instance on many commonly studied applications like image classification, object detection, etc.). \u2028\n\n2.\tTrivial Solution?: A na\u00efve fix to the above problem, in the context of certified robustness, which the paper also mentions on P2, is that for super-sensitive applications, one can simply report $R(x) - \\gamma$ as the certificate for a small $\\gamma$, instead of $R(x)$ to ensure that the output certificate is valid. $\\gamma$ can be really small, for instance, P8 mentions that for MNIST, the approximation errors are at the 13th decimal point. The paper argues that finding a fixed $\\gamma$ is not possible in general, but fails to provide convincing evidence on any real tasks. On a synthetically constructed task, $\\gamma$ is showed to be potentially large (0.1), but then the scale of $R$ is orders of magnitude larger leading to the same solution. Generally, depending on the task at hand, there should be a principled way to choose $\\gamma$ depending on scale of the error that can be tolerated for the problem.\u2028\n\n3.\tProposed method exponential in dimension?: The proposed approach to finding adversarial perturbations, is roughly to perturb each dimension of the input a bit till a misclassification is achieved. A slightly smarter way of doing these floating point flips is utilized, but the approach is essentially exponential in dimension. How much time does the proposed algorithm take per image? from P8, it seems like a time-out of 15 minutes is set for every image. \u2028\n\n4.\tProposed Method ReluPGD same as PGD applied to max-margin objective? Could the authors comment on how the ReLUPGD algorithm differs from a standard PGD attack using the max-margin loss (e.g., loss(positive class) - loss(negative class) for the binary case). \u2028\n5.\tProposed Method\u2019s applicability in real scenarios: In practice, most certification methods for Neural Networks produce certificates that are very pessimistic for most input points. In light of this, it is hard to believe that a very high decimal place attack would even be successful for real networks. The examples shown in this work linearize the network or study synthetic problems with linear boundaries, and this effect does not show up. \u2028\n\n6.\tWriting: The writing could be improved at several places, and some portions could be cut to make way for the core contributions:\n\t1.\tP2 Contribution 1: \u201cinvalidate the implementations\u201d \u2014  invalidate might be a too strong word here.\n\t2.\tP2 Contribution 2: \u201cfloating point norm\u201d is not defined till now. \n\t3.\tStatement unclear: \u201cin the case where the library computes \u2026\u201d, which library are we talking about here?\n\t4.\tP2 Contribution 3: Cohen et. al.\u2019s main certificate is probabilistic. \n\t5.\tP3: No reference needed for distance of a point to a plane. \n\t6.\tP4: The main contribution, the \u201cneighbors\u201d algorithm could be moved to the main text for clarity, currently it is unclear what this is. \n\t7.\tP5: It is unclear whether the entire warmup section is needed, since the end result is a PGD-like algorithm, and PGD is quite standard in the literature now. \n\t8.\tP5: The algorithm ReLUPGD should appear in the main paper, since it is one of main contributions. \n\t9.\tFig 2, P6: For the synthetic experiments, what is the setup, is $x, w, b$ fixed and $D$ is changing? If so, how were these values decided? Are there any average statistics over these values?\n\t10.\tP9: Theorem 1 is a standard statement of interval arithmetic, and as such it is unclear whether it should be a theorem."
+            },
+            "questions": {
+                "value": "Questions are mentioned above alongside the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "1: strong reject"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5156/Reviewer_s866"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698808094827,
+        "cdate": 1698808094827,
+        "tmdate": 1699636510081,
+        "mdate": 1699636510081,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Niv76UDgHZ",
+        "forum": "amjNJMpBiq",
+        "replyto": "amjNJMpBiq",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_FP18"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5156/Reviewer_FP18"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a new attack methodology to break robustness certificates given by existing methods. It exploits the rounding errors present in the floating point computation of the certificates. The authors test the efficacy of their attack on linear classifiers, linear SVM, and neural network models and empirically show that such exploits exist for all these models. Finally, the authors propose a formal mitigation approach based on bounded interval arithmetic to prevent such exploits."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The high success rate of the proposed attack shows the magnitude of the problem and the need for it to be addressed.\n- The initial proposed solution might help spark some more research for making existing certification more robust to such exploits."
+            },
+            "weaknesses": {
+                "value": "- While the paper states that it is not easy to fix the problem by just replacing the certified radius $\\tilde{R}$ with $\\tilde{R} - \\gamma$, ($\\gamma << 1$), it is not clear what the attack success rate looks like when a $\\gamma$ that is a small fraction of $\\tilde{R}$ is used. As the strong threat model already leads to a huge drop in attack success, it seems plausible that just certifying a slightly more conservative radius might suffice for practical use (as the bounds in some cases like Randomized Smoothing are already probabilistic).\n- The proposed method is not shown for most of the state-of-the-art certification methods. It would be great to see the effective drop in certified radius that happens when using the proposed method and see the computation cost as well."
+            },
+            "questions": {
+                "value": "Please refer to the Weaknesses section for the questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698820076327,
+        "cdate": 1698820076327,
+        "tmdate": 1699636509966,
+        "mdate": 1699636509966,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

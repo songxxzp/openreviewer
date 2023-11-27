@@ -1,0 +1,206 @@
+[
+    {
+        "id": "YBO97zxsWn",
+        "forum": "Mqukp3Lsnt",
+        "replyto": "Mqukp3Lsnt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_CKa5"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_CKa5"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a dense offset field (like optical flow) by using attention, and shows demonstrations of video frame alignment (Fig7) and video denoising (Fig8).\n\nThe paper claims to propose a kind of a combination of NATTAN (non-local search) and GDA (shift or displacement prediction) as shown in Figure 1. It first finds a large displacement somehow, then refines it using attention, as demonstrated in Fig3. Thus the proposed method is called \"shifted\" \"non-local search\".\n\nThe core of the paper is section 3.1, which shows the whole process using top-k search with attention, and section 3.2 introduces the case when shift F is given.\n\nSection 3.3 justifies that the refinement of optical flow leads to a better offset estimation, and section 3.4 simply states that the method is implemented on CUDA (which is called in-place).\n\nExperiments show that the proposed method gives a better quality, less memory usage (Fig9) and faster computation (Fig10)."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "1 poor"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "This approach is somewhat on the hardware side and is thus very advantageous in terms of speed and memory consumption over other methods. The method is implemented \"in-place\", whatever it means as no details are disclosed, so fewer memory consumption is very attractive compared to recent memory-hungry large models.\n\nDenoising performance is better than others as shown in Tables 1 and 2, and table 2 shows that the proposed method has a good trade-off between computation time and gpu memory."
+            },
+            "weaknesses": {
+                "value": "Patch-based offset correction: as long as reading section 3.1, similarities for search are computed to each \"reference locations\" and \"search locations\", depending on strides S_Q and S_K. Given the predicted offset F, which is floating point coordinates, corrected coordinates reside in the integer grid. In experiments strides were set to 2 (probably, as it is now shown), however it is slower as shown in Table 10. There are no experiments on denoising and alignment with stride 2, it is difficult to expect the proposed method to work as better as stride 1.\n\nExperiments: Results show that the proposed method works as expected, but so many details are not explained and hence it is hard to see how the method really works and how it behaves for different hyper-parameters under ablation studies. For example, patch size P, feature extractor for patches, details predicting offset F, K of top-K, \n\nInsights: This paper is on \"space-time attention\" and top-k patches are used for the search over T frames. It should be shown that how these top-k patches are selected, how patches attend to where/when, and how corrections are improved, because such insights would be a great help for understanding the method and prompting potential following works.\n\n\n\nOther comments:\n\nOrganization and writing: Symbols and concepts defined in section 3.1 are not well connected to the following sections and explanations, which makes the logical flow hard to understand.\n\nOffset instead of alignment/denoising: Experimental results demonstrate how the method works in applications, however, directly investigating the learnt offset value F would be helpful for evaluating the proposed method.\n\n\nTerms:\n\n- \"STAN\" appears first in p5, but explained and spelled in p8.\n- N_Q and N_K for Reference locations and Search locations do not match as Q is for query and K for key."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698224126815,
+        "cdate": 1698224126815,
+        "tmdate": 1699636381420,
+        "mdate": 1699636381420,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "1j3fGIEKPb",
+        "forum": "Mqukp3Lsnt",
+        "replyto": "Mqukp3Lsnt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_UHjC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_UHjC"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes Shifted Non-Local Search for frame-wise alignment. Specifically, the query points are searched in the windows which is shifted by the predicted optical flows. The top-k locations are then aggregated with Guided Deformable Attention and 3D convolution."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The authors demonstrate that optical flow requires only minor spatial corrections for frame-wise alignment.\n\n2. The authors introduce In-Place Computation, which significantly reduces the memory working set and consequently enhances speed.\n\n3. The proposed method achieves state-of-the-art results on video denosing task."
+            },
+            "weaknesses": {
+                "value": "1. The way authors show that optical \ufb02ow only needs small spatial corrections is from the results of Sintel-Clean benchmark, however, this setting is far from the real-world dataset, where blur and degradation could happens. Moreover, these results are from methods with high computational cost, which is not feasible for the online setting.\n\n2. the idea is already explored in video enhancement task, such as BasicVSR++ [1] RVRT [2], where the deformable convolutions/attentions' offsets are computed on top of the SpyNet predicted optical flow. Moreover,  IART [3] propose an cross-attention scheme by searching around the OF-shifted window.\n\n3. This paper is the mixture of \n\n[1] BasicVSR++: Improving Video Super-Resolution with Enhanced Propagation and Alignment (CVPR2022)\n\n[2] Recurrent Video Restoration Transformer with Guided Deformable Attention (NeurlPS2022)\n\n[3] An Implicit Alignment for Video Super-Resolution (arXiv:2305.00163)"
+            },
+            "questions": {
+                "value": "1. the reproduced results for RVRT 39.29 seems deviate a lot from the original paper 40.57 for DAVIS sigma=10, why this is the case? Moreover, I think RVRT already implement offsets on top of predicted optical flow, which I think is the same method with the proposed one.\n\n2. Is there direct comparison on STAN alignment with guided deformable attention? (i.e. comparing results by only changing the alignment module, keep the original backbone unchanged for RVRT.)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4156/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4156/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4156/Reviewer_UHjC"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698674045227,
+        "cdate": 1698674045227,
+        "tmdate": 1699636381327,
+        "mdate": 1699636381327,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "3SQLUMK4ma",
+        "forum": "Mqukp3Lsnt",
+        "replyto": "Mqukp3Lsnt",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_U4AC"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4156/Reviewer_U4AC"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper addresses non-local search (ie, dense point tracking) from temporal sequences. The authors propose a two stages approach, where at first a local displacement is estimated, the followed by a local search. This framework improves upon previous work which either estimate a point-wise large scale shift, or compute a a local displacement/correlation. The framework is validated in the context of space-time attention, for application such as denoising on Davis dataset."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1) Non global image matching/search is a hard problem. Applications related to video analysis (object tracking, denoising) are important. \n\n2) The proposed approach (first predicting an off-set, then refinining the estimation in a local search window) is intuitive. The merits of the approach are shown experimentally (frame alignment, space-time attention for video denoising)."
+            },
+            "weaknesses": {
+                "value": "1) The technical explanations of the implementation of the approach are difficult to follow. Section 3.1 and 3.2 could certainly be clarified and simplified. For example,  specify the meaning of the indices, use different letters for different variables (what is the difference between I and \\tilde_I?; if K_v is the variable for the Keys then do not use K again to denote the number of neighbor, etc)\n\n2) The results section is not clear to me. I suggest the authors to start the experiments section by summarizing how they will attempt to demonstrate what are the advantages of their approach through several specific applications using different datasets and different evaluation metrics."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4156/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698850294735,
+        "cdate": 1698850294735,
+        "tmdate": 1699636381232,
+        "mdate": 1699636381232,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

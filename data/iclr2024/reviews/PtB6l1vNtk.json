@@ -1,0 +1,295 @@
+[
+    {
+        "id": "fqh4dDTkpo",
+        "forum": "PtB6l1vNtk",
+        "replyto": "PtB6l1vNtk",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_4s9N"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_4s9N"
+        ],
+        "content": {
+            "summary": {
+                "value": "Lagrangian decomposition is an approach to obtain lower bounds for optimal values of hard combinatorial optimization problems. For some problems and decompositions, these bounds are tighter than the simple continuous relaxation (which just drops the integrality constraint). The lower bound in Lagrangian decomposition is a concave piecewise-affine function of the Lagrange multipliers and is traditionally maximized using subgradient or bundle methods, which may be slow.\n\nThe paper proposes a deep learning architecture to predict optimal values of Lagrange multipliers in Lagrangian decomposition of MILP problems. The motivation is to use these predicted suboptimal LMs to warm-start subgradient or bundle methods.\n\nThe architecture is a encoder-decoder one. The probabilistic encoder encodes the input MILP instance and the primal+dual optimal solutions of the continuous relaxation into a latent space. The deterministic decoder then decodes these latent features to the values of Lagr. multipliers (precisely, to differences between the LMs in Lagr. decomposition and continuous relaxation).\n\nThe method is tested on two MILP problems: multicommodity fixed-charge network design (MCDN) and capaciated facility location (CFL). These have natural decompositions to small subproblems, which provide strictly better bounds than continuous (LP) relaxations. The predicted LMs are compared to the LMs obtained from continuous relaxations. This shows that the predicted LMs sometimes close 3/4 of the gap between the optimal lower bound and the continuous-relaxation lower bound. Moreover, the runtime of the bundle solver is compared when initialized with (a) zero LMs, (b) LMs from the continuous relaxation, (c) LMs from the proposed method. Warm-starting by the predicted LMs speeds up the bundle solver typically by tens of percents."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "To my understanding, the method is more general than the previous methods to predict optimal Lagrange multipliers. However, the idea of predicting Lagrange multipliers was proposed before.\n\nThe topic itself (predicting optimal Lagrange multipliers in Lagr. decomposition) is relevant for combinatorial optimization. However, in my opinion, its impact is more limited than, e.g., predicting decisions in branch&bound search.\n\nThe deep learning architecture is, to my knowledge, novel. However, this novelty is only incremental as the architecture combines known techniques in a novel way.\n\nThe text is clear enough, up to inconsistent notation and its frequent abuse."
+            },
+            "weaknesses": {
+                "value": "First let me admit that I am not an expert in deep learning but I have good knowledge of combinatorial optimization and Lagrangian decompsition. So I will comment mainly on the latter.\n\nThe two MILP problems (MCDN, CFL) on which the method is tested have very specific decompositions: the subproblems are small (each sitting on an edge or node of the problem graph) and each subproblem has only one integer (0-1) variable. In particular, both subproblems are almost identical: they are continuous knapsack problems with an additional indicator variable than switches the edge/node on and off. It is possible that the relatively good reported performance would not extend to decompositions to more complex subproblems. Even if the method did not perform well on more complex problems, it would nevertheless be useful to report it. In my opinion, this significantly reduces the impact of the work.\n\nThe approach is applicable not only to MILPs but also ILPs or 0-1 LPs. A good source of more complex decompositions is the 0-1 LP formulation of the max-apriori (MAP) inference problem in graphical models (aka discrete energy minimization, aka Weighted Constraint Satisfaction Problem). This problem can be decomposed to arbitrary subproblems, each of which is itself a MAP inference problem. See e.g. [1,2,6,7]. While tree-structured subproblems provide the same bound as the continuous (LP) relaxation, non-tree subproblems (such as cycles or planar graphs [4,5]) provide strictly tighter bounds. There is a large public database of instances, e.g. [3].\n\nMoreover, I wonder if the method is competitive to some other methods to suboptimally compute Lagrange multipliers, not based on learning. One example is min-marginal averaging -- see [Lange2021, Abbas2022a] and references therein. Though this method (without smoothing) is only suboptimal, it is much faster than subgradient methods, especially if the subproblems are small. Let me hypothesize that for MCDN and CFL, a few iterations of min-marginal averaging, warm-started by continuous relaxation, would close a large part of the gap and be faster  than prediction based on deep learning.\n\n[1] J. K. Johnson, D. M. Malioutov, and A. S. Willsky.\nLagrangian relaxation for MAP estimation in graphical models.\nAllerton Conf. Communication, Control and Computing, 2007.\n\n[2]  N. Komodakis, N. Paragios, and G. Tziritas.\nMRF optimization via dual decomposition: Message-passing revisited.\nICCV 2007.\n\n[3] Kappes et al.\nA Comparative Study of Modern Inference Techniques for Discrete Energy Minimization Problems.\nIJCV 2015.\n\n[4] Yarkoni, J.\nPlanar Decompositions and Cycle Constraints.\n\n[5] Batra et al.\nBeyond Trees: MAP Inference in MRFs via Outer-Planar Decomposition.\n\n[6] M. Wainwright.\nGraphical Models, Exponential Families, and Variational Inference.\n2008.\n\n[7] T Werner.\nRevisiting the Linear Programming Relaxation Approach to Gibbs Energy Minimization and Weighted Constraint Satisfaction.\nPAMI 2010.\n\nMinor comments:\n- The word 'accurate' in the title is redundant and misleading. I'd replace it with `optimal'.\n- The notation is quite often inconsistent and non well designed. E.g.:\n- The decoder is denoted by $f(\\pi\\mid z)$ in the intro, which is confusing because it is deterministic (it is correct later).\n- The symbols $LR(\\pi)$ and ${\\cal G}(\\pi)$ in (2) apparently denote the same thing.\n- Section 2.1: The bipartite graph encoding the MILP constraints is known as factor graph.\n- Typo below (13): $y_{ij}$ should be $y_{ij}=1$.\n- Typo below (18): \"demand is ... is\"\n\nPOST REBUTTAL: I still find the paper not strong enough, mainly for limited instance class in the experiments. Therefore, I keep my evaluation."
+            },
+            "questions": {
+                "value": "It is rather surprising that the coefficients of the variables in MILP constraints were not needed for training (as noted in the 2nd par of section 2.3). This would not surprise me if the MILP formulations had all coefficients similar (incl. their signs) - but this is not the case (there are $r_{ij}^k,b_i^k,c_{ij}$ in the MILP formulation of MCDN, similarly for CFL). Do you have any insight, please?\n\nDo you plan to make the code available if the paper is accepted?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Reviewer_4s9N",
+                    "ICLR.cc/2024/Conference/Submission5480/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5480/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698097528115,
+        "cdate": 1698097528115,
+        "tmdate": 1700822519615,
+        "mdate": 1700822519615,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "lSqmqzobWB",
+        "forum": "PtB6l1vNtk",
+        "replyto": "PtB6l1vNtk",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_Gopm"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_Gopm"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a learning framework for computing good Lagrangian dual multipliers for solving mixed integer linear programs (MILPs). Numerical experiments on conducted on two MILP problems. The proposed method seems to provide Lagrangian multipliers that close much gap between the continuous relaxation bound and the optimal Lagrangian dual bound."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The proposed framework uses an architecture that can deal with variable input sizes. The proposed approach is tested on relevant MILP problems."
+            },
+            "weaknesses": {
+                "value": "1. The technical contribution of the paper is very limited. Most techniques are from existing literature.\n2. The numerical results are not strong enough. The proposed method does seem to be beneficial for obtaining an initial guess of the optimal dual. But it seems like the Lagrangian dual problem itself is not computationally hard (based on the results in Section 4) even on MCND-BIG-COMVAR. The optimal dual multipliers can be found easily by BM within a few minutes.\n3. The writing can be improved. For example, CR is not defined (I assume it means continuous relaxation). I can find typos once in a while."
+            },
+            "questions": {
+                "value": "It seems like the CR solution is important for learning a good dual solution. How does the learned dual solution compare with the CR dual solution in terms of GAP and GAP-CR?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Reviewer_Gopm"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5480/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698353867131,
+        "cdate": 1698353867131,
+        "tmdate": 1700512873458,
+        "mdate": 1700512873458,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Wy98Oh8BHc",
+        "forum": "PtB6l1vNtk",
+        "replyto": "PtB6l1vNtk",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_Qm6g"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_Qm6g"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper considers mixed integer linear programs (MILPs). MILPs are NP-hard to solve optimally. A good approximation scheme is to use the Lagrangian to obtain good lower bounds. Hence, good Langrangian multipliers are needed for a specific MILP problem. The paper describes a deep learning approach based on a graph convolutional net to predict good Langrangian multipliers.\n\nThe paper also provides two sets of experiments that show the efficacy of the presented approach. In some cases (the Multi-Commodity Fixed-Charge Network Design Problem) it can close the gap between the continuous relaxation of the MILP and the best Lagrangian relaxation up to 85%. In others (the Capacitated Facility Location Problem) up to 50%."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper considers an important task of (approximately) solving MILPs by using the Lagrangian dual to obtain good lower bounds. The presented approach is sound and very interesting and seems to improve upon previous results in this area."
+            },
+            "weaknesses": {
+                "value": "The paper considers a very important problem of finding good dual variables. While the presented approach seems plausible and useful, the paper is lacking a proper comparison to existing work. A good baseline that compares this approach over existing approaches is missing (in the experiments).  Also, it is unclear how the presented approach can really be beneficial. It is shown in the experiments that the network can predict good Lagrangian multipliers, such that a subsequent bundle method can be warm started and its iteration count is cut by one third. However, it would have been nice and essential to compare the running times also to state-of-the-art IP solvers like gurobi and also provide the instances and the code as a supplement such that they can be assessed by the reviewers.\n\nFurthermore, it is not clear how well the approach really learns to predict the multipliers. If you provide enough training samples, like in your case, how well would a simple k-NN work?\n\nSince MILPs are very important, and the presented approach is very general, it would have been nice to see it also applied to more general and more common MILPs. MCDN and CFL are somewhat special problems."
+            },
+            "questions": {
+                "value": "1. How long does gurobi need to solve the MILP instances?\n2. How does the approach compare to a simple k-NN baseline?\n3. How does the approach compare to other approaches that learn Lagrangian dual variables? The paper states a number of such approaches for a number of specific MILPs."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Reviewer_Qm6g"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5480/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698832149923,
+        "cdate": 1698832149923,
+        "tmdate": 1699636559338,
+        "mdate": 1699636559338,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "LXFzdqBRc9",
+        "forum": "PtB6l1vNtk",
+        "replyto": "PtB6l1vNtk",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_F7ni"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission5480/Reviewer_F7ni"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors presented an experiment report on solving a mixed integer linear program (MILP) by predicting the Lagrangian relaxation. They model the MILP problem by treating variable topology as a GNN (see [1] for an overview) and model the variable representation by an encoder-decoder architecture (this should be related to [2] despite not in an RL setup.) For prediction, they focus on the loss function by the Lagrangian relaxation with external convex relaxation input and predict the difference from the convex relaxation. Specifically, the draft take advantage of splitting the MILP problem by relaxing the harder constraints into the Lagrangian relaxation and using the exact solution of the easier problem from an outer solver as the training samples. Finally, the authors report their experiments on multi-commodity fixed-charge network design and capacitated facility location problems, and they report the ablation study on their solver variants.\n\n[1] Combinatorial Optimization and Reasoning with Graph Neural Networks. Cappart et al. 2022\n[2] Attention, Learn to Solve Routing Problems!. Kool et al. 2019"
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "The draft looks more like an industrial, experimental report than a paper. The authors proved that the proposed method generalized well from the training dataset to the testing dataset. It has pretty good prediction errors in smaller datasets with one pass through the data and without RL in training. Further, the authors show that the learned solutions can warm-start the bundle methods. The solver may be valuable to the industry if the errors are acceptable."
+            },
+            "weaknesses": {
+                "value": "However, the fatal benefit of the draft is that it doesn't include experimental comparisons to the other methods. Using DNN to improve combinatorial optimization has quite some literature, but the authors don't even cite [2], which has a close connection with the work on the encoder-decoder refinement in training. Further, in the experimental section, the authors only conduct experiments on self-generated datasets, which makes it even harder for outsiders to know what's happening. Thus, I can only recommend a rejection."
+            },
+            "questions": {
+                "value": "1. P2: Please define the CR bound in your context.\n2. P8 on the bundle method warm start. Does the time include the CR / DNN forward time?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission5480/Reviewer_F7ni"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission5480/-/Official_Review"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699873254449,
+        "cdate": 1699873254449,
+        "tmdate": 1699873254449,
+        "mdate": 1699873254449,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

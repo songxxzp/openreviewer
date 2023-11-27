@@ -1,0 +1,563 @@
+[
+    {
+        "title": "Feature Map Matters in Out-of-distribution Detection"
+    },
+    {
+        "review": {
+            "id": "RvzT6IDLLh",
+            "forum": "ZrY38sUYWs",
+            "replyto": "ZrY38sUYWs",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_NfBj"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_NfBj"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper propose two methods to increase OOD performance:\n(1) a score function called Feature Sim (FC), which is the mean absolute deviation of feature maps.This rely on the assumption that the activation difference between the foreground and background of the ID data is larger than OOD data.\n(2) a Threshold Activation (TA) module which is a shifted ReLU applied on the feature maps, the underlying assumption is that ID features have higher activations and significant foreground component than OOD feature.\nCombining FS and TA with ASH gives state-of-the-art results."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. FS measures the mean of the channel-wise deviation of the feature map: The underlying assumption of the FS is \"The activation of the network for ID data is usually concentrated in the foreground (salient area), while the activation difference between foreground and background (other areas) in OOD features is not as significant.\" the author models this separation using GMM and provide in-depth theoretical analysis.\n\n2. TA module enlarge the distance between ID and OOD data by weaking the lower part of the activations. \n\n3. FS+TA+ ASH achieves state-of-the-art result and the author also provided comprehensive experiments on various dataset."
+                },
+                "weaknesses": {
+                    "value": "(1) The GMM assumption, as illustrated in Figure 3 also C.2, relies on the fact that ID has object, while OOD data has only background. However, this is not clearly defined in the ID and OOD data definition. In fact, for near OOD task, ID and OOD data both contain objects. (e.g. ImageNet vs. SSB-hard, MINIST vs. CIFAR). \n\n(2) The author should provide more details on the hyperparameter $\\labmda$ for Section 5.3. For example, how to choose it? In the experiments, is it chosen by validating on validation dataset or testing dataset? Is there any ablation on this factor?\n\n(3) Although the author shows state-of-the-art results combing FS and TA with ASH (+energy score), this treats FS and TA as orthogonal methods with ASH and Energy Score. However this is not true, as FS is an OOD scores and TA is a model rectification technique, the author should compare them separately and directly with their opponents.\n- compare FS with other OOD score function: Energy, MLS, MSP.\n- compare TA with other post-hoc model rectification technique: ReAct, DICE, ASH"
+                },
+                "questions": {
+                    "value": "Regarding FS:\n\n(1) For Eq.4, what is the GAP operator?\n\n(2) FS measures the mean of the channel-wise deviation of the feature map, what is the intuition for this design? What is the difference if using the deviation of the feature map?\n\nRegarding TA:\n\n(3) The design of TA is opposite to ReAct, how this leads to the same outcome (distancing ID and OOD data) while the changes are opposite to ReAct?\n\n(4) For the choices of the stage to apply TA and FS, are they validated directly in the testing dataset?\n\nI am willing to raise my score if the author can address the above issues."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Reviewer_NfBj"
+                    ]
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5135/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698455435138,
+            "cdate": 1698455435138,
+            "tmdate": 1699636506761,
+            "mdate": 1699636506761,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "vwcSSWKNl0",
+                "forum": "ZrY38sUYWs",
+                "replyto": "RvzT6IDLLh",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">**W1:** The GMM assumption, as illustrated in Figure 3 also C.2, relies on the fact that ID has object, while OOD data has only background. However, this is not clearly defined in the ID and OOD data definition. In fact, for near OOD task, ID and OOD data both contain objects. (e.g. ImageNet vs. SSB-hard, MINIST vs. CIFAR).\n\n\n**A1:** Thanks for your comments!  We'd like to clarify a misconception that OOD data consists only of background elements. In fact, OOD images also include foreground elements, such as various plants in the iNaturalist dataset or objects in scenes (like fountains, trees, boats, etc.) in the SUN and Places datasets. **For example, the foreground of the OOD image in Figure 3 is a waterfall that is also the Ground Truth of the image.**\n\nIn our paper, \u201cforeground\u201d does not merely refer to the image contents corresponding to its label; rather, \u201cforeground\u201d pertains to the regions or objects that play a critical role in determining the sample labels. The definition of \u201cforeground\u201d in our paper aligns with that of saliency detection [1], i.e., saliency detection aims to locate the important parts of natural images which attract our attention [2]. For example, in an indoor scene, a model doesn't label the image based on plain walls but focuses on distinctive objects like furniture, which form high-activation \"foreground\" regions. In contrast, less significant elements like walls are considered \"background\" with lower activations.\n\nOur hypothesis is based on the premise that OOD samples exhibit lower foreground activation than ID samples. As illustrated in Figure 3 and Appendix C.2, this occurs because the model, trained on ID images, is less sensitive to foreground objects associated with OOD, leading to lower foreground activations. This principle underpins the effectiveness of our method.\n\nThe results for ImageNet vs. SSB-hard and MINIST vs. CIFAR are shown below. Our method still can perform well on these settings.\n\n| Method       | ID          | OOD      | AUROC      | FPR95      |\n|--------------|-------------|----------|------------|------------|\n| MSP          | CIFAR100    | MNIST    | 92.55%     | 42.68%     |\n| Energy       | CIFAR100    | MNIST    | 98.29%     | 9.37%      |\n| ODIN         | CIFAR100    | MNIST    | 97.09%     | 18.36%     |\n| ASH          | CIFAR100    | MNIST    | 92.54%     | 47.15%     |\n| FS+TA+Energy | CIFAR100    | MNIST    | **99.84%** | **0.15%**  |\n| FS+TA+MSP    | CIFAR100    | MNIST    | 98.69%     | 7.06%      |\n| MSP          | CIFAR10     | MNIST    | 92.86%     | 48.73%     |\n| Energy       | CIFAR10     | MNIST    | 96.48%     | 21.58%     |\n| ODIN         | CIFAR10     | MNIST    | 96.33%     | 22.58%     |\n| ASH          | CIFAR10     | MNIST    | 97.22%     | 22.50%     |\n| FS+TA+Energy | CIFAR10     | MNIST    | 99.33%     | 3.34%      |\n| FS+TA+MSP    | CIFAR10     | MNIST    | **99.55%** | **0.12%**  |\n| Energy       | ImageNet-1k | SSB-hard | 72.34%     | 83.88%     |\n| MSP          | ImageNet-1k | SSB-hard | 72.16%     | 84.53%     |\n| ODIN         | ImageNet-1k | SSB-hard | 72.75%     | 83.75%     |\n| ASH          | ImageNet-1k | SSB-hard | 74.07%     | 80.65%     |\n| FS+TA+Energy | ImageNet-1k | SSB-hard | **74.26%** | **79.91%** |\n| FS+TA+MSP    | ImageNet-1k | SSB-hard | 73.31%     | 81.35%     |\n\n\n\n[1] Qin, Xuebin, et al. \u201cU2-Net: Going deeper with nested U-structure for salient object detection.\u201d Pattern recognition 106 (2020): 107404.\n[2] Zhao, Ting, and Xiangqian Wu. \u201cPyramid feature attention network for saliency detection.\u201d Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2019."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700488730230,
+                "cdate": 1700488730230,
+                "tmdate": 1700488781011,
+                "mdate": 1700488781011,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "WFi6Ib3MEl",
+                "forum": "ZrY38sUYWs",
+                "replyto": "Nq5QW9Bdx7",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_NfBj"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_NfBj"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "Thanks for the rebuttal, which addresses some of my questions. However, I still find the definition of \u201cforeground\u201d and \u201cbackground\u201d unclear, and I suggest the authors to define them rigorously using \u201csaliency\u201d. Furthermore, FS+TA perform worse than the current SOTA ASH, although stacking them to ASH provides some improvement. I maintain our original score of 5."
+                    }
+                },
+                "number": 19,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700706852735,
+                "cdate": 1700706852735,
+                "tmdate": 1700706852735,
+                "mdate": 1700706852735,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "uvugxqUZyP",
+            "forum": "ZrY38sUYWs",
+            "replyto": "ZrY38sUYWs",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_gmH7"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_gmH7"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose one simple yet effective method Feature Sim (FS) and one plug-in module Threshold Activation (TA). Experiments demonstrate their method can achieve good performance."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "This paper is well written, and the concept of \"foreground\" and \"background\u201d is interesting. The experiments are comprehensive, and the results are promising."
+                },
+                "weaknesses": {
+                    "value": "1)\tIn Figure 1 and Figure 6, the authors give the feature visualization of ResNet50 (perhaps using the last layer, as claimed in Appendix C.1). However, as far as I know, in ResNet, each layer has a multitude of feature maps. Especially in the middle layers, most feature visualizations on the feature maps can\u2019t be directly to be utilized for visualization. The patterns FS utilizes maybe like ReAct, leveraging abnormally high activations. Could the authors provide clarification about this?\n2)\tFeature Sim Score essentially quantifies the data dispersion (like variance) on each feature map. It is more like utilizing extreme values on intermediate feature layers, a concept that has been extensively explored by previous feature-based methods. Could the authors clarify the difference?\n3)\tThreshold Activation appears to borrow the concept from ReAct and apply it to intermediate layers. Could the authors clarify the novelty of TA?"
+                },
+                "questions": {
+                    "value": "Shown in Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Reviewer_gmH7"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5135/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698659024995,
+            "cdate": 1698659024995,
+            "tmdate": 1700814830354,
+            "mdate": 1700814830354,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "FCoVvlA6U9",
+                "forum": "ZrY38sUYWs",
+                "replyto": "uvugxqUZyP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">**W1:** In Figure 1 and Figure 6, the authors give the feature visualization of ResNet50 (perhaps using the last layer, as claimed in Appendix C.1). However, as far as I know, in ResNet, each layer has a multitude of feature maps. Especially in the middle layers, most feature visualizations on the feature maps can\u2019t be directly to be utilized for visualization. The patterns FS utilizes maybe like ReAct, leveraging abnormally high activations. Could the authors provide clarification about this?\n\n\n**A1:** Sorry for the misunderstanding. We follow [1] to conduct the visualizations. To be specific, we derive the heatmap by summing the features of last convolutional layer across the channel dimension and normalizing it to [0, 1]. Concretely, assume we get a feature map after C5 block of ResNet50 with shape (1,C,H,W), note that batchsize is equal to 1. To get the visualization result, the feature map is summed along the channel dimension to be (1,H,W), and then each pixel is normalized to [0,1] to get the heatmap.\n\nReAct operates under the premise that OOD samples will exhibit abnormally high activations, leading to the overconfidence on OOD samples. However, Feature Sim is based on the opposite concept, utilizing the principle that ID samples will have higher activations as models are more farmilar with ID samples. More detailed analysis is shown in the following answer **A3**.\n\n[1] Xiangyu Peng, Kai Wang, Zheng Zhu, Mang Wang, and Yang You. Crafting better contrastive views for siamese representation learning. In CVPR, 2022.\n\n>**W2:** Feature Sim Score essentially quantifies the data dispersion (like variance) on each feature map. It is more like utilizing extreme values on intermediate feature layers, a concept that has been extensively explored by previous feature-based methods. Could the authors clarify the difference?\n\n**A2:**  Thanks for your suggestions! We are not entirely certain which specific previous feature-based methods are referred to in the question. Therefore, we would like to focus on comparing and explaining in relation to ASH and Mahalanobis methods (already stated in Appendix E).\n\n**Difference between our method and ASH:**\n\nASH is an plug-in algorithm that requires existing score functions to work in conjunction with it, such as MSP and Energy.  Furthermore, while ASH claims to operate on feature map activations, it actually works well when placed in the penultimate layer of the classifier, so it does not effectively process feature map activations as claimed.\n\nEssentially, we believe that ASH truncates features, whereas our proposed TA weakens them.\n\nWe have noticed that the core idea behind the three forms of ASH is to set the activations below the threshold to zero and preserve or even amplify those above the threshold. However, due to the characteristics of convolutional kernels, the remaining high OOD responses can \"diffuse\" back to other regions during the forward propagation of the network, recontaminating the \"purified\" feature maps (see Fig. 10 and Table 16 in the Appendix). This also explains why placing the ASH method in non-classifier positions leads to poor results.\n\nIn contrast, TA has some similarities in design with ASH but carries a different essence. Firstly, we observe that the absolute strength of responses for ID features is higher than that of OOD features in the feature maps. Therefore, if we weaken both ID and OOD features by the same value 'k', the information preserved in ID features will be much more than that in OOD features (see Fig. 10 and Table 16 in the Appendix). Secondly, this weakening effect avoids the \"contamination\" issue seen in ASH's feature maps, ensuring that OOD, after being weakened, will not generate high activations to mislead classifier's outputs.\n\n**Difference between our method and Mahalanobis:**\n\n\nThe Mahalanobis-based methods precompute the mean and normalize the feature amplitude of each class using the covariance of all training samples. During the inference stage, they calculate the Mahalanobis distance difference between the input sample's feature and the class prior feature.\n\nOn the other hand, the Feature Sim method examines the difference between the sample's feature map and its mean, reflecting the significance of feature activation differences between ID and OOD samples. Unlike Mahalanobis-based methods, our proposed Feature Sim method does not rely on prior class distribution and does not require obtaining statistical features from training samples. Instead, it mines clues from the sample's own foreground-background relationship. We believe that these two types of methods are fundamentally different in their approach."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700488675416,
+                "cdate": 1700488675416,
+                "tmdate": 1700488675416,
+                "mdate": 1700488675416,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "YzbsqYTxCf",
+            "forum": "ZrY38sUYWs",
+            "replyto": "ZrY38sUYWs",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_sGRf"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_sGRf"
+            ],
+            "content": {
+                "summary": {
+                    "value": "This paper proposes a new perspective to utilize the feature maps for OOD detection. A Feature Similarity score function, which is defined as the absolute difference between the feature map and its mean value, is proposed to distinguish the ID and OOD data. Besides, a Threshold Activation module is introduced to increase the feature separability between ID and OOD data. The performance of the proposal looks good."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The motivation is clear and the whole method makes sense. \n2.  The method is simple and extensive experiments are performed to demonstrate the effectiveness of the proposal. \n3.  The method can collaborate well with previous post-hoc methods, and FS+TA+ASH can achieve state-of-the-art on various OOD detection benchmarks."
+                },
+                "weaknesses": {
+                    "value": "1. After Eq.3 \u201cFeature Sim measures the self-similarity of the feature maps, whose core idea is to compare the activation differences between foreground and background on the ID and OOD feature maps\u201d, It is a little bit confused why Feature Sim compares the activation differences between foreground and background on the ID and OOD feature. More explanations should be provided.\n2. \"Eq. (2) is equivalent to the GAP operator\". Actually, Eq. 2 is not a GAP operator, GAP performs global pooling in the feature map, whereas Eq. 2 performs pooling across different channels.\n3. In section A.1, the authors train the ResNet50 from scratch, while other comparison methods (Energy, ReAct, DICE ect.) use the off-the-shelf ResNet model for experiments. Therefore, the comparisons might be unfair, I recommend the author to utilize the off-the-shelf model.\n4. The Threshold Activation module is quite similar to ReAct and ASH, which makes the novelty of the introduced TA module limited. Besides, the TA module decreases the ID classification accuracy significantly, even it can be remedied by using another classification branch."
+                },
+                "questions": {
+                    "value": "1. It is not clear why employ the absolute difference between the feature map and its mean value as OOD score. Have the authors considered to use the mean value of Gram Matrix as the similarity score, which I think should be better than the absolute difference. The Gram Matrix captures the similarity between different feature maps [1]. \n\n[1] Image Style Transfer Using Convolutional Neural Networks."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5135/Reviewer_sGRf"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5135/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698721632721,
+            "cdate": 1698721632721,
+            "tmdate": 1700654367955,
+            "mdate": 1700654367955,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "RJrpZTC6hn",
+                "forum": "ZrY38sUYWs",
+                "replyto": "YzbsqYTxCf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">**W1:** After Eq.3 \u201cFeature Sim measures the self-similarity of the feature maps, whose core idea is to compare the activation differences between foreground and background on the ID and OOD feature maps\u201d, It is a little bit confused why Feature Sim compares the activation differences between foreground and background on the ID and OOD feature. More explanations should be provided.\n\n**A1:** Thanks for this comment. We apologize for not providing a clear description. In fact, for a sample, Feature Sim calculates the OOD score by examining the difference in activations between its foreground and background. We explain this operation through a toy example.\nWe assume a $3 \\times 3$ feature map of an ID sample as follows, where the middle pixel represents the foreground and the other pixels represent the background.\n\n| 0.1 | 0.1 | 0.1 |\n|-----|-----|-----|\n| 0.1 | 1.0 | 0.1 |\n| 0.1 | 0.1 | 0.1 |\n\nThe mean of the feature map $\\mu_{ID}=0.2$, then its Feature Sim Score is defined as $S_{ID}=(8\\times|0.1-\\mu_{ID}|+|1.0-\\mu_{ID}|) / 9=0.18$\n\nFor an OOD sample, based on our observations in the text, it should have lower foreground activation than an ID sample. Suppose its foreground is located at the bottom right corner, the feature map is represented as:\n\n| 0.1 | 0.1 | 0.1 |\n|-----|-----|-----|\n| 0.1 | 0.1 | 0.1 |\n| 0.1 | 0.1 | 0.4 |\n\nWe get $\\mu_{OOD}=0.13$, then its Feature Sim Score is defined as $S_{OOD}=(8\\times|0.1-\\mu_{OOD}|+|0.4-\\mu_{OOD}|)/9=0.06$. Therefore, we have $S_{ID}=0.18 > S_{OOD}=0.06$.\n\n\n>**W2:**\"Eq. (2) is equivalent to the GAP operator\". Actually, Eq. 2 is not a GAP operator, GAP performs global pooling in the feature map, whereas Eq. 2 performs pooling across different channels. \n\n**A2:** Sorry for the misunderstanding. We want to show that Eq. 2 is equivalent to the GAP operator on on the spatial (height, width) axis. For each channel, a feature map with shape of (H, W) will be pooled as a single value. To be specific, the shape of f(x) is (B,C,H,W) and the shape of GAP(f(x)) is (B,C). We will add some details about the GAP operator in the updated version.\n\n\n>**W3:** In section A.1, the authors train the ResNet50 from scratch, while other comparison methods (Energy, ReAct, DICE ect.) use the off-the-shelf ResNet model for experiments. Therefore, the comparisons might be unfair, I recommend the author to utilize the off-the-shelf model.\n\n**A3:** Sorry for the **misunderstanding**. **In our experiments, we actually used the official pre-trained checkpoints provided by mmclassification**, which aligns with the performance of other comparison methods (Energy, ReAct, DICE, etc.). This ensures that our comparison with these methods is fair and consistent. The detailed description of the training process for the official pre-trained weights was included for clarity, but it seems to have caused some confusion.\n\n\nThe reason we use the checkpoint provided by mmclassification rather than the official PyTorch one is that the official PyTorch does not provide checkpoints for resnet18 on cifar10 and cifar100. In order to ensure that all models are trained from the same framework and to avoid experimental unfairness due to differences in training methods, we use the official mmclassification checkpoint. Additionally, we have verified that its performance on the ImageNet-1k benchmark can align with the official PyTorch checkpoint."
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700488494886,
+                "cdate": 1700488494886,
+                "tmdate": 1700488494886,
+                "mdate": 1700488494886,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "f3NmE4dzOq",
+                "forum": "ZrY38sUYWs",
+                "replyto": "WqYfZ1useC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_sGRf"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_sGRf"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to Authors Rebuttal"
+                    },
+                    "comment": {
+                        "value": "I appreciate the authors' addressing of my concerns and I will raise my rating.\nHowever, I still feel that the proposed method is similar to the previous works such as ASH.  The novelty of this paper is limited due to the just subtle differences in thresholds"
+                    }
+                },
+                "number": 14,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700654347461,
+                "cdate": 1700654347461,
+                "tmdate": 1700654347461,
+                "mdate": 1700654347461,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "gGbBWzypwP",
+            "forum": "ZrY38sUYWs",
+            "replyto": "ZrY38sUYWs",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_gWG8"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5135/Reviewer_gWG8"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper proposes a post-hoc method for out-of-distribution detection. The authors observe that ID data is more robust than OOD data and the gap between foreground and background features is more prominent. Based on these observations, the authors propose a new OOD score function based on the spatial feature maps, and a threshold activation technique to further boost the performance. Experiments are conducted on various OOD detection benchmarks and some results are appealing."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The proposed method is simple and easy to implement.\n2. The authors conduct comprehensive experiments to evaluate the method.\n3. The method achieves state-of-the-art results when combined with other techniques."
+                },
+                "weaknesses": {
+                    "value": "1. he method claims to leverage spatial clues in the feature maps. However, no spatial information is actually used in the final OOD score calculation (cf. Eq. (3)). \n\n2. The method is mainly based on the observation that the activation difference between foreground and background is more prominent for ID data. However, the generalizability of this observation remains unverified. Notably, most of the visualizations of OOD data in Figure 6 display small foreground objects, which calls into question the applicability of this method to a broader range of OOD scenarios.\n\n3. The theoretical analysis of the method assumes that the features of foreground and background follow two Gaussian distributions. This is a strong assumption that may not hold in realistic settings.\n\n4. As indicated in Table 1, this method requires integration with other OOD detection techniques to achieve state-of-the-art results. This raises two concerns: Firstly, combining different OOD functions could understandably lead to a performance boost, making it unclear how much of the improvement is attributable to the proposed method itself. Secondly, the aggregation parameters appear to require meticulous tuning, as shown in Appendix A.1, which casts doubt on the method's ease of use in real-world applications.\n\n5. The paper claims that the proposed method is adaptable to other tasks such as semantic segmentation and object detection. However, the experimental setup is puzzling. The method appears to focus on distinguishing between image-level ID and OOD, which deviates from these standard tasks, such as OOD segmentation [1]. Besides, it remains unclear the unique advantages of this method in these application areas.  For example, one could easily use a simple average of existing pixel-wise OOD scores as the image-level OOD score for the segmentation task.  There are no comparisons with any baseline methods in Table 6. \n\n[1] Chan Robin, et al. Segmentmeifyoucan: A benchmark for anomaly segmentation. NeurIPS, 2021."
+                },
+                "questions": {
+                    "value": "See detailed comments/concerns above."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5135/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698819527811,
+            "cdate": 1698819527811,
+            "tmdate": 1699636506449,
+            "mdate": 1699636506449,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "JPrN7behYD",
+                "forum": "ZrY38sUYWs",
+                "replyto": "gGbBWzypwP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">**W1:** The method claims to leverage spatial clues in the feature maps. However, no spatial information is actually used in the final OOD score calculation (cf. Eq. (3)).\n\n**A1:** Thanks for your suggestions! Our approach utilizes the spatial proportions and relative activation strengths of the foreground and background. However, upon further consideration, especially after a reviewer's reminder, we acknowledge that our method does not utilize a strong spatial positional relationship. As a result, employing the term 'spatial clues' might cause confusion for readers, and we intend to revise this phrasing. \n\n>**W2:** The method is mainly based on the observation that the activation difference between foreground and background is more prominent for ID data. However, the generalizability of this observation remains unverified. Notably, most of the visualizations of OOD data in Figure 6 display small foreground objects, which calls into question the applicability of this method to a broader range of OOD scenarios.\n\n\n**A2:** Thanks for pointing out this issue. In fact, the oracle method should segment the foreground and background areas of the image, and then separately calculate the average activation intensity within these areas, thereby obtaining the difference in activation between the foreground and background, making the method unaffected by the scale of the object. However, we cannot obtain segmentation annotations for an image in advance.\nFortunately, our method is not overly sensitive to object scale, because the most of the OOD foreground activations are **quite lower** than that of ID images. Therefore, Feature Sim is robust to changes in scale.\n\nTo verify this phenomenon, we plan to locally magnify images where the foreground occupies a smaller proportion, observing the impact of size changes on the OOD Score of these samples. The results will be updated here once we complete the experiments\uff01\n\n>**W3:** The theoretical analysis of the method assumes that the features of foreground and background follow two Gaussian distributions. This is a strong assumption that may not hold in realistic settings.\n\n**A3:** Thanks for your comments! In the field of OOD detection, it\u2019s common to use Gaussian distributions to model features and aid in explaining the algorithm\u2019s mechanism [1][2]. The Gaussian Mixture Model (GMM) we employ is more general and can cover more types of features compared to Gaussian distributions.\n\nRegarding the GMM modeling of foreground-background, we reiterate that the one-dimensional GMM only represents the probability densities of activation components for feature foreground and background, without encoding their spatial relationships. Therefore, we do not consider GMM to be a stringent assumption. Moreover, in Appendix B.10, we employ the foreground-background differences fitted by GMM directly as the OOD score. Experimental results on the ImageNet-1k benchmark are 90.83% AUROC and 35.08% FPR95, which effectively substantiates the rationale behind our GMM-based modeling.\n\nOur intention with employing a toy model is to facilitate reader comprehension of how our module operates. A more complex model that closely mimics real-world scenarios does not yield an analytical solution but only results from numerical simulations. The GMM we utilized effectively describes the histogram distributions of the foreground and background in most scenarios, as illustrated by the blue and orange lines in Figures 7 and 8 of the Appendix. As indicated in Section 7, titled \"Understanding Feature Sim from the Perspective of GMM,\" our objective isn't to provide a rigorous theoretical proof in this section, but rather to enhance the reader's understanding of the Feature Sim (FS) working mechanism."
+                    }
+                },
+                "number": 1,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700488315400,
+                "cdate": 1700488315400,
+                "tmdate": 1700488315400,
+                "mdate": 1700488315400,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "pw9RayHYpF",
+                "forum": "ZrY38sUYWs",
+                "replyto": "gGbBWzypwP",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Updated experiments for the object scale"
+                    },
+                    "comment": {
+                        "value": "Reviewer gWG8 is concerned that the foreground sizes in the OOD datasets we selected are small, resulting in lower OOD scores. Reviewer gWG8 is curious whether the OOD score would increase if the foreground size in the OOD image increases, thus affecting the OOD detection performance of FS.\n\nAmong the four OOD datasets, only iNaturalist is object-centric, so it is most susceptible to the impact of object scale. Therefore, we use iNaturalist as an example for our experiments. We zoom in the OOD image w.r.t. the image center (w/2, h/2) and then resize it to 224. This way, we will get foregrounds of different sizes. We perform continuous zoom-in operations on the iNaturalist dataset, without altering the ID dataset. The experimental results of FS+TA are shown below.\n\n| Scale Ratio | iNaturalist |        |\n|-------------|:-----------:|:------:|\n|             |    AUROC    |  FPR95 |\n|           1 |      96.86% | 16.03% |\n|         1.1 |      97.84% | 10.90% |\n|         1.2 |      97.92% | 10.57% |\n|         1.3 |      98.08% |  9.78% |\n|         1.4 |      98.17% |  9.18% |\n|         1.5 |      98.25% |  8.62% |\n|         1.6 |      98.30% |  8.25% |\n|         1.7 |      98.33% |  8.18% |\n|         1.8 |      98.34% |  8.33% |\n|         1.9 |      98.34% |  8.31% |\n|           2 |      98.48% |  7.66% |\n\nThe experimental results show that when the foreground size of OOD images increases, the performance of OOD detection improves. Our detailed analysis of this phenomenon is as follows:\n\n* During the continuous enlargement of the foreground size, a mismatch occurs between the size of the object and the receptive field of the network, leading to a further reduction in the network's response to the foreground. This causes the OOD scores of iNaturalist to decrease, resulting in an increase in the OOD detection performance.\n* The increase in the proportion of the foreground in OOD images does not enhance the activation intensity of the foreground. The experimental phenomenon is consistent with our previous explanation.\n\nMoreover, we also examine some samples shown in Figure 7, and their OOD scores also decrease as the size of the foreground increased. We will update these discussions in the revised paper."
+                    }
+                },
+                "number": 15,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700662123297,
+                "cdate": 1700662123297,
+                "tmdate": 1700664632674,
+                "mdate": 1700664632674,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "1Bo2j4UEdb",
+                "forum": "ZrY38sUYWs",
+                "replyto": "pw9RayHYpF",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_gWG8"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5135/Reviewer_gWG8"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Thanks for your response"
+                    },
+                    "comment": {
+                        "value": "Thanks for the detailed response and additional results. \n- W1-3: As the reply indicates, it seems that the paper requires some significant revision. \n- W4: The dynamic range in Fig 4 is pretty narrow. The analysis does not fully convince me. \n- W5: Thanks for the clarification. The added results partially addressed this concern. However, it is uncommon/infeasible to discard input images in many real-world semantic segmentation and object detection tasks. It is a bit overclaimed."
+                    }
+                },
+                "number": 20,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5135/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700709535228,
+                "cdate": 1700709535228,
+                "tmdate": 1700709535228,
+                "mdate": 1700709535228,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

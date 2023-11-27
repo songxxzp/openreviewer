@@ -1,0 +1,278 @@
+[
+    {
+        "id": "mF9hZYj0P6",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_AByS"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_AByS"
+        ],
+        "forum": "caW7LdAALh",
+        "replyto": "caW7LdAALh",
+        "content": {
+            "summary": {
+                "value": "This paper presents a novel evaluation framework called IdentityChain which is designed mainly to evaluate self-consistency. Basically, given some initial natural language specification ($nl_0$), a model ($M$) will first generate code ($pl_0$). Then, the $M$ generates a natural language summary ($nl_1$), given only ($pl_0$). Now, using only $nl_1$, $M$ generates the corresponding code ($pl_1$). So, there is effectively a chain: $nl_0 \\rightarrow pl_0 \\rightarrow nl_1 \\rightarrow pl_1$. Their framework measures semantic equivalence, where the self-consistency condition is met if $sem(pl_0) = sem(nl_1) = sem(pl_1)$, and the \\textit{strong} self-consistency condition is met if $sem(nl_0) = sem(pl_0) = sem(nl_1) = sem(pl_1)$. This corresponds to a chain of length 1, but this could be extended to an arbitrary length (they use 5 in this paper). For measuring semantic equivalence $sem(pl_i) = sem(pl_{i+1})$, they introduce a metric called Test Output Match (TOM) in which they check whether the exact output of $pl_i$ and $pl_{i+1}$ are the same for each of the tests in the given test suite. They argue that this also implicitly evaluates $sem(pl_i) = sem(nl_{i+1})$. They conduct experiments using HumanEvalPlus and MBPP, using 11 different code LLMs, encompassing both foundational models as well as instruction-tuned models using greedy decoding. Their results show that even though code LLMs can achieve impressive initial accuracy (pass@1), they achieve relatively lower scores on self-consistency, especially as the number of iterations increase, and in fact, accuracy does not always correlate with self-consistency. They demonstrate that IdentityChain can be used for efficiently finding flaws at each step by highlighting a few of their findings from such experiments. They also demonstrate that self-consistency is better correlated with human judgment compared to other common static and dynamic metrics."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- This notion of consistency is very interesting and very useful for evaluation. The idea of using the Test Output Match for approximating semantic equivalence is also quite neat, and something particularly useful for evaluating PL-to-NL since existing metrics are not great for this.\n- The analysis in Figure 2 for understanding how performance degrades as the number of iterations increases is quite interesting. The authors have also enumerated a number of findings related to weaknesses of code LLMs from their own use of this framework which can inspire future work in this space.\n- The authors have conducted very thorough experiments and have in-depth evaluation, even demonstrating correlation with human judgment (though some of the details of this are unclear). This underlines the value of the evaluation framework they have introduced."
+            },
+            "weaknesses": {
+                "value": "- The IdentityChain framework assumes that the underlying code model performs well at both tasks (NL-to-PL and PL-to-NL). It is possible that the model is good at one and not the other, and it is not possible to decouple these in their framework.\n- The authors introduce the idea in a very general manner, in which the self-consistency idea could be applied between many different tasks. However, it is important to note that this approach can only be applied to a pair of symmetric tasks. More concretely, the two tasks they focus on in this paper are NL-to-PL and PL-to-NL, and these assume that the natural language and code sufficiently and holistically capture one another. These assumptions would not be valid for certain types of tasks, such as summarization tasks, in which a very brief summary with a high-level overview is to be generated for a given input. In such cases, the summary would not sufficiently and holistically capture the input in such a way that something semantically equivalent to the input could be re-generated given only the summary. \n- Based on my previous two points, it seems that the code summarization task (PL-to-NL) may not be symmetric to the (NL-to-PL) task. Namely, in $p_i \\rightarrow n_{i+1}$, the model could generate a high-level natural language summary rather than a holistic description of $p_{i}$ with sufficient details for for generating $n_{i+1} \\rightarrow p_{i+1}$ , with the expectation that $p_{i+1}$ would be semantically equivalent to  $p_{i}$. It is likely that the pretraining data for these code models include a lot of natural language with high-level descriptions of accompanying code (e.g., docstrings, NL StackOverflow test near code snippets). If this is the case, then the model is likely not great at generating holistic natural language descriptions for code. Therefore, it is possible that the model is very good at NL-to-PL (as per the high accuracy scores) but not as good at PL-to-NL, which results in low self-consistency scores. However, since it is not clear how to decouple this in the IdentityChain, it is difficult to clearly see this."
+            },
+            "questions": {
+                "value": "1) Please comment on the points raised in the section above.\n2) The results shown in Table 2 are unclear to me. Based on the description, it seems that the evaluation is on $sem(pl_0) - sem(nl_1)$. Therefore, it seems that each metric is computed based on $score(pl_0$, $nl_1)$. However, one of these is code and the other is natural language, so computing metrics like exact match on this would not make sense. Could you please clarify the details here?\n3) In this framework, $pl_0$ is generated from a human-written specification $nl_0$. Since $nl_1$ is model-generated and not human-written, is it fair to expect that $nl_1 \\rightarrow pl_1$ generates code that is similar to $pl_0$? Isn't it possible that the distributions are different?\n4) In this paper, you focus on doing NL-to-PL first, which is natural since that is how HumanEval and MBPP are designed. Have you considered starting with PL-to-NL? Would you expect to see similar results?\n\n\nSome minor comments:\n- I would suggest re-considering calling this idea \"self-consistency\" as this term has been used to describe a different principle with LLMs: https://arxiv.org/abs/2203.11171.\n- Section 5.3: \"fin-grained\" should be \"fine-grained\"\n- Last line of page 6: \"StarCoderBase-13B\" is inconsistent with Table 1"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Reviewer_AByS"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8199/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697317241293,
+        "cdate": 1697317241293,
+        "tmdate": 1700670680943,
+        "mdate": 1700670680943,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "fewkfGg44W",
+        "forum": "caW7LdAALh",
+        "replyto": "caW7LdAALh",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_6ee8"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_6ee8"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes to evaluate code LLMs with respect to self-consistency (including documentation for code and code). To this end they perform a formal definition and evaluate multiple models. The paper shows that self-consistency is a concerning aspect.\n\nThis behavior is highly anticipated as it is known for LLM in general. Thus, the research question, while worth asking, is already quite likely to yield only limited insights. The authors would have to motivate much more, why different behavior could be anticipated and then carefully analyze to what extent this reasoning holds (or does not). In the intro the paper does present first steps in this direction though lacking reasoning, i.e., the mere fact that a docstring does not allow to generate code but a natural language completion does is interesting, but per se not surprising. Maybe, it is due to training data? Maybe due to sth else? The authors should carefully think about such questions. In the analysis some findings are not sufficiently explained or might be spurious or follow general known patterns (\"LLMs don't understand (code) semantics\"). A positive example is the lack of awareness of data types, which is specific to code. Finding multiple specific aspects and then generalizing to known model behavior facts is significantly more interesting as it provides deeper insights. In summary, the paper lacks depth and addresses a question that from the outset is of some but not much interest given existing knowledge on LLMs.\n\nDetailed comments:\n*  For example, we observe that stacking more parameters does not necessarily guarantee the improvement of self-consistency: while StarCoderBase-7B performs worse in Pass@1 for both benchmarks than StarCoderBase-13B, the former outperforms the latter after five self-iterations\n This is a single example, no statistical analysis. Also in general large models seem to perform better. So this finding is of very limited relevance. Looking at performance of LLMs there is often some variation."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "see above"
+            },
+            "weaknesses": {
+                "value": "see above"
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8199/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698656956916,
+        "cdate": 1698656956916,
+        "tmdate": 1699637017174,
+        "mdate": 1699637017174,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Jih3tJjxMq",
+        "forum": "caW7LdAALh",
+        "replyto": "caW7LdAALh",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_d4Cs"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_d4Cs"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper focuses on evaluating the self-consistency of Code Large Language Models (Code LLMs). The authors stress the importance of self-consistency in these models as they might generate varying outputs for semantically similar inputs. They introduce an evaluation framework, IdentityChain, which helps in understanding the model's vulnerabilities and improves the architecture of Code LLMs. Furthermore, they discuss various existing evaluation metrics for Code LLMs, emphasizing that many of these do not consider the model's self-consistency. By using their framework, they aim to provide better insight into the models and improve the training or architectural design of Code LLMs in the future."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Originality: The paper addresses the lesser-explored topic of self-consistency in Code LLMs. The introduction of the IdentityChain framework showcases an original approach to understanding the internal workings and vulnerabilities of such models.\n\nQuality: The paper cites multiple sources and provides a comprehensive review of the existing literature, giving it a solid foundation. The work is well-researched and backed by evidence.\n\nClarity: The paper is structured logically, with a clear progression from the introduction of the problem to the presentation of the solution. The content is presented in an organized manner, making it relatively easy to understand for readers.\n\nSignificance: Addressing self-consistency in Code LLMs has potential implications for the future development and deployment of such models, making the research both timely and significant."
+            },
+            "weaknesses": {
+                "value": "Generalization: The paper specifically discusses Code LLMs, and it would be useful to understand how the principles and findings apply to other LLMs or different types of models.\n\nComparison with Existing Solutions: While the paper reviews existing evaluation metrics, a direct comparison in terms of performance or effectiveness with the proposed solution might have added more clarity."
+            },
+            "questions": {
+                "value": "How does the IdentityChain framework compare in terms of efficiency and accuracy with other existing evaluation tools for Code LLMs?\nAre there any plans to extend the research to encompass other types of LLMs or machine learning models?\nHow can the IdentityChain framework be integrated into the current training methodologies of Code LLMs for better results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8199/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698731758751,
+        "cdate": 1698731758751,
+        "tmdate": 1699637017016,
+        "mdate": 1699637017016,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xaWhJnumK2",
+        "forum": "caW7LdAALh",
+        "replyto": "caW7LdAALh",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_G8dX"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission8199/Reviewer_G8dX"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a concept of self-consistency for Code LLMs and proposes a framework, namely IdentityChain, to evaluate their self-consistency. Using IdentityChain, the paper studies the self-consistency of a series of CLMs beyond the accuracy based on the HumanEval+ and MBPP benchmarks and reveals some inconsistent behaviors of those models."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "Leveraging unique properties of code such as executability and dynamic engine feedback, this paper formalizes a definition of self-consistency for CLMs. The consistency is interpreted on the NL-PL-NL chain, unlike recent work on self-consistency such as Elazar et al. (2021), which defines the consistency as invariance of LLMs to semantic preserving transformations of the prompts.\n\nThe authors propose IdentityChain, a framework for self-consistency evaluation with a new metric, named Test Output Match (TOM) score. TOM is based on matching binary outcome of dynamic test execution as well as syntax and runtime errors."
+            },
+            "weaknesses": {
+                "value": "There are some weaknesses in the self-consistency formulation:\n\n1. We could construct a perfectly self-consistent and not-so-useful CLM. For example, a CLM could generate summarization nl_1 exactly the same as pl_0. It is likely that the model generates pl_1 semantically equivalent to the input pl_0 in the next step. The chain goes on and the model is mostly perfectly self-consistent. Based on that, we could have very high self-consistency but that does not say much about the model.\n\n2. An important aspect of consistency is the consistent behavior to transformations of the prompts with equivalent semantics. This paper does not touch upon it.\n\n3. While the concept and the proposed framework sound general to any task, it seems to only apply to code synthesis and summarization. What about other tasks for code such as reasoning about code, fixing bugs?"
+            },
+            "questions": {
+                "value": "At the end of Page 2, it is said that \u201cthe underlying semantics of pl1, nl1, pl0 should all be the same. We call such a behavioral property self-consistency\u201d, but in the next paragraph, the authors write \u201ca model\u2019s accuracy is low, its self-consistency can remain high when the model, despite making initial errors, consistently maintains those errors\u201d. Please clarify.\n\n\u201cit relatively improves GPT-3.5 by 57.5% in FPS-5\u201d What is FPS-5 here?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission8199/Reviewer_G8dX"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission8199/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699041447553,
+        "cdate": 1699041447553,
+        "tmdate": 1700695731787,
+        "mdate": 1700695731787,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

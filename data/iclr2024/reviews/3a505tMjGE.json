@@ -1,0 +1,291 @@
+[
+    {
+        "id": "qTsYQEt3k8",
+        "forum": "3a505tMjGE",
+        "replyto": "3a505tMjGE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_F6GH"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_F6GH"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper discusses the over-estimation problem in VAEs: VAEs often assign a higher likelihood to OOD datapoints than ID datapoints. In analyzing this issue, the paper brings forth two different possible reasons, namely (1) the prior choice $p(z)$ being Gaussian, (2) the entropy of ID data being much higher than OOD data. The paper does this analysis by decomposing the ELBO, and then proposes two approaches to mitigate these two factors. Combining these two approaches give an unified way of handling a VAE\u2019s overestimation problem, and the authors evaluate their approach in a suite of unsupervised OOD detection tasks."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The decomposition of the ELBO, and the two factors given for VAEs over-estimation, is novel to the best of my knowledge. It is also a clever way of analyzing the problem.\n2. Section 3.2, further analysis on Factor I. I like the simple to complex examples provided to show how $p(z)$ being a standard normal distribution can be an improper choice of prior when modeling a complex distribution.\n3. The paper is well written and easy to read.\n4. The authors have conducted a thorough set of experiments and ablations."
+            },
+            "weaknesses": {
+                "value": "**(Motivation)** Could the authors explain the motivation behind choosing unsupervised OOD detection and specifically VAEs? Typically, there are no shortage of labeled datapoints from the training distribution, so a few use-cases would be helpful. Also is there a particular reason for focusing on VAEs? Some prior successful unsupervised OOD detection method, such as DoSE [1], works on both VAEs and Glow, and LMD [2] uses diffusion models for OOD detection (diffusion models being the typical generative model of choice over VAEs these days).\n\n**(Notation, section 2.1)** Why is $x = \\textrm{ID}$ or $x = \\textrm{OOD}$? A better notation is $D(x) = \\textrm{ID}$ if $S(x) > T$, and so on, where $D$ is the ID-OOD classifier.\n\n**(Definition 1, VAE\u2019s overestimation)** The authors define over-estimation when the expected ELBO over the OOD distribution is larger than that on the ID distribution. This however, is a weak definition in the sense that it gives no guarantee about arbitrary samples from these distributions. For example, it is quite possible that due to overlaps between ELBO on ID and OOD data, there is no overestimation but a big fraction of the ID/OOD samples are misclassified.\n\nFor example, assume that the score function on the ID distribution has a distribution $N(10, 5)$, and that on the OOD distribution has a distribution of $N(9, 5)$. Then by definition 1, there is no overestimation issue in this case. However, it is easy to see that if we choose the threshold $T$ such that 95% of ID samples are classified as ID, then a big percentage of OOD samples would also be classified as ID. A better definition of over-confidence would take into account the threshold $T$, $P(S(x) < T | x \\sim p_{id})$ and $P(S(x) < T | x \\sim p_{ood})$.\n\nWhile I understand that this definition is chosen to facilitate the theoretical discussion/make the proofs easier, it is important to acknowledge this weakness in the paper. \n\n**(More notations)** I am assuming $p_{\\theta}(x|z)$ is the decoder distribution, and $p(x)$ represents the true distribution of $x$. This needs to be clearly stated and used in a careful manner. \n\n**(Equation 5)** Could the authors clarify the term $H_{q, p}(z|x) = -E_{p(x)q_{\\phi}(z|x)} [log(p_{\\theta}(z|x)]$ (equation 5)? The expectation is taken over the true distribution $p(x)$ but the term inside is the model distribution $p_{\\theta}(z|x)$. This is not the conditional entropy of the variable $z|x$ in the usual sense, and some explanation/clarification of notation would be useful. It is possible the model distribution is not close to the true distribution. Is there some sort of assumption that they are?\n\n**(Contribution 1 in introduction: dataset entropy mutual integration)** In the introduction, dataset entropy mutual integration is coined as:\n\n>> \u201csum of the dataset entropy and the mutual information terms between the inputs and latent variables\u201d\n\nHowever, in page 4, we see that:\n\n$$\\textrm{Ent-mut} = H_p(x) + I_q(x, z) - I_{q, p}(x, z)$$\n\nSo it is not technically a sum of entropy and mutual information, as we subtract $I_{q, p}(x, z)$ in the expression. Also what is the relevance/meaning of $I_q(x, z) - I_{q, p}(x, z)$?\n\n**(Table 1 and 2)** No error bar or uncertainty estimation is given. A lot of the methods have similar numbers, and without an error bar, it is hard to discern the results. I would request the authors to \n\nRun the experiments for 3 seeds, for each baseline, and report the standard error.\nBold the top performing method, and also any method whose average performance > lower bound on the top performing method\u2019s performance. Any equivalent formulation is also good.\n\n**I see that Table 10 and 11 in the appendix have the associated error bars**, but mentioning/referencing them in the main paper would be important. \n\n**(Lack of self-containedness)**\n\nI was looking for limitations of the paper, and it is mentioned in the appendix K. I would request this to be moved to the conclusion section to make the paper more self-contained.\n\n\n**(Nit: overclaiming)**\n\nSection 3.2\n>> the prior distribution $p(z) = N(0, I)$ is an improper choice for VAE when modeling a complex data distribution $p(x)$\n\nThis is overclaiming: \n1. what is the measure of complexity of $p(x)$? Its entropy/differential entropy? \n2. We have seen some examples when the prior being $p(z) = N(0, I)$ leads to a bad outcome. This does not prove this statement in a general sense. Better way to say this, use \u201cmay be an improper choice\u201d instead of \u201cis an improper choice\u201d, unless the authors have a more specific theorem to present.\n\n[1] Density of States Estimation for Out-of-Distribution Detection, https://arxiv.org/abs/2006.09273\n\n[2] Unsupervised Out-of-Distribution Detection with Diffusion Inpainting, https://openreview.net/forum?id=HiX1ybkFMl"
+            },
+            "questions": {
+                "value": "**(Understanding Post-Hoc prior)**\n\nJust to make sure I understand the method correctly: for PHP, one first trains a VAE using ELBO from equation 2:\n\n$$ELBO(x) = E_{q_{\\phi}(z|x)} [\\text{log}p_{theta}(x|z)] - D_{KL}(q_{\\phi}(z|x)||p(z))$$\n\nAnd only once this is done, PHP trains a second LSTM to learn $\\hat{q_{id}}(z)$ to match the learned $q_{id}(z)$ from the regular VAE training?\n\n**(Error related to LSTM estimation)**\n\nDoes the method assume that the LSTM learned distribution $\\hat{q_{id}}(z))$ matches $q_{id}(z)$? What happens when this match is not well, or $D_{KL}(\\hat{q_{id}}(z)||q_{id}(z))$ is high? Then it seems that PHP should not work. This seems like a key assumption for PHP to work well.\n\n**(Table 1)** \n\nWhy are the methods in supervised/auxiliary column different between FashionMNIST/MNIST and CIFAR-10/SVHN?\n\n\n**(Table 10 and 11)**\n\nWhy are the error rates of DEC 0 in table 10 and 11?\n\n\n**(Additional experimental results)**\n\nWould it be possible to produce table 1, but with CIFAR-100 used as the ID dataset? Most OOD detection papers report numbers on CIFAR-100, and it is regarded as a harder task than CIFAR-10.\n\n\n**(Computational resources)**\n\nHow much additional computation time is required for this method, including training a separate LSTM for PHP? How does this compare with other baselines?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Reviewer_F6GH",
+                    "ICLR.cc/2024/Conference/Submission2226/Senior_Area_Chairs"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1697953212178,
+        "cdate": 1697953212178,
+        "tmdate": 1700673265852,
+        "mdate": 1700673265852,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "E55QSCAF6G",
+        "forum": "3a505tMjGE",
+        "replyto": "3a505tMjGE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_jWXz"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_jWXz"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes a new anomaly score for OOD detection with VAEs: rather than use the ELBO, the paper proposes to \n1. replace the prior $p(\\mathbf{z})$ in the KL divergence term in the ELBO with the aggregated posterior $\\hat{q}_{id}(\\mathbf{z})$, which they call the post-hoc prior (PHP) method, and \n2. add a term $\\mathcal{C}(\\mathbf{x}) = \\mathbb{E}_{p_{id}}[PHP(\\mathcal{x})] \\frac{\\mathcal{C}_{non}(\\mathbf{x})}{\\mathbb{E}_{p_{id}}[\\mathcal{C}_{non}(\\mathbf{x})]}$, which they call the dataset entropy-mutual calibration (DEC) method.\n\nOn the two most classic OOD detection failures for DGMs (i.e., FMNIST vs. MNIST, CIFAR-10 vs. SVHN), using just one of PHP or DEC succeeds on one benchmark but fails on the other, while using both PHP and DEC combined (which they call AVOID) succeeds on both benchmarks. On the Celeb-A vs. CIFAR-10 and Celeb-A vs. CIFAR-100 tasks, PHP, DEC, and AVOID perform better than other VAE-based detection methods. The authors also show that AVOID performs better than the ELBO on various OOD detection tasks with FMNIST, CIFAR-10, or Celeb-A as the in-distribution dataset."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. Originality: To my knowledge, the proposed method is novel.\n2. Quality: The experiments consider a wide range of baseline methods and ablations. \n3. Clarity: The paper does a good job of breaking down the presentation particularly for factor 1, e.g. from analysis to proposed method.\n4. Significance: The paper tackles the important question of understanding and improving failures in OOD detection by VAEs. In particular, I find it interesting that OOD detection with VAEs improves when substituting in the aggregate posterior for the prior in the ELBO. This result seems to provide a good example of how accounting for estimation error can improve OOD detection."
+            },
+            "weaknesses": {
+                "value": "1. The motivation behind DEC is unclear, and its presentation is a bit circuitous. For instance, why is the non-scaled calibration function defined as it is in Eq 19, especially when $n_i \\geq n_{id}$? There are many definitions that could satisfy property 1 (Eq 15). Also, if the point of the scaling is to be comparable to the Ent-Mut terms, why scale by Ent-Mut of the ID distribution plus a KL term rather than just the Ent-Mut term directly? It would help if, for instance, the authors can show that the performance is robust to various choices in DEC (or motivate the specific choices made).\n2. The experiments show that PHP and DEC by themselves each only minimally improve OOD detection performance in some cases. In addition, the experiments only consider certain pairs but not their reverse (e.g., FMNIST vs. MNIST but not MNIST vs. FMNIST). Considering the latter can increase confidence that the proposed solution is not overfitting on a particular type of OOD detection task.\n\nA few smaller comments:\n1. The use of \"counterfactual\" in the third paragraph in the intro seem incorrect.\n2. Eq 24 in the appendix looks wrong (though I think just due to typo; not something I noticed to affect any other part of the paper)."
+            },
+            "questions": {
+                "value": "1. (Repeated from above) Why is the non-scaled calibration function defined as it is in Eq 19, especially when $n_i \\geq n_{id}$? There are many definitions that could satisfy property 1 (Eq 15). Also, if the point of the scaling is to be comparable to the Ent-Mut terms, why scale by Ent-Mut of the ID distribution plus a KL term rather than just the Ent-Mut term directly? \n2. Do the authors have any hypotheses as to why PHP and DEC by themselves each only minimally improve OOD detection performance in some cases?\n3. What are the results of this method on \"reverse\" dataset pairs (e.g. ID MNIST vs. OOD FMNIST)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Reviewer_jWXz"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698720870182,
+        "cdate": 1698720870182,
+        "tmdate": 1699636156053,
+        "mdate": 1699636156053,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xF1lL27ELA",
+        "forum": "3a505tMjGE",
+        "replyto": "3a505tMjGE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_G5ek"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_G5ek"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper addresses the problem of generative models, specifically VAEs, when applied to OOD detection tasks. It is based upon the observation that the ELBO used in VAEs, even though it is a reasonable candidate, is an unreliable metric for OOD detection. Moreover, it tries to change the metric to come to a more reliable score to perform OOD detection.\n\nThe paper breaks down the ELBO of a dataset (being in- or out-of-distribution) into two components: (i) a negative KL divergence between the aggregate posterior $q(z)$ and the prior $p(z)$, and (ii) a negative term related to dataset entropy and mutual information between inputs and latent variables. \nIt identifies the cause of ELBO's poor performance in OOD detection, noting that the KL divergence in (i) is often overestimated and the negative entropy term in (ii) is often inflated for simpler datasets that we perform OOD detection on (for example doing OOD detection on MNIST when a model is trained on FashionMNIST). The work proposes a post-hoc correction to adjust the former (PHP) and it introduces a method (DEC) to correct the small OOD entropies by utilizing a complexity measure inspired by Serra et al. (2020).\nImplementing these adjustments successfully improves OOD detection for VAEs in challenging scenarios, such as differentiating between datasets like FashionMNIST and MNIST, or CIFAR10 and SVHN.\n\nAll in all, the study tries to address an intriguing problem, but at this stage, I cannot accept it and I will explain why in the following. I would be willing to increase my score to above the acceptance threshold if the authors can address all the important issues and suggestions that I have written in the following."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1) The paper is well-written and easy to follow.\n2) The problem of DGMs failure in OOD detection is intriguing and has been observed not only in VAEs, but almost all the likelihood-based deep generative models. Therefore, any contribution in this field is valuable.\n3) Breaking down the ELBO term is interesting from a theoretical standpoint. Although this observation is not entirely novel, as I will explain in the weaknesses, the theory is certainly sound and the method improves the OOD detection performance by large for the tasks it has considered.\n4) The toy examples are very informative and interesting."
+            },
+            "weaknesses": {
+                "value": "1) **(Important)** The OOD detection pathology is one-sided, meaning that it happens when you train a model on a relatively complex dataset and test it for OOD on a simpler one. However, it usually does not hold the other way around. An important feature that a good OOD detection method should have is that even though it fixes the pathological direction, it does not hinder the performance in the reverse direction. That being said, please provide the results when running the framework in the reverse direction where a VAE is trained on MNIST and tested for OOD on FashionMNIST. Similarly, when a model is trained on SVHN and tested for OOD on CIFAR10. It is well-known that many such methods hinder the performance in the other direction, one would need to make sure this does not happen for the current algorithm.\n2) **(Important)** Although the entropy and KL divergence breakdown is touted as novel, it is not entirely novel! Caterini et al. (2022) have considered breaking down the likelihood term into an entropy and a KL divergence term. In fact, in the special case where ELBO equals the likelihood and the encoder and decoder provide perfect mappings, the mutual information terms cancel out and the entropy term is pointed out in Caterini et al. (2022). However, this paper is not mentioned at all. It should most certainly be added to the next iteration of the paper.\n3) The PHP method needs to train an entirely new model which can be time-consuming. Ideally, your generative model already has a good understanding of what in-distribution means and should be able to perform OOD detection even without additional training.\n4) The DEC method is tested specifically on image data and the SVD-based algorithm also seems like a sort of \u201coutside help\u201d. Even though similar methods have been proposed in the past to fix the entropy term, such as Serra et al. (2020), I still believe that the DGM should already have the information required for OOD detection without the need for any extra model training or running modality dependent algorithms.\n5) Performing OOD detection requires adjusting an $n_{id}$ hyperparameter which is task-dependent, and there is no guarantee that one setting of this hyperparameter generalizes to all.\n6) Please cite the relevant study by Schirrmeister et al. (2020) on the reason behind the OOD detection anomaly for invertible networks.\n7) This study only considers VAEs. It would be interesting to see how the method acts in a broader context when a latent space is involved. For example, latent diffusion models are such examples. Even though other generative models might be out of the scope of the paper, it should be pointed out as a limitation of this study.\n\n**References**\n\nCaterini, Anthony L., and Gabriel Loaiza-Ganem. \"Entropic issues in likelihood-based ood detection.\" I (Still) Can't Believe It's Not Better! Workshop at NeurIPS 2021. PMLR, 2022.\n\nSchirrmeister, Robin, et al. \"Understanding anomaly detection with deep invertible networks through hierarchies of distributions and features.\" Advances in Neural Information Processing Systems 33 (2020): 21038-21049."
+            },
+            "questions": {
+                "value": "1) **(Important)** Although the PHP method is quite novel, it reminds me of the studies where an extra flow model is trained on the latent space of a VAE to alleviate the bias that the aggregate posterior should be Gaussian. Loaiza-Ganem et al. (2022) (which has not been referenced in this paper) show that a VAE model that has been trained again with a flow on top can perform much better in OOD detection. Could you provide some discussion on the connections between your study and theirs? And how yours is novel?\n\n2) **(Important)** Could you please generate a figure similar to Figure 3 for the CIFAR10 (vs) SVHN OOD detection task where the PHP method does not improve the performance by large?\n\n3) The computation of $C_{non}$ seems rather contrived! I might have missed it but what is the rationale behind the formula when $n_i \\ge n_{id}$? Why not choose a simple fix such as the compression scores proposed by Serra et al. (2020)? I am referring to an ensemble of FLIF, JPEG, and PNG compressions and computing the bit count for the compressed images.  Also, can I ask for a runtime analysis of computing $C(x)$? This is more of a suggestion, but I believe you can improve algorithm 1 (in Appendix D) for computing $n_i$ by performing a binary search rather than iterating over all the possible values. Since the number of potential singular values $N$ can be as high as the number of pixels, it is important to be efficient.\n\n**References**\n\nLoaiza-Ganem, Gabriel, et al. \"Diagnosing and fixing manifold overfitting in deep generative models.\" arXiv preprint arXiv:2204.07172 (2022)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission2226/Reviewer_G5ek"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698805365104,
+        "cdate": 1698805365104,
+        "tmdate": 1700700377005,
+        "mdate": 1700700377005,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "GamSr0Qbwi",
+        "forum": "3a505tMjGE",
+        "replyto": "3a505tMjGE",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_ms1o"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission2226/Reviewer_ms1o"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a new approach to address overestimation in unsupervised Out-Of-Distribution (OOD) detection using Variational Autoencoders (VAEs). In their investigation, they found two main factors that contribute to overestimation in OOD, (1) improper design of the prior, and (2) gap in entropy-mutual integration between in-distribution and out-distribution. The proposed approach uses a new score function to address the two problems. \nThe paper presents extensive experiments to validate the effectiveness of the proposed method, suggesting a competitive performance compared to literature methods. An ablation study is also presented to evaluate the behavior of the main components of the proposed approach: post-hoc prior and dataset entropy-mutual calibration."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "I found the performed evaluation of the factors that cause overestimation in OOD detection very interesting. The unsupervised approach using VAEs seems promising and robust.\nThe authors also designed a comprehensive and extensive set of experiments, including ablation studies, to evaluate the contributions of individual components of the proposed method.\nThe paper is well-organized, I liked the approach of breaking down the problem, its causes, the solution, and the experimental validation in a logical sequence.\nI believe that OOD detection represents a significant challenge in the field of machine learning. This is especially true for safety-critical applications as we are every day more dependent on automatic decision-making."
+            },
+            "weaknesses": {
+                "value": "Besides the large number of experiments, I think the main experiments are centered on or in variations of specific datasets like FashionMNIST and CIFAR-10.\n \nI agree with the authors that the ablation study provides insights, but I don't think the contributions of the PHP and DEC components are still clear, especially when combined.\n\nThe authors should clearly address the computational efficiency of the proposed method compared to standard VAEs and other literature approaches to the problem.\n\nI don't like to rely on t-SNE plots to make claims about the differences between in-distribution and out-of-distribution data.  While it is a popular choice for high-dimensional data visualization, I think UMAP offers several advantages as it preserves more of the global structure of the data and is more reproducible as it offers more intuitive hyperparameters. \n\nI was wondering, as the authors separate ensemble methods from non-ensemble methods in the \"Unsupervised\" category, it would be interesting to understand how the proposed method performs against ensemble methods. I was considering the performance in terms of performance and computational cost.\n\nI do believe the authors benefit from a discussion on scenarios where the proposed method might not work well. This gives readers a more balanced view and sets expectations correctly. I suggest the authors explore more of that."
+            },
+            "questions": {
+                "value": "Would the method work with more complex architectures, or is it specifically tailored to standard VAEs?\n\nHave the authors evaluated the robustness of the proposed idea against adversarial examples or noisy datasets?\n\nHow does overestimation influence real-world decisions or systems that rely on OOD detection? I think contextualizing that in the paper will help the reader to understand better the proposed approach."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission2226/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698862466513,
+        "cdate": 1698862466513,
+        "tmdate": 1699636155886,
+        "mdate": 1699636155886,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

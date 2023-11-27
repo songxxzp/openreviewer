@@ -1,0 +1,388 @@
+[
+    {
+        "title": "An Inexact Regularized Adaptive Algorithm with Manifold Identification for Training Structured Neural Networks"
+    },
+    {
+        "review": {
+            "id": "6bJvUpv1Ci",
+            "forum": "BlCnycxgJQ",
+            "replyto": "BlCnycxgJQ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_N8rQ"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_N8rQ"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose a variant algorithm of RMDA. Different from RDMA, the authors introduce a diagonal precondition matrix, based on the adaptive learning rate in the first-order algorithm. Further, to efficiently approximate the solution of the subproblem, the authors solve the subproblem with algorithm PG. Under some mild conditions, the authors provide convergence analysis of the proposed algorithm. The experimental results show the benefit of the proposed algorithm."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. The authors introduce adaptive preconditioner, and inexact update of subproblem, while maintain the convergence of the algorithm.\n\n2. The running time can be reduced 3x while the accuracy does not drop too much according to the experimental results."
+                },
+                "weaknesses": {
+                    "value": "Because I am not familiar with RDAM, I wonder about the difficulty of applying the adaptive preconditioner and inexact updates. Because extending SGD with such adaptive precondition is well-known, and applying inexact update in primal-dual update is well-known, I am not sure about the novelty of adding two techniques into RDAM."
+                },
+                "questions": {
+                    "value": "See weakness."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3314/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698676305057,
+            "cdate": 1698676305057,
+            "tmdate": 1699636280973,
+            "mdate": 1699636280973,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "2DyXjrMhV3",
+                "forum": "BlCnycxgJQ",
+                "replyto": "6bJvUpv1Ci",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply"
+                    },
+                    "comment": {
+                        "value": "We thank the reviewer for the detailed evaluation of and the invaluable suggestions to our work.\nOur reply to the comments are as follows.\n\n1. > Because I am not familiar with RDAM, I wonder about the difficulty of applying the adaptive preconditioner and inexact updates. Because extending SGD\nwith such adaptive precondition is well-known, and applying inexact update in primal-dual update is well-known, I am not sure about the novelty of adding two techniques into RDAM.\n\nIndeed, adaptive methods in the case without a regularizer is well-studied and\nutilized in practice, and inexact updates in the mentioned primal-setting setting is also\nwell-known.\nHowever, note that convergence of adaptive algorithms is not proven until very recently by [1], and its theoretical studies is not quite well studied.\nAs mentioned in the paper, our algorithm can be seen as an extension of the MADGRAD algorithm of Defazio and Jelassi to the regularized setting, but their theoretical analysis covered the special case that the objective is convex only, while our analysis is for nonconvex problems, and we have the added critical component of manifold identification for obtaining structured models.\nThe primal-dual updates the reviewer mentioned is also for convex problems (primal-dual relationship is meaningful only for convex problems, for otherwise the smallest possible duality gap could still be arbitrarily large).\n\nWe also want to mention that even an extension seemingly very similar for different algorithms could be of significantly different difficulties.\nFor example, we easily have convergence guarantees for both gradient descent and Newton's method with line search on strongly convex problems, and we can still get convergence guarantees for GD on nonconvex problems, but without modifications, classical Newton's method on nonconvex problems would easily fail to converge.\n\nMore importantly, intuitively inexact updates could probably still guarantee\nasymptotic convergence of some first-order measure, but for manifold/structure\nidentification it could be quite different.\nWhen the subproblems are solved exactly, first-order optimality condition in\nthe subproblem ensures satisfaction of sufficient conditions for manifold identification,\nbut when the subproblem is solved inexactly, the story is totally different.\nFor demonstration, we will use the basic proximal gradient (non-stochastic)\nalgorithm with a very simple strongly convex toy example of \n\n$$\n\\min_{x \\in R^2}\\quad F(x) \\coloneqq \\frac12 (x - \\hat x) ^\\top (x-\\hat x)  + \\|\\|x\\|\\|_1,\\quad \\hat x \\coloneqq (0.3, 2).\n$$\n\nThe only optimal solution is $x^* = (0, 1)$, and the gradient of the smooth (quadratic) part has Lipschitz constant $L = 1$.\nConsider that we start from $x_0 = 0$, then the subproblems are of the form\n\n$$\n\\min_{x \\in R^2}\\quad (x_k - \\hat x)^\\top x + \\frac12 x^\\top x + \\|\\|x\\|\\|_1 = \\min \\quad F(x) + \\text{constant}.\n$$\n\nWe consider inexact solutions to the subproblem (and thus also to the original problem) of the form\n$$\nx_k = (f(k), 1 + f(k))\n$$\n for any decreasing function $f$ that converges asymptotically to\n$0$ arbitrarily fast with $k$, but $f(k) \\neq 0$ for any given value of $k$.\nThen clearly, $x_k$ converges to $x^*$ arbitrarily fast, but due to this\ninexactness, no matter how small, structure identification (here the structure\nis that the 1st coordinate becomes $0$) is never achieved.\nThis shows that careful design of the inexactness condition and theoretical\nanalysis is needed to ensure identification of the active manifold, which is of\nhigh importance for training structured models, as we have also seen in the\nexperiments.\n\nWe also note (as we have remarked in the paper before Theorem 4) that when\napplied to the existing framework of Yun et al. (2021), our inexactness\ncondition leads to much stronger guarantees than that in the\nliterature by Deleu and Bengio (2021), as their analysis with inexact solutions\nrequires the regularizer to be smooth, which induces no structure, but ours\napplies to general nonsmooth regularizers.\nMoreover, our condition is easily checkable, but their inexact condition on the\ndistance between the current subproblem objective value and the optimum is not\nverifiable because the optimum is not known a priori.\nThis also shows even regarding convergence only, suitable inexactness is not\nwell-studied yet.\n\nOverall, we indeed combined several known components to design our new\nalgorithm, but the difficulty of combining multiple items is not\njust the sum of the individual items, just like one wouldn't say that since\nconvex nonsmooth optimization is well-studied and nonconvex smooth optimization\nis well-studied, so nonconvex nonsmooth problems can also be solved easily.\nAnd indeed before this work, an adaptive regularized training algorithm that\nidentifies the locally optimal structure is still missing, and our method\nindeed exhibits superior performance over existing methods over representative\nlarge-scale deep learning works."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3314/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700253819903,
+                "cdate": 1700253819903,
+                "tmdate": 1700253819903,
+                "mdate": 1700253819903,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "Ay2FxPkixf",
+            "forum": "BlCnycxgJQ",
+            "replyto": "BlCnycxgJQ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_a8Jk"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_a8Jk"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The authors propose an inexact regularized adaptive dual averaging algorithm with momentum, which they call RAMDA, for training structured neural networks with the help of regularization. The authors provide a number of theoretical guarantees for their algorithm, such as: after a finite number of steps, the structure of the iterates of RAMDA are identical to the structure induced by the regularization at the stationary point. RAMDA also makes use of manifold identification by producing stochastic estimators of the gradient that almost surely converge to the true gradient. The authors also propose a general iterative subroutine for approximately solving a particular subproblem found in RAMDA and many existing frameworks. They also provide extensive numerical experiments, comparing their method RAMDA with other state-of-the-art methods."
+                },
+                "soundness": {
+                    "value": "4 excellent"
+                },
+                "presentation": {
+                    "value": "4 excellent"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "- The method seems novel and interesting.\n- The authors provide a stronger result than that of Deleu & Bengio (2021), showing that their subproblem solver for equations (4) and (6) can be effectively applied to the general framework of Yun et al. (2021) and maintaining the same convergence guarantees.\n- The authors provide novel proofs that show the iterates of RAMDA (their method) possess the same structure as that at the point of convergence (Theorem 3).\n- The authors provide extensive experiments that demonstrate the effectiveness of their method."
+                },
+                "weaknesses": {
+                    "value": "- The authors don't necessarily prove convergence of their algorithm to a point (please correct me if I'm wrong). They remark after Theorem 2, that proving this is difficult even for stochastic gradient descent. Could this be done for gradient descent? Perhaps one needs further assumptions as well.\n\n- While the authors speak about structure in generality throughout the paper, the experiments only examine one type of structure (sparsity). It would be interesting to empirically examine other types of structure."
+                },
+                "questions": {
+                    "value": "- What is the reason for disabling weight decay in the experiments?\n- Can RAMDA be applied to other structure types, besides sparsity?\n- In Table 4, the text says RAMDA gives the best validation accuracy, but it's actually MSGD. Perhaps you mean that RAMDA gives the best validation accuracy out of the sparsity-inducing methods. Same point for the other tables."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3314/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3314/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission3314/Reviewer_a8Jk"
+                    ]
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3314/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698738216417,
+            "cdate": 1698738216417,
+            "tmdate": 1699636280885,
+            "mdate": 1699636280885,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "RkDymIRYP3",
+                "forum": "BlCnycxgJQ",
+                "replyto": "Ay2FxPkixf",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply (1)"
+                    },
+                    "comment": {
+                        "value": "We would like to thank the reviewer for the detailed evaluation of and the\ninvaluable suggestions to our work.\nOur reply to the comments are as follows.\n\n\n1. \n> The authors don't necessarily prove convergence of their algorithm to a point (please correct me if I'm wrong). They remark after \n  Theorem 2, that proving this is difficult even for stochastic gradient descent. Could this be done for gradient descent? Perhaps one \n  needs further assumptions as well.\n\n  It is indeed true that we do not have guarantees for the iterates to converge.\n  However, when the loss is lower-bounded (by 0, as is usually the case for machine learning tasks) and the regularizer is coercive \n  (which is the case for the group-LASSO norm we used in our current experiments), the objective function is level-bounded, meaning \n  that when the objective values do not blow up, the iterates are also bounded.\n  In this case, at least a subsequence of the iterates converge to a limit point.\n  And surely if there are certain hyperparameter settings that make the objective\n  value blow up, they would have been excluded in the hyperparameter search, so our algorithm essentially has at least a limit point in \n  practical settings.\n\n  Even for (non-stochastic) gradient descent without a regularizer, convergence of the iterates would require additional assumptions.\n  For example, convexity would be one of such conditions [1].\n  For nonconvex problems, the most prominent condition for iterate convergence is the Kurdyka-Lojasiewicz\n  condition at a limit point or a compact set of limit points.\n  This condition means that the objective value is dominated by a polynomial of\n  the subgradient, in a neighborhood of the limit point(s). See, for example, the\n  canonical works [2,3,4].\n  However, those are for subgradient-like descent methods that monotonically\n  decrease the objective value every iteration, and they still need to make the\n  additional assumption that the iterates stay in a bounded area.\n\n  For dual-averaging methods this is even more difficult.\n  Up to our knowledge, the only existing works that have guarantees on\n  convergence of the iterates for dual-averaging-type methods need a global\n  convexity and a local strong-convexity condition. See [5,6].\n\n\n2.\n> While the authors speak about structure in generality throughout the paper, the experiments only examine one type of structure (sparsity). It would be interesting to empirically examine other types of structure.\n\n> Can RAMDA be applied to other structure types, besides sparsity?\n\nAs our theory shows, as long as the regularizer associated with the structure\nis partly smooth and prox-regular at the point of convergence, RAMDA can be\napplied to identify the active manifold. For convergence, we the\nsubdifferential of the regularizer should be outer semicontinuous, as required\nin Theorem 2.\nMany popular regularizers satisfy these conditions (all convex regularizers are\nprox-regular everywhere and their subdifferential is outer semicontinuous\neverywhere), so\nRAMDA is not confined to sparsity or group sparsity, and we picked it\nsimply because it seems to be the most widely considered structure in practice\nfor a wide spectrum of machine learning problems including but not limited to\ndeep learning.\nThere are also some other regularizers with different structures like the\nL-infinity norm, nuclear norm, and the total-variation norm that are popular in\nvarious tasks in machine learning and image processing that are partly smooth.\nSee, for example, Table 1 of [7] for some widely-used regularizers and their corresponding structures/manifolds.\n\nWe have added a preliminary experiment of a layer-wise low-rank structure in Appendix D to show that our method indeed works on other structures widely used in machine learning as well.\n\n\n3.\n> What is the reason for disabling weight decay in the experiments?\n\nOne reason is that weight decay is disabled in the code provided by NVIDIA for training Transformer-XL with the Wikitext-103 data, see https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/Transformer-XL/pytorch/wt103_base.yaml.\n\nAnother reason is that weight decay is in spirit akin to L2 regularization for avoiding overfitting, and in our tasks, we already have another regularizer that will also provide such functionality, so adding weight decay probably would not affect the performance much but it would for sure increase the cost of hyperparameter tuning.\n\nBut to be honest, the major reason for us is budget concerns.\nAdding in weight decay would lead to an additional hyperparameter for tuning,\nand the overall cost could easily become 5-10 times higher, while for our limited\nbudget, we think that going for larger problems but with less hyperparameter\ntuning would be more representative and meaningful than going for smaller\nproblems with an exhaustive hyperparameter search."
+                    }
+                },
+                "number": 5,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3314/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700253090517,
+                "cdate": 1700253090517,
+                "tmdate": 1700416289321,
+                "mdate": 1700416289321,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "3KqWsTmAce",
+                "forum": "BlCnycxgJQ",
+                "replyto": "3PtYJOzRKc",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3314/Reviewer_a8Jk"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3314/Reviewer_a8Jk"
+                ],
+                "content": {
+                    "comment": {
+                        "value": "I thank the authors for their reply. I have also read the other reviews and the discussion that followed (as of this writing), as well as the updates to the paper.\n\nI am grateful that they included another experiment, albeit preliminary, to showcase a different type of structure (low-rankness). I do see that RMDA is the best performer, as opposed to the algorithm in the paper, RAMDA. But RAMDA and RMDA are similar, and they both outperform the other methods, ProxSGD and ProxGen.\n\nMy questions and concerns have been answered, and as it currently stands I am inclined to keep my score."
+                    }
+                },
+                "number": 13,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3314/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700523828934,
+                "cdate": 1700523828934,
+                "tmdate": 1700523828934,
+                "mdate": 1700523828934,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "fFlC489DYo",
+            "forum": "BlCnycxgJQ",
+            "replyto": "BlCnycxgJQ",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_VVRX"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission3314/Reviewer_VVRX"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The paper presents a new algorithm named Regularized Adaptive Dual Averaging with Momentum (RAMDA) for training structured neural networks. The main problem that this paper tackles is that optimization algorithms only guarantee a presence of structure like sparsity at the convergence point but don\u2019t offer any guarantee of the structure at points close to the stationary points which is what we use in practice. Utilizing the theory of manifold identification, RAMDA ensures that after a finite number of steps, the structures of the iterates are identical to the structure at the stationary point of convergence and their algorithm is adaptive. To achieve this, the authors tackle the challenges of solving subproblems in the presence of preconditioners and regularization terms by proposing an iterative subroutine that approximately solves these issues, while still maintaining convergence guarantees. The paper includes experiments with modern neural networks in computer vision, language processing, and speech tasks, demonstrating that RAMDA achieves better structured sparsity and prediction performance than the state of the art."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "1 poor"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "- The problem of guaranteeing structure at close to the stationary points seems important which is not very well studied."
+                },
+                "weaknesses": {
+                    "value": "- The paper is not well written and it is very hard to understand the exact comparison with existing approaches and what the paper is trying to achieve. I had to go and read the previous RMDA paper to understand what the problem is. \n- Moreover, there are a lot of statements in the paper which seems like is the contribution of the paper but are actually taken from previous works. This problem of guaranteeing structure near the stationary point has already been studied. Like the challenges in variance reduction with data augmentation have been already dealt with in the RMDA paper. The main contribution in this work is of making the RMDA algorithm adaptive. Moreover, there are other works as the authors mention like Defazio and Jelassi which had already combined adaptiveness and momentum. It is not clear how does this work differs from those previous works."
+                },
+                "questions": {
+                    "value": "- On page 2, the authors mention the active manifold of being the lowest rank. I am not sure I understand this statement and how it fits in with the rest of the paper. Do the authors show that the manifold that they identify is optimal? Was it also shown in the RMDA work?\n- How does the computational efficiency of RAMDA compare to other state-of-the-art methods, particularly in training very large neural networks? \n- In the experiments conducted, were there any scenarios where RAMDA did not perform as well as expected?\n- For the vision tasks, why is the performance not compared to other algorithms?\n- In the results section, the performance of RAMDA is better than RMDA. Why is that? Because, it seems like RAMDA is achieving the same structure just can achieve it in fewer iterations because of the adaptive component."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission3314/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1699219171747,
+            "cdate": 1699219171747,
+            "tmdate": 1699636280805,
+            "mdate": 1699636280805,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "h98BSoPnDk",
+                "forum": "BlCnycxgJQ",
+                "replyto": "fFlC489DYo",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Request for clarification of one of the questions"
+                    },
+                    "comment": {
+                        "value": "We would like to thank the reviewer for the careful read of our manuscript and the review.\nBefore preparing for a full reply, we would like to first request a clarification.\nThe reviewer asked\n\n> For the vision tasks, why is the performance not compared to other algorithms?\n\nBut in section 5.2, we did compare all the algorithms listed in Table 4. Do you mean Tables 2-3 in section 5.1?"
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3314/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1699640730651,
+                "cdate": 1699640730651,
+                "tmdate": 1699640730651,
+                "mdate": 1699640730651,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "lkWHghQeCz",
+                "forum": "BlCnycxgJQ",
+                "replyto": "fFlC489DYo",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission3314/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Reply (1)"
+                    },
+                    "comment": {
+                        "value": "We would like to thank the reviewer for the detailed evaluation of and the\ninvaluable suggestions to our work.\nOur reply to the comments are as follows.\n\n1. Regarding the comments in the weakness part, we have modified the\nintroduction to clarify the problem we tackle and what are the main focus and\ncontributions of this paper.\nThe reviewer also mentioned that\n\n> This problem of guaranteeing structure near the stationary point has already been studied. Like the challenges in variance reduction with data augmentation have been already dealt with in the RMDA paper.\n\nIt is true that guaranteeing structure near the stationary point has been\nstudied, as we have used existing tools of manifold identification from\nnonlinear optimization. The RMDA paper has also studied this, but that is for a\ndifferent algorithm, and without inexactness.\nWith inexactness, analysis becomes more difficult, and with adaptiveness added,\nthe algorithm is totally different and convergence guarantees and\nidentification guarantees are nontrivial.\nFor example, convergence guarantees of adam is not established until last year\nby Zhang et al [1], and convergence guarantees of adagrad are also not proven until\nvery recently (the original adagrad paper by Duchi et al dealt with convex\nproblems only, and the analysis is for regret guarantees for online settings\nbut not for the traditional convergence guarantees),\nwhile convergence of SGD has been known for decades.\nOn the other hand, for identification guarantees, the major difficulties are\nfrom the inexactness in the subproblem solving, and inexactness emerges only\nwhen we combine adaptiveness and regularization.\nWhen the subproblems are solved exactly, first-order optimality condition in\nthe subproblem can easily guarantee sufficient conditions for manifold\nidentification, but when the subproblem is solved inexactly, the story is\ntotally different and thus difficult.\nFor demonstration, we will use the basic proximal gradient (non-stochastic)\nalgorithm with a very simple strongly convex toy example of \n\n$$\n\\min_{x \\in R^2}\\quad F(x) \\coloneqq \\frac12 (x - \\hat x) ^\\top (x-\\hat x)  + \\|\\|x\\|\\|_1,\\quad \\hat x \\coloneqq (0.3, 2).\n$$\n\nThe only optimal solution is $x^* = (0, 1)$, and the gradient of the smooth (quadratic) part has Lipschitz constant $L = 1$.\nConsider that we start from $x_0 = 0$, then the subproblems are of the form\n\n$$\n\\min_{x \\in R^2}\\quad (x_k - \\hat x)^\\top x + \\frac12 x^\\top x + \\|\\|x\\|\\|_1 = \\min \\quad F(x) + \\text{constant}.\n$$\n\nWe consider inexact solutions to the subproblem (and thus also to the original problem) of the form\n$$\nx_k = (f(k), 1 + f(k))\n$$\n for any decreasing function $f$ that converges asymptotically to\n$0$ arbitrarily fast with $k$, but $f(k) \\neq 0$ for any given value of $k$.\nThen clearly, $x_k$ converges to $x^*$ arbitrarily fast, but due to this\ninexactness, no matter how small, structure identification (here the structure\nis that the 1st coordinate becomes $0$) is never achieved.\n\n\nOur goal is to combine adaptiveness, regularization, momentum, and structure\nidentification (which requires variance reduction), for it is known that\nadaptive methods are superior for many deep learning models, but combination of\nthese elements result in new challenges including those we illustrated above\nand beyond.\n\n\n> The main contribution in this work is of making the RMDA algorithm adaptive. Moreover, there are other works as the authors mention like Defazio and Jelassi which had already combined adaptiveness and momentum. It is not clear how does this work differs from those previous works.\n\nIf it is just about combining adaptiveness and momentum, it has already been done in Adam.\nWhether variance reduction is achieved or not after adaptiveness is added to dual\naveraging has not been studied by Defazio & Jelassi, and their convergence\nanalysis is for convex problems only, but our analysis is for nonconvex problems.\nMoreover, the key difference between our work and theirs is that we have a\nregularizer in the objective function to promote structures, and this results\nin inexact updates, while their algorithm for smooth optimization does not\ninvolve any inexactness.\nOur key result is that with inexactness and a preconditioner for adaptiveness,\nwe still ensured manifold identification.\nAdaptiveness in training structured models is still missing and it is crucial\nfor getting good models, as we have seen in our experiments for modern large\ndeep learning models.\nWe have updated our introduction to clarify our contributions and differences\nwith existing works."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission3314/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700254009357,
+                "cdate": 1700254009357,
+                "tmdate": 1700254009357,
+                "mdate": 1700254009357,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

@@ -1,0 +1,497 @@
+[
+    {
+        "title": "Enhancing Mutual Information Estimation in Self-Interpretable Graph Neural Networks"
+    },
+    {
+        "review": {
+            "id": "GGVRDs7DCl",
+            "forum": "Dt3rcTC8Sw",
+            "replyto": "Dt3rcTC8Sw",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_BVpy"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_BVpy"
+            ],
+            "content": {
+                "summary": {
+                    "value": "Existing self-interpretable Graph Neural Networks (GNNs) built upon Graph Information Bottleneck (GIB) suffer from the burdensome of mutual information estimation. To address this issue, this work proposes a novel framework for self-interpretable GNNs with an enhanced technique for mutual information estimation, namely GENIMI. Experiment results indicate the proposed GENIMI enjoys improved predictive and interpretable performance."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "This paper is well-written and easy to follow. The motivation for improving the mutual information estimation in the GIB framework is clear and crucial. Empirical results show that the proposed GEMINI enjoys competitive performances of GNN prediction and interpretability."
+                },
+                "weaknesses": {
+                    "value": "However, the reviewer is concerned with some theoretical details.\n\n1. For the predictive term in Eqn. 3, the appropriate formula derivation is: $I(G_{sub};Y)=E_{p(G_{sub},Y)}\\log{\\frac{p(Y|G_{sub})}{p(Y)}}\\geq E_{p(G_{sub},Y)}q_{\\omega}(Y|G_{sub})+H(Y)$.\n\n2. Does $p_{\\phi}(G_{sub}|G)$ and $q_{\\theta}(G_{sub}|G)$ share the same subgraph generator? If so, what is the intuition behind using $q_{\\theta}(G_{sub}|G)$ to approach $p_{\\phi}(G_{sub}|G)$?"
+                },
+                "questions": {
+                    "value": "The authors are encouraged to address the concerns in Weaknesses."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "details_of_ethics_concerns": {
+                    "value": "N/A"
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 1,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5483/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698665519366,
+            "cdate": 1698665519366,
+            "tmdate": 1699636560087,
+            "mdate": 1699636560087,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "nZe3lG3xjd",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "GGVRDs7DCl",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">Q1:For the predictive term in Eq. 3, the appropriate formula derivation is:\u00a0$I(G_{sub};Y) = E_{p(G_{sub},Y)} \\log \\frac{p(Y|G_{sub})}{p(Y)} \\geq E_{p(G_{sub},Y)} \\log q_\\omega(Y|G_{sub}) + H(Y)$.\n\nA1: Thanks for your comments. We apologize for the error in Eqn. 3, where the denominator of the first term of line 1 should be $p(Y)$ instead of $p(G_{sub})$. We have revised it in the paper. Please note, however, that this mistake does not impact the following derivations and conclusions presented in the paper.\n\n\n>Q2: Does\u00a0$p_\\phi(G_{sub}|G)$\u00a0and\u00a0$q_\\theta(G_{sub}|G)$\u00a0share the same subgraph generator? If so, what is the intuition behind using\u00a0$q_\\theta(G_{sub}|G)$\u00a0to approach\u00a0$p_\\phi(G_{sub}|G)$?\n\nA2: Thanks for your question! $p_\\phi(G_{sub}|G)$ is the probability that $G_{sub}$ is sampled by $G$ based on a underlying subgraph generation process parameterized by $\\phi$. However, learning $\\phi$ is not enough to calculate the exact value of $p_\\phi(G_{sub}|G)$, it should also include a subgraph matching step to compute $p_\\phi(G_{sub}|G)$, leading to a NP-hard complexity. Previous works (e.g., GSAT) made some assumptions to ignore the subgraph matching step. Nonetheless, this has resulted in an imprecise learning of $\\phi$ and an inaccurate calculation of $I(G_{sub};G)$.\n\nInstead, we simultaneously learn $\\phi$ and approximate $p_\\phi$ by a variational distribution $q_\\theta$. Based on Eq.7 in the paper, the maximization of $E_{p(G, G_{\\text{sub}})} [ \\log q_\\theta( G_{\\text{sub}}|G) ]$ is equivalent to minimizing $E_{p(G)}[KL(p_\\phi(G_{\\text{sub}}|G) || q_\\theta(G_{\\text{sub}}|G))]$. Thus, we learn $q_\\theta$ in Eq.8 with a fixed $\\phi$. The optimization of $\\phi$ is achieved by minimizing the total GIB objective.\nPlease refer to the ***Common concern 1*** for a rigorous analysis.\n\n\nIn the detailed implementation, the subgraph generator $g_\\phi$ is used to instantiate the subgraph generation process, and hence determines the distribution $p_\\phi(G_{sub}|G)$. $q_\\theta$ is implemented as a neural network taking $G_{sub}$ and $G$ as inputs and outputs a probability. The network $q_\\theta$ includes two GNNs to extract representations of $G_{sub}$ and $G$ respectively and then calcutate a probability. The parameters in $g_\\phi$ and $q_\\theta$ are learned iteratively, as depicted in the pseudo-code in Appendix."
+                    },
+                    "title": {
+                        "value": "Response to reviewer BVpy"
+                    }
+                },
+                "number": 10,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700238037566,
+                "cdate": 1700238037566,
+                "tmdate": 1700635950076,
+                "mdate": 1700635950076,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "KHnr8LfJSm",
+            "forum": "Dt3rcTC8Sw",
+            "replyto": "Dt3rcTC8Sw",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_NeoE"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_NeoE"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The goal of the paper is to evaluate the mutual information (MI) between an input graph and a key subgraph. To tackle this problem, the authors propose a novel framework called GEMINI, which trains self-interpretable graph models and addresses the challenge of distorted and imprecise estimations in graph MI estimation research. The authors construct a variational distribution over the critical subgraph and create an effective MI upper bound estimator. The proposed method is shown to be effective according to empirical results."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "1. This paper is well-organized and well-written. The authors provide sufficient details about their work and easy to understand.\u00a0\n\n2. Estimating the mutual information between the input graph and the subgraph is both important and challenging."
+                },
+                "weaknesses": {
+                    "value": "1. This work closely follows GSAT[1]. Its main theoretical contribution is the addition of the information bottleneck (IB) upper bound loss $L_{GCLUB}$ to the objective of GSAT[1], which is based on the idea of variational CLUB[2].\n\n2. Does the proposed model's ability to remove the spurious correlation come from the framework of GSAT? Can GEMINI provide a theoretical guarantee for the removal of spurious correlations?\n\n3. Some of the numerical results reported in Table 1 and Table 2 are quite different from those reported in GSAT. The differences are particularly noticeable with the numbers that involve MNIST-75sp in Table 1 and those associated with SPMotif in Table 2, relating to GIN and GSAT. It would be helpful if the authors could provide further details about their implementations and explanations for these differences.\n\n[1] Miao, Siqi, Mia Liu, and Pan Li. \"Interpretable and generalizable graph learning via stochastic attention mechanism.\" In\u00a0International Conference on Machine Learning, pp. 15524-15543. PMLR, 2022.\n[2] Cheng, Pengyu, Weituo Hao, Shuyang Dai, Jiachang Liu, Zhe Gan, and Lawrence Carin. \"Club: A contrastive log-ratio upper bound of mutual information.\" In\u00a0International conference on machine learning, pp. 1779-1788. PMLR, 2020."
+                },
+                "questions": {
+                    "value": "1. On page 3, in the last sentence before Eq.3, should it be a \u201clower\u201d bound of $I(G_{sub};Y)$?\n\n2. I cannot find the curve of GSAT in the second subfigure of Fig. 2(d). Is it missing or unavailable?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 2,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5483/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698686600075,
+            "cdate": 1698686600075,
+            "tmdate": 1699636559991,
+            "mdate": 1699636559991,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "4h6t04Ka1f",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "KHnr8LfJSm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer NeoE (part 1)"
+                    },
+                    "comment": {
+                        "value": ">Q1: This work closely follows GSAT[1]. Its main theoretical contribution is the addition of the information bottleneck (IB) upper bound loss\u00a0$I_{GCLUB}$\u00a0to the objective of GSAT[1], which is based on the idea of variational CLUB[2].\n\nA1: Thanks for your comments. The novelty of the paper is that we point out the limitation of GSAT and propose a framework to approximate $p_\\phi(G_{sub}|G)$ by the variational distribution $q_\\theta(G_{sub}|G)$. \n\n\nIn detail, GSAT assumed the generated subgraph $G_{sub}$ is an edge-weighted variant of $G$, where the nodes in $G_{sub}$ and $G$ are one-to-one correspondence, and the edges in $G$ are sampled to obtain $G_{sub}$. However, these works overlook the scenario where the number of nodes in $G_{sub}$ is less than that in $G$. Even if the number of nodes in $G_{sub}$ equates to that of $G$, the correspondence between nodes in $G_{sub}$ and those in $G$ may be nonunique. In such cases, it is necessary to perform subgraph matching before calculating the probability $p_\\phi(G_{sub}|G)$. Since subgraph matching is NP-hard, it becomes extremely difficult to accurately compute the value of $p_\\phi(G_{sub}|G)$. Given the learned $\\phi$, previous studies have not been able to compute an effective value of $p_\\phi(G_{sub}|G)$.\nMoreover, computing the prior distribution $r(G_{sub})$ over graphs is equally challenging as $p_\\phi(G_{sub}|G)$. GSAT involves the term $r(G_{sub})$ to compute the upper bound value of $I(G_{sub};G)$. However, the calculation of $r(G_{sub})$ requires to designate a random graph sampling process and hence encounters similar difficulties as when calculating $p_\\phi(G_{sub}|G)$.\n\nInstead, our proposed method approximates $p_\\phi$ by a variational distribution $q_\\theta$. Based on Eq.7 in the paper, the maximization of $E_{p(G, G_{\\text{sub}})} \\left[ \\log q_\\theta( G_{\\text{sub}}|G) \\right]$ is equivalent to minimizing $E_{p(G)}[KL(p_\\phi(G_{\\text{sub}}|G)$ || $q_\\theta(G_{\\text{sub}}|G))]$. Thus, we learn $q_\\theta$ in Eq.8. In addition, we use the CLUB to calculate the upper bound of $I(G_\\text{sub};G)$, which avoids considering the prior $r(G_\\text{sub})$."
+                    }
+                },
+                "number": 7,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700237725440,
+                "cdate": 1700237725440,
+                "tmdate": 1700636086085,
+                "mdate": 1700636086085,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "XROvO0IaQ7",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "KHnr8LfJSm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer NeoE (part 2)"
+                    },
+                    "comment": {
+                        "value": ">Q2: Does the proposed model's ability to remove the spurious correlation come from the framework of GSAT? Can GEMINI provide a theoretical guarantee for the removal of spurious correlations?\n\nA2: Theoretically justifying the capability of the proposed method for removing spurious signals can be challenging, since we need to mathematically formalize the *removal*  of spurious signals. Therefore, we conducted an experiment to empirically compare the resistance to spurious signals between the proposed method and GSAT. We have also added a section in Appendix A.6.\n\nSpecifically, we select three checkpoints from SPMotif (0.9) and SPMotif (0.7) for both methods and randomly generate 3000 spurious graphs to evaluate the **spurious score** and the **predictive score**. Each spurious graph is generated by randomly selecting a motif graph and a base graph and then assembling the two. For each spurious graph $g_i$, we denote its label as $y_i$ (determined by its motif graph) and its spurious-aligned class as $s_i$ (determined by its base graph). The spurious-aligned class is the label of motif graph with which a spurious base graph is correlated in the training set SPMotif (0.9) and SPMotif (0.7). For example, in SPMotif (0.9), a spurious base graph *tree* has a probability of 0.9 to appear with a motif graph *house* together. Since the label for *house* is 0, the spurious-aligned class for *tree* is 0.\n\nIn the evaluation dataset, we ensure $y_i \\neq s_i$ for each $g_i$. Referring to the established work (Post hoc explainers may be ineffective for detecting unknown spurious correlation), we define the **spurious score** as \n\n$\nSpurScore = \\frac{1}{N}\\sum_{i=1}^{N} f(g_i)[s_i].\n$\n\nwhere $f(g_i)$ is the output probabilities of a model, i.e., a three-dimensional vector in our setting. $N$ is the number of evaluation samples, i.e., 3000 in this experiment. The spurious score indicates the average probability of a model mistakenly predicting a graph to its spurious class.\nSimilarly, we calculate the **predictive score** as\n\n$\nPredScore = \\frac{1}{N}\\sum_{i=1}^{N} f(g_i)[y_i].\n$\n\nThe predictive score indicates the average probability of a model correctly predicting a graph to its ground truth class.\n\nThe results are shown in the table:\n|        |  SPMotif (0.9) |                  |  SPMotif (0.7) |                  |\n|:------:|:--------------:|:----------------:|:--------------:|:----------------:|\n|        | Spurious Score | Predictive Score | Spurious Score | Predictive Score |\n|  GSAT  |     0.0985     |      0.7517      |     0.0108     |      0.7711      |\n| GEMINI |     0.0708     |      0.7776      |     0.0029     |      0.9123      |\n\nWe find that for models trained from both datasets, the spurious score of GEMINI is smaller than that of GSAT. Moreover, the predictive score of GEMINI is significantly better than that of GSAT, especially when the spurious signal is moderate, e.g., SPMotif (0.7). These results verify the superior resistance and robustness against spurious signals compared to GSAT."
+                    }
+                },
+                "number": 8,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700237871202,
+                "cdate": 1700237871202,
+                "tmdate": 1700638477687,
+                "mdate": 1700638477687,
+                "license": "CC BY 4.0",
+                "version": 2
+            },
+            {
+                "id": "3hAIO5DB77",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "KHnr8LfJSm",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer NeoE (part 3)"
+                    },
+                    "comment": {
+                        "value": ">Q3: Some of the numerical results reported in Table 1 and Table 2 are quite different from those reported in GSAT. The differences are particularly noticeable with the numbers that involve MNIST-75sp in Table 1 and those associated with SPMotif in Table 2, relating to GIN and GSAT. \n\nA3: Thanks for your comments! For the SPMotif results in Table 2, there is a parameter to control the size of the base (spurious) graph in the generation of SPMotif. In GSAT, the size is relatively larger, e.g., 20 for tree, 60 for wheel, in the test set. We find that a large base graphs prone to result in distribution shift. We slightly adjust the parameter to be smaller, e.g., 15 for tree, 30 for wheel, to relieve the distribution shift and facilitate comparison. Because we mainly aim to focus on the spurious correlation and interpretation performance, instead of distribution shifts. Moreover, we generate more samples for SPMotif compared with the implementation of GSAT. We generate 30000 samples for a SPMotif dataset, while the number is 3000 in GSAT according to their source code. Hence, the predictive performance of GSAT on SMPotifs in Table 2 is better than their originally reported result.\n\nFor the MNIST-75sp results in Table 1, We adopt the strictly identical dataset settings as with the GSAT baseline. The difference may come from some model parameters, adopted loss coefficients, and randomness, since the dataset size of MNIST-75sp is only 20000 and we only run three times to obtain the averaged results, which may also affect the evaluation numbers.\n\n\n>Q4: On page 3, in the last sentence before Eq.3, should it be a \u201clower\u201d bound of\u00a0$I(G_{sub};Y)$?\n\nA4: Yes, you are correct. We are sorry for this typo and have made a revision.\n\n>Q5: I cannot find the curve of GSAT in the second subfigure of Fig. 2(d). Is it missing or unavailable?\n\nA5: The second subfigure Fig. 2(d) compares node probabilities. GSAT solely learns edge probabilities, and hence node probabilities remain 1.0. The node probability for GIN is also 1.0. So the curve of GIN  overlaps over the curve of GSAT. We have added a clarification in the caption of Fig. 2(d)."
+                    }
+                },
+                "number": 9,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700237909258,
+                "cdate": 1700237909258,
+                "tmdate": 1700636573496,
+                "mdate": 1700636573496,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "e0B1avJipC",
+            "forum": "Dt3rcTC8Sw",
+            "replyto": "Dt3rcTC8Sw",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_51zY"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_51zY"
+            ],
+            "content": {
+                "summary": {
+                    "value": "The Graph Information Bottleneck framework significantly enhances the self-interpretability of Graph Neural Networks. However, current approaches in estimating the mutual information between graph explanations and their original forms frequently yield distorted and imprecise estimations, ultimately compromising the effectiveness of the model. In response to these limitations, this paper introduces a novel framework called GEMINI to address these challenges."
+                },
+                "soundness": {
+                    "value": "3 good"
+                },
+                "presentation": {
+                    "value": "2 fair"
+                },
+                "contribution": {
+                    "value": "3 good"
+                },
+                "strengths": {
+                    "value": "+ They utilize a MI upper bound estimator based exclusively on the conditional probability distribution.\n+ They introduce a variational distribution and its suitable instantiation for the conditional probability distribution.\n+ Extensive experiments demonstrate the effectiveness of the proposed framework."
+                },
+                "weaknesses": {
+                    "value": "-\tThey employ established MI estimator theory, which appears easily extendable to the graph domain. In my view, it seems they have not drawn particularly interesting conclusions or specific designs for graphs. I have some reservations about the novelty of the proposed framework.\n-\tThe experimental results are not convincing enough. SOTA explainers for GNNs should be set as baselines. Moreover, the proposed model did not exhibit a significant improvement compared to these baselines.\n-\tThe paper's writing and organization require enhancements. For instance, it is challenging for readers to discern the corresponding relationships between the limitations and the contributions."
+                },
+                "questions": {
+                    "value": "Please refer to the weaknesses.\n\n- They employ established MI estimator theory, which appears easily extendable to the graph domain. In my view, it seems they have not drawn particularly interesting conclusions or specific designs for graphs. I have some reservations about the novelty of the proposed framework.\n- The experimental results are not convincing enough. SOTA explainers for GNNs should be set as baselines. Moreover, the proposed model did not exhibit a significant improvement compared to these baselines.\n- The paper's writing and organization require enhancements. For instance, it is challenging for readers to discern the corresponding relationships between the limitations and the contributions."
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "6: marginally above the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                },
+                "first_time_reviewer": {
+                    "value": "Yes",
+                    "readers": [
+                        "ICLR.cc/2024/Conference/Program_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5483/Senior_Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5483/Area_Chairs",
+                        "ICLR.cc/2024/Conference/Submission5483/Reviewer_51zY"
+                    ]
+                }
+            },
+            "number": 3,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5483/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698740407969,
+            "cdate": 1698740407969,
+            "tmdate": 1699636559868,
+            "mdate": 1699636559868,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "pi5xRmCZug",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "e0B1avJipC",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "comment": {
+                        "value": ">Q1: They employ established MI estimator theory, which appears easily extendable to the graph domain. In my view, it seems they have not drawn particularly interesting conclusions or specific designs for graphs. I have some reservations about the novelty of the proposed framework.\n\n\nA1: Thanks for your comments. The novelty of the paper is that we point out the limitation of previous GIB works and propose a framework to approximate $p_\\phi(G_{sub}|G)$ by the variational distribution $q_\\theta(G_{sub}|G)$. The experimental results demonstrate that we can have a better estimation of the GIB term compared with GSAT and DIR. \n\nIn detail, previous GIB works think the generated subgraph $G_{sub}$ is an edge-weighted variant of $G$, where the nodes in $G_{sub}$ and $G$ are one-to-one correspondence, and the edges in $G$ are sampled to obtain $G_{sub}$. However, these works overlook the scenario where the number of nodes in $G_{sub}$ is less than that in $G$. Even if the number of nodes in $G_{sub}$ equates to that of $G$, the correspondence between nodes in $G_{sub}$ and those in $G$ may be nonunique. In such cases, it is necessary to perform subgraph matching before calculating the probability $p_\\phi(G_{sub}|G)$. Since subgraph matching is NP-hard, it becomes extremely difficult to accurately compute the value of $p_\\phi(G_{sub}|G)$. Given the learned $\\phi$, previous studies have not been able to compute an effective value of $p_\\phi(G_{sub}|G)$, which affects the upper bound value of $I(G_{sub};G)$. Instead, our proposed method approximates $p_\\phi$ by a variational distribution $q_\\theta$ with the learned $\\phi$. Based on Eq.7 in the paper, the maximization of $E_{p(G, G_{\\text{sub}})} \\left[ \\log q_\\theta( G_{\\text{sub}}|G) \\right]$ is equivalent to minimizing $E_{p(G)}[KL(p_\\phi(G_{\\text{sub}}|G)$ || $q_\\theta(G_{\\text{sub}}|G))]$. Thus, we learn $q_\\theta$ in Eq.8. \n\nFor a formal analysis of the limitations of previous works, please refer to ***Common concern 1***.\n\n>Q2: The experimental results are not convincing enough. SOTA explainers for GNNs should be set as baselines. Moreover, the proposed model did not exhibit a significant improvement compared to these baselines.\n\n\nA2: Thank you for your feedback. Indeed, GSAT is the state-of-the-art baseline with both predictive and interpretable capabilities. \nAdditionally, GNNExplainer and PGExplainer are frequently employed as post-hoc explanation methods for GNNs in prior research. As demonstrated in Table 1 & 2, our proposed method maintains comparable predictive performance with mainstream GNNs (e.g., GIN), and improves the interpretation AUC over the second-best baseline across five datasets. The average improvement is about 3%$\\sim$ 5% over the state-of-the-art self-interpretable baseline. Thus, we believe our model exhibits a significant advancement in interpretability, contributing to the existing body of research on GNNs.\n\n>Q3: The paper's writing and organization require enhancements. For instance, it is challenging for readers to discern the corresponding relationships between the limitations and the contributions.\n\n\nA3: Thanks for your suggestions. We have revised the paper more clearly to distinguish the limitation analysis and our proposed method. We also added the rigorous formulation and limitation analysis in Appendix A.1. Please refer to Section 3, 4, and Appendix A.1 in the revised paper."
+                    },
+                    "title": {
+                        "value": "Response to reviewer 51zY"
+                    }
+                },
+                "number": 4,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700237399354,
+                "cdate": 1700237399354,
+                "tmdate": 1700638393915,
+                "mdate": 1700638393915,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    },
+    {
+        "review": {
+            "id": "d2WmbHmanG",
+            "forum": "Dt3rcTC8Sw",
+            "replyto": "Dt3rcTC8Sw",
+            "signatures": [
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_6KN9"
+            ],
+            "nonreaders": [],
+            "readers": [
+                "everyone"
+            ],
+            "writers": [
+                "ICLR.cc/2024/Conference",
+                "ICLR.cc/2024/Conference/Submission5483/Reviewer_6KN9"
+            ],
+            "content": {
+                "summary": {
+                    "value": "In this paper, the authors introduce a novel approach for approximating the Graph Information Bottleneck (GIB). Their method focuses on modeling the distribution of arbitrary subgraphs and graphs, while also bypassing the need to model the prior of subgraphs. Experimental results seem to demonstrate the effectiveness of the proposed method."
+                },
+                "soundness": {
+                    "value": "2 fair"
+                },
+                "presentation": {
+                    "value": "3 good"
+                },
+                "contribution": {
+                    "value": "2 fair"
+                },
+                "strengths": {
+                    "value": "1. The paper is well-written, with the authors providing a thorough derivation of the proposed GIB approximation and presenting a clear step-by-step explanation of their method.\n\n2. The authors employ the CLUB technique to circumvent the need for modeling the prior of subgraphs. This approach appears to relax the assumptions made in previous methods, enhancing the flexibility and applicability of the proposed approach."
+                },
+                "weaknesses": {
+                    "value": "1. The model architecture in this paper bears a resemblance to GSAT, and it would be advantageous if the authors could explicitly delineate the key distinctions between the two. Furthermore, the experimental results suggest a notable enhancement over GSAT despite their similar model architectures. Providing inference codes for model reproduction would greatly facilitate the validation of these results and contribute to the paper's overall reproducibility and transparency.\n\n2. The authors assert that the proposed method can generate sparse subgraphs even without the need for sparse regularization. However, it is evident that L_sp is introduced as a subgraph term to regulate graph sparsity. In the ablation study, the authors argue that this term is essential, which appears to be inconsistent with their initial claim in the introduction."
+                },
+                "questions": {
+                    "value": "1. See the comments above.\n\n2. What is the benefit of modeling arbitrary subgraphs and graphs? Since G_{sub}^1 should be sampled from G_1 and should not be related to G_2.\n\n3. Why is the MI upper bound approximation proposed in the method better than previous methods?"
+                },
+                "flag_for_ethics_review": {
+                    "value": [
+                        "No ethics review needed."
+                    ]
+                },
+                "rating": {
+                    "value": "5: marginally below the acceptance threshold"
+                },
+                "confidence": {
+                    "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+                },
+                "code_of_conduct": {
+                    "value": "Yes"
+                }
+            },
+            "number": 4,
+            "invitations": [
+                "ICLR.cc/2024/Conference/Submission5483/-/Official_Review",
+                "ICLR.cc/2024/Conference/-/Edit"
+            ],
+            "domain": "ICLR.cc/2024/Conference",
+            "tcdate": 1698792304959,
+            "cdate": 1698792304959,
+            "tmdate": 1699636559771,
+            "mdate": 1699636559771,
+            "license": "CC BY 4.0",
+            "version": 2
+        },
+        "responses": [
+            {
+                "id": "Qeo72g2Y21",
+                "forum": "Dt3rcTC8Sw",
+                "replyto": "d2WmbHmanG",
+                "signatures": [
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "readers": [
+                    "everyone"
+                ],
+                "writers": [
+                    "ICLR.cc/2024/Conference",
+                    "ICLR.cc/2024/Conference/Submission5483/Authors"
+                ],
+                "content": {
+                    "title": {
+                        "value": "Response to reviewer 6KN9"
+                    },
+                    "comment": {
+                        "value": ">Q1: The model architecture in this paper bears a resemblance to GSAT, and it would be advantageous if the authors could explicitly delineate the key distinctions between the two. Furthermore, the experimental results suggest a notable enhancement over GSAT despite their similar model architectures. Providing inference codes for model reproduction would greatly facilitate the validation of these results and contribute to the paper's overall reproducibility and transparency.\n\nA1: Thanks for your advice! The key difference between GSAT and our proposed method is that we improve the calculation of $p_\\phi(G_{sub}|G)$ and $I(G; G_{sub})$. Actually, $p_\\phi(G_{sub}|G)$ is the probability that $G_{sub}$ is a generated subgraph from $G$ based on a subgraph generation process parameterized by $\\phi$. However, knowing $\\phi$ is not enough to calculate the exact value of $p_\\phi(G_{sub}|G)$, it should also include a subgraph matching step to compute $p_\\phi(G_{sub}|G)$, leading to a NP-hard complexity. GSAT made some assumptions to ignore the subgraph matching step. Nonetheless, this has resulted in an imprecise learning of $\\phi$ and an inaccurate calculation of $I(G_{sub};G)$.\n\nInstead, we simultaneously learn $\\phi$ and approximate $p_\\phi$ by a variational distribution $q_\\theta$. Based on Eq.7 in the paper, optimizing the objective in Eq. 8 minimizes the KL divergence between $p_\\phi$ and $q_\\theta$. The optimization of $\\phi$ is achieved by minimizing the total GIB objective.\n\n\nPlease refer to the ***Common concern 1*** for a comprehensive and rigorous analysis. For the inference codes, we have provided the source code in the supplementary material to facilitate the reproduction of our experimental results.\n\n>Q2: The authors assert that the proposed method can generate sparse subgraphs even without the need for sparse regularization. However, it is evident that L_sp is introduced as a subgraph term to regulate graph sparsity. In the ablation study, the authors argue that this term is essential, which appears to be inconsistent with their initial claim in the introduction.\n\nA2: Thanks for your comments. In the first section of the ablation study (Effect of the $L_{GCLUB}$ term), we remove the $L_{sp}$ term and rely solely on the $L_{GCLUB}$ regularization. Figure 2(b) demonstrates that $L_{GCLUB}$ could generate sparse graphs, e.g., the average edge/node probability is about $0.6\\sim 0.7$. We claim $L_{sp}$ is essential for generating even ***sparser*** graphs, e.g., average edge/node probability of $0.3\\sim 0.5$. The term $L_{sp}$ is used to provide users with the opportunity to achieve a desired level of subgraph sparsity based on their preferences.\n\n>Q3: What is the benefit of modeling arbitrary subgraphs and graphs? Since $G_{sub}^1$ should be sampled from $G_1$ and should not be related to $G_2$.\n\nA3: Thanks for your questions! Different from the previous works, we provide a more accurate calculation of $p_\\phi(G_{sub}|G)$ and $I(G;G_{sub})$. In detail, we approximate $p_\\phi(G_{sub}|G)$ by a variational distribution $q_\\theta(G_{sub}|G)$, and use the CLUB upper bound for $I(G;G_{sub})$.  \n\nWhen adopting our $I_{GCLUB}$ bound to calculate the upper bound of $I(G;G_{sub})$, a subgraph instance of $G_{sub}$ may not be directly sampled from a graph instance of $G$. According to the CLUB bound in Eq. 5 of the paper, for the second term $E_{p(G)} E_{p(G_{sub}) } [ \\log p_\\phi( G_{\\text{sub}}|G )]$, $G_{sub}$ and $G$ come from their own marginal distributions. Hence when we calculate this term, we need to calculate $p_\\phi( g_{\\text{sub}}^2 |g^1 )$ where $g^1$ is sampled from $p(G)$, and $g_{\\text{sub}}^2$ is sampled from $p(G_{\\text{sub}})$. $g_{\\text{sub}}^2$ may not come from $g^1$.\n\n>Q4: Why is the MI upper bound approximation proposed in the method better than previous methods?\n\nA4: Thanks for your questions! The reason for the utilization of CLUB bound is to avoid the estimation of the prior distribution $r(G_{sub})$. Computing $r(G_\\text{sub})$ over graphs is equally challenging as $p_\\phi(G_{sub}|G)$. For example, GSAT regarded the prior probability of a subgraph instance $r(g_{sub})$ as the product of edge probabilities on $g$, where the existence of each edge follows an independent Bernoulli distribution. However, $r(g_{sub})$ is essentially $r(g_{sub}|g)$, which relies on the parent graph $g$ (as we have stated, in GSAT and other works, $g_{sub}$ must be a weighted version of $g$ and the matching between node sets of $g_{sub}$ and $g$ is implicitly assumed to be known), and is not a *real* prior distribution over graphs. A real graph prior $r(g_{sub})$ should be able to be calculated for an arbitrary graph $g_{sub}$ without knowing its *parent graph* $g$. Hence, we should utilize an MI bound that does not depend on  $r(G_{sub})$."
+                    }
+                },
+                "number": 3,
+                "invitations": [
+                    "ICLR.cc/2024/Conference/Submission5483/-/Official_Comment"
+                ],
+                "domain": "ICLR.cc/2024/Conference",
+                "tcdate": 1700237237411,
+                "cdate": 1700237237411,
+                "tmdate": 1700638294061,
+                "mdate": 1700638294061,
+                "license": "CC BY 4.0",
+                "version": 2
+            }
+        ]
+    }
+]

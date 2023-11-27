@@ -1,0 +1,280 @@
+[
+    {
+        "id": "FBd1xPbojs",
+        "forum": "yiMB2DOjsR",
+        "replyto": "yiMB2DOjsR",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_3oQn"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_3oQn"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a general framework for sampling  unnormalized probability densities. The main idea is based on smoothing the distribution\nby adding Gaussian noise to the original sample. The process then repeats $m$ times,\neach time independently adding gaussian noise to the original sample.\nThe final step involves computing the Bayes optimal predictor of the original sample based on the i.i.d. samples from the smoothed density.\n\nThe authors first demonstrate via an example that sampling all the smoothed observations jointly at once might not be optimal, since the \nsampling problem might become ill-conditioned as $m$ increases, which prohibits the use of standard MCMC methods. Subsequently, they demonstrate\nthat if instead sequential sampling is used, where each sample is taken conditional on the previous samples, then the condition number\nof the sampling problem can only improve as $m$ increases, enabling the use of MCMC methods. They prove that this process succeeds to sample\nin a general setting where the initial distribution is supported on a bounded subset of $\\mathbb{R}^d$. Additionally, they evaluate their\napproach experimentally, by sampling from elliptical gaussians (which are ill-conditioned) and mixtures of gaussians. \nThe performance is then compared to that of standard Langevin MCMC algorithms without smoothing, showing significant benefits both\nin terms of distributional convergence, as well as finding less dominant modes of the distribution."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This is a very original work, introducing an elegant and intuitive general framework for sampling from unnormalized probability densities. The idea of smoothing \nand walk-jump sampling has already appeared in prior work (Saremi & Hyvarinen, 2019), but this is the first time it has been applied to\nthe general problem of sampling from non-log concave densities. I like the intuition given by the authors about how smoothing helps by \"filling in\"\nprobability mass between modes of the original distribution, thus reducing the general problem to the log-concave setting.\nOne strength of this new approach is that the sequential sampling can simply be implemented by keeping a running average of all the previous\nsamples up until this point, so the memory footprint is small. \nMoreover, this paper is written with great clarity, as all theoretical results are explained in detail and they convincingly demonstrate the power of the new approach.\nThe experiments also complement the theory very nicely, by showing the benefit of running Langevin with smoothing. The tunneling phenomena that\nare observed from the simulations are also very interesting. Lastly, most of the proofs follow from standard techniques, but they are at an\nadequate level for ICLR."
+            },
+            "weaknesses": {
+                "value": "One thing that is missing from this paper is the final step of computing the bayes estimator $\\mathbb{E}[X|y_{1:m}]$ to obtain samples from the true \ndistribution.\nFor that, it is needed to estimate the score function $\\nabla \\log p(y_{1:m})$ of the smoothed distribution. The authors acknowledge that this is \na separate issue that needs to be addressed. I understand this might be beyond the scope of the current work, which is more focused on \nshowing the benefits of smoothing. However, ultimately estimating the score function is a crucial step for this to be an end-to-end approach\nfor sampling and it is not clear what is the difficulty of this problem compared to the original sampling problem (is it strictly easier in some sense?).\nIn my opinion, this would make clear what the benefit of this approach over standard MCMC algorithms is."
+            },
+            "questions": {
+                "value": "-Related to a previous point about estimating the score function, how exactly do the authors arrive at the expression (4.8) for estimating the\nscore function? In appendix B, a number of properties is proven about the score function, among which that it is related to $\\mathbb{E}[X|y_{1:m}]$.\nHowever, I don't see how this is captured in the empirical definition of (4.8). What is the meaning of taking a weighted average of\nthe $\\epsilon_i$s?\n\n-As the authors discuss in Remark 2, the convergence of the condition number to $1$ with rate $1/m$ holds as long as the original distribution involves \nsome (even small) additive gaussian noise. Why is it enough that even a tiny bit of Gaussian noise be added to the distribution for this decay to happen?\nDo the authors have some intuition about that statement?\n\n-Related to the previous question, if we care about the expected hessian of the conditional sampling, I'm wondering whether it's possible to have a version of Theorem 1 showing that the expected condition number of the conditional sampling problem\nconverges to $1$ with rate $1/m$ without assuming that the original distribution contains some amount of Gaussian noise. The reason is\nthe following: the proof for all the claims about the \"increase\" in log-concavity basically hinge on equation (D.2), which asserts that\n$\\nabla^2 \\log p(y_{1:m}) = -\\sigma^{-2} I + \\sigma^{-4} Cov(X|y_{1:m})$. The argument then proceeds by the observation that conditioning on more and\nmore observations can only reduce the variance of $X$ in expectation, so the \"positive\" part on the right hand side can only become smaller as\n$m$ increases. The proof of Theorem 1 expresses $Cov(X|y_{1:m})$ as $O(1/ m) + O(1/m^2) Cov(Z|y_{1:m})$ \nand bounds the latter covariance by a constant, since $Z$ is supported on a bounded set (as the footnote in page 18 suggests). \nHowever, it seems conceivable to me that if we do not impose the assumption s $X = Z + N_0$, we could instead\nshow directly that $\\mathbb{E}[Cov(X|y_{1:m})]$ decreases as $O(1/m)$ if $X$ is bounded. The reason I believe this is true is that, by Proposition 2, we know that the posterior\nof $X$ conditioned on $y_{1:m}$ converges in distribution to $X$ at a rate of $1/m$. Thus, the conditional variance of $X$ given $y_{1:m}$ \nshould decrease as $m$ becomes larger. Another intuitive way to see this is that we could for example simply take the average \n$\\overline{y_m}$, which is $O(\\sigma/m)$ close to $X$. Thus, we gain more and more information about $X$ as $m$ increases, which suggests\nthat $\\mathbb{E}[Cov(X|y_{1:m})] = O(1/m)$ always. Have the authors considered this more general statement?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Reviewer_3oQn"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6039/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698709029046,
+        "cdate": 1698709029046,
+        "tmdate": 1699636649657,
+        "mdate": 1699636649657,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "xBy0bWTMNF",
+        "forum": "yiMB2DOjsR",
+        "replyto": "yiMB2DOjsR",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_gqez"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_gqez"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces an MCMC-type method that sequentially samples an unnormalized density with Gaussian smoothing. The critical theoretical contribution shows that with a proper choice of noise level and the sequential strategy, the conditional densities with compact support (or similar ones) become more and more log-concave \"healthily.\" Through the process, the algorithm mainly keeps the means, given the properties of the Gaussian kernels. Internally, the algorithm employs an MCMC strategy (like Langevin) and methods for score function estimation."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The submission is a well-written research paper. The authors explained the concepts clearly and presented the critical theoretical contribution elegantly. The authors have done an excellent job of demonstrating the effectiveness of the proposed method and its potential applications. \n\nThe problem itself is also fundamental and worth studying. The authors start by finding that \"all (measurements) at once\" (AAO) is suboptimal and then present a \"one (measurements) at once\" (OAT) algorithm that has solid theoretical guarantees. In particular, Gaussian smoothing helps transform a (nearly) compact density towards log-concavity so that it's feasible to sample from it, and measurements accumulation (in a non-Markovian manner) makes the density more and more log-concave and well-conditioned. Combining both effects makes the proposed OAT strategy superior to AAO ones.\n\nMoreover, the paper demonstrates the value of combining theory and experiments in a research project. The theoretical analysis provides a solid foundation, while the experiments validate the proposed method and help readers gain more insights and understand its accuracy. Combining theory and experiments leads to a more complete understanding of the OAT strategies and opens up new avenues for further research."
+            },
+            "weaknesses": {
+                "value": "One weakness is in the result presentation: The paper does not provide a direct performance guarantee on Algorithm 1. I understand the inner-loop method is the object of study here. Still, it should be feasible to make some assumptions around its properties and derive a theorem that captures the algorithm's performance as $m$ and $n_t$ increase. The error metric could ideally be a Wasserstain-type distance for consistency with the experiment section. \n\nThe experiment evaluation partially supports and reflects the theoretical claims, but the settings could be more complex for a thorough evaluation. For example, it would be interesting to understand what magnitude the # sampling iterations must be for some rather complex distributions, e.g., $k$-mixture of Gaussians where $k$ increases. The densities used in Section 5 are well-designed to test specific hypotheses/claims. Yet, experiments should probably cover more than that, such as demonstrating the properties of the main algorithm(s), which can be critical for method adoption.\n\nMinor points: \n- May I know the purpose of \"4.1 Example\" as it seems to be just deriving various quantities for a concrete/standard Gaussian mixture? I don't see how it helps the readers better understand Theorem 1.\n- In Section 5.2, is there an intuitive explanation for why \"the optimal $\\sigma$ here is in fact larger than the noise level needed to make $p(y_1)$ log-concave\"?\n- Would it make sense to add more description for Figure 4, panels (c) and (d)? Currently, it is not entirely clear what they are offering."
+            },
+            "questions": {
+                "value": "Please take a look at the \"Weaknesses,\" where the comments cover both theory presentation and experiments, as well as some additional questions (under \"minor points\"). \n\nOne additional question: \n- Is the actual code anonymously shared somewhere? It would be good to have it for result reproducibility and smooth adoption of the method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6039/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698824975385,
+        "cdate": 1698824975385,
+        "tmdate": 1699636649533,
+        "mdate": 1699636649533,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "qn6i1IhhJb",
+        "forum": "yiMB2DOjsR",
+        "replyto": "yiMB2DOjsR",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_9mSy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_9mSy"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes a framework of sampling from unnormalized densities by transforming this problem to more amenable log-concave sampling."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "**Originality**: The paper is an extension of the paper by Saremi & Srivastava. The proposed framework is very different from what I could find in the literature.\n\n**Quality**: Once familiar with the literature (see weaknesses), I found the framework really elegant and simple. I learnt a lot from reading this paper.\n\n**Clarity**: The paper is well-written (again see the caveat in the weaknesses section) for someone already familiar with this literature. The calculations are thorough without being burdensome. The explanations are crisp without being terse.\n\n**Significance**: The final algorithm proposed is simple and should be easily adopted by the community. More importantly, I found the paper useful in learning how to think about sampling, and I believe it will be useful for the rest of the community also."
+            },
+            "weaknesses": {
+                "value": "The paper could have done a better job at exposition of not so well-known notions like walk-jump sampling. The current exposition is good enough for someone intimately familiar with the literature, but for others, like me, it takes some reading of cited papers to not see ideas as being \"pulled out of a hat\"."
+            },
+            "questions": {
+                "value": "1. How to handle the case when the desired probability measure does not have a density?\n2. It would have been insightful to discuss adversarial cases where the proposed sampling technique fails."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6039/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699199283299,
+        "cdate": 1699199283299,
+        "tmdate": 1699636649435,
+        "mdate": 1699636649435,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "GUk7xM4jFm",
+        "forum": "yiMB2DOjsR",
+        "replyto": "yiMB2DOjsR",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_ZJfB"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6039/Reviewer_ZJfB"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a framework for sampling from an unnormalized density $p\\propto{\\rm e}^{-f}$ on $\\mathbb{R}^d$ by using a Gaussian smoothing scheme. It constructs $X\\sim p$, $Y_i|X\\sim_{\\rm i.i.d.}\\mathcal{N}(X,\\sigma^2I)$ ($i\\in[m]$) for some suitable $\\sigma$ and $m$. By sequentially (one at a time) sampling the joint distribution of $Y_{1:m}$, the conditional distributions will become \"more log-concave\", and finally it outputs $\\mathbb{E}[X|Y_{1:m}]$ as an approximate sample from $p$, which can be expressed in a function of $\\bar{Y}_{1:m}$. The paper demonstrates the advantages of the sequential sampling scheme through some theoretical and empirical examples."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "Overall, the paper introduces a novel theoretical framework that differs from existing MCMC methods or sequential inference models. The paper is well-written, with clear notations, convincing examples, and mathematically rigorous proofs. The structure is well-organized: the authors first introduce an example of an anisotropic Gaussian target distribution, which leads to the important observation that OAT is easier than AAO in terms of the condition number. Then, they present the theory for general distributions (once log-concave, always log-concave), which helps the reader understand the motivation."
+            },
+            "weaknesses": {
+                "value": "Score estimation is essential for the algorithm's efficiency. However, most of the experiments in the paper use the analytic score function, which is not realistic in practice. Moreover, the score has to be estimated at each step of ${\\rm MCMC}_\\sigma$, which will significantly increase the algorithm's complexity.\n\nThe paper only compares the performance of accurate and approximate scores in appendix H, and the result is not very satisfactory. The estimated score performs well when $d=2$, but it deteriorates when $d=8$. These results suggest that the score estimate's precision could be much worse in high dimensions, which I believe is the paper's main weakness.\n\nIn 4.2.1, the proposed method for score estimation is based on importance sampling (which transforms the expectation w.r.t. the probability density $\\nu\\propto\\exp(-f-\\frac{1}{2\\sigma^2}||\\cdot-y||^2)$ to $\\mu=\\mathcal{N}(y,\\sigma^2I)$). However, (Chatterjee and Diaconis, 2018) has shown that the sample size needed for accurate estimation by importance sampling is usually $\\exp({\\rm KL}(\\nu||\\mu))$ for general target functions. For this reason, (Huang et al, 2023, section 3) use Langevin Monte Carlo to sample from $\\nu$ and combine it with importance sampling in a similar task of score estimation. The experiments in your paper indicate that the score estimator also suffers from high variance. The authors should experiment with different score estimators, instead of saying that \"studying the covariance of the plug-in estimator and devising better estimators is beyond the scope of this paper\".\n\nReferences:\n\n(Chatterjee and Diaconis, 2018) Sourav Chatterjee, Persi Diaconis. The sample size required in importance sampling. Ann. Appl. Probab. 28(2): 1099-1135 (April 2018). DOI: 10.1214/17-AAP1326.\n\n(Huang et al., 2023) Xunpeng Huang, Hanze Dong, Yifan Hao, Yian Ma, Tong Zhang. Reverse Diffusion Monte Carlo. ArXiv preprint arXiv:2307.02037."
+            },
+            "questions": {
+                "value": "1. The algorithm outputs a *biased* sample of $p_X$, but the bias $W_2^2(p_X,\\hat{p}_{m^{-1/2}\\sigma})$ can be made arbitrarily small by choosing $\\sigma$ and $m$ such that $\\frac{\\sigma^2d}{m}$ is small enough. How can we choose these parameters in a principled way? In the Gaussian example (proposition 4), we can reduce $\\kappa_1$ by increasing $\\sigma$, and in theorem 1, we need a large $\\sigma$ to make $p(y_1)$ strongly log-concave. However, this also increases the bias, so we need a larger $m$ to compensate that. How can we balance this trade-off between complexity and accuracy?\n\n2. In the experiment, how do you choose the projection direction $\\theta$ for estimating the Wasserstein-2 distance? A more fair comparison would be to use $\\theta$ following the uniform distribution on the Euclidean unit ball (i.e., the *sliced* Wasserstein-2 distance). Efficient approximation algorithms are available, for example, in (Nadjahi et al., 2021).\n\nMinor corrections:\n\n1. In A.1, $-2\\sigma^2\\log p(y_{1:m}|x)=\\sum_{t=1}^{m}||y_t-x||^2+{\\rm cst}$. \n \n2. In remark 3, for (4.7) to hold, ${\\rm cov}(Z|y_{1:m})\\preceq{\\rm cov}(Z|y_{1:m-1})$ almost surely; ... is very large, so that ${\\rm cov}(Z|y_{1:m-1})\\approx0$.\n\n3. The exponential family in the third footnote should be $p(x|\\nu)=\\exp(-f(x)+\\frac{1}{\\sigma^2}(x-x_0)^\\top(y-x_0)-\\frac{\\nu}{2\\sigma^2}(||x-x_0||^2+||y-x_0||^2)-a(\\nu))$. \n\n4. In the third paragraph of introduction and the second paragraph of section 2, $Y_t=X+N_t$, $t\\in[m]$. $N_t$ are i.i.d. $\\mathcal{N}(0,\\sigma^2I)$ random variables that are also independent of $X$. In theorem 1, $X=Z+N_0$, $Z$ and $N_0$ are independent.\n\nReferences:\n\n(Nadjahi et al., 2021) Kimia Nadjahi, Alain Durmus, Pierre Jacob, Roland Badeau, Umut \u015eim\u015fekli. Fast Approximation of the Sliced-Wasserstein Distance Using Concentration of Random Projections. In Advances in Neural Information Processing Systems, 2021."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6039/Reviewer_ZJfB"
+                ]
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6039/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699380916198,
+        "cdate": 1699380916198,
+        "tmdate": 1699636649334,
+        "mdate": 1699636649334,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

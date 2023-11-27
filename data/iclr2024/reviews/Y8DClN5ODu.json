@@ -1,0 +1,336 @@
+[
+    {
+        "id": "pVinRcpd0I",
+        "forum": "Y8DClN5ODu",
+        "replyto": "Y8DClN5ODu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_rEVh"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_rEVh"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose Distillist-Generalist-Specialist (DGS), an approach to reduce the input size of in-context learning examples without sacrificing accuracy.\nDGS consecutively applies three modules, each of which is an LLM with a particular prompt:\nThe 'Distillist' receives a list of input-output pairs which it then attempts to 'distill' into shorter versions, without losing any information.\nThe 'Generalist' checks if each of the proposed distillations meet the following two general criteria: (1) the input message is only a question with no additional content or context, (2) the output response contains all information necessary to derive the final answer.\nIf the proposed distillation do not pass the test of the generalist, the distillist is re-queried.\nFinally, the 'Specialist' consists of two steps: first, an LLM is used to try to answer the distilled question. Then a second LLM takes the distilled question and LLM prediction as input and predicts a 'score' for the distillation. \nThe LLM is prompted to produce a score that reflects the 'accuracy', 'relevance', and 'coherence' of the distillation \u2013\u00a0the prompt contains general instructions as to how the score should be produced.\nIf the LLM produces a score that is sufficiently high, the distillation is accepted.\n\n\nThe authors evaluate their approach on the GSM8K, BoolQ, and MultiRC tasks with ChatGPT, ChatGLM, and AutoCompressor.\nThey also compare against the AutoCompressor model as a baseline."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "I agree with the authors that context size can be a limiting factor for In-Context Learning, e.g. when inputs exceed maximum context size or when the cost of using these models depends on the input size.\nCompressing the size of inputs is an interesting way of solving these issues.\nDGS presents an interesting and novel 'LLM-first' approach to implementing this solution."
+            },
+            "weaknesses": {
+                "value": "Unfortunately, I believe there are a variety of issues with the draft in its current form that I would like to see the authors address before I can recommend its acceptance.\n\nA) One concern with the paper is the lack of a zero-shot baseline.\nFor example, for BoolQ, the authors report a 3-shot accuracy of about 60% in Table 3.\nThis seems to be about the same as the _zero_-shot accuracy for GPT-3 (which should match or be outperformed by ChatGPT used by the authors) published here: https://paperswithcode.com/sota/question-answering-on-boolq?tag_filter=188.\n**If there are no benefits to including in-context examples in the first place, then it is no surprise that there is no performance hit from compressing input examples with any method, including DGS.**\nThe zero-shot baseline can be seen as an 'infinite compression baseline': it compresses inputs of any size into zero tokens.\nI would like the authors to demonstrate that DGS outperforms this zero-shot baseline.\n\nB) Relatedly, Table 1 shows that there are _no_ improvements as the number of in-context examples is increased for GSM8K. In fact, an increase in the number of in-context learning (ICL) examples leads to decreased performance. On the one hand, this observation supports my worries that a zero-shot baseline would outperform DGS.\nOn the other hand, this makes me sceptical that DGS is actually a method that 'ensure generalizability across diverse query types'.\nFor standard ICL tasks, I would expect the performance to improve (and eventually stagnate) as more examples are provided in-context.\n\nIf there are no errors in this evaluation, I believe it is possible the authors have chosen tasks that do not really fit with common expectations for in-context learning.\nIf this is the case, I would ask the authors to provide evidence their method works on ICL tasks where more examples improve performance, either by repeating the experiments of Table 1 for  BoolQ and MultiRC or by evaluating on additional tasks for which this is definitely the case,  e.g. SST-2, Hate Speech, AG News, Subjectivity, RTE, MNLI, Financial Phrasebook).\n\nC) I would suggest the authors make even more clear that their method only applies to targets task where the size of individual inputs is very large. (Alternatively, they can also demonstrate it works for other common ICL tasks such as SST-2, Hate Speech, AG News, Subjectivity, RTE, MNLI, or Financial Phrasebook.)\n\nD) What is the uncertainty (e.g. boostrap confidence intervals) on the values in Table 1, 2, and 3? You claim that DGS \"uniformly\" improves performance. However, often, the gap is only 0.1%, and I am sceptical these results are significant. \n\nFor example, if we assume that, in Table 1, for GSM8K, performance does not actually decrease as we add more examples but, rather, it stays the same, this would mean the standard deviation is about ~1 percent.\n\nYou should be able to compute bootstrap confidence intervals from the numbers you already have, without running any new experiments.\n\n\nE) Why are there no results for AutoCompressor on GSM8K in Table 2?\n\n\nF) The authors should provide additional ablations/baselines.  The appendix contains an ablation for DGS without the generalist, however this does not provide accuracy  / compression ratio numbers.\nI would be interested to see the performance (in terms of accuracy/compression ratio) without the generalist, as well as without the specialist.\nFurther, I would be interested to see the performance of the following simple baseline:\nFor each QA pair separately, you ask ChatGPT to 'Rewrite this input in the most concise way without losing any information that is necessary to arrive at the final answer' (and variations thereof).\n\nG) Your introduction of the scoring system for the generalist is misleading. In the main body of the text you write that you will regenerate distillations if there are more than 10 points deducted. However, figure 7 reveals that a 10 point deduction is incurred from a single violation already. Why don't you just write that you regenerate if the generalist detects a single violation or more?\n\n\nH) Sometimes the paper is a bit strong in claiming things like they are 'facilitating the reasoning capabilities of LLMs under the fixed constraint of context limit'.\nFor this to hold true, I would say they would need to show that, without DGS, prediction quality degrades. \nE.g. only with DGS can I include sufficient examples to get reasonable predictions.\nHowever, in fact, they just show they _reduce_ input size without taking a hit in accuracy. They do not show the opposite: _improving_ accuracy by being able to include a larger effective number of examples.\n\n\nI) \"Although successful, such fine-tuning processes necessitate substantial computational resources, often requiring hundreds of high-end GPUs, thereby increasing financial constraints for many researchers\" --> To be fair, this only has to be performed once per model, whereas your approach has to be run once per task. While I think DGS is a valid idea, I think this argument against scalable positional embeddings does not hold up."
+            },
+            "questions": {
+                "value": "J ) Have you tried going through QA pairs individually instead of asking the models to distill them in batches? It seems like this would possibly be less error-prone.\n\nK) In the prompt for the specialist (figure 8), why do you not include the ground truth answer or the LLMs prediction for the original, long input? Surely, this would make it much easier to judge the usefulness of the distillation. \n\nL) If I understand correctly, the distillist distils both questions and answers. Yet, the specialist does not check if the distilled answer makes sense \u2013\u00a0it only sees an 'initial response' produced from an LLM (based on the distilled question). Why is there no separate checking of the distilled answers (in addition to the general checking of the distillist)?\n\nM) \"If the computed score exceeds 90, it indicates that the distilled demonstrations are well-suited for the specific question. In this case, the demonstrations, having been evaluated by both the Generalist and Specialist, proceed to the Distillist for further refinement\" --> Why, if the distilled demonstrations are 'well-suited' are they passed to the distillist again? I thought things would be done by now? Do you apply DGS iteratively or does the distillist do something else when it is called again? When do you break out of this loop?\n\nN) \"Demonstrations exceeding 2000 tokens are partitioned into two segments, each of which is distilled independently before concatenation. Additionally, since the input question participates in the distillation process, a question is randomly selected from the training set before distillation starts.\"  --> Why do you not use the question that actually belongs to the demonstration? The distillist prompt mentions \"several User-Response pairs\" but you just call it with a single input then?  \n\nO) \"DGS proves consistently effective, regardless of how the demonstration and question are selected, as will be demonstrated in subsequent experiments\" --> Where do you show this?\n\nP) \"Such an emergent feature fundamentally\" --> Why is this an 'emergent' feature? What do you mean by this?\nI do not think you have provided sufficient evident and discussion to claim this is an 'emergent' feature."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6763/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698400473709,
+        "cdate": 1698400473709,
+        "tmdate": 1699636779924,
+        "mdate": 1699636779924,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "w1oFk4yrof",
+        "forum": "Y8DClN5ODu",
+        "replyto": "Y8DClN5ODu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_AeYf"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_AeYf"
+        ],
+        "content": {
+            "summary": {
+                "value": "ICL becomes popular among LLM users. However, such context burdens on the computational overheads. This work proposes a DGS framework to distill the in-context demonstrations (a so-called novel paradigm trying to take advantage of the natural language redundancy to propose better natural language prompts). Specifically, such framework operates on the input tokens, through token selection and overall content rephrasing to distill the contexts, building upon three expert LLM agents (ChatGPT), one for distillation, one for punishment, and the other for evaluation. The whole pipeline looks interesting and effective under three NLP tasks (GSM8K - mathematical reasoning, BoolQ - binary classification, and MultiRC - Reading Comprehension) for three large language models (ChatGPT, ChatGLM, and AutoCompressor - two of them are very aligned RLHF large LMs)."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "* The Agent pipeline looks interesting, and the final result looks promising in distilling the demonstrations in both compression ratio and performance improvements. This demonstrates their practical value, even under such simple heuristic-driven pipeline. \n\n* I am also enjoying their analysis part on \"how distilled demonstrations perform better\". It looks very intuitive as natural language redundancy. Some contents are repeating the previous semantics. In addition, the power of ChatGPT in locating relevant knowledge also looks interesting."
+            },
+            "weaknesses": {
+                "value": "* This work has demonstrates its value at those aligned or large LMs. I am just curious about whether such technique could generalize to smaller LMs, such as GPT-2, or others, since some generalization behaviors might **not** be the same.\n\n* For your experimental setup, I have noticed that you test on **one** randomly sampled ICL prompt per task. I am just curious about the robustness of your utility in handling many other ICL prompts. That is to say, it would be better for showing some average results (performance, and compression ratio).\n\n* It will definitely be better to include any kinds of **efficiency** discussions. If we aim at deploying your technique, how it costs?\n\nI am happy to raise the score if there are any improvements."
+            },
+            "questions": {
+                "value": "See Weaknesses, especially the point #2 and #3."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6763/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6763/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6763/Reviewer_AeYf"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6763/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698487145640,
+        "cdate": 1698487145640,
+        "tmdate": 1699636779794,
+        "mdate": 1699636779794,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "0NamNa7Vt6",
+        "forum": "Y8DClN5ODu",
+        "replyto": "Y8DClN5ODu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_VMEd"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_VMEd"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces a strategy called Distillist-Generalist-Specialist to distill demonstrations in In-context Learning. Although the method is straightforward, it offers a practical approach to addressing the challenges presented by long-text demonstrations. There are some questions about this paper and would like the authors to provide further clarification."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. This paper proposes a simple strategy to compress the content of demonstrations, resulting in shorter textual lengths. This is particularly helpful for long-text demonstrations. \n\n2. The authors provide a clear demonstration of the approach and conduct numerous case studies, allowing for a quick understanding of how this method is implemented."
+            },
+            "weaknesses": {
+                "value": "1. The innovation in this paper is lacking. Using large models to compress content and address the issue of excessively long text is a technique that has been applied for quite some time. For instance, techniques like summarization in langchain-github have been used to avoid exceeding maximum length limits. \n\n2. The description of the key aspects of this method is not precise enough, and I couldn't find a clear definition of \"Punishment Score.\"\n\n3. The applicability of the method is not adequately clarified. For example, the mathematical examples showcased by the authors may be easily compressed appropriately for ChatGPT. However, for tasks involving causal reasoning, sarcasm, or emotional inference, using large models to compress text length may likely result in the loss of crucial information, which is not desirable.\n\n4. The lack of evidence for improvement in accuracy makes the explanations seem more like speculation. The compression that removes incorrect information appears similar to a CoT process, but is the test input compressed? If it is, it becomes difficult to verify if the improvement is due to changes in demonstrations because the test input questions have also changed."
+            },
+            "questions": {
+                "value": "1. Techniques like summarization in langchain-github been used to avoid exceeding maximum length limits, does this paper's contribution only lie in proposing a few prompts for compressing demonstrations?\n\n2. Could you provide a clear definition of \"Punishment Score\"? I couldn't find the mathematical definition of this term. Is this value just evaluated by ChatGPT? How is its reliability ensured?\n\n3. How about the applicability of the method? The mathematical examples showcased by the authors may be easily compressed appropriately for ChatGPT. However, for tasks involving causal reasoning, sarcasm, or emotional inference, using large models to compress text length may likely result in the loss of crucial information.\n\n4. The rewriting seems like a CoT (Compression of Transformations) process that changes the way reasoning is done. It's reasonable to say that a more stright question has a higher accuracy for the model. However, if the final test questions are compressed, it becomes difficult to verify whether the improvement is due to changes in demonstrations. This is because the input questions have changed. For example, if a mathematical problem is rephrased by ChatGPT to make it clearer, it becomes easier to answer correctly. However, this doesn't prove that the improvement is due to the author's method or its connection to demonstrations. It may simply be the result of the question being rephrased, which is different from the claim made by the author regarding their contribution."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6763/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698535462554,
+        "cdate": 1698535462554,
+        "tmdate": 1699636779682,
+        "mdate": 1699636779682,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "bZdaoVel6p",
+        "forum": "Y8DClN5ODu",
+        "replyto": "Y8DClN5ODu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_u1NF"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_u1NF"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper tries to reduce computational burdens and financial costs of LLMs by demonstration distillation. The motivation is that in ICL, context or demonstrations take up many tokens in the prompt, but a large number of tokens may not be feasible for current LLMs. So, this paper proposes a method to remove redundant tokens in prompts and try to keep the ICL performance. The proposed method DGS contains three agents, i.e., Distillist, Generalist and Specialist. They are responsible for different parts of the task, and complete the whole distillation process in a cooperative and iterative manner. The proposed DGS is evaluated on multiple benchmarks, and good results are obtained."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "4 excellent"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "This paper is well-motivated, since reducing the prompt length is necessary in many real-world scenarios. The presentation in this paper is good and the idea behind it is illustrated clearly with explanations and examples. The design method is reasonable to some extent, since many aspects when doing demonstration distillation are considered in DGS, such as retaining essential elements, controlling quality, accuracy, relevance, and so on."
+            },
+            "weaknesses": {
+                "value": "It seems that many costs are introduced by the proposed method, but the proposed method aims at reducing costs at the beginning. In order to do distillation, three agents, with ChatGPT behind them, are called iteratively, which must cause many computational burdens and financial costs. So, taking the costs in this distillation process into account, will the DGS reach the goal of reducing costs? For the cases where the context already exceeds the length limit of the LLM, how does this compression take effect?"
+            },
+            "questions": {
+                "value": "Is the randomness from LLMs considered in experiments? Using a LLM without randomness or setting the temperature to 0 is a more appropriate way for reproducible experiments."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6763/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698721558892,
+        "cdate": 1698721558892,
+        "tmdate": 1699636779553,
+        "mdate": 1699636779553,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "CfwDmf1xlK",
+        "forum": "Y8DClN5ODu",
+        "replyto": "Y8DClN5ODu",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_Ddz4"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6763/Reviewer_Ddz4"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes an approach to compress demonstrations that can be used in an in-context learning setup. The proposed approach is termed as Distillist-Generalist-Specialist (DGS) which as the name suggests consists of three LLM-powered agents that help with the compression process. This approach shows similar performance to uncompressed demonstrations while significantly reducing the number of input tokens. The proposed approach is designed to help reduce computational and financial costs that arise from using lengthy demonstrations."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "The paper is well written and is easily understandable. The proposed approach is simple and intuitive. Empirical experiments demonstrate the value of the proposed DGS approach by significantly reducing the number of input tokens and retaining overall performance."
+            },
+            "weaknesses": {
+                "value": "1) The proposed DGS approach is powered using OpenAI's chatgpt. While chatgpt is a very popular and capable model, nonetheless it is a closed-source model. The authors should have investigated a few (1-3) open-source LLMs that could power the three LLM agents instead and check how the performance changes.\n\n2) The proposed approach is motivated to help reduce computational and financial costs that are associated with using longer demonstrations in an ICL framework. However, using models like chatgpt to power the proposed approach can also end up being expensive to operate. The authors should have designed and included a small experiment describing the potential financial relief the proposed approach offers.\n\n3) The proposed approach is only compared against AutoCompressor method despite including two other demonstration compression methods in the related work section."
+            },
+            "questions": {
+                "value": "1) Can you test your approach using 1-2 open-source models and evaluate how that affects performance?\n2) Can you include performance results using the demonstration compressions methods that were listed in the related work section?\n3) Compare your approach to other demonstration selection approaches that specifically look for valid but short demonstrations that can be used in an ICL framework. Look at the following papers: a) https://aclanthology.org/2023.findings-acl.273.pdf; b) https://arxiv.org/abs/2211.04486; c) https://arxiv.org/abs/2310.10707; d) https://arxiv.org/abs/2302.05698; e) https://arxiv.org/abs/2104.08786"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 5,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6763/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698815510888,
+        "cdate": 1698815510888,
+        "tmdate": 1699636779441,
+        "mdate": 1699636779441,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

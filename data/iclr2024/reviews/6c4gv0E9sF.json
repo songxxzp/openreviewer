@@ -1,0 +1,208 @@
+[
+    {
+        "id": "oAK32ySLBZ",
+        "forum": "6c4gv0E9sF",
+        "replyto": "6c4gv0E9sF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_sLn7"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_sLn7"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose a spiking neural network variant of BERT called SpikeBERT, thereby employing knowledge distillation using BERT as the teacher model. The main advantage of SpikeBERT compared to vanilla BERT seems to be that it is consuming less \u201cenergy\u201d (measured in mJ)."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "- **Table 2**: It\u2019s interesting and promising to see that SpikeBERT has much lower energy consumption than FT BERT.\n\n\n- **Section 4.5**: I appreciate the comprehensive ablation study that was performed on the hyperparameters. It\u2019s good scientific practice to scrutinize the impact/effect of different hyperparameters."
+            },
+            "weaknesses": {
+                "value": "- **Contributions**: I think contribution 2 is misleading. While the authors show that their model performs better than existing SNN methods, their method performs on par with a simple TextCNN (from **ten** years ago) which I think is computationally much less expensive than their whole pre-training and fine-tuning pipeline because TextCNN is a much smaller architecture whose outputs are non-contextual/static word representations that can easily be pre-computed.\n\n- **Section 3**: The entire \u201cpre-training + knowledge distillation + fine-tuning\u201d pipeline appears to require a vanilla BERT model that has previously been pretrained on a large language corpus as is standard. If you rely on BERT, why would I not \u201cjust\u201d fine-tune or probe BERT instead of applying your pipeline? What is the advantage here? \n\n\n- **Notation/Math**: The math and notation in Section 3 are a bit sloppy and not very precise.\n\n\n- **Table 1**: The results in Table 1 are misleading. The authors bold-faced their model\u2019s performances. However, \u201cFT BERT\u201d (which is clearly not SOTA anymore on these tasks) achieves much stronger performance than their model across all reported datasets. Moreover, TextCNN --- which was one of the **first** CNN models for text sequences and whose representations are non-contextual/static word representations --- shows better performance on two datasets (Subj and ChnSenti) and only marginally worse performance on the other four datasets. I\u2019d be curious to see the standard deviations here. Because, if they overlap, then the performances between TextCNN and SpikeBERT are not statistically significantly different. Please report the standard deviations in brackets next to the averages and unbold your numbers or at least explain in the caption what bold-face means here. It\u2019s not good practice to mislead the reader by simply bold-facing your numbers without further explanation.\n\n\n- **Conclusion**: The conclusion is pretty short for a scientific conference paper. There is no discussion of results or impact. Moreover, I think the claim \u201c*[...] can even achieve comparable results to BERTs with much less energy consumption across multiple datasets for both English and Chinese, leading to future energy-efficient implementations of BERTs or large language models.*\u201d is misleading. I think SpikeBERT achieves comparable results to TextCNN but not to FT BERT. Also, BERT is not SOTA anymore since 2021. How would SpikeBERT compare against more recent variants of Transformer-based foundation models such as RoBERTa, Albert, or T5? (see the [Glue](https://gluebenchmark.com/), [SuperGlue](https://super.gluebenchmark.com/) and [SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) leaderboards for an up-to-date list of models in NLP). I am not convinced that the approach reported in this paper is \u201c*leading to future energy-efficient implementations of BERTs or large language models*\u201d. There are numerous other approaches that have demonstrated this via distillation techniques (e.g., [DistilBERT](https://huggingface.co/docs/transformers/model_doc/distilbert)).\n\n\n- No limitations are discussed as part of the conclusion. Unfortunately, there is no discussion section.\n\n\n- An entire body of work that has employed distillation techniques over the past 4 years in NLP is not discussed here."
+            },
+            "questions": {
+                "value": "- **Section 3**: The entire \u201cpre-training + knowledge distillation + fine-tuning\u201d pipeline appears to require a vanilla BERT model that has previously been pretrained on a large language corpus as is standard. If you rely on BERT, why would I not \u201cjust\u201d fine-tune or probe BERT instead of applying your pipeline? What is the advantage here? Linear probing is much less expensive than fine-tuning (it only requires a linear classifier) and often equally performant (depending on the task).\n\n\n- **Section 4**: Could you elaborate why I would use SpikeBERT over TextCNN although the methods perform equally well on all the reported datasets (see my comment on Table 1 above)? TextCNN is a computationally much less expensive method and has the \"advantage\" of static word representations. So, I could just compute the representations for each word used in the datasets a priori and then run inference as many times as I want without the need to run the sentences through the model. That being said, I don\u2019t think that anyone in the community would still use a TextCNN from 2013 that produces non-contextual word representations for NLP tasks.\n\n\n- Why didn\u2019t you compare SpikeBERT against [DistilBERT](https://huggingface.co/docs/transformers/model_doc/distilbert)? DistilBERT is a distilled version of BERT that is much faster and cheaper and has comparable performance to BERT (probably better than SpikeBERT on the benchmarks that you looked at). AFAIK, DistilBERT exists since 2020. So, there must be an even better and more recent version of DistilBERT such as DistilRoBERTa or DistilALBERT. But please take a look yourself.\n\n\n- **Table 2**: Why is the number of FLOPs consistently larger for SpikeBERT than for FT BERT although SpikeBERT\u2019s energy consumption is much lower? How do you explain that? I\u2019d like to see FLOPs and energy consumption of TextCNN reported in this table and not just SpikeBERT vs. FT BERT. Could you please report those? In addition to the FLOPs and energy consumption of TextCNN it would like to see these numbers for [DistilBERT](https://huggingface.co/docs/transformers/model_doc/distilbert) which has been shown to be much more computationally efficient/energy efficient than BERT while preserving most of its performance (around 95%) via knowledge distillation but their pipeline seems to be easier than your pipeline and does not necessitate \"embedding alignment\". Again, there probably exist even better distilled versions of BERT or RoBERTa or GPT-2/GPT-3 by now.\n\n\n- **Table 3**: Did you employ the same data augmentation strategies to all methods that you compared SpikeBERT against? If data augmentation plays a crucial role in the performance of the model (which it does according to your ablations), then it seems not fair to compare SpikeBERT + DA against other methods without DA."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698225647083,
+        "cdate": 1698225647083,
+        "tmdate": 1699636456293,
+        "mdate": 1699636456293,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ZmquCbQ2JX",
+        "forum": "6c4gv0E9sF",
+        "replyto": "6c4gv0E9sF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_17Yy"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_17Yy"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes SpikeBERT, a spiking BERT model designed for language tasks based, and describes a two-stage distillation method employed in its training.\n\nThe authors conduct experiments on several text classification tasks on English and Chinese datasets. The results show that SpikeBERT outperforms state-of-the-art spiking neural networks and achieves comparable results to BERT on text classification tasks for English and Chinese, while consuming significantly less energy."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1. The authors provide the necessary background on spiking neural networks (SNNs) and Spikformer architecture.\n\n2. This work is the first Transformer-based SNNs for language tasks, and achieve state-of-the-art performance on text classification tasks.\n\n3. The authors present an ablation analysis for all their contributions, and compare SpikeBERT with other BERT variants like TinyBERT and DistilBERT on Appendix."
+            },
+            "weaknesses": {
+                "value": "1. Although SNNs can reduce the energy consumption when inference, the proposed two-stage distillation method may lead to more energy costs when training. Can you explain this matter?\n\n2. In Figure 3(b), it seems there are no emergent abilities in the SpikeBERT, which is different from non-spiking large language models."
+            },
+            "questions": {
+                "value": "Q: I wonder why the authors choose BERT as their teacher model. \n\nIf the authors can respond reasonably to all my questions and comments, I will improve the score of this manuscript."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No"
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4742/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4742/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission4742/Reviewer_17Yy"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698395132330,
+        "cdate": 1698395132330,
+        "tmdate": 1699889417496,
+        "mdate": 1699889417496,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "JOZ3yI5MQ2",
+        "forum": "6c4gv0E9sF",
+        "replyto": "6c4gv0E9sF",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_is3e"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission4742/Reviewer_is3e"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors propose SpikeBERT, a spiking neural network (SNN) architecture for language tasks. SpikeBERT extends and improves Spikformer architecture to process text instead of images. It replaces certain modules in Spikformer to make it suitable for language tasks.\nThe approach uses a two-stage knowledge distillation method to train SpikeBERT: First stage is pre-training distillation using a large unlabeled corpus to align embeddings and features. Second stage is task-specific distillation using a fine-tuned BERT on a downstream task as teacher. The model is evaluated on 6 English and Chinese text classification datasets: it outperforms prior SNN methods and achieves comparable accuracy to BERT. The estimated theoretical energy consumption is much lower for SpikeBERT as compared to traditional approaches."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "Advantages:\nUses a highly scalable Transformer-based architecture as the backbone and outperforms prior SNN methods by 3.49% on average across 6 datasets.\nTwo-stage distillation allows pre-training on large unlabeled data.\nFeature alignment loss aligns hidden representations.\nData augmentation further facilitates distillation.\nEvaluated on diverse English and Chinese datasets: works well for both English and Chinese text classification.\nSignificantly reduces theoretical energy consumption (by 27.82% compared to fine-tuned BERT).\n\nThe claims are reasonably supported by the results. The proposed SpikeBERT outperforms prior SNN methods significantly and achieves comparable accuracy to BERT on multiple datasets. Ablation studies provide insights into model architecture and training."
+            },
+            "weaknesses": {
+                "value": "Potential weaknesses include:\nThe method relies on the teacher ANN, so can not learn directly from the data.\nThe method does not address zero-shot generalization to novel language tasks, which is the main appeal of the LLMs.\nFails to capture fine-grained word semantics well.\nRequires GPUs with large memory due to additional time dimension.\nEnergy reduction based on theoretical estimates, actual hardware measurements would be more compelling."
+            },
+            "questions": {
+                "value": "The approach was evaluated on datasets created for ANNs, not neuromorphic data. It would be interesting to consider using e.g. a neuromorphic cochlea for speech signal.\nAdding scaling experiments would be helpful - trying bigger versions of SpikeBERT with more layers, heads and timesteps to explore the scaling law.\nIt would be helpful to provide visualizations of the learned spike patterns to offer insights into model operation and interpretability.\nHow would the chioce of alternate surrogate gradient functions would impact training convergence and accuracy?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission4742/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698720431546,
+        "cdate": 1698720431546,
+        "tmdate": 1699636456103,
+        "mdate": 1699636456103,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

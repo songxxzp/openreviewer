@@ -1,0 +1,270 @@
+[
+    {
+        "id": "Txqm85cP33",
+        "forum": "Vy6sjPt2Vr",
+        "replyto": "Vy6sjPt2Vr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_Un4y"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_Un4y"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper proposes to revisit the standard uniform square tokenization in vision transformers, and instead replace it with **superpixel-based tokenization**. The superpixel partition follows the methodology of \"SuperPixel Hierarchy\" (Wei et al, Transactions on Image Processing 2018) with an additional regularization term for self-loop edges. Based on this criterion, pixels are grouped hierarchically to form superpixels, and the number of hierarchy levels is chosen to obtain a comparable number of tokens to `ViT-B/16`.\nOnce the superpixels are defined, several sets of features are extract for each of them to form the input token representations:\n  * **positional encodings** are computed as a histogram over the spatial positions present in the superpixel\n  * **texture features** are extracted using gradient operators\n  * **color features** are computed by interpolating the light intensity information present in the suerpixel\n\nOnce the superpixel and corresponding features are defined, the rest of the model is defined as a standard transformer architectures. In practice, the paper uses **ViT (Small and Base)** as backbone. The proposed method is evaluated on the task of image classification, as well as through various explainability metrics. It is compared to the backbone (ViT), as well to a method employing random Voronoi cells as tokens. The results show that the proposed method can match classification accuracy of the standard ViT backbone while yielding more interpretable feature attribution maps."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- **Clear writing and motivation**: The paper is clearly written and fully describes the proposed tokenization as well as feature extraction methods. The core motivation of departing from \"uniform square patches\" tokenization is very meaningful and superpixels appear like a well established tool to tackle this problem.\n\n- **Clear reproducibility details**: The paper clearly describes the training details and hyperparameters in the appendix to reproduce the results.\n\n- **Interpretability results**: The paper report interpretability experiments results using multiple metrics/frameworks to evaluate the faithfulness of feature attributions."
+            },
+            "weaknesses": {
+                "value": "- **Practicality of superpixels**: One advantage of square tokenization is that it is highly practical:, it's a simple patching operation, and the position encodings can easily be transferred across scales using interpolation (see for instance \"*FlexiViT: One Model for All Patch Sizes, Beyer et al, CVPR 2023*\"). In contrast, the proposed method requires the extra step of generating superpixels for each input image, which is not discussed in the paper\n\n- **Limited baselines:** The paper primarly evaluates three methods: `ViT-{S,B}/16` (the base model), `SPiT-{S, B}/16` (the proposed model) and `RViT-{S,B}/16`, which, from my understanding, is a baseline introduced in this paper using random Voronoi cells as tokens. I understand that improving classification accuracy is not the main goal of the paper hence the choice of baselines, but I do still think the paper would benefit from comparing to baselines which have a similar goal (i.e. either methods that propose more flexible tokenization, or more interpretable attention maps)\n\n- **Missing related work:** In general, the discussion of related work in the paper is very short and does not seem to contextualize the paper enough. For instance, some points which may be interesting to discuss:\n  * On the aspect of interpretability, models such as `DINO` trained with finer-grained tokens (*Emerging Properties in Self-Supervised Vision Transformers, Caron et al, CVPR 2021*) would be a stronger baseline than ViT trained with coarser patch size\n  * *Vision Transformer with Super Token Sampling, Huang et al, CVPR 2023* is another method that uses superpixel in Vision transformers. The related work section explains that this method build super-pixel by gradually merging square patches, unlike the current work which uses super-pixels from the start; However, it is not clear to me why this is preferable, and how these two approaches compare in practice. \n  * In addition, there has been many works investigating more flexible tokenization than the standard ViT \"uniform square\" assumption, which is not reflected in the introduction. For instance:\n    * **Token merging** approaches (e.g. \"*`ToME`: Your ViT but faster, Bolya et al, ICLR 2023*\") also alleviate the issues that [quote] *\" complexity and memory scales quadratically with the number of tokens in self-attention\"*\n    * Other works on **dynamic tokenization** (e.g. \"*Vision Transformers with Mixed-Resolution Tokenization, Ronen et al, 2023*\" or \"*MSViT: Dynamic Mixed-Scale Tokenization for Vision Transformers, Havtorn et al, 2023*\") also propose to incorporate mixed-resolution information directly at the input tokens stage and also show that ViT \"can be succesfully trained under irregular tokenization\"\n    * `Swin` transformers and other **multi-scale works** gradually build multi-scale tokens, hence they do not have the issue that [quote] *\"the scale of the partitions are rigidly linked to the model architecture by a fixed patch size\"*\n\n**Overall summary:** My main concern is that it is not clear to me why using superpixels as tokens is advantageous with respect to other methods implementing some form of input-dependent tokenization, either in terms of performance or computational cost. The main gain seems to be in obtaining more fine-grained interpretability maps, but these are also only compared to the standard ViT-backbone (and the random voronoi cell baseline)\n\n**Post-rebuttal note:**  As some other reviewers mentioned, Is still have some reserves about the novelty/impact of the proposed method; however, in light of the rebuttal addressing several concerns and showing promising results on dense prediction tasks, I am raising my score from 5 to 6"
+            },
+            "questions": {
+                "value": "- **Notion of equivalence in Propositions 1 and 2**: What does it mean for the two operators to be equivalent ? the proof of proposition 1 only seems to show that both operators have the same input and output dimensions. Generally, I am not sure what the conclusion of Section 2.4 is and how significant it is.\n\n- **Number of tokens and batched executions:** In Section 2.2, it is said that \"*We empirically verify that setting T = 4 produces comparable numbers of tokens to a ViT-B16*\"; Does this mean that each image has a different number of tokens in practice, and how does this impact batched execution during training/inference ?\n\n\n- **Evaluation on segmentation:** The choice of super-pixels seem particularly relevant for more dense tasks such as segmentation: This might be a more favorable task to evaluate on than image classification."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3302/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3302/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission3302/Reviewer_Un4y"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3302/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698674264248,
+        "cdate": 1698674264248,
+        "tmdate": 1700604142018,
+        "mdate": 1700604142018,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "SyzxfqGxlW",
+        "forum": "Vy6sjPt2Vr",
+        "replyto": "Vy6sjPt2Vr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_N399"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_N399"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper introduces an innovative approach to improving tokenization strategies in vision transformers. In contrast to traditional regular grid partitioning methods, they propose a superpixel transformer approach capable of irregular tokenization. By employing state-of-the-art metrics, this method can flexibly divide irregular patches, thereby enhancing the ability of subsequent transformer modules to extract higher-quality features and significantly improving model interpretability. Furthermore, the authors conducted an extensive series of experiments to rigorously validate the effectiveness of their method."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "This paper demonstrates a highly promising starting point by introducing the use of superpixel partitioning for irregular patch division, which seeks to address the inherent limitations of traditional grid-based partitioning methods in transformers. As highlighted by the authors, this approach has the potential to significantly enhance the interpretability of attention mechanisms in Vision Transformer (ViT) and facilitate the extraction of high-quality features, marking its potential impact on pioneering applications of transformers. The paper maintains a clear and informative structure. In summary, this work demonstrates a high degree of originality and holds substantial potential for further research and applications in the field."
+            },
+            "weaknesses": {
+                "value": "1\u3001In the experimental section, the authors have provided thorough validation and analysis of the enhancement in feature extraction achieved by superpixel tokens in subsequent transformer modules. However, the paper lacks an analysis of SPiT efficiency. While Table 4 indicates that the superpixel algorithm used in this study performs comparably to state-of-the-art algorithms with substantially lower inference time, it is essential to explore whether the integration of superpixel tokens with subsequent transformer modules introduces a significant computational load. To address this, the authors should consider adding an additional set of comparative experiments to analyze the inference efficiency between ViT, RViT, and SPiT.   \n2\u3001The determination of hierarchical levels T is not clearly explained. To provide a more comprehensive understanding, the authors could include an additional set of ablation experiments to explore the implicit relationship between T settings and model performance. These additional experiments and analyses will further strengthen the paper's contributions and insights.  \n3\u3001The paper's summary of related work is relatively limited. The authors should consider expanding the discussion of strategies for improving tokenization methods in the related work section, such as [1] [2]. This would contribute to a more thorough understanding of the research landscape and enhance the paper's contributions.  \n\n[1] Havtorn J D, Royer A, Blankevoort T, et al. MSViT: Dynamic Mixed-Scale Tokenization for Vision Transformers[C]//Proceedings of the IEEE/CVF International Conference on Computer Vision. 2023: 838-848.  \n[2] Ronen T, Levy O, Golbert A. Vision Transformers with Mixed-Resolution Tokenization[C]//Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2023: 4612-4621."
+            },
+            "questions": {
+                "value": "Have you considered conducting a comparative analysis between your superpixel tokenization method and mixed-scale tokenization approaches [1] [2]? Mixed-scale tokenization can also alleviate the limitations of regular grid partitioning methods to some extent, reducing information loss without introducing excessive computational overhead. What advantages do you offer in comparison to them?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3302/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698801766380,
+        "cdate": 1698801766380,
+        "tmdate": 1699636279260,
+        "mdate": 1699636279260,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "wjZqSes2yo",
+        "forum": "Vy6sjPt2Vr",
+        "replyto": "Vy6sjPt2Vr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_ubVn"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_ubVn"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper presents a method that replaces the square patch tokenization by superpixel tokenization in vision transformers. The authors implemented a GPU-based superpixel method to serve as the tokens. The authors investigates the ViT using superpixel tokens for image classification tasks, and find that the proposed method is useful in some cases."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- The idea of replacing square tokens with superpixel tokens is straightforward and reasonable.\n- Extensive experiments to analyze the proposed method. \n- The proposed method has better explainability then vanilla square patch tokens."
+            },
+            "weaknesses": {
+                "value": "- The experimental results are not very convincing. As stated in the paper \"although we insist that the results are not significant enough to warrant any clear benefit for any framework in particular on classification tasks\". It is not clear how useful is the proposed method in image classification and other tasks.\n- Some sentences are not complete, e.g., \"We hope that our work inspires more research into the\" in page 9."
+            },
+            "questions": {
+                "value": "The runtime analysis is missing. Would replacing the square patches with superpixels for tokens requires much extra runtime?\nDo the superpixel tokens remain the same in each layer or are hierarchically grouped together?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3302/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698911296148,
+        "cdate": 1698911296148,
+        "tmdate": 1699636279187,
+        "mdate": 1699636279187,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "ouUj5K2e1a",
+        "forum": "Vy6sjPt2Vr",
+        "replyto": "Vy6sjPt2Vr",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_Apxd"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission3302/Reviewer_Apxd"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper suggests using superpixels instead of patches as the input for vision transformers. It generates superpixels using a previous method with a different regularization term. Experiments show that superpixels have better interpretability than patches."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "This paper has an interesting motivation to use superpixels instead of grids as the input for vision transformers. It also provides better interpretability by visualizing the attention maps. The paper gives the formulation of the proposed method and proves that the conventional ViT is a special case of it."
+            },
+            "weaknesses": {
+                "value": "This paper has limited novelty, as previous works [1][2] have already explored the combination of superpixels and Transformers. The superpixels are created using only low-level and predefined features in the first layer, which may cause permanent errors. In contrast, [1][2] use the features learned by the network. This may explain why the performance on image classification is worse than the baseline.\n\n[1] Vision Transformer with Super Token Sampling\n\n[2] Superpixel Transformers for Efficient Semantic Segmentation"
+            },
+            "questions": {
+                "value": "Do you use a differentiable online tokenization process?\n\nHow does your method compare with conventional superpixel methods like SLIC, since you also use manually defined features?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission3302/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699228079653,
+        "cdate": 1699228079653,
+        "tmdate": 1699636279115,
+        "mdate": 1699636279115,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

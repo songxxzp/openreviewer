@@ -1,0 +1,280 @@
+[
+    {
+        "id": "4RfWe5n0i1",
+        "forum": "rM9VJPB20F",
+        "replyto": "rM9VJPB20F",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_Fmsc"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_Fmsc"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the tension between group robustness methods and poisoning defenses; in particular, the authors show that group robustness methods which pseudo-label the minority group are often unable to distinguish minority samples from poison samples. On the other hand, poisoning defenses can make the minority group more difficult to learn, which hurts group robustness. The conclusions are supported by a variety of experiments and a simple theoretical result."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "1. This paper makes an important contribution by exposing the incompatibility of current group robustness and poisoning defenses, especially showing that group robustness methods can make models more susceptible to poisoning adversaries. This observation is novel as far as I know, and should be interesting for the community.\n2. The experiments use a variety of robustness and poisoning techniques and metrics (if not datasets) and the extension to a federated learning application is welcome. The authors also provide a theoretical result in a simple yet well-motivated setting.\n3. The authors show that a naive combination of both techniques fails to resolve their tension, an interesting result which could represent a new direction of research for the community."
+            },
+            "weaknesses": {
+                "value": "The main weakness of the paper is its limited dataset evaluation, which consists only of Waterbirds and a 10% subset of CelebA. While the experiments are indeed comprehensive with different techniques and metrics, the size and composition of the datasets questions whether the results hold more generally.\n\nIn particular, Waterbirds is known to the community to be a limited benchmark and should mostly be used for sanity checking or simple comparisons. First, Waterbirds is an easy benchmark in the sense that simple class balancing methodologies using ERM achieve similar worst-group accuracy performance to methods like Group DRO which utilize group information (as close as 1% WGA in [1]). Second, the validation and test distributions of Waterbirds are more amicable compared to the training dataset, as they are group-balanced conditioned on the classes; this can skew model selection in some cases. Third, Waterbirds is known to contain incorrect labels as well as images with both landbirds and waterbirds present [2]. Finally, while CelebA is a more complex dataset than Waterbirds, and the 10% subset was likely necessary due to computational restrictions, the fact remains that both datasets are small, belong to the vision domain, and only utilize binary-valued spurious features.\n\nSome suggestions may include Spawrious [3] for the vision domain (in particular because it is not too large; it is a difficult dataset which is smaller than CelebA) or MultiNLI [4] for the language domain (which would also introduce a non-binary-valued spurious feature).\n\nI also found the writing unclear in some parts, detailed in the next section."
+            },
+            "questions": {
+                "value": "1. I would encourage the authors to perform a more detailed literature review, as the related work subsection for group robustness is out of date and does not include any references more recent than 2021. There have been significant contributions since 2021, particularly in methods which pseudo-label the minority group (with or without an explicit identification model), e.g., [2,5,6,7,8,9].\n2. The definitions in Section 2.2 are unclear and should be improved.\n    * I believe the reason that the definitions of groups differs from [4] is to account for the dirty-label samples later in Section 3.3. This should be explicitly stated prior to the definitions, as otherwise the definitions seem inconsistent with the literature. Is the worst-group accuracy in the remainder of the paper computed with respect to these new groups (i.e., 8 groups) or the original groups (i.e., 4 groups)? This should also be made explicit.\n    * The definition of a minority group seems somewhat arbitrary and inconsistent with the literature. As far as I understand the definition given is that for a dataset of size $n$, a group $g\\in G_Y$ is a minority group iff the number of data belonging to $g$ is less than $n/|G_Y|$. If we use 4 groups for CelebA as is common in the literature, this would mean that blond-female is a minority group in CelebA (it has 22880 datapoints while the total data is 162770 over 4 groups), whereas the text states that the only minority group is blond-male. On the other hand, if we use 8 groups as I believe this work does, then blond-female is barely a majority group, and hence it is not clear that it remains a majority group when a random 10% subset of CelebA is taken.\n3. The bibtex could use an update: there are some extra braces and capitalization errors.\n4. It would be helpful for reference to include a table with the proportions of each group and class in each benchmark dataset, as well as the proportions of each group and class in the 10% sample of CelebA used in the experiments. See [9, 10] for examples.\n5. The definitions in Section 3.3 are unclear and should be improved. First, it should be made clear that $I(x)\\in [0,1]$, i.e., that it is a probability output rather than a logit output. Second, $I(x)_y$ is referred to as the \u201cconfidence\u201d of model $I$ on input $x$ for class $y$, which is misleading: if $I(x)_y=0$ the model is in fact very confident (that $x$ does not belong to class $y$). I would expect the definition of \u201cconfidence\u201d in this case to look more like $2|I(x)_y - 1/2|$, since $1/2$ can be considered as the \u201cleast confident\u201d prediction in a binary classification problem.\n6. In Appendix A.2, should \u201cDLDB\u201d read \u201cDLBD\u201d?\n7. In Figure 1, it should be made clear that the lighter-colored circles and triangles are amplified points (it is otherwise an excellent figure). Also, the two shades of red are indistinguishable.\n8. The phrase \u201cthis boost is almost as high as it could have been\u201d in Section 3.2 is confusing and could use a rephrase, perhaps connecting it to the worst-case approach tested earlier.\n9. In Section 5, \u201cconciliate\u201d should perhaps be replaced by \u201creconcile\u201d.\n10. At the bottom of page 7, should the citation to Wu et al. be in parentheses, i.e., \\citep?\n\n***Recommendation***\n\nOverall, the novelty and importance of the contribution cause me to lean slightly more towards acceptance than rejection, but I believe the paper would be greatly improved with additional results on more rigorous benchmark datasets as detailed in the Weaknesses section, as well as improvements to the clarity of the writing.\n\n***References***\n\n[1] Idrissi et al. Simple data balancing achieves competitive worst-group-accuracy. CLeaR, 2022.\n\n[2] Taghanaki et al. MaskTune: Mitigating Spurious Correlations by Forcing to Explore. NeurIPS, 2022.\n\n[3] Lynch et al. Spawrious: A Benchmark for Fine Control of Spurious Correlation Biases. ArXiv, 2023.\n\n[4] Sagawa et al. Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization. ICLR, 2020.\n\n[5] Kim et al. Learning Debiased Classifier with Biased Committee. NeurIPS, 2022.\n\n[6] Sohoni et al. BARACK: Partially Supervised Group Robustness With Guarantees. ICML SCIS Workshop, 2022.\n\n[7] Zhang et al. Correct-N-Contrast: A Contrastive Approach for Improving Robustness to Spurious Correlations. ICML, 2022.\n\n[8] Qiu et al. Simple and Fast Group Robustness by Automatic Feature Reweighting. ICML, 2023.\n\n[9] LaBonte et al. Towards Last-layer Retraining for Group Robustness with Fewer Annotations. NeurIPS, 2023.\n\n[10] Kirichenko et al. Last Layer Re-Training is Sufficient for Robustness to Spurious Correlations. ICLR, 2023."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Reviewer_Fmsc"
+                ]
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6555/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698444574212,
+        "cdate": 1698444574212,
+        "tmdate": 1699636740035,
+        "mdate": 1699636740035,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "CQdmDAxAaC",
+        "forum": "rM9VJPB20F",
+        "replyto": "rM9VJPB20F",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_Shsu"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_Shsu"
+        ],
+        "content": {
+            "summary": {
+                "value": "The authors consider the interplay between a certain type of group robustness methods and poisoning attacks. They show that methods to achieve high accuracy on minority groups in the absence of (validation) group annotations also often flag poisoned examples, and thus amplify poisoning attacks. Additionally, they show that poisoning defenses often flag minority examples as poisons, thus removing them from the dataset. Finally, the authors complement their experimental findings with an formal impossibility result in a toy setting."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "1 poor"
+            },
+            "strengths": {
+                "value": "The authors present an interesting connection/trade-off between two fields within ML. The problem of exploring trade-offs between competing objective is important."
+            },
+            "weaknesses": {
+                "value": "### Overclaiming / limited scope of conclusions\nI believe that the statement\n\"We show experimentally that group robustness methods fail to distinguish minority groups from poisons.\"\nis misleading. In particular, the authors only consider group robustness methods which use a loss-based heuristic in lieu of *validation* group annotations. This significantly reduces the scope of authors' contributions (to the best of my knowledge, at the time of writing, only ~3 group robustness methods use the above heuristic), and in my opinion is not properly reflected in the writing. \n\n### No evidence the phenomenon persists for attacks with high efficacy (success rate)\n\nMy main concern with the paper is the following: if I have an attack (e.g., backdoor attack) with very high ASR, I would expect to have low loss on poisoned (e.g., backdoored) examples in the validation set. Hence, there's no reason for me to expect that JTT/GEORGE/etc would flag them as minority examples. In most of the reported setups, e.g. Table 2, the attack success rate is very low (e.g., 20%), even in the \"worst\" case when the group robustness method amplifies the attack. \n\n\nMinor point: It would have been nice to report results for the state of the art method (to the best of my knowledge) that uses the loss-based heuristic [1].\n\n[1] Qiu, Shikai, Andres Potapczynski, Pavel Izmailov, and Andrew Gordon Wilson. \"Simple and Fast Group Robustness by Automatic Feature Reweighting.\" arXiv preprint arXiv:2306.11074 (2023)."
+            },
+            "questions": {
+                "value": "### Is ASR actually amplified by group robustness methods\n\nI am confused the statement \"The large gap between (6.7% \u00b4 97.4%) the standard and ideal cases shows an opportunity for better heuristics\" (referring to Table 2). It is \"not the job\" of the group robustness method to remove the poisoning attack. Thus, a more fair comparison in my opinion would be to compare \"standard\" ASR against the baseline of not applying the group robustness method. What is the gap then?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6555/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698693488923,
+        "cdate": 1698693488923,
+        "tmdate": 1699636739922,
+        "mdate": 1699636739922,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Tc2796JzhN",
+        "forum": "rM9VJPB20F",
+        "replyto": "rM9VJPB20F",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_a2i2"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_a2i2"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work identifies a critical conundrum between group robustness and poisoning resilience metrics in machine learning. The contributions are 3-fold:\n\n1) It presents empirical evidence illustrating that methods designed for group robustness are unable to differentiate between minority groups and poisoning data. This inability exacerbates the impact of poisoning attacks, a claim further substantiated by theoretical support under various assumptions.\n\n2) Further, it demonstrates through empirical studies that standard defenses against data poisoning struggle to distinguish poisoned data from that of minority groups. This leads to a compromise in group robustness, an issue observed in both centralized and federated learning setups.\n\n3) Finally, this paper concludes that merely combining group robustness strategies with poisoning defense mechanisms fails to address these challenges, indicating a need for more nuanced solutions."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "2 fair"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "1) This paper is well written and it is easy to follow. The takeaways from each section are explicit, novel and clear.\n\n2) Figure 1 clearly conveys the key ideas.\n\n3) The findings are interesting and useful to the community."
+            },
+            "weaknesses": {
+                "value": "1) Experiments. The results on CelebA (Section 4) only uses a randomly sampled 10% of the dataset which is concerning. Can the authors also consider the full CelebA setup, so that the results are more reliable?\n\n2) Why are the ASR values negative in Table 3 (Waterbirds / SA setup).\n\n3) Could the authors elaborate on whether any experiments were conducted involving the other two types of poisoning defenses mentioned in Section 2.1?\n\n\n\nMinor concerns\n\n1) Title Appropriateness: The broad focus implied by the current title, \"Poisoning Defenses,\" does not accurately reflect the specific emphasis of the work on poisons that are challenging to learn. A more precise title would set clearer expectations for readers.\n\n\n\nOverall I enjoyed reading this paper. In my opinion, the strengths of this paper outweigh the weaknesses. Authors please consider addressing the weaknesses above during rebuttal."
+            },
+            "questions": {
+                "value": "Please see Weaknesses section above for a list of all questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission6555/Reviewer_a2i2"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6555/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698817767075,
+        "cdate": 1698817767075,
+        "tmdate": 1699636739771,
+        "mdate": 1699636739771,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "4ziEdBbsZo",
+        "forum": "rM9VJPB20F",
+        "replyto": "rM9VJPB20F",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_wCf5"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission6555/Reviewer_wCf5"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper studies the existing tension between the group robustness and the resilience to poisoning attacks. The authors argued that, group robustness methods will unavoidably amplify the poisoning samples and boost poisoning performance. On the other hand, poisoning defenses will remove poisoning outliers will also unavoidably remove the minority samples. The authors advocate for tacking this inherent tension in future works."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "1. The problem of the inherent tension between group robustness and poisoning resilience is an interesting problem/\n2. The presented empirical results are well-presented to support the main claim in the paper."
+            },
+            "weaknesses": {
+                "value": "The main weakness of this paper is to make an impossibility type of claim without a more principled understanding on the problem.\nIn particular, the authors aim to find a tension between any poisoning attack and the distributionally robust optimization methods, which probably undermines the much-needed principled understanding. In particular, I am expecting some type of result that points out the tension between a poisoning with a clearly defined attacker capability and objective, and the group robustness optimization techniques (e.g., using loss-based thresholding). This result should show that, in order to achieve the attacker objective maximally, the poisoning points will also unavoidably become the amplified minority samples. This way, we can make claims on the impossibility of having group robustness and poisoning resilience at the same time. My major concern here is, the tensions between poisoning and group robustness are drawn some limited empirical results and the poisoning attacks also do not reflect what the attacker in practice may really care to do. For example, many ASR are quite low as presented in Table 2 and I am not sure if it is because the poisoning attacks are configured in some undesirable ways (with respect to the attack objective), who may choose a different approach to achieve higher ASR. The alternative, in turn, may no exhibit a strong tension. Related to this, the impossibility result in the paper only shows that there exist some poisoning points that are harder to learn but did not reason whether these poisoned points are useful for achieving the attacker objectives. I would suggest the authors to first clearly define the threat model and then conduct more rigorous analysis on how this can interfere with group robustness methods. Then, the insights are supported through extensive empirical evaluations."
+            },
+            "questions": {
+                "value": "1. In page 4, what is the intuition behind configuring the poisoning attacks as described? The configuration seems to be different from the one in the original paper and the authors should clearly explain the reason. \n2. Will the gradient shaping method [1] enable a mitigation to the currently observed tension? \n\n[1] Hong et al., \"On the Effectiveness of Mitigating Data Poisoning Attacks with Gradient Shaping\", arXiv 2020."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "5: marginally below the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission6555/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1699138241672,
+        "cdate": 1699138241672,
+        "tmdate": 1699636739640,
+        "mdate": 1699636739640,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]

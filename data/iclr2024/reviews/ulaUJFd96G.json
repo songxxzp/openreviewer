@@ -1,0 +1,279 @@
+[
+    {
+        "id": "nHgpMXpukn",
+        "forum": "ulaUJFd96G",
+        "replyto": "ulaUJFd96G",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_wcXN"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_wcXN"
+        ],
+        "content": {
+            "summary": {
+                "value": "Paper addresses long contexts (>4k tokens of a pre-trained model such as LLaMA) in LLMs which are challenging because of the nature of Transformer self-attention.\nA technique called HOMER is introduced: contrarily to previous approaches that approximate the computation of self attention, or that use position interpolation at inference, authors propose a \u2018compression\u2019 method which decomposes the long input into manageable chunks; then a hierarchical merging strategy ensures the \u2018communication\u2019  between those chunks. One advantage of the approach is that it does not necessarily require fine-tuning. Perplexity experiments are done to assess the efficiency of the method as well as experiments on passkey retrieval and Q&A tasks. Finally it is shown that the approach proposed can be used successfully in addition to position interpolation techniques."
+            },
+            "soundness": {
+                "value": "4 excellent"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "4 excellent"
+            },
+            "strengths": {
+                "value": "-a new approach to handling long contexts in LLMs that can be used additionally to position interpolation techniques proposed recently\n\n-extensive experiments done with LLaMA2 (ppl and long-context tasks) and comparison with recent (2023) baselines such as YaRN\n\n-convincing results on both ppl and tasks evaluations\n\n-method is orthogonal to position interpolation methods"
+            },
+            "weaknesses": {
+                "value": "-the parts related to propagative refinement (3.2) and efficiency improvement (3.3) should be clarified/improved\n\n-for Q&A it is a pity that HOMER+YaRN results are not presented (+ YaRN seems to not be working well on this task, why?)"
+            },
+            "questions": {
+                "value": "-It is unclear to me why PROPAGATIVE REFINEMENT OF LOWER-LAYER EMBEDDINGS is needed. During inference the final layer representation of the long input is computed so why do you actually need to refine the lower layer embeddings afterwards ? In other words, why do you need to have fixed-length embeddings for every layers afterwards ? I could not fully understand this part.\n\n-Similarly section 3.3 is a bit to laconic to be fully understandable: how this binary-tree inspired computation is innovative ? What is described in Appendix/figure3 seems to me a straightforward way to efficiently compute the hierarchical merging process.\n\n-for Q&A it is a pity that HOMER+YaRN results are not presented (+ YaRN seems to not be working well on this task, why?)\n\n-for Q&A i\u2019m wondering if the comparison with YaRN and NTK is really fair as for them, context documents are clipped whereas for HOMER, which is a compression technique, the full context document can be used.\n\n-In 4.4 (ablation) it not 100% clear what the uncalibrated (as opposed to calibrated) pruning criteria is"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 1,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7631/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698391537002,
+        "cdate": 1698391537002,
+        "tmdate": 1699636927171,
+        "mdate": 1699636927171,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "JePYY4n4X4",
+        "forum": "ulaUJFd96G",
+        "replyto": "ulaUJFd96G",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_ae6y"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_ae6y"
+        ],
+        "content": {
+            "summary": {
+                "value": "This paper proposes an approach to extend the context limit of large language models (LLMs). The key idea is to hierarchical context merging, progressively conducting token pruning from bottom to top layers. The token pruning method is simple and training-free, which prunes the tokens with minimal attention from the final token in each chunk, and conducts adjustments (e.g., attention and position bias) to make sure the model to work properly. The results show that it can work on 64k context length without perplexity explosion."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "2 fair"
+            },
+            "strengths": {
+                "value": "- A training-free method and can be easily adopted\n- Some empirical results showing the feasibility of the token pruning method."
+            },
+            "weaknesses": {
+                "value": "While this paper presents a seemingly promising approach to long context modeling, its major issue lies in the lack of clarity regarding its use case. According to the paper's description, HOMER first breaks down a long context (e.g., 64k) into N chunks, prunes tokens from each chunk, and finally merges them into a compressed and short context. If this is the case, this method is not suitable for streaming decoding scenarios (where the key-value cache of previously decoded tokens is not recalculated, only new decode tokens are computed).\n\nThe key question arises: if this work is not for streaming decoding, then there is no need for such a process. For a 64k length context, wouldn't it be sufficient to ignore the first 62k context and only use the last 2k context? According to the results in Figure 1 of the paper, using only 2k context, the perplexity (PPL) is less than 6 (around 5 point something), whereas after all the effort of merging with HOMER, the PPL is above 8.\n\nGiven this, I question the necessity of using HOMER. Using the last 2K context directly seems to yield better results, casting a large doubt on the value of the method proposed in this paper. If the setting of this paper is not for streaming decoding, then the performance of HOMER should at least be better than the PPL of the 2K context. However, this method requires recalculating the key-value pairs for the previous context, which doesn't seem to align with a streaming decoding setting, making it the most confusing aspect for me."
+            },
+            "questions": {
+                "value": "See the weakness section"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "3: reject, not good enough"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "value": "Yes",
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Reviewer_ae6y"
+                ]
+            }
+        },
+        "number": 2,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7631/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698535164977,
+        "cdate": 1698535164977,
+        "tmdate": 1699636927049,
+        "mdate": 1699636927049,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "pxpQh4UxYS",
+        "forum": "ulaUJFd96G",
+        "replyto": "ulaUJFd96G",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_X3So"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_X3So"
+        ],
+        "content": {
+            "summary": {
+                "value": "The paper introduces a new method called Hierarchical Context Merging to extend the context limit of LLMs all the way to 64K tokens. The method is training-free, and uses a divide-and-conquer methodology to segment inputs into smaller units. At each following Transformer layer, the segments are fused together through a token reduction technique to reduce the memory footprint. The authors also propose to optimize the computation order to further reduce the memory requirement by 70%. \n\nThe proposed method is evaluated on three sets of tasks: Perplexity on 19 long documents from PG-19, passkey retrieval and question answering. The paper shows superior performance on all three benchmarks against RoPE-based baselines such as PI, NTK and YaRN."
+            },
+            "soundness": {
+                "value": "2 fair"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "The work shows several strengths:\n1. The proposed method HOMER is the only method which has a reasonable Perplexity on 64K long documents. The performance gain on passkey retrieval at 32K tokens is impressive: 22.4% -> 80.4%.\n2.  The memory reduction up to 70% is also quite impressive."
+            },
+            "weaknesses": {
+                "value": "However, I do have several weaknesses regarding the work:\n1. For Llama-2-13B, the gain on both perplexity and passkey retrieval is very marginal for all the context lengths below 32K.\n2. The Accuracy on QA benchmark is very concerning (Table 3): HOMER alone is worse than the NTK method, not showing any performance advantage. 1&2 together raises the question of the generalization of the HOMER method, and the presented results are not comprehensive enough to convince the readers.\n3. The biggest concern is the complexity of the method: compared to RoPE based methods, HOMER involves merging chunks, token reduction, embedding refinement as well as computational order reduction. All these techniques together make the proposed method very hard for wide adoption in the community, hence limiting the impact of the work."
+            },
+            "questions": {
+                "value": "I do have a few questions that I need clarifications from the authors:\n\n1. The inference time of HOMER was not discussed at all in the paper. Instead, memory is the major focus. While memory footprint is an important dimension, inference time is very important for LLM applications. Given the extensive manipulations of HOMER on context embeddings at each Transformer layer, I expect a significant overhead occurring due to such forward operations compared to RoPE methods.\n2. The explanation of propagative refinement is confusing: token pruning is done through a forward pass, and the top-K token embeddings are tracked and obtained only at the top-layer after the entire forward pass. It is unclear to me how the refined embeddings are gathered at the low-level layers, and impact the computation results shown in the ablation in Table 4(b).\n3. Minor point: the token pruning section didn\u2019t explain how it is done \u2013 it is unclear how the top-K hyperparameter is selected, and the tradeoff between speed and K is made (e.g. keeping a large K at each layer will result in more steps of pruning)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "6: marginally above the acceptance threshold"
+            },
+            "confidence": {
+                "value": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "first_time_reviewer": {
+                "readers": [
+                    "ICLR.cc/2024/Conference/Program_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Senior_Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Area_Chairs",
+                    "ICLR.cc/2024/Conference/Submission7631/Reviewer_X3So"
+                ]
+            }
+        },
+        "number": 3,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7631/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698637980357,
+        "cdate": 1698637980357,
+        "tmdate": 1700615464708,
+        "mdate": 1700615464708,
+        "license": "CC BY 4.0",
+        "version": 2
+    },
+    {
+        "id": "Jll1XeauXH",
+        "forum": "ulaUJFd96G",
+        "replyto": "ulaUJFd96G",
+        "signatures": [
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_uJAL"
+        ],
+        "nonreaders": [],
+        "readers": [
+            "everyone"
+        ],
+        "writers": [
+            "ICLR.cc/2024/Conference",
+            "ICLR.cc/2024/Conference/Submission7631/Reviewer_uJAL"
+        ],
+        "content": {
+            "summary": {
+                "value": "This work presents a new approach to handle long context by LLMs without any training, by compressing and merging context chunks in a divide-and-conquer manner. Specifically, the long context is first split into chunks, and a LLM then encodes and compresses the chunk by pruning its tokens according to attention importance, finally concatenating adjacent chunks at each transformer layers. The proposed approach is shown achieving good performance on retrieval and QA tasks. Additionally, it can be viewed orthogonal to other techniques to extend LLM context length via scaling Rotary embeddings, and is shown state-of-the-art performance on QA when combing with other existing techniques together."
+            },
+            "soundness": {
+                "value": "3 good"
+            },
+            "presentation": {
+                "value": "3 good"
+            },
+            "contribution": {
+                "value": "3 good"
+            },
+            "strengths": {
+                "value": "- The proposed approach brings a new perspective to handle long context by LLMs through context compression and merging, complementary to other popular techniques focusing on Rotary position embeddings.\n  \n- The approach is shown to surpass all baselines on Passkey Retrieval, extending to 8 times longer than the pretrained context length. For QA, it is shown to achieve the best performance combining with another long-context technique NTK.\n  \n- The proposed approach has the advantage of low GPU memory usage, compared with other baselines, due to the compression of context, leading to a reduced size of KV cache."
+            },
+            "weaknesses": {
+                "value": "Though effective on the relatively easy Passkey Retrieval, the heavy compression and merging of context might hurt the reasoning capability of LLMs, as shown by Table 3 that the proposed approach alone underperforms other long-context techniques on QA. It is unknown whether this technique would remain useful on other tasks that also require reasoning. More experiments on other tasks could be conducted to demonstrate the advantages as well as the disadvantages of the proposed approach."
+            },
+            "questions": {
+                "value": "What if we only look at the attention importance at the final layer directly, and use the top-k positions as the final pruning decisions for every layer? How is this compared to the proposed approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": "8: accept, good paper"
+            },
+            "confidence": {
+                "value": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked."
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        "number": 4,
+        "invitations": [
+            "ICLR.cc/2024/Conference/Submission7631/-/Official_Review",
+            "ICLR.cc/2024/Conference/-/Edit"
+        ],
+        "domain": "ICLR.cc/2024/Conference",
+        "tcdate": 1698735647663,
+        "cdate": 1698735647663,
+        "tmdate": 1699636926842,
+        "mdate": 1699636926842,
+        "license": "CC BY 4.0",
+        "version": 2
+    }
+]
