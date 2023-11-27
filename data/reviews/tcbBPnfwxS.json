@@ -1,0 +1,119 @@
+[
+    {
+        "id": "o03IzOs13Gs",
+        "original": null,
+        "number": 1,
+        "cdate": 1666541574951,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666541574951,
+        "tmdate": 1666541574951,
+        "tddate": null,
+        "forum": "tcbBPnfwxS",
+        "replyto": "tcbBPnfwxS",
+        "invitation": "ICLR.cc/2023/Conference/Paper5595/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper discusses the post-training quantization (PTQ) methodology of a Generative Pre-trained Transformer (GPT) model for a generation task. While formatting the weight to 4 or 3-bit, activation remains as FP. The PTQ methodology is a layer-wise quantization with a small calibration-set, and a part of the weight is quantized using a round-to-nearest (RTN). The remaining FP weights are updated with second-order information (Hessian) of the FP weights through Optimal Brain Quantization (OBQ) in one-shot scheme using the calibration set. Gradually widen the quantization area and quantize the entire weight at the end.\n\nThe experiment was performed on the language generation task for the OPT and BLOOM models, and the comparison methodology is FP16 and RTN. Experimental results are shown together with the speedups table as the degradation decreases as the model gradually increases (175B). Additionally, training and kernel code were provided to the supplementary.",
+            "strength_and_weaknesses": "-Strengths:\n1. This paper well defined the problems that occur in the generation task of the GPT model, and solved it with weight only quantization and FP16 activation.\n2. The paper proposes a new weight quantization method named GPTQ, which can quantize the 175B model into 3-bit or 4-bit in a short time with only inside a single GPU.\n3. Training and kernel code provided.\n\n-Weaknesses:\n1. The presented methodology is marginally improved from the existing method (OBQ).\n2. Due to computation time, the authors did not compare the performance with the latest PTQ methodologies. It is required to compare GPTQ with BRECQ for 125M ~ 6.7B models since BRECQ always outperforms GPTQ as seen in Table 1.\n3. Based on the code in the supplementary material, when performing layer-wise quantization, the input with all preceding layers quantized is solely utilized. The input with all preceding layers kept in full precision is not exploited at all. Noting that the existing works such as [1] AdaRound and [2] AdaQuant employ both inputs, the proposed method partially use the information about input, which can cause the accumulation of quantization error for deeper networks.\n4. The proposed method does not consider the cross-layer dependency at all. As shown in BRECQ, it is far better to consider the cross-layer dependency than not.\n5. In $\\textbf{H}$ (the Hessian matrix of the reconstruction error, Eq. (1)), which is used for one-shot update of full-precision weights, only the input feature information of the quantized model is used. This may have the following problems.\n- Given that taking advantage of $\\textbf{H}$ can have nothing to do with the minimization of the final task loss but the weights are already trained towards minimizing the final objective, using $\\textbf{H}$ to update weights can deteriorate the performance of layer-wise quantization rather than improve.\n- The reason why to update weights trained with the pre-training dataset via $\\textbf{H}$ calculated through the calibration set (e.g., C4) is not clear since the pre-training dataset can be irrelevant to the calibration set. \n\n6. PPL measurement is highly dependent on evaluation method. It is necessary to explain how the PPL metric used for evaluation was measured. \n- The measured PPL performance of the FP16 model is peculiarly good, considering that all experimental results are based on zero-shot tasks. It would be recommended to supplement by referring to the two links below.\n- For fair comparisons, the perplexity should be measured again by referring to the links below.\n- https://github.com/huggingface/transformers/tree/main/examples/pytorch/language-modeling\n- https://huggingface.co/docs/transformers/perplexity\n\n7. Typo correction required in table2 (66b -> 66B)",
+            "clarity,_quality,_novelty_and_reproducibility": "Section 3.2 is hard to understand without reading previous works, which makes it difficult to follow Section 3.3. It seems that Section 3 should be revised for better understanding. As the GPTQ algorithm is based on OBQ, the novelty of GPTQ seems to be somewhat incremental.",
+            "summary_of_the_review": "The quantization problem of the generative model is realistically solved with weight only quantization and FP activation. The results show a performance close to that of the FP16 in the 175B model, the largest model published. However, the methodology used lacks novelty by utilizing existing ones. In particular, the methodology that repeatedly uses the output of the quantized model from calibration set has not been analyzed how it affects the weight update of the pre-trained model in LLM. Finally, it is necessary to clarify how the PPL metric was measured in the performance evaluation.\n\nDue to such disputable points mentioned in weaknesses and the somewhat incremental novelty of the GPTQ algorithm, I cannot recommend the acceptance of this paper at this moment.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_X8QT"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_X8QT"
+        ]
+    },
+    {
+        "id": "8gcu65NrJpu",
+        "original": null,
+        "number": 2,
+        "cdate": 1666571299462,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666571299462,
+        "tmdate": 1669339812827,
+        "tddate": null,
+        "forum": "tcbBPnfwxS",
+        "replyto": "tcbBPnfwxS",
+        "invitation": "ICLR.cc/2023/Conference/Paper5595/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper studies the problem of reducing the memory consumption of pre-trained GPT-like models via post-training quantization methods. These models often have billions or even hundreds of billions of parameters, making the compression overhead also a big cost. To address this issue, the paper introduces layer-by-layer quantization methods that find low-bit representations of weight values based on Hessian information. Evaluation of recently released OPT 175B and BLOOM 176B models show that the proposed method can enable low-bit representation of those large models while retaining similar perplexity numbers on several downstream tasks. ",
+            "strength_and_weaknesses": "Strengths:\n- The paper studies a timely problem, which is to reduce the memory consumption of large-scale GPT models without incurring high compression overhead.\n- The proposed GPTQ method demonstrates promising results on the two largest open GPT models. \n\nWeaknesses:\n- Apart from applying the optimizations to the largest open GPT models, the technical novelty of the proposed method is quite limited. Layer-wise quantization is widely used in prior works, as the authors also mentioned in Section 3.1. The formulation of optimal brain quantization also largely follows [1] and more recent work such as [2].  In fact, Sections 3.1 and 3.2 should be in the background section. The method proposed in Section 3.3 seems to be more like minor tweaks.\n- While existing work used INT8 quantization to quantize both weights and activation, such as ZeroQuant[3], they led to actual latency improvement. In contrast, the proposed method uses 3 or 4-bit for weight quantization and FP16 activations, which to the reviewer's best knowledge, cannot lead to real latency improvements (or even lower latency on a single device since the computation still happens at FP16). The end-to-end latency from this work comes more from using a reduced number of devices, which limits its application scenarios. \n- The paper claims it as \"the first method to leverage approximate Hessian information\". This is not true. Hessian information has been used for mixed-precision quantization in prior works such as Q-BERT and Hawq. \n- The evaluation is also inadequate. For evaluating the GPT models, the zero-shot, few-shot learning, and fine-tuning results are important. However, the paper primarily evaluates its approach to fine-tuning a few small downstream tasks such as PennTreebank and wiki2. Therefore, the compression might come at a cost of significantly degraded zero-shot and few-shot learning capabilities of these GPT models. \n- The training cost saving compared to other methods is not very convincing. Most training time comparison is based on extrapolation rather than doing any actual measurements. The methodology used for extrapolation is also a bit strange because it is under the assumption that the SGD step is constant regardless of the scale of the model. However, there is no evidence that SGD steps need to remain constant and are a hard constraint for prior works. To be more convincing, it would be better to compare ZeroQuant-LKD and GPTQ under the same training budget, e.g., by using the same amount of tokens as inputs or SGD steps in both cases.\n- The paper also seems to describe existing works inaccurately. For example, native INT8 quantization (also used in the evaluation) cannot represent SOTA works such as ZeroQuant and LLM.int8(). The former uses token-wise quantitation for activations, and layer-wise kd and the latter also uses fine-grained quantitation for weights to retain model accuracy, which is different from the setup used in this paper's evaluation. LLM.int8() also reports quantization results on OPT175B/BLOOM176B. To be more convincing, it would be better to make a direct comparison with those methods using the exact methods described in those works. \n\n[1] Hassibi et. al. \"Optimal Brain Surgeon and general network pruning\", 1993\n\n[2] Frantar et. al. \"Optimal Brain Compression\", 2022\n\n[3] Yao et. al. \"ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers\", 2022",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity\nThe problem setup and motivation are clear. The paper also provides details about its methodology. \n\nQuality\nThe writing quality of this paper overall is pretty decent and is easy-to-follow. \n\nNovelty\nThe paper does not seem to describe prior work's techniques and contributions accurately. The comparison also is not based on a faithful setup of the methodology used by prior work. The main methods such as layer-wise quantization and OBS are also not very novel. \n\nReproducibility\nThe paper describes the technique well and should be quite reproducible. ",
+            "summary_of_the_review": "The paper studies a timely problem and introduces a technique that reduces the model size of large-scale GPT models. However, the paper largely falls short of accurately describing and comparing with recent advancements in post-training quantization of GPT models. The evaluation is also inadequate in that it primarily demonstrates the results using a few small fine-tuning tasks. \n\n=========================\n\nPost-rebuttal comments:\n\nThe authors addressed my concerns in the rebuttal quite well. I increased my score to the positive side to reflect my stance. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_AnMH"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_AnMH"
+        ]
+    },
+    {
+        "id": "w9IT00siJM",
+        "original": null,
+        "number": 3,
+        "cdate": 1666637419437,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666637419437,
+        "tmdate": 1666637419437,
+        "tddate": null,
+        "forum": "tcbBPnfwxS",
+        "replyto": "tcbBPnfwxS",
+        "invitation": "ICLR.cc/2023/Conference/Paper5595/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "In this paper, the authors proposed GPTQ, a practical method to perform low-bit weight quantization of large Generative Pre-trained (GPT) models in a post-training manner. GPTQ adapted from existing Hessian-based quantization method and performed modifications to improve efficiency by using a fixed per-row ordering, a faster runtime optimization, and addressing numerical stability issues. Results show that the proposed method can achieve low-bit quantization (3/4 bits) of largest OPT and BLOOM models at negligible accuracy loss. ",
+            "strength_and_weaknesses": "Strength:\n1. Firstly, the paper is generally well-written and easy to follow. \n2. The proposed methods combines empirical insight of ordering in OBQ method, and system optimization like batch processing and numerical precision handling, leading to a holistic solution.\n3. Results show that the proposed method can preserve the performance of LLMs at a low-bit quantization (3/4).\nWeakness:\n1. The author mentioned the method can speed up the inference since \"weight matrices can fit into the faster accelerator-local memory\". However, for the fp16 model and model parallelism, the weights are also stored in accelerator-local memory (part of the weights per GPU). The throughput can be improved by pipeline parallelism or more advanced parallelism (e.g., [a]). What is the baseline when measuring speed up? Does the baseline include advanced model parallelism techniques? Does the baseline use a competitive implementation like FlashAttention [b]?\n2. The authors proposed a quantized-matrix full-precision-vector product kernel. Could the authors discuss how large is the dequantization overhead?\n\n[a] Zheng et al., Alpa: Automating Inter- and Intra-Operator Parallelism for Distributed Deep Learning\n[b] Dao et al., FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness",
+            "clarity,_quality,_novelty_and_reproducibility": "The clarity and quality of the paper are good. \n\nThe novelty is mostly on accelerating an existing quantization method (OBQ) to make it scalable to a large model setting. I think the technical contribution is non-trivial.\n\nThe reproducibility is good since code is provided.",
+            "summary_of_the_review": "The proposed method is valuable to the community. It reduces the requirement for people to run a large language model. My only concern is how the baseline is chosen for latency measurement. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_TffF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5595/Reviewer_TffF"
+        ]
+    }
+]

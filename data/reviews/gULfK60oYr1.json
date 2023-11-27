@@ -1,0 +1,158 @@
+[
+    {
+        "id": "BpbY2bFMaE",
+        "original": null,
+        "number": 1,
+        "cdate": 1666199281486,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666199281486,
+        "tmdate": 1666199281486,
+        "tddate": null,
+        "forum": "gULfK60oYr1",
+        "replyto": "gULfK60oYr1",
+        "invitation": "ICLR.cc/2023/Conference/Paper560/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper aims to improve exploration in MARL by preventing revisiting of previously explored regions. The authors propose an extension of QMIX with an arbitrary intrinsic reward module (CDS in the experiments). The proposed method NRT makes snapshots of a density estimator to detect when the distribution of joint observations changes. If a revisitation of a previously explored part of the joint observation space is detected, a snapshot of the last layer of the mixing network and the local Q-network is saved as well. Using these saved networks the authors claim they found a method to scale the out-of-the-box intrinsic reward to avoid reexploration of known areas. Empirical results are not entirely clear, but seem to show that the proposed methods improves performance.",
+            "strength_and_weaknesses": "**STRENGTH**\n\nThe problem of re-exploration is relevant, in particular for MARL, and the idea of making snapshots of the network parameters could in principle be a solution to it. The results also look promising.\n\n**WEAKNESS**\n\nThe proposed method is not clear to this reviewer. Before a reliable review can be made, the reviewer would like to ask the authors to answer the following questions (and try to clarify them in the text as well):\n1. Which role does the replay buffer play in revisitation? As long as a sample is in the replay buffer, it will be regularly updated. Does revisiting occur after a sample leaves the buffer, or for some other reason?\n2. What is stored when you \"store the current joint observation distribution estimator\"? The output? The paramters $\\xi$? And how often do you save them? Is your algorithm constant memory, or do the memory requirements grow linearly with time?\n3. When you \"add a new branch\", which the reviewer interprets as saving (or detaching) the network parameters of the last layer, why do you expect the outputs of both the local Q-network and the mixing network to remain meaningful after the \"shared modules\" have been changed by gradient descent? Wouldn't any substantial change in the shared parameters require a change in the \"saved\" parameters as well? \n4. During exploration (\"execution\"?), which branch is used to select actions? It seems that (eq.2) selects a branch, but what is gained when the actions are drawn from an old policy? Or do you always draw actions from the \"default branch\" and use (eq.2) only to modify the intrinsic reward?\n5. Details on the modified intrinsic reward are hard to decipher. However, it seems that you compute a running average of a scaling factor $1+\\bar\\alpha$, which itself is clipped to be between $L_1$ and $L_2$. The appendix names them as usually $L_1=0.5$ and $L_2=2$, but why these values? How can the reader interpret $\\bar \\alpha$? \n6. Wouldn't it be conceptually simpler to estimate the joint observation density of the *entire past* and scale down intrinsic rewards for observations the agent has already observed?\n7. How should the 3D plots be read? What is \"checkpoint time\" and what is \"historical point time\"? Which graph would indicate a \"non-revisiting\" agent? If it is a front of high JS distances for new checkpoints, wouldn't a 2D-colour-plot be clearer to read?\n8. Plotting the median and the variance is unorthodox and makes the results hard to interpret. Are your results statistically significant (or at least appear that way)? If you re-plot them with means and standard deviations, do the standard deviations of NRT and the best competitor overlap?",
+            "clarity,_quality,_novelty_and_reproducibility": "The biggest problem of the paper seems to be structure and language. While most sentences make sense, after rereading the paper this reviewer is unable to describe the proposed method in detail. Most terms in the background section are not explained and require in-depth knowledge of the cited papers. For example, Figure 2 is not understandable (and nearly all symbols are undefined) to a reader that has not read the original QMIX paper. While the results look good at first, the way that they are plotted makes it hard to interpret whether NRT significantly outperforms CDS, and 3 random seeds are also very little to make reliable claims in a field that is as stochastic as exploration.",
+            "summary_of_the_review": "The paper was in the current form not understandable to the reviewer. The performance of the method appears to be good, but it is not clear how and why this is, and what the downsides of the proposed methods are.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_hnNg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_hnNg"
+        ]
+    },
+    {
+        "id": "f5IAEZkZZi",
+        "original": null,
+        "number": 2,
+        "cdate": 1666440728977,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666440728977,
+        "tmdate": 1666440728977,
+        "tddate": null,
+        "forum": "gULfK60oYr1",
+        "replyto": "gULfK60oYr1",
+        "invitation": "ICLR.cc/2023/Conference/Paper560/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose a novel multi-agent architecture and intrinsic reward scheme for avoiding the issue of revisiting previously seen states in multi-agent reinforcement learning. They demonstrate improved performance in a didactic domain as well as in Google Research Football.",
+            "strength_and_weaknesses": "# Strengths \n* The challenge of revisitation is well motivated.\n* The proposed method seems effective for avoiding the revisitation issue.\n* Evaluation is performed on the Google Research Football setting which is still challenging for many cooperative MARL methods.\n\n# Weaknesses\n* It is not clear from the writing whether revisitation is uniquely an issue in multi-agent problems. I could imagine that learning decentralized policies accentuates this issue, but it should be explicitly motivated.\n* The design decisions in the methods section (specifically revolving around the branching architecture) could be motivated better (more details in questions below).\n* The approach seems as though it would scale poorly, as it requires storing new parameters for each \"revisitation tuple\" detected. Furthermore, the computation of intrinsic rewards scales with the number of revisitation tuples.\n* The method's generality would be more convincing if also tested on the standard StarCraft benchmarks in addition to GRF.\n\n# Questions\n* Doesn't computing revisitation tuples require storing all transitions seen over the course of training? And naively it would take $O(T^2)$ time since you have to iterate over $t'$ and $t''$. The details on this are a bit sparse: how do you overcome these challenges? I assume some sort of sub-sampling is involved.\n* It is not clear why branching the Q-function is useful for avoiding revisitation. Why would re-using old policies help avoid revisiting previously seen sub-spaces? Intuitively it would do the opposite. Is the point that you can use these branches to \"absorb\" bad data from thoroughly explored states that come from your replay buffer such that the new branches are only trained on data from novel sub-spaces? If so, perhaps a simpler filtering or re-weighting scheme scheme could be similarly effective and less computationally expensive.\n* How are the branched functions trained? Do you update different ones depending on whether they meet the criteria in Eqn 2? Perhaps more explanation here will address the question in the previous bullet as well.",
+            "clarity,_quality,_novelty_and_reproducibility": "# Clarity\nDiscussed in the \"Strengths and Weaknesses\" section. In summary, the problem setting is clear; however, the decisions behind the design of the methods are not.\n\n# Quality\nThe results are good; however, the methods may be seen as a bit heuristic-based without enough justification for the heuristics.\n\n# Novelty\nThe paper addresses a novel and important problem.\n\n# Reproducibility\nNo code is provided and the paper is missing details to reproduce effectively (e.g. how to find revisitation tuples, how branched Q-networks are trained, etc.)",
+            "summary_of_the_review": "This work achieves impressive performance on a challenging domain by addressing a well-motivated problem; however, a significant portion of the methodological decisions (i.e. branching architecture) are lacking convincing motivation and important details. At this time I cannot recommend acceptance; however, I am willing to revise my opinion if the clarity of section 3.2 is significantly improved (in terms of details regarding how branching architectures factor into training and execution as well as motivation for why they are necessary).",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_iFpg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_iFpg"
+        ]
+    },
+    {
+        "id": "9JO10ONMAny",
+        "original": null,
+        "number": 3,
+        "cdate": 1666571488823,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666571488823,
+        "tmdate": 1666576408906,
+        "tddate": null,
+        "forum": "gULfK60oYr1",
+        "replyto": "gULfK60oYr1",
+        "invitation": "ICLR.cc/2023/Conference/Paper560/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies multi-agent exploration, which is an important problem for more efficient multi-agent reinforcement learning. The authors first pointed out that the issue of \u2018revisition\u2019 hurts the exploration and learning efficiency of  existing intrinsic exploration methods. To address the issue, the author \u200b\u200bproposed to add branches to agents\u2019 local Q-networks and the mixing network to prevent receiving repeated observations. In addition, auxiliary intrinsic rewards are proposed to further avoid revisitation. The proposed approach is evaluated on three academy tasks of Google research Football (GRF). The results show that the proposed approach outperforms baselines.",
+            "strength_and_weaknesses": "### Strength:  \n\nThe paper is well-motivated and the problem it aimed to address is important.  Specifically,  the paper identified and formally defined the \u2018revisitation\u2019 issue. The reviewer thinks it is an important step for our community to better address the issue. \n\n### Weakness:\n\nWhile the motivation and the introduction is clear, the reviewer has some concerns regarding the rigorousness of the presentation of the technical content and the generality of the experimental results. Please see the detailed comments below:\n\n1. The reviewer found Sec 3.2 difficult to follow. Many terms are either undefined or vaguely defined.   \n\n    - In p.4, the paper reads \u2018augment the mixing network in the CTDE framework to achieve diverse credit assignments across agents\u2019. It is unclear what \u2018diverse credit assignments\u2019 is referring to. A formal definition would be helpful.   \n\n   - In p.4, the paper reads \u2018The red item added to the independent part of each class is an L1 regularization term for filtering out useless diversity.\u2019 Both \u2018red item\u2019 and \u2018the independent part\u2019 are undefined in the text. In addition, it is unclear to the reviewer what is \u2019useless diversity\u2019 referring to.   \n\n   - In p.4 the paper mentioned \u2018According to each agent\u2019s independent observation, the first class satisfying the marginal condition in Eq. 2 \u2026\u2019 Doesn\u2019t Eq.2 consider joint observation?   \n\n   - It is unclear to the reviewer how Eq (2) helps select a branch that prevents revisitation. Could you elaborate?    \n\n2. While the proposed approach outperformed baselines in some tasks of GRF, the reviewer found reporting results on only three tasks not convincing. Particularly, the three selected tasks involved a very limited number of controlled agents. It is unclear if the proposed approach could be applied to more complex settings. Reporting results in GRF 11 vs 11 full game or in StarCraft II micromanagement challenge (SMAC) would be very helpful. \n\n\n3. The term \u2018sub-space\u2019 is used throughout the paper without formal definition. \n\n       \n4. Figure 1 reports the \u2018coverage rate\u2019 of baselines and the proposed approach. It is unclear to the reviewer how the \u2018coverage rate\u2019 is computed. Without the definition of the metrics, it is hard to interpret the results. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "### Clarity:  \nThe approach section is unclear and not rigorous. The reviewer found it hard to follow. Please see the weakness section for more details.   \n\n### Quality:  \nThe claims in the paper are partially supported by the experiments. Experimental results on more complex tasks would make it more convincing.    \n\n### Novelty:  \nThe reviewer found the identified \u2018revisitation\u2019 issue an important problem. However, more clarification on the technical content is needed.   \n\n### Reproducibility:  \nNo code is provided and the technical content is not very clear. The reviewer thinks the results may be difficult to reproduce. \n",
+            "summary_of_the_review": "In summary, the paper identified and addressed the important \u2018revisitation\u2019 problem. However, the presentation of technical content is unclear and the experimental results are not very convincing. Major revision is needed.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_2T1q"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_2T1q"
+        ]
+    },
+    {
+        "id": "hePXVoZxgC",
+        "original": null,
+        "number": 4,
+        "cdate": 1666753549612,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666753549612,
+        "tmdate": 1666753549612,
+        "tddate": null,
+        "forum": "gULfK60oYr1",
+        "replyto": "gULfK60oYr1",
+        "invitation": "ICLR.cc/2023/Conference/Paper560/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper tackles the challenge of exploration in multi agent reinforcement learning. The paper highlights the difficulty that in the multi-agent setting the value of intrinsic rewards can fluctuate and may sometimes increase, making previously visited states appear attractive again. As a solution the authors present Never Revisit an exploration technique for multi agent reinforcement learning. The authors evaluate this method on a maze environment and Google research football on show improved results over existing baselines.",
+            "strength_and_weaknesses": "Strengths:\n\n_ The paper presents decent results on Google research football that improve over existing multi agent exploration methods.\n\nWeaknesses:\n\nOverall despite several reads I was not able to understand the method proposed by the authors.\nThe paper relies on many concepts and terms are not properly defined.\nThe whole architecture is never properly defined and there is also no pseudo of the algorithm developed in the paper.\nFew examples:\n\nIn Definition 1, \\pi_t is not defined and it is not clear that (t'', t) is an interval\nIn section 3.2, the mixing network, branches and local utility network are not defined.\nThe paper relies on CDS but it is never properly introduced, same goes for the r^short the intrinsic rewards introduced by CDS",
+            "clarity,_quality,_novelty_and_reproducibility": "In its current state the paper is far from being self contained and is difficult to read.\nBecause of that it is also no possible to evaluate the novelty and reproducibility of the paper.",
+            "summary_of_the_review": "Thought the paper seem to display interesting empirical results I would advise the authors to rework section 3 of their manuscript to make it easier to understand. In its current I'm unable to properly judge the paper and for that reason I cannot recommend acceptance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_XHpU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper560/Reviewer_XHpU"
+        ]
+    }
+]

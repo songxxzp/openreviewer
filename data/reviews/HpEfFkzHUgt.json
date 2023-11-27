@@ -1,0 +1,158 @@
+[
+    {
+        "id": "y7GRw19nyvk",
+        "original": null,
+        "number": 1,
+        "cdate": 1665988310327,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665988310327,
+        "tmdate": 1669728886006,
+        "tddate": null,
+        "forum": "HpEfFkzHUgt",
+        "replyto": "HpEfFkzHUgt",
+        "invitation": "ICLR.cc/2023/Conference/Paper1734/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper introduces Auto-Encoding Adversarial Imitation Learning (AEAIL) for adversarial imitation learning (AIL). The framework uses the reconstruction error of an auto-encoder as the reward rather than classifier-based reward. The authors suggest that reconstruction errors provide denser rewards. Experimental results show that AEAIL outperforms baseline methods, especially when using noisy demonstrations.",
+            "strength_and_weaknesses": "Strength:\n1. The proposed method is clean and straightforward to implement.\n2. The use of AE to overcome noisy demonstration appears robust and outperforms baselines empirically.\n\nWeakness:\n1. I can't agree with the theoretical claim that the proposed AE discriminator minimizes the Wasserstein distance.  The Wasserstein distance formulation from [1] and used in this paper requires the space of the reward function to be Lipschitz-K. However, this assumption may not hold true for AE in practical applications, as noted by the authors. For the practical attempt to clip the weights, note that [1] clips the weights of the discriminator $f$ directly. However, for AE, the function that needs to be Lipschitz-K is the actual reward $|||x - f(x)|^2$. It remains to be shown that weight clipping is effective for AE reward.\n\nIn addition, AE-based GAN is more closely associated with energy-based GAN (see the theoretical derivation in [1]), which shows that AE minimizes total variation distance, not Wasserstein distance.\n\n2. The definition of reward denseness is unclear to me. I can't find any formal definition of it and the differential entropy in the experiment is only a \"proxy\" to the concept of denseness. The entropy measurement is also problematic for 2 reasons: 1) it appears that simply scaling the reward with a large constant would improve entropy for any reward function. 2) Entropy requires $p(r(s, a))$ to compute. It is unclear to me how the probability of a reward $r(s, a)$ is obtained.\n\n3. I have several concerns over the empirical evaluation. a) Why TRPO is the only RL algorithm used for all methods, instead of more recent one like D4PG. In particular, PWIL originally used D4PG. It is well understood empirically that different RL algorithms have significant impacts on the method performance. Thus it would be preferable to select the best RL algorithm for each individual method. b) Some empirical results are hard to reconcile with previous works. For instance, the humanoid expert performance is quite low compared to previously used (5700 vs ~10000 in PWIL). PWIL was able to achieve a performance of 7000+ using 11 demonstrations in original PWIL, while this work only achieves ~3500 with 320 demonstrations. Could the authors please discuss how to reconcile the discrepancies?\n\n[1] Wasserstein generative adversarial networks, Arjovsky et al., ICML 2017",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is mostly clear and easy to follow. Some aspects of the claims are not well supported (e.g. AE yields Wassterstein distance; Reward denseness is not well defined). The method has limited novelty since most of the components may be traced to some existing works (e.g. the use of AE are similar to [1, 2, 3]). Source code is provided for reproducibility.\n\n[1] Exploration by random network distillation, Burda et al. ICLR 2019.\n\n[2] Random expert distillation: Imitation learning via expert policy support estimation, Wang et al. ICML 2019.\n\n[3] Energy-based Generative Adversarial Networks, Zhao et al, ICLR 2017.",
+            "summary_of_the_review": "The paper proposes an AE-based approach to AIL. While the method shows some promise for noisy demonstrations, it has limited novelty, issue with its theoretical interpretation and discrepancies with previous empirical results. Substantial revision may thus be needed for the current manuscript.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_9Nok"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_9Nok"
+        ]
+    },
+    {
+        "id": "fqPeg6zyJ_",
+        "original": null,
+        "number": 2,
+        "cdate": 1666278585484,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666278585484,
+        "tmdate": 1666346000987,
+        "tddate": null,
+        "forum": "HpEfFkzHUgt",
+        "replyto": "HpEfFkzHUgt",
+        "invitation": "ICLR.cc/2023/Conference/Paper1734/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "\nIn this work, a version of the GAIL method is proposed where the reward in the form of the discriminator on the state-action distribution is replaced by a reward in the form of the reconstruction error of an autoencoder on state-actions. The method is evaluated in extensive simulated experiments.\n",
+            "strength_and_weaknesses": "\n**Strengths:**\n\nI see the motivation.\nClearly, GAIL has its weaknesses in terms of overall instabilities. And one specific problem can be the discriminator becoming \"too good\" (though maybe a bit more detail would be appropriate on what this means, given that, on some level of abstraction, the better the discriminator the better for the imitator; and, as far as I understand, this is more a problem of the particular training dynamics/diverging \"speeds\" of imitator and discriminator).\n\nOn a high level, I see that the idea of learning representations/autoencoders can help here. I see that an autoencoder can be a way to detect the \"anomaly\" of having a non-expert compared to an expert.\n\nExtensive simulation experiments are conducted with mostly good performance of the proposed method.\n\n\n**Weaknesses and improvement points:**\n\n\nHowever, I think this work is too premature, in terms of writing as well as methodological contribution:\n\n\nThe structure, ordering and writing, in particular description of the method, need to be improved. Here are some more and some less problematic parts I see:\n* I'm surprised that Wasserstein divergence/WGAN are introduced quite lengthily in sec 3 and 4, but then not really used? There is no further mentionin of it after eq (2)? That's confusing. I think if the Wasserstein GAN framework is actually not used, and the relation is merely that both have a bi-level/adversarial formulation, then Wasserstein does not have to be introduced so prominently. Btw., I recommend to also include [Xiao at al: Wasserstein adversarial imitation learning] as reference.\n* Related to this: Is the Lipschitz-continuity constraint in the problem in eq. (3) dropped compared to (2)?\n* I think the presentation of IL, IRL,etc., needs to be improved. I wouldn't subsume all those variants of GAIL under IRL! Because IRL is about recovering the expert's underlying reward function - assuming it \"exists\" - while GAIL etc. practically do not recover the expert reward (this can be seen from the fact that in equilibrium, the discriminator is always flat, and this is hardly a sensible expert reward). Overall, I would say, IL is the overarching task where demonstrator state-actions are given and have to be imitated. And then there are all these versions like BC, IRL, GAIL, \u2026 I think this is the proper conceptual background, while currently the structure and writing of intro and background (sec 3) leaves room for improvement.\n* I feel that the whole intro, background and method sections jump back and forth between motivation and actual method. This is not fundamentally wrong, but a bit confusing in terms of structure.\n* The CartPole balancing task is referred to without proper introduction. It needs to be introduced properly before discussing details like velocities (sec 4.1).\n\n\n\n\n\nMethod and its novelty/contribuion:\n* I think an autoenconder just learns a lower-dimensional data *manifold* - and not a *distribution* (in contrast to a variational autoencoder, GAN, etc.). But, at least in some cases, this means that *all elements that in fact lie on the manifold will get the same error/reward*. But this may not be expressive enough as a reward function. In contrast, with distributional approaches, even within the manifold there is a further \"weighting/ordering\" between elements of the manifod.\n* As a minor point, intuitively, I feel that an autoencoder should be something that learns a very general, robust representation. I feel the autoencoder/representation in this work - i.e., reconstruction error for expert states - is not robust to distributional changes etc. I think it often happens that in one instance (say, for one initialization), a state-action pair is good (taken by the expert), while in another instance it is bad (taken by non-expert). I.e., whether a state is good or bad can heavily depend on initial state, random fluctuations, etc. E.g., from one starting position in a maze, the expert may never want to visit a certain state, while from another one, the state would lie on the shortest path. It's hard for me to make this intuitive counterargument specific, and maybe GAIL suffers from similar problems, but it does seem to be a limitation.\n* More positively speaking, I think it would be relevant to also conceptually better understand the relation between an autoencoder based appraoch to detect the expert versus non-expert, compared to the more classic distribution-divergence one.\n* I feel sec 4.3's title makes quite a strong claim, but then there is little details on the precise conditions for the convergence guarantees. I don't say the full theory from the mentioned Guan et al is needed, but the treatment just feels a bit incomplete in terms of necessary assumptions.\n* I'm wondering: if - as sec 4.3 seems to indicate - the proposed autoencoder-based method is just a special case of what has already been treated by Guan et al, this may indicate that the contribution of the present work is rather limited.",
+            "clarity,_quality,_novelty_and_reproducibility": "(see above)",
+            "summary_of_the_review": "The motivation in terms of unstable GAIL, as well as the high-level idea of the autoencoder-based version make sense. But I think this work is too premature, in terms of writing as well as methodological contribution.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_ymvo"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_ymvo"
+        ]
+    },
+    {
+        "id": "Pz4qY-5PCGc",
+        "original": null,
+        "number": 3,
+        "cdate": 1666548816221,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666548816221,
+        "tmdate": 1666548816221,
+        "tddate": null,
+        "forum": "HpEfFkzHUgt",
+        "replyto": "HpEfFkzHUgt",
+        "invitation": "ICLR.cc/2023/Conference/Paper1734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes to use reconstruction loss as a reward function in adversarial imitation learning for solving Mujoco locomotion tasks. The idea is built on top of WGAIL/GAIL method, where an autoencoder replaces the discriminator. \n",
+            "strength_and_weaknesses": "**Strengths** \nPaper demonstrates that using reconstruction loss as a reward can lead to better performance than some prior methods. \n\n**weaknesses** \n- Overall, the idea of using reconstruction loss in RL already exists*. Therefore, the novelty of the proposed approach is limited.\n-- *Loss is its own Reward: Self-Supervision for Reinforcement Learning\n-- *Improving Sample Efficiency in Model-Free Reinforcement Learning from Images\n- The experimental evaluation is limited as it does not quite convince that the proposed approach results in significant improvement.\n- Theoretical justification to motivate the design choice are not convincing either to support the idea of auto-encoder based surrogate reward function. The statement \"The higher entropy of learned rewards means the reward signal can offer more feedback for each state-action pair, thus providing a denser reward signal to the agent policy.\" is given without any justification or theoretical support. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear and easy to follow. The approach is simple and reproducible.  However, there are major concerns over the novelty/quality of the paper.",
+            "summary_of_the_review": "The Paper demonstrates that reconstruction loss can be used as a discriminator in a GAIL-like framework and present performance in various Mujoco Tasks. However, the proposed approach lacks significant novelty and is also not well justified theoretically. Moreover, some of the statements are given without reference or mathematical support. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_EB8r"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_EB8r"
+        ]
+    },
+    {
+        "id": "iusN5iCgZT",
+        "original": null,
+        "number": 4,
+        "cdate": 1666626642834,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666626642834,
+        "tmdate": 1666626642834,
+        "tddate": null,
+        "forum": "HpEfFkzHUgt",
+        "replyto": "HpEfFkzHUgt",
+        "invitation": "ICLR.cc/2023/Conference/Paper1734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a novel method for adversarial imitation learning that restricts the family of reward functions to a specific function that is monotonically decreasing in the reconstruction error of an auto-encoder (I think that \"reconstruction-error\" and \"auto-encoder\" are misnomers, as the encoder-decoder network is not trained to minimize the reconstruction error).\nThe method is compared to prior AIL methods (GAIL, DAC, PWIL, FAIRL) on Mujoco tasks, where achieves better performance, in particular when the expert data is perturbed by Gaussian noise. Furthermore, several ablations are conducted, for example to test a VAE-style and a GAIL-inspired objective for training the reward function.",
+            "strength_and_weaknesses": "Strength:\n- The paper is well written \n- The approach is novel\n\nWeaknesses:\n- The algorithm doesn't seem fully sound\n- The experiments may suffer from reward bias ",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity:\nOverall, the paper is quite clear. However, some aspects need to be better described:\n- The assumption 4.3 (iii) should be stated more rigorously. What is \"the distribution divergence\" and how is it regularized? When is it \"properly\" regularized?\n- How was the entropy for \"Question 1\" computed? Does a scaling of the reward function increase the estimated entropy?\n- Was $\\exp(-\\text{AE}(x))$ in Eq. 8 restricted to the range $[0,1]$?\n\nQuality:\n- The method seems purely empiric, as I can not find a convincing theoretical justification. What is the overall objective (e.g. which divergence) optimized by the method? Section 4.3 just lists a few assumption (that are partially unclear, see above) under which the method \"converges globally\" but it is unclear what solution it converges to.\n- The experimental evaluation seems to suffer from reward bias (Kostrikov et al. 2019): The \"reconstruction-error\" and the resulting reward function are unable to express negative rewards. As the absorbing states (falling down in Mujoco) are assumed to have a reward of zero, the reward functions have a survival bias.\n\nNovelty:\nThe approach is novel, but the contribution seems to be mainly restricted to proposing a specific model family for the reward function and using it for Wasserstein/JS-AIL.\n\nReproducibility:\nThe reproducibility seems good, as the authors provide code and details on the experiments in the appendix.",
+            "summary_of_the_review": "The paper proposes a novel method for imitation learning that does not seem fully sound, but achieves good results in practice. I think the paper could be accepted in principle, however, currently the evaluation seems to suffer from reward bias, and thus, the value of the empirical results seems questionable. How would the algorithm perform on environments where the agent needs to reach an absorbing state (e.g. MountainCar?), or when learning the reward also for the absorbing states (as proposed by Kostrikov et al. 2019)?",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_vULj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1734/Reviewer_vULj"
+        ]
+    }
+]

@@ -1,0 +1,160 @@
+[
+    {
+        "id": "c52-gJz2Yf",
+        "original": null,
+        "number": 1,
+        "cdate": 1666667285809,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666667285809,
+        "tmdate": 1666667285809,
+        "tddate": null,
+        "forum": "NSMlX2F21C7",
+        "replyto": "NSMlX2F21C7",
+        "invitation": "ICLR.cc/2023/Conference/Paper2497/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposed a new contrastive distillation method that distills consistent representations with a light cost. Specifically, the proposed method uses 1) a fixed-size memory bank as the teacher dictionary to achieve the storage efficiency; 2) the moving average of the student's projection head as the teacher's projection head to produce consistent negative keys; 3) the moving average of the student model to bring $q_r$ closer to its instance-negative but class-positive keys. \n\nThe authors verify the effectiveness of the method on extensive tasks and models.",
+            "strength_and_weaknesses": "Strength: \n\n1. The proposed method is well-motivated and novel. Improving the memory efficiency in contrastive learning is a valid practical concern. \n2. The experiment results on various models and tasks show clear gains, which demonstrate the effectiveness of the method.\n3. The paper provides ablation studies on all proposed components.\n\nWeakness:\n\n1. Can the authors provide a quantitative result on the achieved speed-up and reduce memory cost?\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "1. The paper is clearly written.\n2. The method is well-motivated and novel, although a bit complicated.\n3. The method is well-supported by notable gains in the experiments.",
+            "summary_of_the_review": "The paper proposed a new contrastive distillation method that distills consistent representations with a light cost. The topic is important and the method is supported by extensive experiments. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No ethic concerns. ",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_FUQY"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_FUQY"
+        ]
+    },
+    {
+        "id": "Q6tIZNvhaei",
+        "original": null,
+        "number": 2,
+        "cdate": 1666813035169,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666813035169,
+        "tmdate": 1666813035169,
+        "tddate": null,
+        "forum": "NSMlX2F21C7",
+        "replyto": "NSMlX2F21C7",
+        "invitation": "ICLR.cc/2023/Conference/Paper2497/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper presents a way of performing knowledge distillation using contrastive learning. The authors point out that existing distillation methods that use contrastive learning have two main issues: (i) memory intensive - as it needs to store the representations of the whole dataset to construct negatives, (ii) the negatives which exist in the memory bank might not have been updated in a while, thereby potentially making the task of differentiating the positives (which are computed fresh in each iteration) from negatives (in the bank) easier than it should be. To this end, the authors propose using a queue data structure instead for storing the negatives. This queue is updated with fresh representations from the teacher and can also be much smaller than the size of the whole training dataset. Empirically, this alternative way of performing contrastive distillation helps in improving the performance of the distilled student a bit, and also helps in certain transfer learning setups.\n",
+            "strength_and_weaknesses": "Strengths\n\n- The issue about memory usage is a valid point to raise. CRD [1] does indeed need a big memory bank to store the features of the whole training dataset, an issue which will get worse with a bigger dataset (e.g., ImageNet). This becomes particularly important when someone has to save the model and resume training; one does not only need to store the teacher/student\u2019s weights, but also need to store the whole training data\u2019s feature set.\n\n- The other main issue, which is about the negatives potentially being out of touch with the fresh features that the teacher is computing, could be important as well. I use the phrase \u201cpotentially\u201d because it is not clear how big of an issue that really is in practice. \n\n- The paper is well written, the issues clearly explained, and the mathematical formulation is easy to follow.\n\n\nWeaknesses\n\n- Even though the issues that the authors have raised pertaining to CRD are valid, in the sense that it would be nice if those did not exist, those are not the issues which I feel stand out too much. As I said in the \u201cStrengths\u201d section, it is not clear how much effect it will have that the negatives sampled for a query were updated a while ago.\n\n- The reason the concern raised above (the importance of recency in feature bank) is important is because the results, especially on the most comprehensive evaluation setup CIFAR-100, don\u2019t show that big of an improvement over the existing contrastive distillation setups like CRD. Sometimes they are even worse.\n\n- But, I think it is not just that the issue of \u201crecency in feature banks\u201d (in CRD) was not important enough, and hence there wasn\u2019t that much improvement brought about by the proposed method. I think that the new proposed way of sampling negatives could potentially be not so ideal in certain situations. Here is how: the batch size for CIFAR-100 setup is set to 64 (as per supplementary) while the queue size is set to 2048. This means that a particular batch of features coming out of the teacher will persist in the queue for (2048/64) 32 iterations. This means that for many different query images, there will be the same set of negatives being used (32 times) until they finally get out of the queue. Compare this to CRD, where for each query image, the negatives will be randomly coming from the whole training set, thereby reducing the possibility of that issue. I do not know how important this difference is in practice, but the fact that there is not a consistent increase in performance for CIFAR-100 might hint at a problem like this. In summary, the method that has been proposed is not a superset of CRD in terms of (theoretical) effectiveness. \n\n- Overall, there is not a straightforward way to fix the issues that the authors have raised about CRD. They need to introduce an additional student network to counter some issues because of the queue data structure, which leads to additional loss components which need to be tuned.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is quite clear in the issues raised and their proposed fix to the issues. I also think the authors have done a good job covering different kind of experiments, e.g., image classification/transfer learning, even if I feel the results themselves are not that impressive.\n\nThe authors have included sufficient details for someone to reproduce the experiments. \n",
+            "summary_of_the_review": "I like that the issues pertaining to contrastive distillation methods were raised, issues which I had not thought of before, but as explained in the \u201cWeaknesses\u201d section, I do not feel those issues are that important, particularly when resolutions to those issues could themselves introduce other issues. I do not think that the idea produced is novel/general enough for it to be applicable to all the problem settings, as is depicted in the results as well (Table1/2). Because of these reasons, I do not recommend acceptance. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_mvUm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_mvUm"
+        ]
+    },
+    {
+        "id": "rBJPngyCNR",
+        "original": null,
+        "number": 3,
+        "cdate": 1667115432145,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667115432145,
+        "tmdate": 1667115432145,
+        "tddate": null,
+        "forum": "NSMlX2F21C7",
+        "replyto": "NSMlX2F21C7",
+        "invitation": "ICLR.cc/2023/Conference/Paper2497/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper introduces and mitigates some challenges encountered in contrastive representation distillation. In particular, the authors point out that the existing methods (CRD and wCoRD) keep track of a memory bank for the negatives that often contain inconsistent representations, which can adversely affect the student model performance. To that end, the paper proposes using separate heads for the teacher and student models where the teacher head is updated using the student head using momentum, allowing the teacher representations to be consistent across different iterations. As a side benefit, the proposed model requires a smaller teacher dictionary than previous works. The paper also proposes reducing the euclidean distance between samples referred to as \"instance-negative class positive\" samples using an additional slowly moving student model. Several experiments show highly competitive results in teacher-student settings.\n",
+            "strength_and_weaknesses": "**Strengths**\n\n1. The proposed method is evaluated on several sets of vision tasks including classification, transferability, and object detection. The performance of the method looks promising with highly competitive results.\n2. The effectiveness of the proposed method is shown in the experiments and ablations. The paper also contains comparisons with relevant baselines from recent years.\n3. The paper generally reads well and is clear for the most part.\n\n**Weaknesses**\n\n1. While the results seem good, I find the novelty in this work limited. Most of the ideas (like momentum update of params) already exist and are known in the self-supervised learning and contrastive learning literature (though these ideas have not been applied in knowledge distillation).\n\n2. The motivation for section 3.2 is unclear. Mainly, the choice of using a slow-moving student model is not motivated or discussed. Furthermore, it is unclear how using a new view of the same input image ensures $q_r$ to become closer to \"instance-negative but class-positive keys\". \n\nOther Minor comments:\n\n1. I find the notation to be a little unclear. In equation 1, what does the index $r$ in $q_r$ refer to? It has not been introduced before. Is it supposed to be $s$ instead, since the input to the student model was $x_s$?\n2. It was mentioned in the introduction that when the representations are inconsistent, \"the student can easily contrast positive and negative samples\", why is that?\n3. In the introduction, Page 1 (last para, 3rd line): \"The student representations in the memory\" shouldn't it be \"teacher representations\" instead? \n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Clarity: Overall, the paper is clear and easy to read, with a few exceptions, particularly with respect to section 3.2 and the notations used.\n- Quality & Novelty: The quality in terms of the presentation is good. As mentioned above the novelty is limited with respect to the proposed methodology.\n- Reproducibility: The procedure of the proposed method is adequately described. The code was not provided as part of the supplementary.\n",
+            "summary_of_the_review": "I think the motivation of the paper is sound and the proposed method combines several existing techniques to address the challenges in contrastive representation distillation. While the experimental analysis looks promising, I think the novelty is limited.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_gYcu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_gYcu"
+        ]
+    },
+    {
+        "id": "gEOywND-kQO",
+        "original": null,
+        "number": 4,
+        "cdate": 1667390920890,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667390920890,
+        "tmdate": 1667390920890,
+        "tddate": null,
+        "forum": "NSMlX2F21C7",
+        "replyto": "NSMlX2F21C7",
+        "invitation": "ICLR.cc/2023/Conference/Paper2497/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper propose a new way to combine knowledge distillation with contastive learning, which updates the encoders in a momentum manner to obtain efficient and consistent encoding. Experiments on both classification and detection have been conducted.",
+            "strength_and_weaknesses": "Strength:\n1. Sufficient experiments have been conducted on both classification and detection.\n2. Good paper writing.\n\nWeakness:\n1. The performance improvements are not very significant. As claimed by the authors in the limitation section, a combination of their method with the previous KD does not lead to good performance. \n2. Lack of in-depth study on how the inconsistency of representations in the memory bank leads to negative influence. It will be better if quantitative results can be provided to study the relation between inconsistency and the performance of knowledge distillation.\n3. Lack of theoretical or experimental study on why does their method works.\n4. Some factors in their framework do not have enough ablation studies. For example, what if the branch of the slow-moving student is not used?\n5. SOTA knowledge distillation method usually distill the knowledge in not only the final layer but also the intermediate layers. However, in the proposed method, it seems that a projection head is required, which is usually only utilized at the final layer in previous contrastive learning methods. So I wonder whether this method can be used in knowledge distillation on the intermediate layers.\n6. In my opinion, the novelty of this paper is not that large, since the moving average trick has been widely used in contrastive learning, And KD+Contrastive Learning is also not novel.",
+            "clarity,_quality,_novelty_and_reproducibility": "Moderate Quality, Moderate Novelty, Bad Reproducibility.",
+            "summary_of_the_review": "Please refer to the strength and the weakness.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "n/a",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_iNks"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2497/Reviewer_iNks"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "5CnwDfrSfa",
+        "original": null,
+        "number": 1,
+        "cdate": 1666672508983,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666672508983,
+        "tmdate": 1666672508983,
+        "tddate": null,
+        "forum": "dNqxZgyjcYA",
+        "replyto": "dNqxZgyjcYA",
+        "invitation": "ICLR.cc/2023/Conference/Paper5133/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a method for model-based offline RL which leverages a learned model to perform model-based value expansion (MVE) in the policy evaluation phase of an actor critic style algorithm. Motivated by the risks of compounding errors and instability when using a model learned only from limited data from a behavior policy in offline RL, the authors propose a Bayesian approach which aims to automatically determine the degree to leverage the learned model, while also leveraging the posterior to apply conservatism to mitigate overestimation bias in the learned Q function. They demonstrate the approach outperforms model-based approaches on standard benchmarks, and achieves state-of-the-art performance on several domains. ",
+            "strength_and_weaknesses": "Strengths:\n- The paper was well written, and explained concepts clearly. The background section provided the right level of information to the reader, explaining the key steps of generalized policy iteration, and how learned models can be used in the policy expansion phase.\n- Leveraging the Bayesian posterior over Q values to construct a lower confidence bound for conservative exploration is an elegant way to incorporate conservatism and prevent overestimation bias as the state/action distribution deviates from that of the behavior policy.\n- The experimental evaluation was thorough and demonstrated a significant performance improvement relative to baselines. I appreciated the comparisons to alternative weighting techniques, highlighting the benefit of the Bayesian inference based approach over simpler algorithmic choices like $\\lambda$-weighting\n\nWeaknesses:\n- The discussion of the probabilistic model and assumptions was imprecise:\n    - Section 3.1 seeks to define a posterior belief over $\\hat{Q}^\\pi$, the Q function for acting under $\\hat{f}$ with policy $\\pi$ and accruing rewards according to $\\hat{r}$. However, then in section 3.2, this posterior is interpreted as a credible interval for $Q^\\pi$, the Q function for the true dynamics, and then used to construct the targets for Q function regression. As the true Q function is true quantity of interest, it would make more sense to frame section 3.1 as estimating p(Q^pi \\mid \\hat{R}_0, \u2026, \\hat{R}_H), and likewise to treat $\\hat{R}_h | Q^\\pi$ as normally distributed, as opposed to $\\hat{R}_h | \\hat{Q}^\\pi$. \n    - The discussion motivating using the conservative estimate as opposed to the MAP estimator of the posterior belief in section 2 was hard to follow. Specifically, the last paragraph on page 5 felt unnecessary, as pointing out that $\\mu$ is an admissible estimator of $\\hat{Q}^\\pi$ does not provide any evidence that a lower-confidence bound estimate would lead to a less biased estimate of the true Q function than the MAP estimate under the posterior.\n    - The state-transition model using the ensemble dynamics model in section 3.2 conflates aleatoric and epistemic uncertainty by proposing that at each timestep, we first sample a dynamics model, and then sample a transition from the chosen model. This could lead to sample trajectories that are not actually dynamically feasible under any one of the individual models. The authors mention that in practice, they hold the model fixed over the course of the rollout when sampling for the purposes of reducing computational complexity. While this does reduce the sampling requirements, it also alters the probabilistic model to one that correctly separates uncertainty over a stationary dynamics model from stochasticity in individual transitions, as discussed in [Chua et al, 2018]. However, as the authors acknowledge in the Appendix, this breaks the conditional independence assumption they leverage to compute the Bayesian posterior.\n    - It is unclear why the mean and variance computed according to (9) and (10) should yield the mean and variance of the observation model p( R_h | \\hat{Q} ). Ensembles of neural networks can be viewed as performing approximate Bayesian inference, i.e. modeling p( f | D), where the prior p(f) depends on the initialization of the ensemble weights []. The authors should clarify why the predictive distribution when marginalizing over the two ensembles reflects the conditional distribution p( R_h | \\hat{Q} ). \n- Experiments were limited to deterministic environments:\n    - While the derivation of the algorithm allowed for environments with stochastic transitions, the experiments focused on domains with deterministic transition and reward functions. I would be interested to see how stochasticity inherent to the environment would impact the performance of CBOP.\n- Hyperparameters were tuned based on final online evaluation performance.\n    - The reported results relied on different LCB coefficients for different environments, which as the authors report in the appendix C.2., was chosen based on final online evaluation performance. Given that this sort of hyperparameter optimization would not be possible in true safety-critical settings which motivate offline RL, it would have been useful to see the impact of this hyperparameter on performance. Specifically, I would imagine that as $\\psi$ is increased from 0, we would see an trend that interpolates between the MAP based performance of STEVE  to the reported results in CBOP. \n    - The initialization of the Q ensemble seemed to play a large part in CBOP's performance -- indeed, as the experiments demonstrated, using a randomly initialized Q ensemble led to poor results as the predictive variance was not calibrated. Furthermore, the authors leveraged gradient diversification to improve the performance of the algorithm. I would have liked to have seen a greater discussion about the importance of a calibrating variance estimates form the Q ensemble, i.e. ensuring the ensemble variance is an accurate estimate of $Var(R_0 | \\hat{Q}^\\pi))$ -- especially in the body of the text. \n\nMinor comments:\n- There are some notation mistakes / incomplete sentences, especially in the appendix. For example, on page 16, the definition of $Q_\\phi^k = \\arg\\min_\\phi \u2026$ is not a valid equation, and the first paragraph of C.2 ends with a fragment.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is generally clearly written, though the notation and discussion of the probabilistic model is hard to follow and not well supported. The experimental results however suggest the performance is impressive w.r.t. baselines and ablations, and the experiments are discussed clearly. From my perspective, the approach is original.",
+            "summary_of_the_review": "Overall, I think the approach presents an interesting idea for combining the benefits of model-free and model-based methods for offline RL, and demonstrates that this idea can lead to impressive performance, which supports it's acceptance. However, the paper could be significantly improved with a clearer discussion of the probabilistic model and the assumptions made to translate the predictive distributions obtained through the DNN ensembles to the assumed measurement model on the true Q function.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_yFv4"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_yFv4"
+        ]
+    },
+    {
+        "id": "dUI0_ATWzx1",
+        "original": null,
+        "number": 2,
+        "cdate": 1666691195176,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666691195176,
+        "tmdate": 1666691195176,
+        "tddate": null,
+        "forum": "dNqxZgyjcYA",
+        "replyto": "dNqxZgyjcYA",
+        "invitation": "ICLR.cc/2023/Conference/Paper5133/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper presents CBOP, a new approach for model-based offline reinforcement learning, where the RL agent is trained to optimize a lower bound on the Bayesian posterior estimate of values. In this approach, each h-step return from a particular state in the offline dataset is treated as a sample from the Bayesian posterior estimate of the value in that state, from which the posterior distribution over the target values is derived. The authors further balance model-free and model-based estimates of the values during policy evaluation by incorporating a lower bound on the Bayesian posterior value estimates for conservativity. \n \n",
+            "strength_and_weaknesses": "Strengths:\n+ The paper is well written and clear to understand. I honestly enjoyed reading the paper.\n+ The experiments show strong and promising results for CBOP compared to state-of-the-art.\n+ The proposed method is novel (to some extent), straightforward, and easy to follow.\n\nWeaknesses:\n- The proposed method has not been theoretically analyzed. In my opinion, any theoretical analysis and guarantees would add great value to the current work.\n- There are some parts in the paper that deserve to be discussed in more detail. For further elaboration, please refer to the questions below.\n- Along with an ensemble of dynamics models, CBOP also utilizes an ensemble of value functions, which makes this method computationally more demanding than other state-of-the-art methods.\n- Similar to MOPO, CBOP heavily relies on the diversity among the ensemble networks. As a result, if the networks within the ensemble turn out to be correlated to one another (which is not uncommon in practice), this method may potentially fail to work properly.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and the proposed idea is easy to follow. The authors have provided some details of their implementation, which, along with the source code provided in supplementary materials, allows for reproducing the results for further validation. \n\nQuestions:\n\n- It seems that CBOP can be formulated as an extension to MOPO, and if so, its performance might suffer from the same reasons that affect the performance of MOPO. To be more specific, both MOPO and CBOP rely on the uncertainty quantified via an ensemble of networks to perform, so if by any chance, the networks within the ensemble are correlated to one another (which is not uncommon in practice), both methods may fail to perform. In the case of CBOP, correlation within an ensemble leads to an incorrect posterior estimation, which can hurt its performance in a similar way that it does in MOPO. I would appreciate a discussion on this matter, and what makes CBOP perform well in situations where MOPO fails for the reason mentioned above.\n\n- From what I understand, as the training progresses and the value networks start to converge, the first term in equation (10) will start to fade. Hence, this term (which corresponds to the uncertainty among the Q-ensemble) will only affect the intermediary stages of the training, and not the final result itself. It would be interesting to see an ablation study where you investigate the effect of this term (which translates to the effect of utilizing a Q-ensemble instead of a Q-function) on the stability and convergence of CBOP.\n\n- From the algorithm presented in the appendix, CBOP only optimizes the policy over the visited states in the offline dataset. Why did you not extend the policy optimization to out-of-distribution datapoints as well?\n\n- Rigter et al. [1] present a model-based offline RL approach that does not depend on ensemble learning for uncertainty estimation. Could you clarify the similarities/differences/benefits between your approach and theirs?\n\n[1] Rigter, M., Lacerda, B., & Hawes, N. (2022). Rambo-rl: Robust adversarial model-based offline reinforcement learning. arXiv preprint arXiv:2204.12581.\n",
+            "summary_of_the_review": "The paper appears to be solid, well-written and clear to understand. It proposes a novel method for model-based offline RL, which is straightforward and easy to follow. CBOP shows strong promise in the experiments compared to other SOTA methods. Although there are some comments that still need to be addressed to improve the paper, I vote for accepting the paper.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_fgeG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_fgeG"
+        ]
+    },
+    {
+        "id": "X9Ym4ZIJrX",
+        "original": null,
+        "number": 3,
+        "cdate": 1667197853742,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667197853742,
+        "tmdate": 1667197853742,
+        "tddate": null,
+        "forum": "dNqxZgyjcYA",
+        "replyto": "dNqxZgyjcYA",
+        "invitation": "ICLR.cc/2023/Conference/Paper5133/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "- Paper studies the offline RL setting, and specifically model-based approaches to offline RL.\n- Paper hypothesizes that model-based value expansion (MVE) can help improve the quality of model-based offline RL algorithms. However, a naive application is found to be unsuccessful due to model bias which is particularly prominent in the offline RL setting. \n- To overcome above challenge, the paper devices a conservative estimation procedure based on uncertainty quantification, similar in spirit to prior work like MOPO and MOReL.\n- The paper empirically evaluates the proposed method (CBOP) on D4RL benchmark tasks and find significant improvements over prior methods.",
+            "strength_and_weaknesses": "- The paper can be interpreted as incorporating MVE to the offline RL setting. While this is incremental in nature, it nevertheless is a useful contribution and can be of interest to the offline RL community.\n- Having a concrete algorithm box to describe the method can be useful to better understand the nuances of practical application.",
+            "clarity,_quality,_novelty_and_reproducibility": "- The paper is well written, but as mentioned above, a clear algorithm box to describe the method would be helpful for better understanding.\n- The novelty is somewhat limited, since the work largely extends a well known prior approach (MVE) from online RL to offline RL. The broad approach taken for this, namely conservative estimation, has also been explored in numerous prior works like MOReL, CQL, MOPO. \n- That said, the specifics of getting the conservative estimates by tracking the full posterior and leveraging the LCB is new. However, at the writing level, this does not come across clearly.",
+            "summary_of_the_review": "Paper extends MVE to offline RL setting. While this is conceptually an incremental advancement, the proposed algorithm empirically displays improvements over prior work. Overall, I recommend a neutral to weak accept rating.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_swCh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_swCh"
+        ]
+    },
+    {
+        "id": "PELuyQJpzTr",
+        "original": null,
+        "number": 4,
+        "cdate": 1667400731501,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667400731501,
+        "tmdate": 1671225509944,
+        "tddate": null,
+        "forum": "dNqxZgyjcYA",
+        "replyto": "dNqxZgyjcYA",
+        "invitation": "ICLR.cc/2023/Conference/Paper5133/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper studies model-based RL in the offline setting. Offline RL typically requires regularization/penalty to avoid distributional shift and enable reasonably accurate value estimation. In contrast to previous model-based algorithms, which penalize only according to model uncertainty, this paper proposes a Bayesian-inspired conservative value estimation mechanism which incorporates both model and Q function uncertainty.\n\nThe authors describe how to approximate the posterior mean and variance of the Q values using ensemble methods. With these in hand, the algorithm can compute a conservative estimate of the Q value via the lower confidence bound. The proposed algorithm, CBOP, demonstrates strong performance on the D4RL benchmark and is (empirically) shown to provide conservative estimates of the actual returns.",
+            "strength_and_weaknesses": "Strengths:\n* Jointly balancing the uncertainty in the model and Q function seems a good idea to me, and this paper presents a reasonably principled way to do that.\n* Experimental results are good. CBOP closes the performance gap between model-based and model-free algorithms in the offline setting, and is demonstrably conservative w.r.t. the true returns.\n* In the appendix, the authors provide evidence supporting their assumption of Gaussianity.\n\nWeaknesses\n* It is not obvious to me that the Bayesian formulation is necessary; the gains in performance could simply be from being conservative over the model and Q function jointly. A possible baseline algorithm to test this question would compute the target via a conservative quantile of all the values $\\{\\hat{R}_h^{k,m}\\}$. This would be a more appropriate baseline than STEVE (which is not conservative because it was not designed for the offline setting), and if CBOP outperforms such an algorithm, the case for the Bayesian approach would be stronger.\n* The comparison of CBOP-estimated values to actual returns is only performed for 3 datasets, all the same task. Including results for all (or at least more) tasks in the appendix would strengthen the reader\u2019s confidence in the algorithm.\n* The hyperparameter tuning sounds a bit dubious. The authors claim \u201cThe only hyperparameter that we have tuned is the LCB coefficient $\\psi$\u201c, but then they also state environment-dependent values for $M$ and $\\eta$.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper\u2019s writing is fairly clear. I really like Figure 2, which provides a nice-looking and succinct summary of the algorithm.\n\nThe Bayesian formulation and resulting algorithm are novel, to my knowledge.\n\nThe full algorithm description and hyperparameters are included in the appendix. I believe it should be reproducible from the information provided.",
+            "summary_of_the_review": "I think the paper is a useful contribution overall. It presents a novel algorithm that appears effective and is well-backed with empirical support. However, the paper could be further strengthened with additional experiments, as detailed above.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_aFWb"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5133/Reviewer_aFWb"
+        ]
+    }
+]

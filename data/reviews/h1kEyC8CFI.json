@@ -1,0 +1,159 @@
+[
+    {
+        "id": "qKziuDcaCK",
+        "original": null,
+        "number": 1,
+        "cdate": 1665834898584,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665834898584,
+        "tmdate": 1666009489621,
+        "tddate": null,
+        "forum": "h1kEyC8CFI",
+        "replyto": "h1kEyC8CFI",
+        "invitation": "ICLR.cc/2023/Conference/Paper4706/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper works on the efficiency of distributed differentially private learning without a trusted server. The main idea is that each user first trains the local model. Then the sever aggregates the local minimizers with only a single call of Secure Multi-Party Computation (SMPC).",
+            "strength_and_weaknesses": "To better understand the position of this paper, here are two alternative options in the literature. \n\n**Option A**. Each user perturbs the local gradient and then sends the noisy gradient to the server. The serve then broadcasts the aggregated gradient. Such communication is repeated for many times. This approach has a high communication cost because there are many rounds. The variance of noise is also large because it depends on the local data size $n_i$ instead of overall data size $N$ (bad utility, bad communication cost, the baseline in this paper). \n\n**Option B**. All users use SMPC to send noisy gradients to server, the noise variance in aggregated gradient is small because it scales with $1/N$ instead of $1/n_{i}$. The noise variance depends on overall data size, but the communication cost is even higher because 1) one still need to run multiple communication rounds; 2) each call of SMPC is more expensive than standard communication and the cost of SMPC scales with the number of users (good utility, bad communication cost, not evaluated in this paper).\n\nThe authors try to design an algorithm that is good in terms of both utility and communication cost. The main design choices are 1) they use an advanced SMPC protocol (Bell et al. 2020), which could scale to millions of users while the protocol used by previous works cannot; 2) they only call the SMPC once; 3) in order to maintain reasonable accuracy, they use a pre-trained feature extractor and only train local linear classifiers. The authors show the proposed algorithm is significantly faster and, in some cases, achieves higher accuracy than Option A.\n\nIn general, I think this work is a good attempt towards solving an important problem, i.e., making the algorithm good in both criterions. However, there is still room for improvement. Please see my comments/suggestions below.\n\n1. An important baseline is missing. This paper does not evaluate the algorithms take Option B, e.g., [1]. Note that those algorithms could also scale to millions of users with the advanced protocol. A fair comparison would be all algorithms use the same protocol. In terms of efficiency, such a comparison would demonstrate the efficiency advantage of calling only a single SMPC. In terms of utility, it is important to show the drop in accuracy. The drop in accuracy seems non-negligible. With a pretrained feature extractor+linear classifier and eps=0.5, [2,3] both achieve ~90% accuracy on CIFAR-10 (see Figure 5 in [2] and Table 3 in [3]) while the accuracy in this work is $<$70%. \n\n2. Although the noise scales with $1/N$, the utility guarantee of the aggregated model would not scale with $1/N$ because each local minimizer only sees $n_i$ datapoints. This may be inevitable if you only allow a single SMPC. However, if you run SMPC $log(N)$ times, it is possible to have a global utility guarantee scales with $1/N$. A simple example is Option 2 with DP-GD, which is studied in [1]. I think a good distributed private learning algorithm should have a utility bound scales with $1/N$. If the authors are interested in this direction, I would recommend papers about variance reduced methods in the non-private distributed learning setting, e.g., [4]. The basic idea is to let each user minimize its local objective (inner loop) and only occasionally run synchronization (outer loop), which would result in fewer calls of SMPC than DP-GD.\n\n3. The utility of the local minimizer may be improved with gradient perturbation (DP-SGD or DP-GD). The current version uses output perturbation on the minimizer of a regularized Huber loss. Note that DP-SGD and DP-GD usually achieve better empirical performance (see [5]) despite they add noise at every step. The reason may be the noises added in earlier iterations get corrected by later gradient updates.\n\n[1]: Distributed Learning without Distress: Privacy-Preserving Empirical Risk Minimization, https://proceedings.neurips.cc/paper/2018/hash/7221e5c8ec6b08ef6d3f9ff3ce6eb1d1-Abstract.html.\n\n[2]: Differentially Private Learning Needs Better Features (or Much More Data), \nhttps://arxiv.org/abs/2011.11660.\n\n[3]: Do Not Let Privacy Overbill Utility: Gradient Embedding Perturbation for Private Learning, https://arxiv.org/abs/2102.12677.\n\n[4]: Convergence of Distributed Stochastic Variance Reduced Methods without Sampling Extra Data, https://arxiv.org/abs/1905.12648.\n\n[5]: A Practitioners Guide to Differentially Private Convex Optimization, https://icml.cc/Conferences/2021/ScheduleMultitrack?event=12667. You can find the presentation at https://slideslive.com/38964861/contributed-talks-session-2?ref=folder-87822 (starts ~32:20).\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The clarity could be improved. Here are two suggestions: \n\n1. Use a table or figure to directly compare with alternative options and highlight the position of this paper. \n\n2. Try to make the Overview section more concise. There are 10 unorganized paragraphs in the Overview, each highlighting a different point. It\u2019s hard for me to get a clear overview.",
+            "summary_of_the_review": "My recommendation is mainly based on 1) one important baseline is missing; 2) there is neither strong empirical performance nor a reasonable theoretical utility bound. Please see Strength And Weaknesses for possible improvements.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_a5Qe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_a5Qe"
+        ]
+    },
+    {
+        "id": "1PFQeMV0Jj-",
+        "original": null,
+        "number": 2,
+        "cdate": 1666570151364,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666570151364,
+        "tmdate": 1666570151364,
+        "tddate": null,
+        "forum": "h1kEyC8CFI",
+        "replyto": "h1kEyC8CFI",
+        "invitation": "ICLR.cc/2023/Conference/Paper4706/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "the paper proposes a method that combines transfer learning (based on fitting linear model on pretrained features), secure aggregation, and differentially private mechanisms, to achieve secure and private machine learning. authors empirically compare against DP-FL and claim performance improvements in the large user regime. ",
+            "strength_and_weaknesses": "strength: the idea of introducing secure aggregation into private machine learning is interesting. this idea likely helps bypass certain limitations of federated learning under local DP in terms of utility (albeit introducing new, but perhaps mild, assumptions, e.g., at least half the users are honest). \n\nweakness: while the main idea makes sense, there are several technical as well as presentational issues which lead to the paper being hard to read. in addition, some of the results / claims are hard to verify (and i personally doubt some claims are true). i list the main points below. \n\n- it's unclear what model of a \"dishonest user\" this work assumes. for instance, in distributed computing, there's this notion of byzantine nodes, which essentially means that they can do whatever they'd like. in milder models, a dishonest user might just be assumed to fail without tampering with aggregation (but also not provide their data). i'm assuming the claim that \">50% users being honest implies secure aggregation works\" is dependent on a precise notion of a \"dishonest user\" whose definition which i was not able to pinpoint in the main text. in the extreme case, what if i assumed the dishonest user is omnipotent and was able to \"steal\" the key of all honest users? wouldn't that give the dishonest user the ability to revert the noise? \n\n- algorithm 1 seems problematic in several ways. \n  - the loss defined on 2 is independent of datapoints whose y is not k. this would mean that the models trained here are only increasing the margin for the positive class -- the margins for the negative class is not penalized, and can grow however they like. there's a chance i might be missing something, but i'd be very surprised if this loss gives high-performing models. can authors clarify how they train these models and perform inference? \n    - personally, i'd perhaps use the loss J = L2 reg + average of l_huber ( f clipped(x) [ 1[y = k] - 1[y \\ne k] ] ), which takes the negative classes' margin into account. \n  - for privacy purposes, i can somewhat see why the loss on line 2 is desirable -- it ensures that each data point only affects the loss of a single model. one could probably argue that this gives a smaller sensitivity (than naive joint release, which produces a \\sqrt{K} factor), though this nuance is not explicitly mentioned in the main text. more generally, if one uses the loss i defined above (the one that penalizes small margins for both pos and neg classes), one cannot assume the joint release still has sensitivity s, but would rather need the conservative bound of \\sqrt{K} s (s is sensitivity of single model release for a particular k). section 3.1 in the main text does not make these points explicit. \n  - have the authors tried the simpler logistic regression? the loss for multi-class logistic regression is strongly convex, and lipschitz (for bounded iterates), and does not possess this awkward one-vs-rest problem with SVMs. \n\n- the authors frame their method with training linear models as an integral component. note while the framework is generally applicable to strongly convex and lipschitz losses (where coefficients are known), the overall method is limited to convex problems, and cannot be applied to when linear model adaptions cannot work well. \n\n- given the strong resemblance to early works such as PATE, i'm surprised the similarities and differences are not discussed. i personally can figure out these, but this job should not be left to the reader solely. some references below. \n\nPapernot, Nicolas, et al. \"Scalable private learning with pate.\" arXiv preprint arXiv:1802.08908 (2018).\nPapernot, Nicolas, et al. \"Semi-supervised knowledge transfer for deep learning from private training data.\" arXiv preprint arXiv:1610.05755 (2016).\nChoquette-Choo, Christopher A., et al. \"Capc learning: Confidential and private collaborative learning.\" arXiv preprint arXiv:2102.05188 (2021).\n",
+            "clarity,_quality,_novelty_and_reproducibility": "the main idea of using secure aggregation to bypass utility challenges in federated learning with DP seems new (though there might be papers i haven't read which does something similar). \n\nthe paper can improve on its writing clarity. given the aforementioned technical and writing issues, it's hard to verify the experimental results. ",
+            "summary_of_the_review": "the paper proposes a method that combines transfer learning (based on fitting linear model on pretrained features), secure aggregation, and differentially private mechanisms, to achieve secure and private machine learning. while interesting, the works have several technical and writing issues that can be improved on. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_qk3x"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_qk3x"
+        ]
+    },
+    {
+        "id": "omtYDoD7i23",
+        "original": null,
+        "number": 3,
+        "cdate": 1666641808879,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666641808879,
+        "tmdate": 1666641808879,
+        "tddate": null,
+        "forum": "h1kEyC8CFI",
+        "replyto": "h1kEyC8CFI",
+        "invitation": "ICLR.cc/2023/Conference/Paper4706/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a scalable differentially private distributed learning framework for protecting privacy over distributed dataset. The scalability of the framework is based on a scalable secure summation protocol.  The privacy of the framework is achieved by aggregating the noise of non colluded users in an oblivious way instead of distributed noise generation over millions of users. They also consider a combination of SimCLR pre-training with linear convex private learning (DP-SVM) to achieve better performance. \n",
+            "strength_and_weaknesses": "Strengths:\n1. The problem of achieving privacy protection in distributed learning is timely and important, especially over large number of users.\n2. Considered the combination of pre-trained model and private linear models to improve the model performance and communication efficiency. \n3. Provided the uniform stability and convergence of proposed methods. \n\nWeaknesses\n1. The presentation of the proposed framework is not clear. The paper is quite hard to understand what kind of framework it proposed. It is better to give some figures for the framework and how the SimCLR-based pretraining is integrated in the whole pipeline. \n2. Many related works on SMPC + DP are ignores and do not provide comparisons in the experiments, e.g., [1] Jayaraman, Bargav, Lingxiao Wang, David Evans, and Quanquan Gu. \"Distributed learning without distress: Privacy-preserving empirical risk minimization.\" Advances in Neural Information Processing Systems 31 (2018).\n3. The reason for introducing the computational DP is not clear.  \n4. How the pretrained model affects the model performance is not clear. \n5. Why is the dimension of Gaussian variance $(p+1)\\times K$ instead $p \\times K$?\n6. Please provide the utility and privacy tradeoff for the private version of Algorithm 1 and the comparison with common private erm methods, e.g., Wang, Di, Minwei Ye, and Jinhui Xu. \"Differentially private empirical risk minimization revisited: Faster and more general.\" Advances in Neural Information Processing Systems 30 (2017).",
+            "clarity,_quality,_novelty_and_reproducibility": "The presentation of the paper needs to be improved. \nThe reproducibility of the paper is good.",
+            "summary_of_the_review": "The paper proposed a scalable differentially private distributed learning framework. However, the idea of integrating pre-trained model extractor with private convex model is not new. Also, the combination of DP with SMPC is also not new. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_p4WT"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_p4WT"
+        ]
+    },
+    {
+        "id": "3IdLVSM3qtO",
+        "original": null,
+        "number": 4,
+        "cdate": 1667308444048,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667308444048,
+        "tmdate": 1667308444048,
+        "tddate": null,
+        "forum": "h1kEyC8CFI",
+        "replyto": "h1kEyC8CFI",
+        "invitation": "ICLR.cc/2023/Conference/Paper4706/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies how to reduce the number of MPC rounds in privacy preserving learning.",
+            "strength_and_weaknesses": "\nThe exact claimed contribution isn\u2019t very clear.  Even though compared to the earlier NeurIPS submission the authors added a \u201ccontributions\u201d paragraph in the introduction, (a) several items in the bullet list are not contributions themselves but more properties of a contribution described earlier, and (b) the description of the contribution doesnt specify clearly to what extent this contribution improves over the state of the art.\n\nIt is unclear to me why the presented algorithm could run with a single SMPC invocation.\n\nAs already stated in my neurips 2022 review, it is unfortunate that the whole paper focuses on a single dataset (Cifar-10).\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "While the idea of reducing smpc invocations is interesting, the current paper doesn\u2019t investigate this question in depth.\nThe key of the paper seems to be that SVM are used, but theory nor experiments seem to prove any novelty in this nor a relation to the number of SMPC invocations.\n\nThe text could be better organized to more clearly relate objective, method, experiment and conclusion.",
+            "summary_of_the_review": "While the authors seem to know good techniques, i dont see how the current paper uses them for a coherent contribution.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "\u2014",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_7DLA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4706/Reviewer_7DLA"
+        ]
+    }
+]

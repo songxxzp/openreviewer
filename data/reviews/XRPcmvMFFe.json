@@ -1,0 +1,119 @@
+[
+    {
+        "id": "DvQcfYQLBkd",
+        "original": null,
+        "number": 1,
+        "cdate": 1666638036805,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666638036805,
+        "tmdate": 1667404570374,
+        "tddate": null,
+        "forum": "XRPcmvMFFe",
+        "replyto": "XRPcmvMFFe",
+        "invitation": "ICLR.cc/2023/Conference/Paper2729/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper suggests an algorithm for offline reinforcement learning based on first applying a noise contrastive objective to estimate a quantity proportional to $p(s_{t+\\Delta t}|s_t,a_t)/p(s_{t+\\Delta t})$, where $\\Delta t$ belongs to a geometric distribution of future times. That is, the ratio of the discounted future state occupancy conditioned on a state-action pair, to the unconditioned discounted future state occupancy, both under a particular policy. This estimate is then used to construct an estimator for action-values by reweighing a dataset of rewards and states generated under the current policy. Building on this idea, the paper also proposes an alternative action value estimator which decomposes the Q-value as a dot product of two vectors. The first vector depends on the policy and reward function and is tracked as a running average. The other vector depends on the state and action and is learned. This decomposition is motivated by the random features approach of Rahimi and Recht (2007). The proposed approaches are evaluated for offline RL mainly in simulated robotics tasks from MetaWorld and found to compare favourably to alternative approaches to offline RL. It is also demonstrated that when additional offline data without rewards is available, it can be use to pretrain $p(s_{t+\\Delta t}|s_t,a_t)/p(s_{t+\\Delta t})$, which in some cases provides a benefit.",
+            "strength_and_weaknesses": "The idea is interesting, and the empirical results appear superficially promising. However, there appear to be a number of technical and clarity issues, and missing details which lead me to lean strongly towards rejecting the paper in its current state.\n\nOn the positive side, the derivation of the method for estimating action values using noise contrastive state representations in equation 12 is interesting and appears correct to me. I'm unsure of its practical utility given the contrastive objective only learns a ratio $p(s_{t+\\Delta t}|s_t,a_t)/p(s_{t+\\Delta t})$ (up to a multiplicative constant). Thus it seems like the method still requires sampling from $p(s_{t+\\Delta t})$. Presumably, the variance would be high in many cases if the state space is large and the unconditioned occupancy measure is very different from the discounted occupancy following a particular state-action pair.\n\nThe description of the method in the introduction is a bit convoluted and, in my opinion, makes it harder rather than easier to understand what follows. In particular, phrasing like \"we will learn an implicit model of the discounted state occupancy measure, which answers the question 'where will the agent be in the time-averaged future?'\" gives the impression that the learned model is of a form that it can take a state action pair as input, and predicted the future state occupancy. Based on my understanding, the contrastive objective only learns a function $f^*(s_t,a_t,s_{t+\\Delta t})$ such that $f^*(s_t,a_t,s_{t+\\Delta t})\\approx p(s_{t+\\Delta t}|s_t,a_t)/p(s_{t+\\Delta t})$ and thus can only really be used to correct samples from $p(s_{t+\\Delta t})$ to samples from $p(s_{t+\\Delta t}|s_t,a_t)$. While this is perhaps clarified in the phrase \"treating it as a classifier rather than a generative model of observations\", I feel like this could have been stated much more straightforwardly.\n\nI am concerned with the correctness of equation 13 and the algorithm that is derived from it. On the left-hand side of the equation is a specific value, while the right-hand side is a random variable. This is in itself perhaps only a minor oversight if we assume the intended meaning is that the expectation of the RHS is equal to the LHS. However, $\\xi(\\pi)$, which is never formally defined, should also be a random variable as it depends on the randomly sampled W and b used in the RFF approximation. As far as I can tell, this is not accounted for as $\\xi(\\pi)$ is approximated using a running average, which presumably averages over many different values of W and b. I believe the RFF estimator in Lemma 1 is only correct if the same W and b are used in both factors so I'm not sure from the description how the algorithm actually works in practice or whether it is correct. Perhaps I overlooked something here, and the authors can explain in more detail how the algorithm works and why it is correct. At the very least I feel a more detailed explanation is required in the paper.\n\nIf I'm reading correctly, Figure 5 shows the log of the $Q_{NCE}$ values compared to the normalized SAC Q-values. Why is one on the log scale and the other isn't? I understood that the $Q_{NCE}$ values themselves should be proportional to the regular Q-values, not their log. Or is the intended meaning that both are on the log scale? Moreover, the claim that both figures show the same topology is not at all clear to me from the picture beyond very basic features around the edges.\n\nAlgorithm 1 is not entirely clear in a number of places. $\\psi^{(j+1)}$ is updated both in line 3 by a gradient, and then in line 6 as an exponential moving average, is this really the intended meaning? I think the issue may be that $\\psi^{(j+1)}$ is overloaded to mean both the exponential moving average and the immediate value. On line 7, what is the boldfaced $\\beta$? I can't see that it has been defined anywhere. It is also stated that $\\phi$ and $\\psi$ are updated using the gradient of $l_{Critic}$ but presumably, this is done somehow using samples in the offline dataset as opposed to explicitly computing the gradient of the full expectation so more details here would be helpful. The same is true for the policy update on line 5.\n\nWhile hyperparameters are provided in the appendix, it would help with the interpretation of the results to describe how they were chosen. i.e. tuned for the proposed approach, kept fixed from prior work. ect.\n\nOther Minor Comments Questions and Suggestions\n==============================================\n* I don't understand footnote 3, I thought the reason for the proportionality is that $e^{f(s_t,a_t,s_{t+\\Delta t})}$ is only equal to the suggested ratio up to a constant. Hence, I don't understand this claim.\n\n* In section 4.2: \"It is possible that multiple optimal critics exist s.t. the multiplicative proportionality constant depends on the action.\" Could the authors clarify this? If it can depend on the action, can it also depend on the state $s_t$? And if it can depend on both of these, what makes it a proportionality \"constant\" at all?\n\n* I can't find it stated anywhere how long training proceeded in the main experiments. I see in Figure 3 that for the pretraining experiments a total of 1 million gradient steps are used, is this the same for all experiments and algorithms?\n\n* Why is the batch size for CVL set to H according to table 3? Does this simply mean it trains on all the transitions in an episode at once? Furthermore, how does H compare to the batch size of 512 used by the other methods? Assuming training is done for a fixed number of gradient updates, this might be important in interpreting the results.\n\n* The left-hand side of lemma 1 in the appendix should be in expectation.\n\n* The first appearance of \"occupancy measure\" in the introduction is a bit jarring since it is never before mentioned that the paper will involve learning an occupancy measure",
+            "clarity,_quality,_novelty_and_reproducibility": "By and large, I did not find the paper to be very clear. Especially, I found the introduction to not help much in understanding the actual contributions of the paper.\n\nI believe there are some novel ideas, though, I am not all that familiar with the full literature on noise contrastive estimation in RL. As far as I know, expressing the Q-value in terms of a noise contrastive estimate of the state and action conditional future occupancy measure does not appear elsewhere. \n\nI feel it would be very hard to reproduce the results from the description of the method in the paper, as many details are missing, however, the authors have stated that they will release the code upon publication.\n\nPlease see above for further details.",
+            "summary_of_the_review": "The idea is superficially interesting, and the empirical results are superficially promising. However, there appear to be a number of technical and clarity issues, and missing details which lead me to lean strongly towards rejecting the paper in its current state. I am particularly concerned about the correctness of Equation 13 and the lack of detail and clarity in the pseudocode of algorithm 1. If the authors can address these issues, I would consider revising my score.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_qU1j"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_qU1j"
+        ]
+    },
+    {
+        "id": "F563Z8P-S89",
+        "original": null,
+        "number": 2,
+        "cdate": 1666675867549,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666675867549,
+        "tmdate": 1669913446182,
+        "tddate": null,
+        "forum": "XRPcmvMFFe",
+        "replyto": "XRPcmvMFFe",
+        "invitation": "ICLR.cc/2023/Conference/Paper2729/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a novel contrastive learning algorithm to estimate the occupancy measure of future states in the offline RL setting. It tackles the well-known issue of extrapolation error in existing algorithms for offline RL, in which rewards outside of the underlying data distribution is not well captured by the model. The contrastive method presented is also able to predict long-term state occupancies without having to rely on an autoregressive model. Additionally, the implicit model captures the full distribution of the occupancy measures rather than just the first moments as seen in prior work.\n",
+            "strength_and_weaknesses": "Stengths:\n- The paper is well motivated, with a detailed background on NCE and its drawbacks (mainly computational), leading to the constrastive loss proposed in Eq.11. The use of the approximate linearized kernel seems novel in its application to this setting.\n- The work presents an interesting line of research for value-based offline RL and seems to work well. Rather than improve offline RL with model-based generative models which require expensive rollouts and single-step compounding errors, this work aims to bypass this with a \"classification\" approach that has worked well in other domains. The empirical validation against other offline benchmarks are convincing.\n\nWeaknesses:\n- Figure 5 is a confusing result to showcase what I think is an important detail of this approach. Is there a quantitative measure of the similarities between distributions, e.g. MMD. I agree that this is difficult given one only cares about the topology and not the actual scores, as the former is enough for Q-estimates to be useful for RL, but I am not convinced by this result as is. \n- I have some concerns about the robustness of this approach with generalization to out of unseen examples, i.e. extrapolation error. In particular, it does not seem compatible with model-based offline RL methods, e.g. COMBO, which aim to mitigate this issue with a learned dynamics model. Could the authors provide any insight into how their C-learning method trades off the \"extrapolation vs interpolation\" as seen in offline RL.\n- Along the lines of the above, it would be interesting to see an ablation study of the method's learned policy with and without the behvior cloning term in Eq. 15",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper seems novel and its technical contributions and validation are high quality. I only have minor concerns about the reproducibility given the many moving parts as well its distinction from several existing paradigms. \n\nClarification:\n- For the experiment in Figure 4, is the no RFF comparison using the full Gaussian kernel (Eq. 12)?",
+            "summary_of_the_review": "Overall, I think this is a nice paper and would of interest to the wider RL community for its theoretical and practical algorithmic contributions. I would lean towards accepting it.\n-------------\nEdit: I thank the authors for their response. Although they addressed my concerns, after discussion, I concur with other reviewers about the issues around the clarity of the technical details. Moreover, I believe there is merit in the work and its improved exposition could make it a strong piece of work. In particular, I encourage the authors to detail how the work differs from and connect back to Eysenbach et al. 2022. \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_4mmq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_4mmq"
+        ]
+    },
+    {
+        "id": "qlB6l0OY2q",
+        "original": null,
+        "number": 3,
+        "cdate": 1666812357200,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666812357200,
+        "tmdate": 1669836123533,
+        "tddate": null,
+        "forum": "XRPcmvMFFe",
+        "replyto": "XRPcmvMFFe",
+        "invitation": "ICLR.cc/2023/Conference/Paper2729/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a contrastive learning based method for offline RL where a implicit dynamic model is learned based on contrastive learning. A contrastive Q-function is calculated based on the implicit dynamic model and the Q-function is then used in policy updates. Numerical experiments on robotic manipulation tasks show improved performance compared with prior methods.",
+            "strength_and_weaknesses": "Strength\n- The paper proposes a new RL algorithm which uses contrastive learning to learn an implicit dynamics model. The implicit model is learned to capture the occupancy measure and is then used to estimate a contrastive Q-function which is proportional to the actual Q-function.\n\n- The contrastive Q-function is verified in the numerical experiments to have a similar shape as the SAC Q-function in the continuous Mountain Car environment.\n\n- In the numerical experiments of MetaWorld benchmarks show good performance of the proposed CVL algorithm.\n\nWeaknesses\n- It is not clear from the paper how positive and negative samples are generated for contrastive learning. In (7), positive and negative samples are both denoted by $\\Delta t$ and the distributions for the samples are not specified. In (11) the negative samples are stated to be generated by a truncated geometric distribution, but there is no description on how the parameter $t'$ is selected. Note that this part is different from Eysenbach et al. (2022) where the positive samples are generated by the occupancy measure and negative samples are random state-action pairs.\n\n- Although occupancy measure does not depend on time, what is learned by contrastive learning seems to be the log likelihood ratio of the $\\Delta t$-ahead state given by the RHS of (8). This log likelihood ratio in the RHS of (8) is not the occupancy measure and it should depends on the time difference $\\Delta t$. However, the proposed contrastive learning method attempts to learn the $\\Delta t$-dependent RHS of (8) by the $\\Delta t$-independent LHS of (8). There seems to be something wrong, or I missunderstand some part of the contrastive learning objective.\n\n- The paper claims to focus on offline RL, but the offline aspect is not clearly discussed in the paper. The estimated contrastive Q-function is said to be the Q-function of the policy $\\pi$, but since it's learned using the offline dataset, it actually won't correspond to the Q-function of the current policy. It is very confusing which the policy $\\pi$ refers to in different parts of the paper.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Some parts of the paper are very vague as mentioned in the weaknesses part. ",
+            "summary_of_the_review": "The proposed new contrastive learning based RL algorithm looks promising, but there are some concerns regarding how the contrastive learning model actually learns.\n\n=== after the rebuttal\nFrom the authors' reply, some of the \"random variables\" like the $\\Delta t$ in the LHS of (8) are actually non-random and are meant to be the averaged values over multiple samples. So those values should be denoted by the corresponding expected values, but which are expected values and which are random variables is very confusing and there are still incorrect steps in the latest version. The paper may contains some good ideas, but a major revision with better clarification seems to be necessary.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_WeYu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2729/Reviewer_WeYu"
+        ]
+    }
+]

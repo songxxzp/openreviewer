@@ -1,0 +1,199 @@
+[
+    {
+        "id": "B4u6bCTAh0M",
+        "original": null,
+        "number": 1,
+        "cdate": 1666232976451,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666232976451,
+        "tmdate": 1670518624316,
+        "tddate": null,
+        "forum": "ylMq8MBnAp",
+        "replyto": "ylMq8MBnAp",
+        "invitation": "ICLR.cc/2023/Conference/Paper408/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The main idea in this paper is to incorporate structural priors on the domains/distributions in an out-of-distribution (OOD) generalization setting.  Given a graphical prior over the set of domains, the authors propose a group-DRO-like optimization problem which incorporates this prior by enforcing that the mixture distribution $q$ over groups must be \"close\" (in some sense) to the prior distribution.  The authors argue that the algorithm they propose for solving this problem enjoys a favorable convergence rate to a saddle point of the minimax formulation.  They also provide experiments concerning classification, regression, and semantic segmentation, showing strong empirical performance vis-a-vis several standard domain generalization baselines. \n\nThe meat of the algorithmic contribution involves inferring the structure amongst the domains and imposing that structure on the groupDRO objective.  To this end, the authors consider settings where the structure comprises a graph (G,E), which describes the relationships within the set of domains G by means of the edge weights E.  If the graph structure is known a priori, the authors compute a particular statistic (namely, a distribution over domains/nodes) on the graph, which is used in the robust optimization framework.  Otherwise, if the graph structure is unknown, the authors argue that the relevant statistics can be inferred from data, although a detailed description of *how* this graph is inferred is lacking.  The remaining algorithmic portions of the paper, including the primal-dual-style optimization scheme and the convergence analysis, use standard tools and do not constitute a novel technical innovation.\n\n",
+            "strength_and_weaknesses": "### Strengths\n\n**Main idea.**  If this paper is to be accepted, it will be due to the motivation idea, which is that domain generalization is impossible unless some sort of structure is placed on the space of domains.  The argument laid out in the paper -- which is that one must construct a reasonable uncertainty set for the minimax formulation -- is convincing.  Until now, it has been unclear how to define this uncertainty set to engender meaningful notions of OOD generalization.  To this end, imposing structural priors over these domains seems worthwhile, especially when this structure is available a priori.  Momentarily playing devil's advocate, I would suggest that the assumption that the uncertainty set should contain any mixture of training distributions is somewhat strong.  However, on the toy datasets considered at the beginning of the experiments, I would tend to agree that the assumption is more or less realistic.\n\n**Natural optimization-based formulation.**  Grounding this formulation in the minimax formulation of groupDRO also seems natural, as this setting naturally lends itself to restricting the distributions that can be obtained over the training groups.  Furthermore, the analysis from steps (3)-(5) seems natural, as the primal-dual style scheme has been shown to be effective in other domain generalization problems (as noted by the authors).\n\n**Strong empirical results.**  On the datasets that the authors choose, the proposed algorithm yields strong results.  This indicates that structure can help to improve OOD performance.  However, I am concerned that there is insufficient detail regarding reproducibility, which -- if experiments are to be a motivating reason for acceptance -- must be added to the paper (see my comments below).\n\n### Weaknesses\n\n**Failing to satisfy the stated contributions.**  One of the aspects I look for when reviewing is whether or not a paper accomplishes the contributions it lists.  In this regard, I believe that this paper is not successful.  In the last section of the intro, the authors say that one of their contributions is the following:\n\n> \"Topology learning methods that are orders of magnitude faster than previous methods to uncover distributional structure from massively collected datasets.\"\n\nHowever, the authors do not show -- in the main text or appendix -- any comparison regarding the speed/efficiency of their method.  They allude to the fact that complexity results exist for a particular distance metric (c.f. (Tong et al., 2021) in the paper), but they never (a) explain how these results relate to the method that they propose and (b) they never demonstrate that this holds empirically.  In fact, there is no comparison to any \"previous methods\" in terms of learning the distribution structure the authors mention, and so the claim quoted above seems to be incorrect as written.\n\nWRT the other contributions, some of them hold, while others are arguable.  The theoretical analysis seems to make a unilateral assumption that the objective R is convex-concave, which as I argue elsewhere in this review, may not hold.  The claims to \"explainability\" do not seem to be discussed in the experiments, and so it's hard to validate that this claim holds as well.\n\n**Insufficient details for learning the topology.**  Simply put, there are nowhere near enough details given to be able to reproduce the topology learning procedure outlined in Section 3.1.  To begin, the authors do not define what an \"affinity matrix\" is, or how it is constructed.  As we are presumably computing K on the space of distributions, it's somewhat unclear (at least to me) how it should be computed.  And while some readers will know what an affinity matrix is, others will not.  It's worth explaining in detail here so as to not lose readers.\n\nIt's unclear why the notion that \"[ERM] captures spurious correlations which preserve group identities\" is important in this context.  What do spurious correlations have to do with the problem described thus far?  Does this setting not work for arbitrary distribution shifts?  And moreover, if ERM pretraining is to be performed, how is model selection performed?  Is the pretraining implemented in the same style as the implementation of e.g. IRM in DomainBed?  This should be discussed in the appendix, as the reason for using ERM pretraining is not fundamentally clear.  Moreover, to provide a fair comparison, one would expect the authors to have allowed groupDRO to also use ERM pretraining.  However, this does not seem to be the case.\n\nThere are almost no details given on how the Markov diffusion operator P is inferred from K.  At the very least, the authors should devote an appendix to discuss this.  Otherwise, there is no way to reproduce the method.  There simply aren't enough details for anyone to reasonably reproduce this work. And what is $P^t$?  Is t an exponent, or a time index?  The same questions could be asked of $\\mu^t$.  And how do these quantities factor into the algorithm? -- Algorithm 1 does not include them.  \n\nThere should also be further discussion of how one moves from $\\mathcal{G}$ -- the graph -- to $p$ -- the structural prior.  There are a few lines on this in the appendix, but as the authors list this as a main contribution, it should be discussed in much more detail in the main text.\n\nFurther questions/comments regarding learning the topology:  What does it mean to yield \"OOD resilience?\"  In what way are these graphical priors consistent with \"human knowledge\" or \"scientific plausibility?\"  The authors offer no evidence to back up either of these claims, meaning that these claims of contribution are not verifiable.  And why is the Earth Mover's distance the relevant metric here?\n\n**Convergence analysis.**  The authors seem to assume (unless I've misread their proofs) that $R(f,q)$ is convex-concave.  This seems to not hold, especially as this depends on the distance metric $\\mathcal{D}$.  What if $\\mathcal{D}$ is not convex?  Then the inner problem seems to have no hope of being concave.  The fact that the analysis relies on this choice of distance metric is not discussed in the paper, and moreover I do not see where the authors mention which distance metric they actually use in the experiments.\n\nAnother comment on the convergence analysis is that it does not inform the practical aspects of the algorithm in any way.  The analysis follows from standard tools which are well-known in the literature, and it's not clear what insight this theory brings to the paper. \n\n**Notation.**  I would also argue that the notation in this section -- and more generally, in several parts of the paper -- is unnecessarily confusing.  The authors seem to use the terms \"entities,\" \"groups,\" \"domains,\" and \"nodes\" to refer to the same thing -- the domains in the domain generalization problem.  The authors do not define $\\mathcal{D}^{n_k}$ here.  What is $k$ indexing? The domains?  And what is $\\sigma_{k,i}$ vis-a-vis $\\sigma$?  Is $\\sigma$ a matrix?  And note that $\\mathcal{D}$ is overloaded here.  First it is used as a distance metric in (3), and then it is used as a distribution/dataset in Section 4.2.  $d$ is used for the distance in the remainder of the paper, which is confusing. \n\n**Experiments.**  Though the paper reports strong empirical results, there are no details about how the algorithms were tuned.  How many hyperparameter seeds were used?  Was this experiment repeated across multiple trials?  These details are crucial for the paper.\n\nFurthermore, one fundamental drawback is that the authors used somewhat non-standard datasets, in the sense that these datasets are not commonly used in domain generalization papers.  This is fine in general, but the fact that no datasets from e.g. WILDS or DomainBed are used means that as a reader, we have no basis for comparing these results to past work.  The reason that benchmarks like these exist is to provide a metric for measuring progress.  And so by choosing not to use these datasets, it's more difficult for the reader to understand the contribution of this work.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity.**  The writing is solid, but as noted above, there is insufficient detail to reproduce the algorithm or the experiments.\n\n**Quality.**  I believe that the ideas here are of high quality (as noted above).  However, the quality of the explanation of the main algorithm and of the experiments is lacking.\n\n**Novelty.**  Again, the main idea of incorporating structural priors is novel.  The formulation is not as novel -- it merges the formulation of GroupDRO with the primal-dual scheme used in Model-Based Domain Generalization, as noted by the authors.  The convergence is not novel; the results follow from standard tools.\n\n**Reproducibility.** As noted above, this paper is not reproducible.  Many more details are needed.  This is a major drawback of this paper.",
+            "summary_of_the_review": "I thought the main idea here was novel.  I also note that the paper reports strong empirical results, and that the formulation is principled and follows from several well-known results in domain generalization.\n\nOn the negative side, the paper is somewhat hard to understand, especially around Section 3.  There are not enough details given to understand or reproduce the topology learning procedure.  The convergence analysis seems to make assumptions that are violated by the formulation, and the analysis does not seem to have any bearing on the practice of domain generalization.  The contributions listed by the authors do not seem to be satisfied.  The experiments also seem to be not reproducible as far as I can tell.\n\nSo to summarize, while this paper starts from a novel idea, the execution is lacking.  Reproducibility is a major concern.  This paper could be significantly improved by adding more details about how the relevant structure is learned, and why the authors' method in particular is the right way of doing it.  All of this being said, I feel that in its current form, the paper is not yet ready for publication.  However, I welcome a discussion with the authors.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_bQwH"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_bQwH"
+        ]
+    },
+    {
+        "id": "qg41dIner1",
+        "original": null,
+        "number": 2,
+        "cdate": 1666268429269,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666268429269,
+        "tmdate": 1666268429269,
+        "tddate": null,
+        "forum": "ylMq8MBnAp",
+        "replyto": "ylMq8MBnAp",
+        "invitation": "ICLR.cc/2023/Conference/Paper408/-/Official_Review",
+        "content": {
+            "confidence": "1: You are unable to assess this paper and have alerted the ACs to seek an opinion from different reviewers.",
+            "summary_of_the_paper": "--",
+            "strength_and_weaknesses": "--",
+            "clarity,_quality,_novelty_and_reproducibility": "--",
+            "summary_of_the_review": "--",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_zKvZ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_zKvZ"
+        ]
+    },
+    {
+        "id": "Euid9tFIKif",
+        "original": null,
+        "number": 3,
+        "cdate": 1666335622566,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666335622566,
+        "tmdate": 1668564996780,
+        "tddate": null,
+        "forum": "ylMq8MBnAp",
+        "replyto": "ylMq8MBnAp",
+        "invitation": "ICLR.cc/2023/Conference/Paper408/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies the distributionally robust optimization problem by leveraging topological knowledge. Specifically, two types of topologies are considered, namely physical-based topology and data-driven topology. The physical-based topology is based on neighborhood information, and the data-driven topology is based on the affinity matrix of the data. By constructing the uncertainty set based on one of the considered topologies, the proposed TRO method is shown to be superior to many popular methods.",
+            "strength_and_weaknesses": "Strength:\n* As traditional DRO methods are only based on the loss values, utilization of the topological knowledge can further improve the uncertainty set selection, thus can improve the learning performance.\n* The experiments are pretty sufficient, both quantitative and qualitative evidence is provided to support the proposed TRO. Moreover, three tasks including classification, regression, and semantic segmentation are investigated to show the effectiveness of TRO.\n* The proposed TRO is theoretically guaranteed.\n\nWeakness:\n* The writing of this paper can be further polished. There are many unclear sentences and unprofessional writing styles. For example, what is the \u201c$L^1$ distance between two groups\u201d? Since $\\ell_2$ is used in this paper, is it supposed to be \u201c$\\ell_1$ distance\u201d? Moreover, it is suggested to explain the notations $q_e$ and $P_e$ to avoid misunderstanding.\n* The three steps of data-driven topology are not clearly presented and it is quite difficult to understand for unfamiliar readers. These three steps seem to be isolated from each other, I cannot see any relevance between them and how they are conducted to produce the topology. Could you please give a more detailed explanation?\n* The constraint in Eq. (3) seems to be erroneously motivated. The distance constraint between $\\mathbf{p}$ and $\\mathbf{q}$ can only make sure that they are numerically close to each other, instead of having a similar topology structure. Intuitively, as $\\mathbf{p}$ tries to find the most influential groups, and $\\mathbf{q}$ focus on finding the groups with large losses, so the optimal $\\mathbf{q}$ is the groups that have both large loss and influence. Is this a correct interpretation?\n* More importantly, the proposed method is a two-stage learning process. The computational cost of learning the topology is not provided.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is moderate in clarity and quality. The proposed topology-based DRO is novel enough. Implementation details and codes are provided to ensure reproducibility.",
+            "summary_of_the_review": "I have carefully read the methodology and experiments. This paper managed to make some contributions to DRO, however, there are still some concerns (see weaknesses). If the authors can address my concerns, I will consider raising my score.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No ethic concerns appear.",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_vFEm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_vFEm"
+        ]
+    },
+    {
+        "id": "Exns8KcqN4",
+        "original": null,
+        "number": 4,
+        "cdate": 1666581387400,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666581387400,
+        "tmdate": 1666581930043,
+        "tddate": null,
+        "forum": "ylMq8MBnAp",
+        "replyto": "ylMq8MBnAp",
+        "invitation": "ICLR.cc/2023/Conference/Paper408/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "Compared to the standard distributionally robust optimization (DRO, Namkoong & Duchi 2016), this paper constructs a new uncertainty set. The uncertainty set of DRO is an f-divergence ball whose center is the uniform distribution of all training samples. The new uncertainty set is a distributional metric ball whose center is the group centrality of the graph constructed by training data. This graph-based uncertainty set captures the correlation of samples. Then solving the corresponding problem can utilize the off-the-shelf method. The theoretical analyses are similar to the existing results in the DRO and ML communities. When the graph captures the underlying relation of training data, the proposed method shows promising results. ",
+            "strength_and_weaknesses": "* **Strength**\n\n  - Learning the group centrality to construct the uncertainty set explores the relationship of the training data.\n\n\n* **Weakness**\n\n  - The novelty is limited to combining the existing methods (graph construction, group centrality, optimization method & convergence rate, generalization bound).\n\n  - The definition of uncertainty set is incorrect.  ",
+            "clarity,_quality,_novelty_and_reproducibility": "* **Clarity** \n  - This paper is well-written and easy to follow.\n\n* **Quality**\n  - The contributions are all over-claimed.\n\n* **Novelty**\n  - The novelty is limited.\n\n* **Reproducibility**\n  -  The study reported in sufficient detail to allow for its reproducibility.\n\n",
+            "summary_of_the_review": "This paper introduces the group centrality to construct the uncertainty set. This method is applicable to distributionally robust optimization for graph data. However, the novelty is limited to combining the existing methods (graph construction, group centrality, optimization method & convergence rate, generalization bound). Consequently, it does not reach the requirement of ICLR. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "None.",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_BJCq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_BJCq"
+        ]
+    },
+    {
+        "id": "BHQJ_5UTvu",
+        "original": null,
+        "number": 5,
+        "cdate": 1666752318291,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666752318291,
+        "tmdate": 1666752318291,
+        "tddate": null,
+        "forum": "ylMq8MBnAp",
+        "replyto": "ylMq8MBnAp",
+        "invitation": "ICLR.cc/2023/Conference/Paper408/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes an algorithm for improving out-of-distribution generalization performance by modeling the topology structures of distributions. Specifically, the algorithm first constructs a graph based on either manually defined priors, e.g., spacial relationships, or learning it from the data. This topology graph serves as a topological prior. Then, it remains to solve a minimax problem under the constraint induced by the topological prior. In contrast to the conventional DRO approach, the proposed algorithm utilizes the topological structure and hence reduces the search space. This can exclude those implausible distributions, reduce the pessimism and hence improve the OOD generalization. The authors provide theoretical guarantees for the convergence rate of the algorithm under both convex and nonconvex loss functions. In addition, the experimental results demonstrate the effectiveness of the algorithm.\n",
+            "strength_and_weaknesses": "Strength:\n- I think the idea of incorporating the topological prior in this paper is novel and very interesting. Especially, most of the prior work in dealing with distribution shift will cast the problem as a minimax problem, which is overly pessimistic. Though TRO also adopts such a method, it constrains the search space of maximization with the topological prior. This can (hopefully) exclude those implausible distributions, and further improves the OOD generation performance. \n\n- The experiments conducted in this paper are related to very important real-world problems, e.g., flood prediction. So, I believe the algorithm in this paper can potentially have some real-world impact on improving the well-being of humans.\n\n- TRO also has theoretical guarantees on the convergence rate under both convex and non-convex losses, though the derivations are straightforward from the existing results and the technical contributions are limited. \n\n\nWeakness/Questions:\n- The proposed framework, TRO, seems to only work for data distributions where they can be categorized into a bunch of discrete groups. It's unclear to me whether many problems satisfy this assumption. It would be great if the authors can provide more discussions. \n\n- For those groups that we don't have any data, how can we infer the topological relationship between them with the groups with data? Also, how do we know the number of groups, if it's not given?\n\n- How do you choose $\\lambda$ in your experiments? If you use a validation set, how do you construct this validation set; and shouldn't it also suffer from distribution shift? ",
+            "clarity,_quality,_novelty_and_reproducibility": "Yes, it's clear, and the algorithm is novel. Code was provided, but I did not run it.",
+            "summary_of_the_review": "This paper propose a novel algorithm for utilizing the topological structure to improve the OOD generalization performance. I don't have critical concerns about this paper, except for some minor questions/weakness. Hence, I would recommend for an acceptance. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_uihf"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper408/Reviewer_uihf"
+        ]
+    }
+]

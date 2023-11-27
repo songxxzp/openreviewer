@@ -1,0 +1,159 @@
+[
+    {
+        "id": "9sls-N7FYq",
+        "original": null,
+        "number": 1,
+        "cdate": 1666470860994,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666470860994,
+        "tmdate": 1666470860994,
+        "tddate": null,
+        "forum": "At0BdxvACds",
+        "replyto": "At0BdxvACds",
+        "invitation": "ICLR.cc/2023/Conference/Paper666/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents a curiosity driven unsupervised data collection method for collecting task-agnostic datasets for offline reinforcement learning. The approach proposes a learnable state reachability module that provides an intrinsic reward for exploration by combining a state-action entropy bonus with a forward dynamics prediction error based reward; the \"horizon\" or \"step\" of the forward dynamics prediction is adapted over time to enable the method to focus on more challenging dynamics over time which serves to better condition the learned representations and aid exploration. Additionally, the learned reachability module provides an importance weight based on the estimated reachability; this is used to weight both the actor and critic updates and enables the agent to focus on less-explored parts of the state space. The approach is used together with DDPG for collecting data, the resulting dataset is relabeled and used for offline RL using TD3. The performance of these learned policies are compared with several baselines and ablations on three domains with four tasks each; results show significant improvement compared to baselines.",
+            "strength_and_weaknesses": "Strengths:\n1. The approach is well motivated and different parts of the proposed approach are analyzed reasonably well in the ablation experiments. Particularly, the adaptation of the environment step and its application to data-collection for offline RL is quite interesting and seems to aid downstream performance.\n2. The evaluation is thorough (albeit on a simple set of tasks) and the learned policies show significant improvements in performance compared to prior work. Ablations clearly demonstrate the importance of the different choices made. \n\nWeaknesses:\n1. The approach is a bit complex and has several moving parts. In particular it is not clear if the inverse networks are necessary as no explicit ablation is done removing them, and the intrinsic bonus and importance weights do not directly depend on these predictions.\n2. While most results show downstream agent performance after offline RL using TD3, it would have been useful to see some quantification of the (downstream task) reward within the collected datasets. This can be a good way to directly compare how useful the dataset is for each of the downstream tasks; plotting this against data collection progress on the x-axis can also help quantify if the change in environment step leads to increasingly more rewarding states being seen.\n3. The adaptation of the environment step is a key novelty in the proposed approach and while it is ablated against different schemes (and different intrinsic rewards) it would be helpful if results are provided for a sweep over hypers for the specific formulation chosen in the paper (specifically, the start/end values of k, and threshold C_w and C_k). \n4. The intrinsic reward weights \\alpha and \\beta for the Jaco task are orders of magnitude different from the others, is there a specific reason for this choice?",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: The paper is well written and the approach is well explained. Fig. 1 in particular is very helpful to understand the overall approach. \n\nQuality & Novelty: The presented approach is novel in its application of environment step adaptation for generating curiosity based rewards and importance weighting for collecting datasets for offline RL. The approach is well evaluated and the ablations are well done; the results are also promising.\n\nReproducibility: Details regarding the different network architectures and hypers are provided which can make it easy to reproduce the results but since the approach has several moving parts it can be tricky to reproduce. ",
+            "summary_of_the_review": "Overall, this approach presents an interesting application of curiosity driven exploration for data collection for offline RL. The results are promising and the evaluation is well done. I would suggest a weak accept.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No concerns.",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_S2Ud"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_S2Ud"
+        ]
+    },
+    {
+        "id": "dIJO0i9Q8L",
+        "original": null,
+        "number": 2,
+        "cdate": 1666653556223,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666653556223,
+        "tmdate": 1666653556223,
+        "tddate": null,
+        "forum": "At0BdxvACds",
+        "replyto": "At0BdxvACds",
+        "invitation": "ICLR.cc/2023/Conference/Paper666/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies the problem of unsupervised exploration in RL, such that the resulting dataset is good for downstream learning (specifically offline RL). The majority of the technical contribution of the paper is in a method for unsupervised exploration. \n\nThe proposed method has quite a few moving parts. \n- First, it learns a state and action representation with a contrastive dynamics modeling loss, where conditioned on timesteps k, a model predicts the state reached k steps into the future after applying k actions. It trains such that the predicted state is closer to the embedding of the true s_{t+k} than negatives. \n- It also trains inverse dynamics models and temporal distance predictors from these low-dimensional embeddings. \n- It simultaneously estimates the particle-based entropy of the state-action distribution using K nearest neighbors distance.\n- The intrinsic exploration reward is formulated as a weighted sum of the particle-based entropy, and the prediction error of the dynamics models (forward, inverse, temporal distance)\n- Finally, when training DDPG with intrinsic reward, during policy optimisation the Q values are weighted inversely proportionally to the \"reachability\" as measured by the k-step dynamics model, up weighting the reward on less reachable states.\nThe method also has a curriculum which updates the choice of k over the course of training to be further away.\n\nIn experiments, they run the proposed approach and other ablations and baseline exploration algorithms for 1M steps, then train offline RL agents on the collected data and evaluate their performance. The proposed approach appears to improve over methods like ICM and APT.",
+            "strength_and_weaknesses": "*Strengths*\n- How to design unsupervised exploration/data collection methods to facilitate offline RL on that data is an important problem. \n- The proposed method does seem to produce better datasets for offline RL on Mujoco tasks than the baselines.\n\n*Weaknesses*\n\nClarity/Method: The main flaw in the paper is the clarity of presentation. The paper proposes a complicated method with many moving parts but fails to motivate or clearly explain them. \n- A large part of the introduction and abstract proposes the \"k-step\" exploration as the key advancement proposed in this work. However it is not clear from much of the paper what exactly is meant by this (e.g. action repeats for k steps, planning length k sequences at a time, extending the horizon of each episode, etc.) Ultimately, it seems like the only impact the choice of k has is in choosing how many steps into the future the dynamics model should predict. The paper could do a much better job of clearly explaining this from the beginning, and probably should choose some different term than \"environment step\". \n- Its also not very convincing that the scheme for adapting this environment step is necessary or effective. The paper proposes to start the value of k at 3 and gradually increase it to 6, with some thresholds on the intrinsic reward to determine when to increase it. This feels a bit handcrafted, and looking at FIgure 4 it doesn't seem convincingly better than the simple uniform or gaussian baseline. \n- The dynamics model takes as input a sequence of k actions correct? The notation seems to suggest its just one action, but predicting s_{t+k} seems ill posed without a sequence of k actions.\n- Overall the method seems to be taking 3 established types of exploration objectives (reachability, entropy, and model error), and combining them by summing the entropy and model error rewards, then scaling the Q function loss by the reachability reward. This way of combining things feels a bit arbitrary. Why is this the right way to combine these parts of the objective? And why should all these be combined, it seems there could be redundancy between then? The paper should better motivate these design choices. \n- Figure 1 is very difficult to parse. \n\nExperiments:\n- Are there error bars for figure 3?\n- I additionally found the ablation naming quite confusing. I would suggest renaming them based on what exactly is being removed from the method in each. \n- Overall the experiments seem to show that the proposed method outperforms the baselines and ablations, though I'm not 100% sold on these experiments due to (1) the ablations seem incomplete (don't include removing each of the 3 parts of the exploration reward) and (2) the minimal gains/no error bars in the ablation experiments.",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity needs improvement, see above. ",
+            "summary_of_the_review": "Overall, the paper proposes an interesting exploration algorithm. However the method has many moving parts that are not clearly explained or motivated, and overall the presentation of the paper and clarity of the writing needs significant improvement. The method itself seems to work decently, but its a bit hard to evaluate the experiments/ablations with the current presentation. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_LA4m"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_LA4m"
+        ]
+    },
+    {
+        "id": "k8nQ7WYbT5",
+        "original": null,
+        "number": 3,
+        "cdate": 1666736170780,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666736170780,
+        "tmdate": 1666736170780,
+        "tddate": null,
+        "forum": "At0BdxvACds",
+        "replyto": "At0BdxvACds",
+        "invitation": "ICLR.cc/2023/Conference/Paper666/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper tackles the problem of dataset collection in offline RL, while most of the prior work focuses on building more efficient algorithms given a fixed dataset. To be specific, the paper proposes curiosity-driven unsupervised data collection, that helps the agent to collect data in a self-supervised fashion. The paper proposes to collect task-agnostic data independently, then label the dataset with task-specific rewards. The paper conducts experiments on the DeepMind control suite including 12 different downstream tasks, and the proposed method achieves good performance. ",
+            "strength_and_weaknesses": "Strength: \n1. The paper tackles an important problem of data collection in the offline RL setting. \n2. The proposed self-supervised algorithm is novel and demonstrates good downstream performance. \n3. The paper is clearly written. \n4. The experiments conducted are solid. \n\nWeakness: \n1. My major concern is about how different offline-RL algorithms can benefit from data collection. The paper uses TD3 as the evaluation protocol algorithm. However, I think evaluating at least some more offline RL algorithms and comparing their performance will make the paper more convincing. \n2. Another concern is that I feel the ablation in Table. 4 is not super conclusive. I especially feel the performance difference for different ablations is small. I am not sure what conclusion we can draw from the table, about the effectiveness of each component. \n3. I am wondering why the authors don't report any results in some D4RL benchmarks (e.g., some mujoco tasks, ant maze tasks or robotics tasks). \n4. The Mixed Intrinsic Reward module is not super novel, given that the entropy and inverse dynamics have been well-known. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written.",
+            "summary_of_the_review": "Please see the strengths and weaknesses above. I am overall positive about this paper. But I hope the authors can address the points I raised above.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_F8ph"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_F8ph"
+        ]
+    },
+    {
+        "id": "GyxXzQkabj",
+        "original": null,
+        "number": 4,
+        "cdate": 1666773242688,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666773242688,
+        "tmdate": 1666795430810,
+        "tddate": null,
+        "forum": "At0BdxvACds",
+        "replyto": "At0BdxvACds",
+        "invitation": "ICLR.cc/2023/Conference/Paper666/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes an approach for self-supervised learning for agents to collect data, which is then relabelled with task reward and used for downstream tasks with offline RL. The approach estimates reachability of states using a contrastive loss where predicted state features and corresponding ground truth features comprise positive pairs (negatives are randomly sampled from the batch). Transitions with higher reachability estimates are prioritized during offline RL training. The intrinsic reward consists of particle-based kNN entropy and prediction error. The paper includes experiments on Walker, Quadruped and Jaco arm-reaching. ",
+            "strength_and_weaknesses": "\nWeaknesses \n\n1. Reachability objective justification - The paper motivates its approach by emphasizing the importance of reachability of future states for offline RL, and proceeds to provide an estimate for this using a contrastive loss where predicted features and corresponding ground truth features are positive pairs, with negatives randomly sampled. There is no explanation for this particular choice beyond the intuition that 'each future state should be most reachable from its own current state'. If there is a lot of overlap of states across trajectories, this statement will likely not hold. Further, even if the states are different, they might need to have similar representations for control (eg: objects might be in similar positions). \n\n2. Model disagreement missing - The paper uses ICM as the comparison for knowledge-based exploration. However, ensemble disagreement of predictive models has shown better results [1,2,3]. This approach is prospective as opposed to retrospective, since it does not rely on prediction error but rather on the variance of the prediction across models, and can solve some problems that prediction error based methods struggle on like the noisy-TV problem. The paper does not compare to this, and also does not discuss why they use prediction error in the intrinsic reward term instead of this. Furthermore, related to 1), an ensemble of predictive models provides an estimate of reachability of states (states on trajectories with lower disagreement are likely to be more reachable). \n\n3. Familiar Intrinsic reward formulation - The paper defines the intrinsic reward to be the sum of terms introduced in previous work. The KNN-based particle entropy of state [4] is modified to include state and action representations, but maximizing entropy of action for exploration has also been previously explored [5]. The other part of the intrinsic reward is just the prediction error of the predicted state feature [6]. These have been studied and examined independently in the past, and the paper does not contribute any new insight into how agents should define rewards for themselves. \n\n4. Experiments/Contribution questions - The paper does include extensive comparisons to a set of prior approaches. However what part of the proposed method leads to the stated benefit? Is it mostly because of the combination of prediction error and particle estimation? Or is it because of the reachability estimate used in offline learning? If it's the latter, how does using better offline RL algorithms such as AWAC/IQL compare (since they also reweight transitions)? If the main contribution is a reweighting scheme for offline RL, then can that be studied independently of the self-supervised exploration setting?\n\nStrengths \n\n1. The paper considers an important problem - that of agents that can direct themselves to collect rich data. Agents that can autonomously act in this manner can keep collecting large datasets, since the bottleneck of task/reward specification is removed. \n\n\n\n\n[1] - Pathak, Deepak, Dhiraj Gandhi, and Abhinav Gupta. \"Self-supervised exploration via disagreement.\n[2] - Sekar, Ramanan, et al. \"Planning to explore via self-supervised world models.\" \n[3] - Mendonca, Russell, et al. \"Discovering and achieving goals via world models.\"\n[4] Liu, Hao, and Pieter Abbeel. \"Behavior from the void: Unsupervised active pre-training.\n[5] Haarnoja, Tuomas, et al. \"Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor.\"\n[6] Pathak, Deepak, et al. \"Curiosity-driven exploration by self-supervised prediction.\"\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity & Quality \n\n1. The contributions of the paper are explained clearly, including a clear algorithm section that describes all the pieces of the overall method. The paper provides sufficient background material, and is easy to follow. The technical portion seems to be fine (though some choices are not justified, as elaborated on above). \n\nOriginality \n\n1. As described above, the intrinsic reward used essentially combines two common approaches in prior work (KNN-state entropy and prediction error). Using reachability of states to reweight transitions for offline Q-learning seems to be different, but if this is the main contribution it hasn't been analyzed using comparison to other offline RL methods / other approaches for estimating reachability (eg - using model disagreement ). ",
+            "summary_of_the_review": "While this paper seeks to tackle an important problem, there are key issues that prevent me from recommending acceptance, including justification of the reachability metric, missing discussion/comparison of model disagreement (for both intrinsic reward and reachability), missing analysis of alternate schemes for offline RL and how they compare to the reweighting approach proposed (given the familiar intrinsic reward that combines known terms). ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_bF1X"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper666/Reviewer_bF1X"
+        ]
+    }
+]

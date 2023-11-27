@@ -1,0 +1,158 @@
+[
+    {
+        "id": "_DbCKvaW0V",
+        "original": null,
+        "number": 1,
+        "cdate": 1666511898215,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666511898215,
+        "tmdate": 1667027383542,
+        "tddate": null,
+        "forum": "zWudXc9343",
+        "replyto": "zWudXc9343",
+        "invitation": "ICLR.cc/2023/Conference/Paper5166/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposes a Transformer-based approach MaskCLIP to address open-vocabulary panoptic segmentation. It uses the existing Mask2former to propose Masks of objects/stuff, and label these detected Mask regions by sending them into CLIP. Instead of sending these mask regions one by one, it aims to modify the image-encoder (ViT in this paper) of CLIP to deal with the mask regions of the same image in parallel. To achieve this, Mask Class Tokens that are copied from class token are proposed to represent corresponding mask regions, the masks proposed by mask2former is used to mask the attention matrix in cross-attention, by which each mask class token focuses on a specific mask region. Then the paper proposes a Relative Mask Attention to 1) update the attention matrix of the mask class token and 2) refine segmentation masks. It achieves good performance on open-vocabulary panoptic/semantic segmentation.",
+            "strength_and_weaknesses": "**Strength**:\n\n1) The idea of Mask Class Tokens is interesting and useful. Previous works usually crop the detected mask regions and then send the cropped regions to CLIP image encoder, which means the CLIP image encoder is called many times and processes the patches of the same image many times. With Mask Class Tokens, the CLIP could deal with the mask regions of the same image in parallel in a single forward. And experiments prove its efficiency.\n2) The experiments show the proposed MaskCLIP achieves good results on open-vocabulary panoptic/semantic segmentation.\n\n**Weaknesses**:\n\n1) The paper is not well presented. It is a little hard to understand the ideas, especially Eq. (1). A detailed explanation of the four parts in Eq. (1) may help the reader to better understand.\n2) Some key details are missing. What if $f_2$ in Figure 2? The text says \"$f_1$ and $f_2$ are two downsampling networks...sharing the same architecture\", does this mean $f_1$ is ViT also?\n3) If yes to the above question, so the image-encoder of CLIP is called #mask times, and the forward process time should be the same as sending mask regions to CLIP one by one (or in a batch), which is not efficient. \n4) Could you please provide the inference speed, like GFLOP, of w/ and w/o RMA, w/ and w/o Mask Class Tokens?\n5) The proposed approach is **not real open-vocabulary**. The claimed \"open-vocabulary\" is based on Mask2former training data, so the mask2former can only propose masks like in training data. For example, the is class **Person** in COCO but no class **Leg**, so is the target-of-the-interest is **Leg**, the mask2former cannot provide a mask for **Leg**, so your approach should also fail in labeling **Leg**.\n6) Your approach is actually unified to semantic/instance/panoptic segmentation, why emphasize panoptic in the title and abstract?\n7) **[Training data]** Do you use all the categories of COCO panoptic segmentation? Do you set some of them as novel categories?",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity**: a little weak, some details are missing and contributions are not well presented.\n\n**Quality**: this paper is good work, at least the Mask Class Tokens. Not sure about the Relative Mask Attention (RMA), I hope the authors could address my concerns on RMA.\n\n**Novelty**: the idea of Mask Class Tokens is novel.\n\n**Reproducibility**: it's easy to reproduce the idea of mask class tokens.",
+            "summary_of_the_review": "Overall, the proposed Mask Class Token is interesting and useful, while the proposed Relative Mask Attention missing essential details and remains some concerns. The performance on open-vocabulary panoptic/semantic segmentation is good. I give a borderline score and am willing to raise the score if authors demonstrate more significance of the RAM.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_MZxt"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_MZxt"
+        ]
+    },
+    {
+        "id": "wHC2H06vaqS",
+        "original": null,
+        "number": 2,
+        "cdate": 1666656923995,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666656923995,
+        "tmdate": 1666656923995,
+        "tddate": null,
+        "forum": "zWudXc9343",
+        "replyto": "zWudXc9343",
+        "invitation": "ICLR.cc/2023/Conference/Paper5166/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper works on open-vocabulary panoptic segmentation using pretrained CLIP weights. The authors first propose a new panoptic segmentation framework that first do class-agnostic mask proposal using an existing frameworks (MaskRCNN and Mask2Former), and then use the predicted mask to interact with the CLIP visual backbone via a relative mask attention module (RMA). The final classification prediction (for any classes) is the dot-product between the refined mask features and the fixed CLIP language embedding. Experiments show the proposed framework outperform existing semantic segmentation methods on ADE20K and Pascal with a good margin (Table. 3), and the proposed mask attention module played an important role in the improvements.",
+            "strength_and_weaknesses": "Strength\n\n+ The task of open-vocabulary segmentation is important, and the authors proposed a reasonable (and unified) framework for open-vocabulary segmentation panoptic, semantic, and instance.\n\n+ I appreciate that the evaluation is done in an cross-dataset setting, which can justify the generalization ability of the proposed framework.\n\n+ The proposed mask attention module gives a good improvements in Table 2, Table 3, and Table 4.\n\n+ The overall framework outperforms strong state-of-the-art semantic segmentation methods including LSeg, OpenSeg, and ALIGN as shown in Table 3.\n\nWeaknesses\n\n- While the paper aims at open-vocabulary segmentation, I feel the idea of using a mask attention module is not directly related to open-vocabulary --- it seems that this module could also improve standard segmentation, with the use of the CLIP visual encoder as an feature refiner. Please correct me if I am wrong, otherwise it would be better to also provide experiments on close-vocabulary segmentation.\n\n- The overall framework looks computationally expensive. It adds an additional ViT-L backbone from CLIP visual encoder, after an already-expensive Mask2Former module. It will be nice if the authors can discuss the FLOPs or latency for better understanding the trade-off.\n\n- Except for semantic segmentation experiments, the authors did not compare to other papers, and the numbers compared to the close-vocabulary setting is low. This makes these two settings not calibrated and less convincing. I understand that there are no/ few works reporting numbers on this specific setting, both some other comparable settings might be viable. E.g., the LVIS base/ novel split in ViLD.\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written, in good quality, and novel. It's currently hard to reproduce without code due to the complexity of the system.",
+            "summary_of_the_review": "This paper propose a valid framework for an important and challenging problem. The author shows state-of-the-art performance on one of the benchmarks (semantic segmentation), but is not super convincing on others (panoptic and instance segmentation). There are also some concerns on the complexity of the added component. My current rating is a borderline accept (mostly for the cross-dataset evaluation setup), but might change (increase or decrease) after rebuttal.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_GGkA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_GGkA"
+        ]
+    },
+    {
+        "id": "IljDeqobRS",
+        "original": null,
+        "number": 3,
+        "cdate": 1666689360406,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666689360406,
+        "tmdate": 1666689360406,
+        "tddate": null,
+        "forum": "zWudXc9343",
+        "replyto": "zWudXc9343",
+        "invitation": "ICLR.cc/2023/Conference/Paper5166/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper focuses on Open-Vocabulary Panoptic Segmentation where the goal is to conduct panoptic segmentation for arbitrary categories classes (open-vocabulary). A method called MaskCLIP is proposed to build on top of canonical background and instance mask representation with a cascade mask proposal and refinement process. Specifically, a Relative Mask Attention (RMA) module is presented on top of a ViT CLIP model to integrate mask tokens for semantic and instance level segmentations. Experiments are conducted on both open-vocabulary panoptic segmentation and semantic segmentation tasks including ADE20K and PASCAL datasets, which shows improvements over the baseline model or some existing methods. ",
+            "strength_and_weaknesses": "Strength:\n\n+ It is reasonable to adapte CLIP module to better take care of mask inputs by applying and learning a mask attention module. The idea makes sense to me. \n\n+ The proposed method shows improvements over the baseline model on both panoptic segmentation and semantic segmentation tasks. It also achieves better performance than some existing open-vocabulary semantic segmentation methods.  \n\n+ Ablations studies and analysis are conducted to help understand contribution of each part of the model. \n\n\nConcerns:\n\n- The key component of the proposed method is RMA module, which is a kind of general idea for adapting CLIP for Open-Vocabulary Panoptic Segmentation. There is no specific designs for panoptic segmentation. Therefore, it is not clear to me why authors emphasize panoptic segmentation where there is no existing methods for direction comparison.\n\n-  For panoptic segmentation, in addition to very basic CLIP baseline, it would be more convincing to benchmark SOTA Open-Vocabulary Segmentation method, e.g. OpenSeg or others by using the same level of supervision to enable comparisons for panoptic segmentation.\n\n-  Authors claimed efficiently for the proposed method and strength than avoids the student-teacher training process. However, evidences are not sufficient to support such claim. For example, there is no inference time comparison between the proposed method and existing method in Table 3. There is also no experiments to compare the proposed method and student-teacher training methods, e.g. [1]. Does the proposed method running faster than [1] or achieve better performance than [1]?\n\n[1] Open-vocabulary object detection via vision and language knowledge distillation, ICLR 2022\n\n- Are comparisons in Table 3 fair? the proposed method rely on both semantic and instance level annotations (panoptic segmentation) to conduct training. Is this the same case for those Open-Vocabulary Semantic Segmentation models?\n\n- Authors mention many time that the proposed method does not need finetuning. Does the proposed method perform better than finetuning CLIP on masked data? ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written and easy to follow. The source code is not provided. ",
+            "summary_of_the_review": "The proposed method has encouraging results for Open-Vocabulary Semantic Segmentation. However, many major claims are not well supported by the current experiments. Please refer to the Strength And Weaknesses part for more details. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_TB5t"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_TB5t"
+        ]
+    },
+    {
+        "id": "7bowM2N8Ts",
+        "original": null,
+        "number": 4,
+        "cdate": 1666704679885,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666704679885,
+        "tmdate": 1666704679885,
+        "tddate": null,
+        "forum": "zWudXc9343",
+        "replyto": "zWudXc9343",
+        "invitation": "ICLR.cc/2023/Conference/Paper5166/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper proposes MaskCLIP, an open-vocabulary segmentation solution that could naturally deal with arbitrary categories using CLIP\u2019s text representation. The newly proposed RMA module enables MaskCLIP to effectively leverage the prior knowledge contained in the CLIP visual encoder. Thus, only trained on COCO, MaskCLIP shows competitive performance on cross-dataset validation and open-vocabulary prediction.",
+            "strength_and_weaknesses": "**Strength**\n\nThe author builds a reasonable pipeline for open-vocabulary panoptic segmentation that could be trained in a data-efficient way.\nThe author designs RMA, which could effectively use the CLIP visual representation to support open-vocabulary recognition and mask refinement.\nThe qualitative and quantitative results are both competitive.\n\n\n**Weaknesses**\n\n**1)** Lack of experiments to support the claim\n\n**a)** The performance of COCO is not reported. Getting a good trade-off between closed and open-vocabulary settings is also important. \n\n**b)** RMA is the core contribution with a complicated structure. However, the author does not carry out ablation studies for the detailed structure of RMA. They could not prove the design of RMA is effective. \n\n**c)** Only report the experiment results for one backbone, which is not convincing.\n\n**d)** The title is panoptic segmentation, however, the experiment related to panoptic segmentation is only Table2 with 4 lines,  which is far from sufficient. The authors should at least include more naive baselines, like using different kinds of methods to fuse the CLIP representation.\n\n**2)** Lack of explanations \n\n**a)** How to convert the segmentation model to class-agnostic? If you just remove the class head, how to rank and remove duplicated masks? \n\n**b)** What kind of Prompt is used is not mentioned, which is important.\n\n**c)** The implementation of Mask Refinement is not mentioned. \n\n**d)** The loss functions are not mentioned. \n\n**e)** According to Section 4.2, the model is trained for only 10k iterations. However, the normal config on coco is 12 or 36 epochs, and Mask2former trains for 50 epochs.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The motivation and the core idea of this paper are clear. However, it lacks many explanations for the details. \nThe novelty of this paper is limited. The core component RMA seems ok, but it brings many parameters and computations. However, the author does not prove it could beat simple alternatives.\n",
+            "summary_of_the_review": "The overall structure is clear, the writing needs further polishing with more explanations of details, and the contributions are overclaimed without sufficient support. The manuscript seems not well prepared and needs further investigation.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_a6DX"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5166/Reviewer_a6DX"
+        ]
+    }
+]

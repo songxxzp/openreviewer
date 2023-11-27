@@ -1,0 +1,158 @@
+[
+    {
+        "id": "t2aTR5b8Hb",
+        "original": null,
+        "number": 1,
+        "cdate": 1665910551362,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665910551362,
+        "tmdate": 1665910551362,
+        "tddate": null,
+        "forum": "iLMgk2IGNyv",
+        "replyto": "iLMgk2IGNyv",
+        "invitation": "ICLR.cc/2023/Conference/Paper1692/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a Transformer-based module for visual reasoning, the Guided Attention Module (GAMR). The model is instantiated with three components: an encoder module, a controller module, and a relational module. The encoder module uses CNN and TCN to extract image features. A guided attention module uses multi-head attention to route visual information from relevant time step and modulate the features to yield a new context vector. The controller LSTM module generates query for the guided attention. The relational module leverages a memory and the context vector to produce the final answer. In experiments, GAMR achieves new state-of-the-art on SVRT and ART. It also shows compositionality and zero-shot generalization.",
+            "strength_and_weaknesses": "The module design follows intuition. It's believed that memory and attention play a significant role in human cognition. The model is crafted following this theory and makes perfect sense. The experimental part is also very detailed: apart from checking in-distribution performance, the authors also verify compositionality and zero-shot generalization with illustrative charts. The model is performative compared to others, showing the superiority compared to the chosen baselines.\n\nThat being said, I do have some concerns for the paper.\n\nFor one thing, the model may not be very novel. Attention and memory have been extensively studied, either jointly or separately, in both vision and language. One very related work is Hahne et. al 2019. The model also shares very similar design to ESBN. \n\nFor another, the model is only evaluated on SVRT and ART, two very simple datasets. There have been more challenging ones for abstract reasoning, like PGM, RAVEN, Bongard, Bongard-HOI. It'd be better to show results on these datasets in order to show superiority. Besides, the authors only briefly mention Hahne et. al 2019 without comparing it extensively.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly presented with quality results but limited novelty. ",
+            "summary_of_the_review": "I think the paper is in general in a good shape, but I'm concerned about novelty in model design and experimental comparison. I'd like to temporarily treat it as borderline and will sync with fellow reviewers.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_4tvR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_4tvR"
+        ]
+    },
+    {
+        "id": "mh3oX2tWbY",
+        "original": null,
+        "number": 2,
+        "cdate": 1666496605829,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666496605829,
+        "tmdate": 1666810931290,
+        "tddate": null,
+        "forum": "iLMgk2IGNyv",
+        "replyto": "iLMgk2IGNyv",
+        "invitation": "ICLR.cc/2023/Conference/Paper1692/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper proposes a novel method for visual reasoning, GAMR, that combines dynamic attention, memory, and relational reasoning. The method compares favorably against other popular approaches, and shows some evidence of compositional combination of rules.",
+            "strength_and_weaknesses": "# Strengths:\n- The proposed method integrates dynamic attention, memory, and relational processing, all of which are thought to be important components for human visual reasoning.\n- The proposed method is able to perform visual reasoning over multi-object scenes.\n- The proposed method shows reasonably strong out-of-distribution generalization, and can learn from relatively few examples.\n- The experiments identify some interesting limitations of previous methods, such as the vulnerability of the ESBN to visual noise.\n\n# Weaknesses:\n- The controller module has a lot of complexity, and some of the components appear to be unnecessary. It would be easier to gain insight into how the model operates if these unnecessary components were removed.\n    - I believe that it is not possible for the multi-head attention component to be contributing to the model's performance. In multi-head attention, for every query, an output is produced which is a weighted average of the values (weighted by the dot product between the queries and keys). However, in this case, there is only a single value, $query_{t}$ (this is also a confusing naming scheme), therefore the resulting outputs can only be copies of $query_{t}$. To confirm this, I used the code provided by the authors and ran a version of the proposed model that ablates the multi-head attention, on a few of the ART tasks. The results (averaged over 10 runs each) confirmed that the multi-head attention has no effect:\n| | same/differenet | RMTS | Dist-3 |\n| ----------- | ----------- | ----------- | ----------- |\n| w/ MHA | $82.3\\pm1.6$ | $64.6\\pm3.7$ | $66.0\\pm4.0$ |\n| w/o MHA | $83.7\\pm1.3$ | $67.3\\pm2.7$ | $67.3\\pm3.3$ |\nThis is also consistent with the results in the paper showing that the number of heads in the multi-head attention had no effect. \n    - The results of the ablation study in the paper show that $w_{k_{t}}$ has no effect. Therefore, this component should be removed from the model.\n- For the ART tasks, only GAMR performs the tasks using multi-object images as inputs (as opposed to receiving pre-segmented objected as the baselines do). Performing the task in this manner should ostensibly be more difficult, but it is also possible that there's some bias (such as visual entropy, see [1]) that can be exploited in this case that is not easily exploited when performing the task over segmented objects. The authors should compare to another baseline that performs these tasks using multi-object images as input, such as the ResNet used in the SVRT experiments.\n\n[1] Joel Fagot, Edward A Wasserman, and Michael E Young. Discriminating the relation between relations: the role of entropy in abstract conceptualization by baboons (papio papio) and humans (homo sapiens). Journal of Experimental Psychology: Animal Behavior Processes, 27(4):316,\n2001.\n\n\n### Other concerns:\n- The paper describes SVRT and ART as 'the two main visual reasoning challenges'. This is certainly not true, as there are many other such tasks, including PGM, RAVEN, relation games, CLEVR, CLEVRER, etc.\n- In the 'related work', the PGM and RAVEN datasets are micharacterized. First, they are described as a single dataset called 'Raven's Progressive Matrices', but Raven's Progressive Matrices is a different problem set, on which the PGM and RAVEN datasets are (loosely) based. Second, these datasets are dismissed as being 'seriously flawed'. However, the papers cited to support this claim address a bias that is only present in the RAVEN dataset, not the PGM dataset, and one of these papers proposes an alternative version of this dataset, I-RAVEN, that addresses these concerns.\n- I believe that the proposed model does not actually employ temporal context normalization, which normalizes representations across a temporal sequence, but instead uses *instance normalization* [2], which normalizes across the spatial dimension of a feature map.\n- The 'GAMR w/ self-attention' and 'GAMR w/o attention' ablations should be described in more detail.\n- The ESBN should be given a brief high-level description in the 'baselines' subsection.\n- In the test of compositional generalization, what is the baseline? It is only described in the figure as 'baseline', and I couldn't find a description in the text.\n- The evidence for compositional generalization could be stronger. How does GAMR perform if only trained on one of the source tasks, or if trained on unrelated source tasks? \n- It would be helpful to give an illustration of one of the compositional tasks (both the two source tasks and the target task) in the main body of the paper.\n- When describing the spatial jittering of objects in presenting the ART results, it should be clarified that this differs from the original implementation of these tasks, and that this explains the discrepancy between the results in the present work and the results in the original paper.\n\n[2] Ulyanov, D., Vedaldi, A., & Lempitsky, V. (2016). Instance normalization: The missing ingredient for fast stylization. arXiv preprint arXiv:1607.08022.\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is lacking in clarity in some places, and the organization of the paper could be improved.\n\nIn particular, the method is not described in sufficient detail. It is ok for this to be done in the supplementary information, but a complete description of the method needs to be present somewhere in the paper. In particular, the following things are missing or unclear:\n- The primary component, guided attention (a novel part of the proposal), is not described in the algorithm, but instead is treated as if it were a widely familiar, predefined function, i.e. '*guided_attention()*'. This component should be explicitly described.\n- Sums are described using a pseudo-pytorch syntax, rather than standard sum notation, and there is no explanation of which dimensions are being summed over. Ideally, the description of the method should be sufficiently detailed so as to be able to implement it without familiarity with pytorch conventions.\n- The operator $\\ast$ is not defined. I think this is elementwise multiplication, but this should be specified. $\\odot$ is a more common notation.\n- The LSTM $f_{s}$ generates a number of outputs, presumably through different output layers. This needs to be specified somewhere, along with the nonlinearities used in each layer.\n- In the memory retrieval step, the memory matrix $M_{t-1}$ is multiplied by $w_{k_{t}}$, which I believe is a scalar, which is then multiplied (elementwise?) by $g$, a vector. How does this yield a vector? Is the result of the multiplication summed across the rows of the matrix?\n- $r_{\\theta}$ is described as a 'multilayer perceptron (MLP) layer', is this a single layer or an MLP? What are the hyperaparameters (nonlinearities and number of units)?\n- The convolutional encoder is described as consisting of 'convolutional blocks', but it is not described what these blocks consist of. How many layers are in each block? What are the hyperaparameters?\n- How many units are there in the LSTM hidden / cell state?\n- In the code provided by the authors, the model appears to use dropout in some places, but this is not mentioned in the text.\n\nAdditionally, the organization of the paper is confusing in some places. First, the section entitled 'benchmarking guided attention' effectively describes an ablation study, that would make more sense to combine with the other ablation results later in the paper. Second, the paper partially describes both the SVRT and ART experiments in the 'Method' section, but then also presents some of the details on the ART experiments later in the section where the ART results are presented (called 'additional experiment'). I think it would be less confusing if the paper had *either* completely separate sections for SVRT and ART, in which the experimental details and results for both are contained, *or* one section that described all of the experimental details for both of these experiments, followed by the results section.",
+            "summary_of_the_review": "In summary, I think the model presented in this work, and the results are promising, but a few extra control experiments are needed, and the clarity of the paper needs to be improved. Specifically, I think the following changes would be necessary to merit a higher score:\n- A more careful ablation analysis, particularly looking at whether the multi-head attention component is needed. Unnecessary components (including also $w_{k_{t}}$) should be removed from the model.\n- A control experiment needs to be performed on the ART tasks using a baseline that solves these tasks the same way GAMR does, using multi-object images as input (e.g. the ResNet baseline used in the SVRT experiments).\n- The method needs to be described in more detail.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_SVeq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_SVeq"
+        ]
+    },
+    {
+        "id": "Fx3csn2_yVC",
+        "original": null,
+        "number": 3,
+        "cdate": 1666647243864,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666647243864,
+        "tmdate": 1666647243864,
+        "tddate": null,
+        "forum": "iLMgk2IGNyv",
+        "replyto": "iLMgk2IGNyv",
+        "invitation": "ICLR.cc/2023/Conference/Paper1692/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors present GAMR, a brain-inspired architecture for visual reasoning. This architecture is transformer-based, but additionally utilizes an LSTM controller module and a memory module. The architecture empirically works well on visual reasoning task. This is exciting from an engineering perspective, but also of interest to (computational) neuroscientists investigating the role of memory and attention (a central controller module) in (visual) reasoning. ",
+            "strength_and_weaknesses": "# Strengths\n\n- The proposed method\u2019s architecture is quite elegant, and it works well empirically. \n- The proposed method\u2019s effectiveness provides further evidence that memory and a main \u201ccontroller module\u201d in the brain are essential for reasoning. \n- The paper is generally well-written. \n- The paper\u2019s supplementary information and appendix are great. \n- The paper\u2019s ablation studies are very nice. \n\n# Weaknesses\n\n- The authors could have used even harder visual reasoning tasks (which might have meant creating a new dataset). As the authors point out, the model currently uses 4 time steps only for its reasoning. Reasoning tasks harder than those from ART and SVRT may require many more time steps. It would be interesting to see how the proposed method performs in these scenarios. ",
+            "clarity,_quality,_novelty_and_reproducibility": "# HIgh-level remarks:\n\n- The paper is generally well-written and of high quality. Some details could be clarified/improved, but I am confident that the authors can make these improvements during the rebuttal period. \n- The paper is reproducible. The main body and appendix provide an appropriate level of information, and the authors release the code for the work. The code is nicely documented and well organized. \n\n\n# Detailed questions/suggestions:\n\n- One question for the authors: I could not find how the ResNet data from Figure 2 was computed. Is that computation part of the supplementary information zip file? \n\n- \u201cInspired b active vision theories\u201d should be \u201cInspired by active vision theories\u201d\n\n- The font size in Figure 1 is very small. At the same time, there is wasted whitespace to the left and right of the figure. I recommend that the authors use the whitespace on the sides of the figure, and increase the font size. \n\n- \u201cand selectively route\u201d should be \u201cand selectively routes\u201d\n\n- The capitalization in \u201cREasOning\u201d (in Algorithm 1) is odd. Was this intentional? Maybe GAMR used to have a different acronym, in which the capitalization made more sense? \n\n- In Figure 1, a dotted red line indicates information flow of the \u201cout\u201d state into the reasoning module. In other places, data flows are indicated using solid arrows. Why not the same for the \u201cout\u201d state? Or did I miss something here ?\n\n- \u201ct=T\u201d  on page 3 should be in math mode. \n\n- Even though papers referenced by the submission describe a memory bank, I recommend that the authors describe in a few sentences how the memory bank works. A reader may for example wonder if the memory bank contains only the current z_t, or all previous z_t too? \n\n- The authors write \u201cWe trained the model for a maximum of 100 epochs with a stopping criterion of 99% accuracy on the validation set.\u201d . This seems like an unusual stopping criterion. Why not just train until the validation loss no longer goes down for a few epochs (\u201cearly stopping\u201d)? \n\n- In Figure 2, the authors show performance with 500 training examples and more. The proposed GAMR architecture appears to perform at a very high level even with 500 training examples. Why did the authors not include a graph showing the performance with say 100 training examples? The performance with very few training examples is, in my opinion, the most exciting aspect of this research area. \n\n- In the first paragraph of Section 6, the authors write \u201cThe first layer learns the \u2026, and the second layer \u2026\u201d . Are these the layers of the MLP? It would be helpful if the authors could be more explicit. \n\n- \u201cand only fine-tuned\u201d should be \u201cand only fine-tune\u201d.\n\n- In Figure 3, what is the model labeled \u201cBaseline\u201d? \n\n- It would be helpful if the authors included a figure showing some example challenges from the ART and SVRT datasets in the main body of the paper, or at least pointed out that examples are in the Appendix. While the authors cite the original sources, the ART and SVRT datasets are so central to the paper that readers benefit from not having to look up the sources.\n\n- Section 7 is onerous to read because tasks that could better have been described in graphics were instead described in words. Please include some graphics illustrating the multi-shot scenarios in Section 7. \n\n- \u201ct=4\u201d should be in math mode. \n",
+            "summary_of_the_review": "This is a nice paper. \n\nThe proposed architecture is interesting both from an ML and engineering perspective (interesting from a conceptual perspective, and much improved performance over earlier methods) and from a neuroscientific perspective (further evidence that brain may need both memory and a central attention module to perform reasoning.\n\nThe proposed method\u2019s architecture is quite elegant, and it works well empirically. \n\nThe paper\u2019s supplementary information and appendix are great, and the paper\u2019s ablation studies are very nice. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_o1fP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_o1fP"
+        ]
+    },
+    {
+        "id": "BJu7YKQg40",
+        "original": null,
+        "number": 4,
+        "cdate": 1666711652120,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666711652120,
+        "tmdate": 1666711652120,
+        "tddate": null,
+        "forum": "iLMgk2IGNyv",
+        "replyto": "iLMgk2IGNyv",
+        "invitation": "ICLR.cc/2023/Conference/Paper1692/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents a transformer-based model for visual reasoning. The paper puts forward an architecture that shifts attention sequentially over a preprocessed image and outputs binary labels pertaining to the relationships between objects in the visual scene. The authors suggest that this model supports cognitive theories that attention and memory interact to solve complex visual reasoning tasks, which seems like quite an uncontroversial claim for the cognitive sciences. \n\nThe model preprocesses an image using a convolutional module, and then learns a task-dependent sequential attention policy over these preprocessed features by using recurrence from an LSTM to direct attention queries over multiple sequential passes through a transformer.\n\nThe model performs well on spatially-related (SR) tasks from the SVRT dataset compared to baseline models in the low data regime (on datasets smaller than 1k), and similarly to baselines when more data is used. In same-different tasks the GAMR model outperforms the baselines in all experiments, with the main benefits again noticed in the low data regime. On the Abstract Reasoning tasks dataset GAMR again outperforms baselines.\n\nThe major contribution of this work is to highlight the importance of recurrent attentional processing for solving visual reasoning tasks. As the model fairly consistently outperforms the presented baselines, this signifies a useful contribution to the literature. The ablations were thorough. The treatment of the related cognitive science feels a little superficial however, and would benefit from a more thorough treatment (or removal altogether - which would also be fine). The paper claims that what the model learns is compositional - in that it re-composes previously learned sub-policies. \n",
+            "strength_and_weaknesses": "*Strengths:*\n\nThe paper provides some evidence that sequential visual attention in some form (although superficially different from how it works in humans) is important for visual spatial reasoning.\nComprehensive ablations clarified the important components of the model for performance. \nThe GAMR model seems to generalise to tasks with similar relations better than their baseline models like Attn-ResNet.\n\n*Weaknesses:*\n\nIt is not clear to me how the task is presented to the model. The attentional processing is said to be task-dependent but Figure 1 shows no task-based inputs to the model.\nIt seems slightly strange to consider an attentional visual reasoning network which is said to be motivated by human visual reasoning, and have the system process the entire image at each time step. Humans and other primates instead take sequential saccades - they must learn a saccadic attentional policy (most similar here to what the LSTM is doing) but which directs this attention spatially to intake and process only small local portions of the visual scene at each timestep (that which fits within a foveated glimpse). This has led to other models which are more closely aligned with the human visual system, like the 2014 paper Recurrent Models of Visual Attention (Mnih 2014) which learns a saccadic policy over visual images. I am unsure whether results have been reported on the Mnih et al network\u2019s performance on SVRT and ART datasets, however the architectural differences and differences in learned policy might be enlightening and help to establish deeper cognitive theories as a result of the work in this paper. \n\nThe current architecture is more comparable to a system which has its eyes firmly fixed at the centre of the image, and has to process it without using saccades to view and attend to parts of interest. This is wholly unlike how humans or animal view and attend to images (see papers measuring humans\u2019 saccadic traces over visual scenes for more details). As a result the attentional maps that the GAMR model learns show distributed attention at each time step rather than local attentional processing. This is fine if the model is not intended to be a cognitive model of human visual reasoning, but the parallel to human visual processing is made at several points in the paper and thus feels incomplete. If the authors wish to keep the link to cognitive science, the paper could benefit from exploring and justifying these architectural choices more thoroughly.\n\nThe paper claims that GAMR is more computationally efficient than with SA because it yields higher performance for the same number of training samples (1k). But this does not consider the computational cost of a forward pass which is higher since there are multiple sequential sweeps through the guided attention module.\t\nThe paper claims that what the model learns is compositional - in that it re-composes previously learned sub-policies. The evidence for this was a little unclear as it\u2019s difficult to interpret what the appropriate baseline is in Figure 3.\n\n*Minor points:*\n\nIn introduction and justification of the work:\nA single recent EEG study suggesting attention and memory are involved in same-different visual reasoning seems out of place here and a poor justification compared to the entire history of work on visual reasoning in cognitive science and neuroscience.\nPoints to \u2018modern cognitive theories\u2019 which are from the 1980s (not so modern).\nThe legend for the architecture diagram seems to be incorrect: The legend says that the recurrent controller f_s generates the queries at each time step, but these are input as keys and values into the transformer module while the queries seem to be sources from the encoded image.\n\nIt would be helpful to explain more clearly exactly how where the guided attn model and the self-attn models deviate - I am assuming that the LSTM is removed and z_img is used as query, keys and values but this is not stated explicitly. It is similarly unclear in this comparison whether there is some self-attn model replacement to make up for the \u2018out\u2019 channel into the reasoning module which would presumably be missing.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is unclear in parts, mainly in its justifications for design features and justifications for some of the baselines used. However I think the work is probably reproducible. ",
+            "summary_of_the_review": "\nThis paper presents a transformer-based model that performs sequential attention over visual images. The results highlight the importance of attentional mechanisms in visual reasoning tasks. The results do not seem particularly novel to me, but I am not an expert on this particular body of literature. The paper itself would benefit from a more considered treatment of the relation to cognitive science and improvements in clarity throughout.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_Gp6M"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1692/Reviewer_Gp6M"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "SZQVC9gzx4T",
+        "original": null,
+        "number": 1,
+        "cdate": 1666322647906,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666322647906,
+        "tmdate": 1666322647906,
+        "tddate": null,
+        "forum": "SJ0Lde3tRL",
+        "replyto": "SJ0Lde3tRL",
+        "invitation": "ICLR.cc/2023/Conference/Paper3449/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper makes an interesting observation that the error after the bellman optimality operation, instead of following gaussian noise, should in theory follow Gumbel distribution. This motivates the usage of Gumbel regression instead of least square to learn the Q functions, and the paper shows its connection to CQL in the policy evaluation regime. The paper also shows in practice one can introduce another V function and policy to deal with continuous action space, and the experiments show that the practical algorithm achieves promising results in both online and offline benchmarks.",
+            "strength_and_weaknesses": "# Strength\n* The paper is very well organized, with sufficient background introduction so that readers without much previous knowledge could also understand the context. \n* The usage of Gumbel regression is well organized, with good theoretical support.\n* The paper also makes a good connection and shows how the minimizer of the Gumbel regression objective recovers previous update rules that require explicitly policy action distribution knowledge such as SAC or CQL, while XQL does not require the access to the policy during the value function update. \n* The practical algorithm shows very promising improvement over previous methods, especially in the offline benchmarks. The practical algorithm seems also easy to be built on previous online methods. \n# Weakness\n* The motivation for using Gumbel regression seems not very obvious in the continuous action region because it's not obvious how to take the max operator. I am also confused about the presentation of the practical motivation (such as Fig.1) for two reasons: \n1. The bellman error is recorded during the training. However, some value functions we learned during the training may not even represent a valid value function for any policy? Then what does this bellman error represent?\n2. The bellman error is actually not calculated with max, but with the action that the corresponding policy takes. Again I understand this is due to the difficulty from the continuous action space, but this seems to deviate from the theoretical motivation.\n* Although the paper claims that not requiring the access to the policy during value function update is a merit of the proposed algorithm, I could not see why this is significant in practice: in practice, we still need to train a policy anyway so we could assume we always have the access to the policy information? ",
+            "clarity,_quality,_novelty_and_reproducibility": "## Clarity\nThe paper is well-organized and easy to read.\n\n## Quality \nThe technical part seems correct. \n\n## Novelty\nThe paper makes an interesting observation and makes good practical contribution.\n\n## Reproducibility\nThe submission includes a code base. The paper includes many implementation details. ",
+            "summary_of_the_review": "Overall, this paper makes a very interesting observation and provides a new perspective on how we should perform Q learning. The method is well motivated, the paper is well-written, and the experiment results seem solid. Although there is still some remaining confusion, I still would like to recommend an acceptance for the paper. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_HuwQ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_HuwQ"
+        ]
+    },
+    {
+        "id": "sajIgF32PQ",
+        "original": null,
+        "number": 2,
+        "cdate": 1666687777954,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666687777954,
+        "tmdate": 1668585970917,
+        "tddate": null,
+        "forum": "SJ0Lde3tRL",
+        "replyto": "SJ0Lde3tRL",
+        "invitation": "ICLR.cc/2023/Conference/Paper3449/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a new Q-learning framework by formulating the TD-error as a Gumbel distribution rather than a Gaussian. This new formulation leads to MaxEnt-RL style RL algorithms, but without the need to sample from out-of-distribution examples. The proposed method shows fairly well performance on standard D4RL benchmarks.",
+            "strength_and_weaknesses": "Strengths\n- Incorporates the MaxEnt RL framework while avoiding the major problem of offline RL (extrapolation error from referring to OOD examples).\n- Modeling TD-error as a Gumbel distribution seems to be more appropriate compared to modeling it as a Gaussian.\n\nWeaknesses\n- On offline RL, the proposed method still requires double-Q learning technique even though the method is expected to be more robust to Q-value overestimation.\n- The experiments table for offline RL (Table 1) is misleading in several aspects:\n\nFirst, the hyperparameters for the proposed method are tuned dataset-wise (refer to Table 4). However, previous works such as CQL or IQL keep their hyperparameters the same at least for each environment. For example, IQL fixes its hyperparameters the same for all MuJoCo locomotion tasks. Thus, the table results are not a fair comparison. Since the paper does not provide any hyperparameter sensitivity results, it is hard to conclude that the proposed method is actually the new \"state-of-the-art\" as the authors argue. Also, even if dataset-wise hyperparameter tuning is freely allowed, recent works seem to show higher performance on several datasets [1, 2].\n\nSecond, the runtime comparison also seems to be misleading. The authors note that the proposed method converges faster than IQL (Figure 6) and runs half the epochs compared IQL. However, based on the source code in the supplementary material, it seems that the proposed method uses a much larger batch size (1024) compared to IQL (256) [3]. Are the authors increasing the batch size and claiming the proposed method converges with much fewer iterations?\n\nQuestions\n- On Lemma 3.4, why is the first expectation over \\mu while the second expectation is over \\pi?\n- On Figure 3, what does -DQ on TD3 mean?\n\n[1] An et al., Uncertainty-Based Offline Reinforcement Learning with Diversified Q-Ensemble, NeurIPS 2021.\n\n[2] Cheng at al., Adversarially Trained Actor Critic for Offline Reinforcement Learning, ICML 2022.\n\n[3] https://github.com/ikostrikov/implicit_q_learning",
+            "clarity,_quality,_novelty_and_reproducibility": "Mentioned above",
+            "summary_of_the_review": "This paper provides a new RL framework by modeling the TD-error as a Gumbel distribution, which allows avoiding sampling OOD datapoints while enjoying the advantages of MaxEnt RL. However, the experiments section seems to be misleading in several aspects.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_pDUA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_pDUA"
+        ]
+    },
+    {
+        "id": "ZACI593L9u",
+        "original": null,
+        "number": 3,
+        "cdate": 1666744960634,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666744960634,
+        "tmdate": 1666744960634,
+        "tddate": null,
+        "forum": "SJ0Lde3tRL",
+        "replyto": "SJ0Lde3tRL",
+        "invitation": "ICLR.cc/2023/Conference/Paper3449/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes Gumbel-regression as an alternative to mean squared error regression for value functions in reinforcement learning. The use of Gumbel distribution is motivated from established theory and empirical observations. The resulting algorithm outperforms state-of-the-art in both online and offline RL benchmarks.",
+            "strength_and_weaknesses": "Strengths:\n- The paper motivates their algorithm based on theoretical foundations and provides Lemmas to support their final loss functions.\n- The paper is well-written and easy to follow.\n- Empirical results against strong baselines show significant improvement\n\nWeaknesses:\n- As far as I can tell, hyper-parameter tuning is done on the test set, there is no separate validation set. \n- It will be great to have this algorithm available as open source. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear, quality is high, novelty is high. Reproducibility is clear based on equations and empirical explanations. \n\n",
+            "summary_of_the_review": "No major weaknesses as such, enjoyed reading this paper. It will help to clarify why tuning Beta on each environment does not lead to over-fitting. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_PnpD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_PnpD"
+        ]
+    },
+    {
+        "id": "FIJJ9sm73S",
+        "original": null,
+        "number": 4,
+        "cdate": 1667378736160,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667378736160,
+        "tmdate": 1667378736160,
+        "tddate": null,
+        "forum": "SJ0Lde3tRL",
+        "replyto": "SJ0Lde3tRL",
+        "invitation": "ICLR.cc/2023/Conference/Paper3449/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This work introduces a new class of Q-learning-based algorithm for both online and offline RL for continuous control tasks based on extreme value theory. By using the insight that the maximum of i.i.d. random variables with exponential tails has a Gumbel distribution, the authors derived a new set of update rules which are equivalent to using soft Bellman backups but do not involve the use of entropies. The effectiveness of the algorithm is demonstrated in both online and offline settings using a set of standard benchmarks.",
+            "strength_and_weaknesses": "I think this paper brings forth some very interesting ideas to the table. Using Gumbel regression to model Q updates is to the best of my knowledge quite novel and in my opinion definitely something worth further exploration. The paper overall was quite easy to read and the authors did a very good job of justifying most claims and the technical choices involved in the algorithm. Some of my comments on some specific points in the paper:\n- Intuitively I agree with the authors in that I think this EVT-based approach would work quite well in an offline setting (and experiment results do support this) since it naturally introduces conservatism into the algorithm. However I would definitely like to understand better where the source of improvement comes from and especially some additional comparisons with other algorithms in this regard, this could come in the form of a toy example that gives easier visualization. \n- For the online setting, I'm not fully convinced why this approach would be better than an algorithm like SAC. Performance for online RL do not seem to offer much improvements. The environments used in the paper are generally considered to be fairly easy environments and the number of random seeds used is very small (3 or 4). Also unlike PPO, numerical instability isn't usually a huge issue for vanilla TD3/SAC for these particular environments.\n- Adding to the above point, it does seem that numerical instability is quite a major issue from a practical perspective, though the authors have introduced ways to mitigate this, I feel that this could still be a huge obstacle to wide practical adoption of this approach.\n- One thing you mentioned in the conclusion section about potential future directions is to integrate automatic parameter tuning for the temperature. Could you elaborate on some of the challenges for doing this and why using the mechanism for this introduced in [1] would be difficult?\n\n[1] Haarnoja, Tuomas, et al. \"Soft actor-critic algorithms and applications.\" arXiv preprint arXiv:1812.05905 (2018).\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Paper was easy to read, and I do not see any major reproducibility issues",
+            "summary_of_the_review": "Overall, I think the community has a lot to gain from the ideas introduced in this paper, which is why I am recommending this paper for acceptance. However having said that, I do think the authors could have done a better job in justifying why \"without entropy\" is better and I hope the authors can offer some additional insight in the discussion period.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_XF2J"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3449/Reviewer_XF2J"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "l49vziE-is",
+        "original": null,
+        "number": 1,
+        "cdate": 1666216310033,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666216310033,
+        "tmdate": 1669179883601,
+        "tddate": null,
+        "forum": "uqLDy0HGPR7",
+        "replyto": "uqLDy0HGPR7",
+        "invitation": "ICLR.cc/2023/Conference/Paper3041/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Uncertainty quantification is necessary in high-stakes applications, where both high predictive accuracy and reliable safeguards to handle unanticipated changes in data generation. This paper addresses the uncertainty quantification in online settings based on recent advances in adaptive conformal prediction. The proposed approach, called Rolling RC, updates a prediction set as data arrive sequentially, while achieving a desired coverage. The proposed approach is evaluated on five real-world datasets for one-dimensional response and one depth prediction dataset for high-dimensional response, showing that the proposed approach roughly achieves the desired coverage. The claimed contributions include (1) validity on the risk of constructed prediction sets, (2) compatibility with online learning methods, and (3) fast reaction to distribution shift. ",
+            "strength_and_weaknesses": "**Strengths**:\n* Rolling RC is simpler than ACI\n* Rolling RC can control any risk, which is novel in online settings\n\n**Weaknesses**:\n* **W1**. Depth estimation use-case is not convincing\n* **W2**. The claimed contributions are weak.\n* **W3**. The convergence bound is not convincing (in an adversarial sequence)\n* **W4**. Weak or no comparison in related work or results\n\n**Discussion**\n\n**W1**. In Section 1.1, the paper introduces online depth estimation as a motivational example for justifying risk controlling. Here, the paper considers (I guess) depth measurements from accurate sensors (e.g., Lidar) as the ground truth depth, and claimed the necessity for uncertainty quantification for speed-up depth sensing. I think this may be a good example, but there are many missing pieces. First, I\u2019m not sure if there are actual benefits in speed-up by using depth estimation via RGB instead of Lidar. In close range, Lidar can collect accurate depth very quickly, but for far objects, anyway we don\u2019t need accurate depth, for example, in self-driving scenarios. Secondly, this motivation example uses the sensor measurements from an accurate sensor as ground truth, but it is unrealistic. For example, Lidar can be very noisy or wrong in snowy weather or puddles in the ground. So, it provides wrong labels to online learning algorithms. At least these two points undermine the justification on the necessity of risk controlling in online settings. Could you refine the motivation example more?\n\n**W2**. The paper claims three contributions: (1) validity on the risk of constructed prediction sets, (2) compatibility with online learning methods, and (3) fast reaction to distribution shift. \n\nFor the risk validity, it is novel in online settings (considering risk controlling is possible under iid), but I\u2019m not convinced why we need risk controlling as mentioned in W1. \n\nFor the second contribution, I think this holds for any conformal approaches, including ACI; I don\u2019t think this is a unique contribution of this paper.  \n\nFor the fast reaction to the distribution shift, I feel that this is a bit contradictory. The paper proposes several interesting stretch functions to reduce prediction set size, while maintaining a desired coverage. But, choosing a stretch function is equivalent to hyperparameter tuning. Meaning that, a good stretch function depends on the property of a data sequence, but simultaneously online algorithms, including Rolling RC, want to work for any distributions. I think I mainly get this impression on the way of choosing hyperparameters of this paper, i.e., hold out an initial subsequence in the entire sequence and test on the later subsequence. This hold-out-first-sequence approach does not make sense in distribution shift, as the initial subsequence cannot represent the later sequence. Could you justify this tuning approach? \n\n\n**W3**. I was trying to understand the convergence bound in the last equation of Theorem 1 proof. Mainly, I was curious about why this deterministic algorithm could work in adversarial settings; recall that traditional online learning algorithms are randomized such that an adversary could not entirely fool the algorithms (or need a realisability assumption, e.g., for the perceptron algorithm). \n\nTo make the analysis simple, let m=0, M=1, \\gamma=1, \\theta_1=0, risk is the indicator loss, and r=0.1. Then, this convergence bound means the absolute difference of the average coverage rate and a desired coverage rate r is bounded by 1/T. By setting T = 10, this means after 10 time steps, the average coverage rate is at most 0.2 for any sequences. So, an adversary can choose an odd-subsequence (i.e., data arrive in odd time) such that a prediction set makes an error. Then, the \\theta changes as follows: \n\nt=1: 0 -> 0.9, \nt=2: 0.9 -> 0.8, \nt=3: 0.8 -> 1,\nt=4: 1 -> 0.9,\nt=5: 0.9 -> 1,\n\u2026\nAs can be seen, at the odd time, \\theta is not one, the adversary can generate a datum to make an error. This means the average coverage rate is 0.5, which is larger than the bound by theorem. Could you correct my understanding? If not, what are additional assumptions to achieve the desired coverage rate?\n\n**W4**. The risk controlling aspect is new in online learning, but I\u2019m not sure why we cannot use the risk controlling idea along with ACI? As mentioned, ACI updates the coverage rate, while Rolling RC updates the threshold directly. What is the reason that we cannot control risk in ACI? If that\u2019s possible, what\u2019s the benefit of using risk controlling in threshold update? This may be justified empirically. \n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity**: The paper is clear. Minor comments: \n- I cannot see color encoding in the first figure in Figure 3; probably rescaling the x-axis addresses this issue. \n- In Line 1 in Algorithm 1, I guess theta_0 is initialized by m instead of 0. \n- The Figure 5 caption (\u201cimage miscoverage\u201d) and the axis label (\u201cimage coverage\u201d) mismatch makes reading very confusing. \n\n**Quality**: The claims seem to be theoretically and empirically supported. \n\n**Novelty**: The claimed novelty is weak. For the validity, Rolling RC supports general risk functions, but its usefulness is not convincing (as mentioned in weaknesses). For the compatibility of the approach, this is not a unique contribution of this paper. For the fast reaction to distribution shift, it is useful under the iid assumption, but not fully convinced its efficacy in distribution shift (as mentioned in weaknesses)\n\n**Reproducibility**: The algorithm is simple, so I believe that this work is reproducible on evaluated cases. Hyperparameter tuning is tricky, but the paper provides some guidelines. \n",
+            "summary_of_the_review": "I think this paper attacks an interesting online conformal prediction by extending ACI for risk controlling, but currently, weaknesses overweigh strengths. So, I lean to rejection, but willing to adjust my understanding. \n\n\n==== post rebuttal\n\nThanks for the response. My main concern was addressed so I raised my score. The following includes remaining minor concerns. \n\n* I agree that online depth estimation is one showcase of online risk controlling, but I'm still not well-motivated whether we need UQ in online depth estimation as I initially mentioned. I hope someone else come up with a cool application of risk controlling Rolling-RC\n* In comparison to ACI, I initially expected that ACI and Rolling-RC would have similar performance in the standard coverage rate (i.e., the binary loss), but it is not as shown in Figure 9. It would be interesting to discuss the performance difference (e.g., \u201ccalibration with cal\u201d is sensitive to the calibration set size). \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_sghz"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_sghz"
+        ]
+    },
+    {
+        "id": "6cmnRyZc-DP",
+        "original": null,
+        "number": 2,
+        "cdate": 1666631173356,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666631173356,
+        "tmdate": 1666631173356,
+        "tddate": null,
+        "forum": "uqLDy0HGPR7",
+        "replyto": "uqLDy0HGPR7",
+        "invitation": "ICLR.cc/2023/Conference/Paper3041/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper, the authors presented a simple, intuitive, and effective method for quantifying uncertainty for online learning models. The proposed framework provides uncertainty sets that provably control risk, applies to any base online learning algorithm, any user-specified level, and works with non-stationary distributions. The paper presents both empirical and theoretical results that demonstrate the effectiveness of the proposed method.",
+            "strength_and_weaknesses": "Strength:\n\n1. The proposed method is simple, intuitive, and effective. It has the flexibility to be applied to many different base online learning algorithms with easy implementation.\n\n2. The proposed method can control multiple tasks and provide valid intervals for all requirements over long-range windows in time.\n\n3. Rolling RC is also able to adapt to shifting distributions quickly. The authors also designed several stretching functions for faster adaptation. Their effectiveness is also empirically verified.\n\nQuestions and weaknesses:\n\n1. In section 3.2, the authors applied \"Rolling RC\" to the regression problem by combining the proposed framework with quantile regression. I would assume the proposed framework can also be applied to standard linear regression (i.e., the M_t being the standard linear regression model, instead of a quantile regression model). Is this understanding correct?\n\n2. It seems that the definition of $MC_t$ on page 7 does not match the explanation below. The current definition seems to say $MC_t$ is simply the cumulative miscoverage counter, instead of a counter of \"miscoverage events happened in a row\".\n\n3. For the experiments in Fig 3, it seems the coverage of energy, traffic, and prices are below 90% when using the \"Error\" stretching function. How to interpret this result? \n\n4. How to interpret the additional assumption in Thm 3 (as compared to Thm 2)? Why does this new assumption represent that \"the risks are more synchronized with each other\"?",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is well-written. I enjoy reading this paper and find the presented framework novel and interesting. For clarity, it would be good to have some additional discussions on the theoretical and empirical results - see the questions in the \"strength and weaknesses\" section.",
+            "summary_of_the_review": "I enjoy reading this paper and find the results interesting.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_EbJN"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_EbJN"
+        ]
+    },
+    {
+        "id": "p8dnDphYMh_",
+        "original": null,
+        "number": 3,
+        "cdate": 1666632464277,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666632464277,
+        "tmdate": 1666632563418,
+        "tddate": null,
+        "forum": "uqLDy0HGPR7",
+        "replyto": "uqLDy0HGPR7",
+        "invitation": "ICLR.cc/2023/Conference/Paper3041/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The authors propose an online conformal risk control method based on ACI, allowing to control multiple risks irrespective of underlying distribution shifts.",
+            "strength_and_weaknesses": "Strengths:\n- Clear and concise abstract and introduction and early problem statement with initial practical example.\n- Simple method for controlling multiple risks irrespective of distribution shift.\n- Experiments to compare to ACI and practical experiments for image depth prediction.\n\nWeaknesses:\n- No separate discussion of related work even though there si quite some work on risk control on conformal prediction for time-series going on.\n- In terms of writing, there are also too many references to the appendix in my opinion. This distracts from the main paper. If something is important enough to be discussed in the main paper, please do include at least the gist of it. But, e.g., referring to finite sample bounds and then not providing the exact bounds in the main paper is hindering the reading flow. Many other examples can be found (properly setting \\gamma, handling multi-dimensional Y, additional stretching function). I am aware that not everything fits the main paper, but as reader it is difficult to actually decide what is important to read or not.\n- Method can be seen as an incremental generalization of ACI, this also concerns the theoretical contributions. Looking at the theorems and their proofs, these seem to follow the ACI paper to most extent \u2013 at least I could not spot any difficulties where proofs needed to change or adapt.\n- The additional \u201cstretching\u201d functions seem a bit misplaced in the paper. I\u2019d rather have the proofs or more intuition about \\gamma, handling multi-dimensional Y, etc. in the main paper). These stretching functions seem more like a \u201ctrick\u201d or so \u2013 maybe similar to changing conformity scores in conformal prediction.\n- Also, regarding the adaptive stretching function, the implications of using examples for this on the guarantee is unclear. This essentially changes the \\theta based on the previous examples. But as \\theta is already calibrated based on example t \u2013 1, shouldn\u2019t this affect the proof/guarantee somehow?\n- In controlling more risks, can I use a single calibration parameter instead of one for each risk? The experiments note that the maximum is used, but in practice I might have parameters independent of the number of risks.\n- Proposition 1 seems rather straight-forward, I do not see the need to explicitly highlight this \u2013 also considering the proof in the appendix.\n- Section A.2 seems just not necessary. I mean the proof is omitted anyway. So why not just have only the more general statement in the main paper with the same/full proof, or just omit it?\n- In the experiments, a clear ACI (or even split conformal risk baseline) is missing. As Figure 3 is about coverage, ACI is applicable and should, in my opinion, reduce to ACI \u2013 or am I wrong? To be honest, I am not interested in ablating the stretching functions (this is not what the paper is about). So, having proper baselines, maybe showing the time series or having a trivial split baseline seems more interesting.\n- Regarding the experiment sin 4.1.3, I am not sure what the takeaway is. I mean for me it seems that this is an empirical strategy to get control over the miscoverage counter. But the method itself cannot provide a guarantee on this, right? Because the guarantee is on losses defined per example.\n- The experiments in 4.2 are clearly the main focus of this paper, also given the ages of appendix on this problem and the introductory example. Given that the method is very similar to ACI, I could imagine this paper to put more focus on this paper and concentrate on an audience interested in depth estimation instead of mainly focusing on the guarantees. Currently, the paper is a bit split \u2013 regarding reading flow etc. it is hard to really have a consistent story (risk control, stretching functions, depth estimation).\n- No conclusion in the end, the paper ends very abruptly.",
+            "clarity,_quality,_novelty_and_reproducibility": "See above.",
+            "summary_of_the_review": "I am not fully convinced that this paper is ready to be published. This is mainly due to a combination of two factors: the story of online (multiple) risk control being diluted by \u201cother things\u201d (stretching functions, the depth estimation application which seems to be key, experiments where I could as well use standard ACI, etc.); and a bit of ambiguity in terms of what the contributions over ACI are (proofs seem to be applicable directly, not a lot of discussion of the theorems etc.). I feel the authors have to decide what kind of paper they want to write and present this in a coherent way, highlighting the corresponding contributions.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_Kmvq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_Kmvq"
+        ]
+    },
+    {
+        "id": "4WmF9Uy4G5L",
+        "original": null,
+        "number": 4,
+        "cdate": 1666632722482,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666632722482,
+        "tmdate": 1666632722482,
+        "tddate": null,
+        "forum": "uqLDy0HGPR7",
+        "replyto": "uqLDy0HGPR7",
+        "invitation": "ICLR.cc/2023/Conference/Paper3041/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a framework to construct uncertainty sets in the online setting to control the risk of the coverage, false negative rate, or F1 score. The propose method has theoretical guarantee for risk control at the user specified level for different underlying data like distribution shifts over time in an unknown manner. It is also extended to control multiple risks simultaneously and experiments show the proposed method rigorously controls various natural risks. \n",
+            "strength_and_weaknesses": "Strength:\n  1. The framework for constructing uncertainty sets has theoretical guarantee on the risk control, which is also extended to control multiple risks simultaneously.\n  2. The theoretical result is applicable even when the underlying data has drastic distribution shifts over time in an unknown manner.\n\nWeakness:\n  The results are very incremental to the previous works such as Gibbs & Candes, 2021 for the theoretical findings and Angelopoulos et al., 2021a; 2022a; Bates et al.,2021 for the different control metrics extension besides coverage rate",
+            "clarity,_quality,_novelty_and_reproducibility": "I think the paper is well-written and easy to read. In that sense, it's very easy for the readers to get the points that the author/s are delivering. But I have some doubts for the novelty of the work as I commented above as the weakness of the paper.",
+            "summary_of_the_review": "I think the problem the paper is trying to solve is very interesting and meaningful. The paper is well-written and easy to read, which is good for the readers to learn the main points of the paper. Although the theoretical results look stronger than previous work in the online learning setting, the technics it uses are very incremental and would not provide much insights for the potential readers.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_9cEN"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3041/Reviewer_9cEN"
+        ]
+    }
+]

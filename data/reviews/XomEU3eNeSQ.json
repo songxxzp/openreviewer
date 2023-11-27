@@ -1,0 +1,158 @@
+[
+    {
+        "id": "JMbq9PuDXv",
+        "original": null,
+        "number": 1,
+        "cdate": 1666211721249,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666211721249,
+        "tmdate": 1666959995002,
+        "tddate": null,
+        "forum": "XomEU3eNeSQ",
+        "replyto": "XomEU3eNeSQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1911/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper addresses code translation. While learning to translate from language `A` to language `B` (i.e., `A<->B`), the paper proposes to also train on translating `A<->LLVM` and `B<->LLVM`. \nThis way, LLVM serves as a proxy language that both `A` and `B` translate to.\nAt test time, no intermediate language is required, and the model translates directly `A<->B`.\nThis way, the `A<->LLVM` and `B<->LLVM` training serves as an effective training time supervision.\nThe approach is demonstrated on the task of unsupervised translation, with 4 programming languages, and shows significant improvements over TransCoder.",
+            "strength_and_weaknesses": "## Strengths\n* The approach is simple and provides strong empirical results in unsupervised translation over TransCoder.\n* The paper basically transforms the \"unsupervised translation problem\" into a \"supervised translation into a proxy language\": Instead of learning an unsupervised translation between `A<->B`, the authors transform the task into a **supervised** translation between each of `A` and `B` languages to `LLVM` (that is, `A<->LLVM` and `B<->LLVM`). That is, they transform the unsupervised translation problem into a supervised translation to a proxy language. \nThe LLVM language serves as a proxy that every language can be **supervisedly** translated to,\nwhich is very clever and very novel in my opinion. \n* The main Section 5 is very clear.\n* At test time, the model does not require additional analysis / conversion / intermediate representation of the input program, which is a huge advantage compared to prior work that relies on compiler information. Much such prior work which leverages compiler/runtime information - requires that information at test time as well.\n* The evaluation is convincing and thorough, evaluating 4 languages and many objective ablations.\n\n## Weaknesses\n* Nothing serious, see the next section\n\n## Questions:\nWould it be meaningful to run the following ablation: the standard objectives (as TransCoder), but also include the LLVM data of the source and target languages (train on the LLVM as additional, separate examples from their C++/Java/Go original programs)?\n\nThe reason I am asking this is because the proposed approach is different from TransCoder in two aspects:\n1. Trains on LLVM as well\n2. Slightly different objectives TLM/TAE/MT.\n\nWhat other experiments could disentangle these two contributions?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear and reproducible.\n\nA few minor comments:\n\n* Writing could be more straightforward - it took me 5 sections to understand the main approach. I would move the current Section 5 to appear right after the introduction. The Related Work section can be deferred to the end of the paper.\n* Minor: I am guessing that it is technically difficult and requires non-trivial dependencies to compile the programs to LLVM. Please release your pretrained models and detailed instructions on how to re-train them.\n* Figure 4 is small and difficult to read.\n\n",
+            "summary_of_the_review": "The paper is very clear, easy to read, and shows strong results over TransCoder using a simple and elegant approach.\n\nThe higher-level idea of transforming the \"unsupervised translation\" problem into a \"supervised translation to a proxy language\" is very novel and clever.\n\nThe proposed approach is appealing since the LLVM information it requires can be generated from the existing training data. \nEven if not all data can be compiled to LLVM, the authors show that a small amount of such supervised LLVM data is sufficient.\nFurther, at test time, the trained model can be evaluated without any additional information.\n\nOverall this is an excellent paper and I would be happy to see it accepted.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_DPxt"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_DPxt"
+        ]
+    },
+    {
+        "id": "ktxI_l28xdu",
+        "original": null,
+        "number": 2,
+        "cdate": 1666623501136,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666623501136,
+        "tmdate": 1666623540860,
+        "tddate": null,
+        "forum": "XomEU3eNeSQ",
+        "replyto": "XomEU3eNeSQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1911/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This work proposes to improve automated program translation from unsupervised data by leveraging compiler intermediate representation (IR), a machine-code like format that is unified across many programming languages. Rather than train a model to translate each language into and from this domain, the work argues for using intermediate representation to augment inputs at training time in order to learn better representations, and omit it during inference. The result is a tool that performs somewhat better than a baseline without IR (TransCoder) without requiring the use of a compiler for inference.",
+            "strength_and_weaknesses": "The main strength of this work is the observation that IR can be made useful for unsupervised program translation by extending the conventional unsupervised translation objectives to include program IR, _rather than_ attempting to map programs into and from IR directly (what the paper calls \"IR Pivot\"), which tends to yield poor performance. As such, the conceptual contribution is somewhat straightforward (adding several loss terms based on concatenating IR and code), but nevertheless novel and significant, especially when considering the rather substantial amount of effort invested to collect hundreds of thousands of Code/IR pairs.\n\nThe main weakness, to me, lies in the evaluation. For one, the work is somewhat unclear in its presentation of the results. The introduction to Section 5 states that all six objectives are used during training, which presumably means both the three TransCoder and three new objectives. That would lead me to read Table 2, from the \"TLM\" row onwards, as including all three TransCoder objectives by default, but some rows also include \"MLM\". Does that mean that no row here represents the combination of all six components, and that the \"TLM\" row works rather well using just a single objective? Furthermore, given that TLM and TAE are very similar, I would like to see the results of \"TAE + MT\" given that \"TLM + MT\" is presented. There are a few other issues here:\n- The \"to Java\" result has the wrong number bold-fonted (should be: \"TLM + TAE: 54.5\");\n- I would expect Katz'19 to be included in the comparison since it is cited as a closely related, if older, technique;\n- It is quite surprising that beam-size 5 yields _worse_ performance for \"to C++\" than using greedy decoding (may be worth double-checking this number);\n- The \"79%\" improvement of Java to Rust mentioned in the abstract appears to be relative to an MLM baseline (Tab. 3, App. A), not TransCoder. Is this supposed to be the full TransCoder model? If not, it seems off to cite this as such a large improvement given that the baseline is realtively weak compared to the de facto standard model, even if TransCoder did not evaluate with this setting.\n\nPlease aim to improve the above results. Given that the score improvement over TransCoder is modest on average (and quite small for some languages), it is important for judging the significance of this work that the results given are reliable.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and easy to follow. I note a few typos below. The investigation showing the deficiency of the IR pivot objective and the proposed remedies are sufficiently novel. As far as I could tell, the work does not offer to release its dataset, which (at least, the IR portion) is likely very challenging to collect, so reproducing this work would be very difficult.\n\nTypos:\n- P7: \"consists in\" -> \"consists of\"\n- P8: \"non trivial performances\" -> \"non-trivial performance\"\n",
+            "summary_of_the_review": "The proposed use of IR to improve unsupervised program translation is reasonably effective and goes beyond the naive (and ineffective) approach of using IR as a proxy for an intermediate domain for universal machine translation. The results are largely convincing, but suffer from a number of smaller issues that should be remedied to make the paper stronger.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_d6WQ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_d6WQ"
+        ]
+    },
+    {
+        "id": "olL_xAkUEd",
+        "original": null,
+        "number": 3,
+        "cdate": 1666636017914,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666636017914,
+        "tmdate": 1666636017914,
+        "tddate": null,
+        "forum": "XomEU3eNeSQ",
+        "replyto": "XomEU3eNeSQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1911/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "For programming language translation tasks (e.g., C# to Rust), the paper augments the source language with intermediate language representation (IR) generated by LLVM. They show that such IR-augmented translation can significantly improve the SOTA. \nThey also showed two alternate design choices where IR is used for neural decompilation and as a pivot task. ",
+            "strength_and_weaknesses": "Strength:\n\n+ The paper is generally well-written and tries to address an interesting problem. The augmentation of IR during translation is a direct way to incorporate structures and some semantics into the code representation, and IR is generated by the compiler. This significantly cuts down the search space and improves the outcome.\n\n+ The paper evaluates low-resourced languages like Go and Rust. \n\n+ IR is also not needed for inference time.\n\n+ They propose alternative design and decompilation as another application.\n\nWeakness:\n\n- The paper is not super novel. It essentially shows augmenting data from a different information source helps to improve NMT. However, I also believe compilation-ware IR augmentation is a good direction toward programming language translation.\n\n- The evaluation is not in-depth. For example, in Tables 2 and 3, different settings (TLM, TAE, and MT) proved to be effective for different settings. There are no explanations for such behavior. Why certain objective functions are more effective in one language translation than another?\n\n- Low-resourced languages like Go and Rust are more similar to C/C++ than Java. I am wondering whether including Java can hurt their translations, especially for translating C++ to Rust and C++ to Go and vice versa. It would be good to understand the impact of different language designs on translation.\n\n\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "I think the empirical part of the evaluation is novel. However, it requires some in-depth study (please see the weakness part).\nMethodology wise, the paper is rather weak. ",
+            "summary_of_the_review": "The paper shows Intermediate Representation (IR) augmentation to source code can improve NMT. While this is a good direction to improve programming language translation, novelty-wise, it is rather thin. The empirical evaluation also requires some in-depth study.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_ikso"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_ikso"
+        ]
+    },
+    {
+        "id": "K7DIE4Nzt-",
+        "original": null,
+        "number": 4,
+        "cdate": 1666776961758,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666776961758,
+        "tmdate": 1667012136455,
+        "tddate": null,
+        "forum": "XomEU3eNeSQ",
+        "replyto": "XomEU3eNeSQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1911/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper takes an interesting approach to training neural models for programming language (PL) translation - use of Intermediary Representations (IR): language-agnostic pseudocode that describes the semantics of the program. The paper proposes to augment code translation with IRs, specifically LLVM IR, to facilitate translations between C++, Java, Rust, and Go languages. The main idea of training neural sequence-to-sequence models relies on pretraining via translation language modeling (TLM), translation auto-encoding (TAE), and IR generation via machine translation (MT). The paper extends a prior dataset of parallel functions to Go and Rust languages. The experiment results show improvements in PL translation over the prior approaches.",
+            "strength_and_weaknesses": "__Strengths__\n- The main proposal of the work is well-motivated. The related work discussions are very comprehensive.\n- The use of IR is interesting and seems new. While the idea seems straightforward, the underlying effort to build such a system proposed in this work is significant.\n- The paper extended an existing translation dataset to new languages with test cases.\n\n__Weaknesses__\n- The writing of the method section could be improved. It became confusing with the mentions of the TransCoder pretraining objectives and the methods used in this work (sections 5.1 and 5.2).\n- Table 1 shows the percentage of successful IR compilation is small. Is it worth pursuing such an approach to building PL translation systems?\n- In Table 2, rows 2 - 7 in the greedy decoding block (starting from TransCoder) show the performance difference across models is very small, but row 8 shows TLM + TAE + MT performs quite well. It is not clear why?\n- While the empirical performances show improvements, there is not enough analysis to emphasize what makes the proposed approach truly effective.\n- In the introduction, the paper mentions, \"Augmenting training data with the corresponding IR can benefit a Neural Transpiler in two ways: it helps align embeddings for different languages and improves the semantic understanding of the code.\" I do not see the authors validating this statement.\n- TransCoder has subsequent improvements in the form of DOBF and TransCoder-ST models. Why they were not mentioned in the empirical results? \n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "__Clarity and Reproducibility__\n- More details should be provided regarding the pretraining setup. Just mentioning models were trained for a week on 32 NVIDIA V100 GPUs is not enough. For reproducibility, it is important to mention the amount of data used (number of tokens, GB of data, number of training steps, etc.).\n- The paper mentions, \"unsupervised machine translation consists of two tasks: training language embeddings (one embedding per language) and aligning them\" - what does training language embeddings mean? Is it truly an indispensable part of unsupervised MT?\n- I am unsure if equations 3, 4, and 5 are needed. They are too simple to be required to emphasize.\n\n__Quality and Novelty__\n- While the use of IR for PL translation seems new, the scientific contribution of this work is thin. The paper reads more as describing a system rather than a research paper.\n- I felt the paper could be compressed and presented as a short paper. It seems the use of unnecessary illustrations, simple math equations, and details of well-known methods are added to span 9 pages.\n",
+            "summary_of_the_review": "I would not prefer to see this paper accepted at the ICLR conference. The paper reads more like a technical report that describes a system using IR, which is interesting. The paper could go into a system conference or on a different track other than the main research track in an ML conference like ICLR. I am unsure if this paper passes the bar of a research paper of ICLR. However, I am not absolutely certain about my judgment, therefore, I am ready to be convinced otherwise.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_2BBL"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1911/Reviewer_2BBL"
+        ]
+    }
+]

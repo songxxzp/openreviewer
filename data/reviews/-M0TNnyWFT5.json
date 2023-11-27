@@ -1,0 +1,120 @@
+[
+    {
+        "id": "3eT4sEGEGc",
+        "original": null,
+        "number": 1,
+        "cdate": 1666638616659,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666638616659,
+        "tmdate": 1669124373197,
+        "tddate": null,
+        "forum": "-M0TNnyWFT5",
+        "replyto": "-M0TNnyWFT5",
+        "invitation": "ICLR.cc/2023/Conference/Paper6431/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The submission proposes TAMiL, a continual learning method inspired by aspects of the global workspace theory that trains task-specific attention modules to select which features from a shared representation are relevant to the current task. The approach uses replay in combination with functional regularization to avoid forgetting, and trains the system in such a way that it can automatically determine the correct task at inference time in class-incremental settings. The results demonstrate that TAMiL outperforms the chosen baselines in three standard CL benchmarks.\n",
+            "strength_and_weaknesses": "########### Strengths ###########\n- The experimental evaluation is notably thorough, including a variety of analyses and ablations that seek to understand various aspects of the improvement of TAMiL with respect to the chosen baselines\n- The idea to use feature selectors as an alternative to classification heads as an alternative form of task-specific parameters is interesting and warrants further investigation\n\n########### Weaknesses ###########\n- There are a number of references that should likely be included and compared against qualitatively (at least) or quantitatively (ideally)\n- Some details about the experimental evaluation are missing, which makes me wonder about the fairness of the comparisons\n- I wasn't able to follow exactly how the approach automatically infers the task ID during evaluation, and I believe that additional explanation would be needed\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The main strength of this submission is, to me, the thoroughness of the empirical evaluation in terms of the number of analyses and insights from the data. I wish more papers took their experimental design as seriously as this one does. Kudos to the authors for that. \n\nMy biggest concern with this submission is broadly speaking its placement with respect to the existing literature. In particular:\n1. There seem to be a number of missing citations that are highly relevant to the submission. Here are some existing threads and accompanying citations that I believe should be discussed in a revised manuscript\n\t- Multiple works have proposed approaches to add task-specific parameters in ways that are far more space efficient than PNNs. The common technique is to use task-specific output classification heads, but other approaches have been proposed (e.g., [1,2])\n\t- Other works have proposed methods to automatically expand the capacity of a NN in a way that grows drastically slower than PNNs, but does not suffer from capacity saturation (nor does it require explicitly adding new parameters for every task; e.g., [3,4])\n\t- A particularly relevant line of work, especially given the GWT motivation, seems to be modular continual learning, most of which also allows the agent to automatically grow its capacity automatically (e.g., [5, 6, 7])\n\t- There are also a number of techniques for automatically determining the task at inference time. [7] contains one example approach, but there are countless others.   \nI would encourage the authors to discuss their work in light of these multiple threads of related work. In particular, looking at the related literature, my take is that the main three contributions of this submission are: a) the motivation in terms of the GWT, b) the new method for adding task-specific parameters via undercomplete autoencoders, and c) the method for inferring the correct task at test time. Would the authors agree with that statement?\n2. The choice of baselines seems somewhat odd, given that the main technical contributions, as I understand, are (b) and (c) in my previous comment. The evaluation should center on the comparison to the various mechanisms for expanding the network capacity (b) and to the techniques for inferring the correct task ID (c). Given the details in the paper, I am unsure whether the competing baselines (especially, the replay-based mechanisms) are allowed to use task-specific output heads. This would be especially fair in the task-incremental setting, where the agent knows which task to assign to each data point. Moreover, I would be interested in seeing some ablation that looks at the difference in performance in TAMiL if instead of using the proposed autoencoder, it used something simpler like task-specific classification heads at the output. I _think_ a version of this is shown in the Appendix in Table 3, but since it was never mentioned in the main paper and I couldn't find enough details in the Appendix describing the ablation, I couldn't be sure.\n\nOne concern in terms of the experiments is whether the replay-based baselines were allowed any number of task-specific parameters, even if just task-specific output heads, as mentioned above. If that is not the case, it is possible that the lack of task-specific parameters would account for most of the difference in performance between TAMiL and the baselines. I believe that the baselines should be allowed task-specific parameters, at the very least in the task-incremental setting.\n\nI was also left somewhat confused about exactly how task inference is being learned during the training process. Why is reconstruction error used to choose the appropriate TAM? My understanding was that TAMs were explicitly trained to only pass relevant information, so why would reconstruction error work here? Could the authors clarify the process for training the task inference, right after Eq. 5? How does this process encourage the model to choose the correct TAM? What parameters are being backpropped in this stage? The representation, the chosen TAM, the prediction portion of the net? And why?\n\n\n############## Additional feedback ##############\n\nThe following points are provided as feedback to hopefully help better shape the submitted manuscript, but did not impact my recommendation in a major way.\n\nWould it perhaps be better to not use the term attention to refer to the task-specific modules? Recently, attention has been more and more associated to the specific form of key-query-value attention from transformers, and this is a different type of attention. Or, maybe the term can be kept, but the manuscript might clarify earlier on what attention means in this particular context and how it's unrelated to attention in transformer models.\n\nSec 3\n- The loss in Eq 4 induces another linear dependency on the number of previous tasks. Is this done over each task's data, the new data, or the union of replay and new data? Based on the description around Eq 5, I'd imagine it's only new task data\n- \"In addition to Lpd (Eq. 4), we do not use any other objective on the TAMs to constrain their learning\" -- so there is no loss term for the autoencoder to reconstruct its input? Then are these really autoencoders? It's just semantics, but shouldn't autoencoders be trained to reconstruct their inputs? Perhaps just stating that they have a similar structure to autoencoders but are not trained for reconstruction might be a good idea. \n\nSec 5\n- I liked the study in Fig. 3 left. Did the authors look at how this compares to other forms of adding task-specific parameters, such as calibration parameters or task-specific classification heads, in terms of number of additional parameters and performance? It seems that this might be included in Table 3 in the appendices, but it was never mentioned in the paper and I couldn't find enough details in the appendix. Could the authors please expand on this?\n- Could the authors describe in a bit more detail what the exact experiment in Fig. 3 right is? What exactly is the task probability?\n- What's the intent of Fig. 4? While clearly TAMiL outperforms the baselines (which was already established), the gap between them is actually fairly constant through the three task-sequence lengths. This suggests that all three methods under comparison are affected roughly equivalently by the length of the task sequence. What insight should we gain from this result?\n- Table 2 ablates the use of the exponential moving average, but what is the reasoning behind using that instead of storing predictions, and why should we expect it to perform better (as it clearly does)?\n\nSupplement\n- The submission mentions that code will be released, but it is not included for review.\n\nTypos/style/grammar/layout\n- \"one such knowledge bases is\"\n- It might be best to place all tables/figures at the top or bottom of the page, though I don't believe the formatting instructions actually request this. \n\n[1] Singh et al. \"Calibrating CNNs for Lifelong Learning\". NeurIPS 2020  \n[2] Ke et al. \"Achieving forgetting prevention and knowledge transfer in continual learning\". NeurIPS 2021  \n[3] Yoon et al. \"Lifelong Learning with Dynamically Expandable Networks\". ICLR 2018  \n[4] Hung et al. \"Compacting, Picking and Growing for Unforgetting Continual Learning\". NeurIPS 2019  \n[5] Mendez et al. \"Lifelong Learning of Compositional Structures\". ICLR 2021  \n[6] Veniat et al. \"Efficient Continual Learning with Modular Networks and Task-Driven Priors\". ICLR 2021  \n[7] Ostapenko et al. \"Continual Learning via Local Module Composition\". NeurIPS 2021  \n",
+            "summary_of_the_review": "This submission introduces a new approach for continual learning inspired by the GWT which uses task-specific attention modules to specialize a shared representation to each individual task, and automatically detects tasks at inference time using these modules. The experimental evaluation is quite thorough in terms of analyzing the results with various perspectives and running a few ablative tests. My biggest concerns are the placement with respect to the literature, both in presenting the novelty of the approach and in comparing against existing methods empirically, and potential lack of fairness in the evaluations. Due to these concerns, I am leaning towards recommending the rejection of this work, but encourage the authors to engage in the discussion.\n\n############# Update after rebuttal #############\n\nI am increasing my score from 5 (marginally below threshold) to 6 (marginally above threshold) per the discussion with the authors below.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_HdW5"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_HdW5"
+        ]
+    },
+    {
+        "id": "vxF6QsbjfD",
+        "original": null,
+        "number": 2,
+        "cdate": 1666783134269,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666783134269,
+        "tmdate": 1666783134269,
+        "tddate": null,
+        "forum": "-M0TNnyWFT5",
+        "replyto": "-M0TNnyWFT5",
+        "invitation": "ICLR.cc/2023/Conference/Paper6431/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Inspired by Global Workspace Theory of conscioussness authors propose TAMiL - a continual learning method that entails task-attention modules to capture task-specific information from the common representation space. Experimental results show that their method outperforms SOTA rehearsal-based and dynamic sparse approaches, while being scalable. The paper also claim to  mitigate catastrophic forgetting along with reducing task-recency bias.",
+            "strength_and_weaknesses": "trengths:\n1. The paper is written well\n2. The approach seems to be novel, though needing some polishing in description\n3. Experimental results are supportive of claims\n4. Code / data to be released later\n5. Model calibration section\n6. Table 1, Figure 8\n\nWeakness:\n1. The contributions of the paper need more clarity with examples\n2. The gaps wrt prior art in Related work section should be highlighted instead of merely writing a line\n3. The ignition event (eqn 5) matching criteria needs some defense in light of Juliani et al., 2022.\n4. The task action space can be elaborated - it is not clear\n5. List down the limitations and assumptions clearly (like Given a sufficiently high buffer size, our method outperforms PNNs)",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity:\nThe paper needs more clarity in terms of usage in practical life.\n\nQuality:\nThe quality of content and work is good.\n\nReproducibility:\nExperiment details are given in a way to compelement publicly available code, data later (if accepted).\n\nNovelty:\nAmong the 4 contributions listed, some of them can be combined into 2 - or provide more support.",
+            "summary_of_the_review": "The paper after polishing can be considered for ICLR.\n\nSuggestions:\n1. Abstract should be to the point and supported by a line of results\n2. The related work section should follow the current trend - topic-wise listing of prior art\n3. Round down to a specific problem you are trying to solve and then think about generalization\n4. List down the assumptions - ex. the task is highly dependent on perception module\n5. GWT is quite old, could have also looked at Michael Graziano's attention schema\n6. For GWT, can look at references of this work: https://www.frontiersin.org/articles/10.3389/fpsyg.2021.749868/full\n7. Fig 6 supplementary, the feature extractors and selectors can be explained along with choice of cosine sim\n8. : The early layers of DNNs capture generic information, while the later layers capture task-specific information. - need details\n9. Our CL model consists of as many TAMs as the number of tasks. - any better way?\n\nMiscellaneous:\n1. Optional - the title looks odd due to hypen break\n2. Break long sentences in smaller forms\n3. The prevalence of several knowledge bases in the brain - correct?\n4. Too much - Inspired by GWT",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "Docoloc plagiarism check is 11 % - which is at borderline, but acceptable given the quality of content.",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_yHwh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_yHwh"
+        ]
+    },
+    {
+        "id": "z5IyRW80FI0",
+        "original": null,
+        "number": 3,
+        "cdate": 1667005702841,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667005702841,
+        "tmdate": 1669827415961,
+        "tddate": null,
+        "forum": "-M0TNnyWFT5",
+        "replyto": "-M0TNnyWFT5",
+        "invitation": "ICLR.cc/2023/Conference/Paper6431/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper, the authors introduced TAMiL, a continual-learning model inspired by the global workspace theory that can learn multiple tasks without catastrophic forgetting by constructing a common representation space across tasks. By combining previous approaches on self-regulated neurogenesis and experience replay, TAMiL outperformed current state-of-the-art rehearsal-based methods as well as popular regularization-based methods on Seq-CIFAR10, Seq-CIFAR 100 and Seq-TinyImageNet, both in Class-Incremental Learning setting and and Task-incremental Learning setting. The basic unit of TAMiL, TAM, can also be flexibly augmented to previous rehearsal-based methods to boost performance.",
+            "strength_and_weaknesses": "Strengths:\n- This paper is well-written and the figures are easily digestible. The baseline models included a wide range of selections, and varied in buffer sizes. TAMiL applies the global workspace theory, a longstanding neuroscience theory for consciousness, to the continual learning setting, which is quite a novel approach.\n\nWeaknesses:\n- The concept of global workspace is influential to the field of cognitive neuroscience, and this paper shows great novelty by taking inspiration from it. However, exactly how the global workspace is mathematically defined, constructed and used was not explained well enough in this paper, unlike the common representation space which the author explains in great detail. Moreover, since the global workspace theory has been linked to many neuroscience findings [(Mashour et al., 2020)](https://www.sciencedirect.com/science/article/pii/S0896627320300520), it would be interesting to draw potential connections between TAMiL and the neural circuits underlying the ignition event.\n\nQuestions:\n- Figure 1 bottom: is $L_p$ the same as $L_{pd}$, i.e. the pairwise discrepancy loss?\n- What are the transformation coefficients mentioned in section 3.4 second paragraph, and where does it fit in Figure 1?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The work is mostly clearly communicated, though it would be even better if Figure 1 could be referred to more frequently in Section 3 of the main text. For example, the color coding in Figure 1 wasn\u2019t very clear to me and I couldn\u2019t find much detail about it in the main text.\n\nThe work combines two common approaches in continual learning, namely replay and regularization, thus is quite novel.\n\nThe training details are provided in the appendix, thus the work should be reproducible upon code release.",
+            "summary_of_the_review": "I lean slightly towards accepting this paper for ICLR: the proposed model, inspired by the global workspace theory, robustly outperforms state-of-the-art continual learning models in many settings. Ablation experiments also provided insights into the importance of each of the components of the model.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_JQ6f"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6431/Reviewer_JQ6f"
+        ]
+    }
+]

@@ -1,0 +1,119 @@
+[
+    {
+        "id": "MAkAYSN460",
+        "original": null,
+        "number": 1,
+        "cdate": 1666622236939,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666622236939,
+        "tmdate": 1666622236939,
+        "tddate": null,
+        "forum": "Crw1sKsLDvl",
+        "replyto": "Crw1sKsLDvl",
+        "invitation": "ICLR.cc/2023/Conference/Paper3690/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a new CNN architecture inspired by biological networks. Instead of a standard ResNet style architecture, this method duplicates the input over a set of modules that then processes all the inputs. This leads to a different way to control parameters and scale the network, resulting in networks that are less deep, but still perform well. The approach is evaluated on ImageNet.",
+            "strength_and_weaknesses": "The paper is interesting and provides an alternative architecture that seems to perform well. The paper is well written and should be reproducible from the provided details. The paper has a lot of experiments to study the design of the comnet, however, it is lacking comparisons to other works. There are no comparisons to other network designs, such as group convolutions, or works that explicitly study scaling of networks, e.g., EfficientNet. The claims about controlling parameter growth are a bit misleading, as all the aspects are controllable in other networks, though they might take a bit more work to change all the settings.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and has details needed to reproduce it. The idea has some novelty inspired by biological networks. \n\nICLR author guideline states that \"Citations within the text should be based on the \\texttt{natbib} package\nand include the authors' last names and year\" which was not followed in this paper.",
+            "summary_of_the_review": "The paper proposes an interesting idea and has extensive ablation experiments. However, it is lacking comparisons to many existing works, which makes it hard to tell how effective this idea is.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_8V6y"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_8V6y"
+        ]
+    },
+    {
+        "id": "WmtnqvvJFgw",
+        "original": null,
+        "number": 2,
+        "cdate": 1666643625222,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666643625222,
+        "tmdate": 1670028456766,
+        "tddate": null,
+        "forum": "Crw1sKsLDvl",
+        "replyto": "Crw1sKsLDvl",
+        "invitation": "ICLR.cc/2023/Conference/Paper3690/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper presents a CNN architecture based on a module performing the following sequence:\n\n(a)  1x1 dim reduce (\"S\")\n(b)  channel tiling (\"CM_Feeder\")\n(c)  stacked group conv with residuals (\"CCM\")\n(d)  1x1 combine/remap (\"P_c\")\n(e)  skip-conn residual (\"LRC\")\n\nThese steps are motivated by analogy to the columnar organization of the biological visual cortex, particularly ACM/CCM.  After training, structural reparameterization is applied before inference, leading to improved execution speed.  The method is evaluated on imagenet, finding improved speed/accuracy curves compared to ResNet and RepVGG.\n",
+            "strength_and_weaknesses": "While the resulting system appears to achieve good performance compared to recent RepVGG, the modules look fundamentally the same or similar to ResNeXt (https://arxiv.org/pdf/1611.05431.pdf), which also uses the steps (a-e) described above.  It's not clear to me what the differences are, if any, and what makes this system more performant.  The three that I can see as possibilities are: (i) stacking multiple group convs before recombining (I think resnext only uses one); (ii) structural reparameterization (from RepVGG); (iii) availability of improved group convolution implementations in cuda.  How do each of these contribute to performance?  Are there any other differences beyond these three?\n\nThe discussion of optimization on multiple efficiency fronts (flops, depth, accuracy, latency, training iters) seems like a bit of a side-track, even though it is mentioned as a main focus.  Descriptions such as in Sec 1, \"to the best of our knowledge, achieving multi-dimensional efficiency has not been explored\", suggest this paper explores explicit ways to measure combinations of these dimensions, e.g. for use in optimization or model selection, but instead the focus is architecture development with standard performance measures (see comments below).  I think it would make more sense to describe the work from this standpoint.\n\nOverall, this system seems to perform well, and its performance and sizing parameters are well-measured on imagenet.  However, the main components leading to this appear to be group convs (used in ResNeXt) and structural reparameterization (from RepVGG), which are combined to create the CoMNet model.  Without a clearer focus on how this work differs and builds upon each of these, along with investigation on interactions unique to their combination (such as repeated group convs with SR), it's hard to distinguish what might be potentially unique contributions in this work, beyond these two existing works.\n\n\n\nMore detailed questions and notes:\n\n\n* Note that the experiment varying \"l\" doesn't quite address the question of the effects of stacking group convs (\"CCMs\"), as the recombination (\"P_c\") is still applied only at the end of the stack.  To see the effect of stacking these before recombining, it would be interesting to look at different combinations of how often the recombination is applied while keeping depth or parameters approximately constant, e.g.:  tile -> CCM -> CCM -> CCM -> P, vs tile -> CCM -> P -> tile -> CCM -> P.  The second has one additional P but one fewer CCM, so similar overall depth.  What is the behavior of this, is there a speed/acc frontier that suggests a best value for number of group conv stacks before recombining and how does it vary with overall depth?\n\n* It would be good to include more comparison systems, including more efficientnet points (only B0 is mentioned in one table), resnext, resnext implemented using the same nvidia group conv library calls used by this system, and for more general comparison, transformer-based ViT variants.\n\n* fig 4:  does the latency plot in this figure use inference-time structural reparameterization?\n\n* sec 3 acm \"controlled parameter growth\":  \"AMCs provide an absolute control over number of synaptic connections\":  how do they achieve this exactly, what values are can be changed or varied in order to control the parameter count in this way?\n\n* sec 2 related work:  As mentioned above, I think ResNeXt needs to be compared to in detail.  Also, connectivity matrices controlling the number of synaptic connections are described in LeCun 1998, which could be good to mention as well.\n\n* eq 2: circled dot notation should be explained/defined in the text, this can be used for several ops e.g. concat, elemwise product, tensor product\n",
+            "clarity,_quality,_novelty_and_reproducibility": "See above.  While the overall description is relatively clear, the following points are unclear to me:\n\n* similarities/differences compared to resnext\n* how the \"multi-dimensional efficiency\" motivation relates uniquely to the architecture developed in this work, beyond standard accuracy vs compute measures\n",
+            "summary_of_the_review": "Overall, this system seems to perform well, and its performance and sizing parameters are well-measured on imagenet.  However, the main components leading to this appear to be group convs (used in ResNeXt) and structural reparameterization (from RepVGG), which are combined to create the CoMNet model.  Without a clearer focus on how this work differs and builds upon each of these, along with investigation on interactions unique to their combination (such as repeated group convs with SR), it's hard to distinguish what might be potentially unique contributions in this work, beyond these two existing works.\n",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_6Lbu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_6Lbu"
+        ]
+    },
+    {
+        "id": "__NufUX1PAU",
+        "original": null,
+        "number": 3,
+        "cdate": 1666649411467,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666649411467,
+        "tmdate": 1669664810937,
+        "tddate": null,
+        "forum": "Crw1sKsLDvl",
+        "replyto": "Crw1sKsLDvl",
+        "invitation": "ICLR.cc/2023/Conference/Paper3690/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper presents CoMNets, a biologically inspired deep network architecture that outperforms existing methods like ResNets and RepVGG in multiple respects (e.g., Latency, FLOPs, depth, etc.). Experiments are shown on ImageNet.",
+            "strength_and_weaknesses": "The paper has following strengths:\n\n1. I found the idea in this paper to be very interesting but I am not knowledgeable about neuroscience side of things so I cannot evaluate the accuracy of authors\u2019 design decisions from neuroscience point of view.\n\n2. The approach is well-explained, and it was still interesting to read about the relationships with biological cortex.\n\n3. Results clearly demonstrate the superiority over RepVGG and ResNets.\n\n4. Good ablations are conducted and analysis using GradCAM, etc., is conducted to understand the feature representation power of these new networks.\n\n\nThe paper has following weaknesses:\n\n1. I was hoping to see some more theoretical (or at least empirical) study on *why* the new proposed architecture would result in better representative power than traditional blocks of the same size. For example, why would the new way of grouping (e.g., after replicating the input features) should do better (in representative power) than other alternatives (e.g., standard group convolutions when scaled up to match params/flops of CoMNet units)? Since the proposed method does look similar to Group Convolutions, one important ablation should be to replace CCM with group convolution equivalents and then scaling up the model to match params/FLOPs, and then see if we get equivalent accuracy or not. Indeed, if it could be theoretically established why the new architecture would certainly do better than these alternatives, that would be ideal.\n\n2. No comparison against newer state-of-the-art methods like ConvNexts [https://arxiv.org/abs/2201.03545] or their newer scalings shown in recent works like Restructurable Activation Networks (RANs) [https://arxiv.org/abs/2208.08562] is performed which makes it unclear if these models would actually beat the newer models on ImageNet. In any case, these newer papers should be discussed in related work to reflect the latest advances in model design for image classification.\n\n3. It is quite unclear where in the model the non-linear activation functions (e.g., ReLUs) happen. Were any batchnorms/layernoms used to stabilize training? What exact activation functions were used for CoMNet and other baselines?\n\n4. Minor -- Citation format deviates from ICLR official template.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This is a very interesting paper and I found the contributions of this work to be novel.",
+            "summary_of_the_review": "My point 1 above in the weaknesses section is most critical. It is important to know that some na\u00efve modification to existing ideas (like group convolutions) will not remove the need to have the CCM modules. Theoretical support would be even better. If this point is reasonably addressed, I will raise my score. Point 2 would help too but it is not as critical as point 1 above. \n\n==== UPDATE AFTER REBUTTAL ====\nI have read other reviews and author response. Authors have addressed one of my main concerns on comparison against vanilla group convolutions. Therefore, I have raised the score to 6 (marginally above acceptance threshold). Future improvements on this work can include: (1) better theoretical justifications (I am not an expert in biological explanations that authors provided during the rebuttal), and (2) deployment on constrained devices (current models are suitable for desktop-scale GPUs but it may be interesting to see how these ideas can be scaled down to MobileNet scale networks). These directions can be good future works and are not necessary for the current paper. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_fyC8"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3690/Reviewer_fyC8"
+        ]
+    }
+]

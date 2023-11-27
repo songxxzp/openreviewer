@@ -1,0 +1,160 @@
+[
+    {
+        "id": "RBzFAgJ1CFH",
+        "original": null,
+        "number": 1,
+        "cdate": 1666052189907,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666052189907,
+        "tmdate": 1666052189907,
+        "tddate": null,
+        "forum": "nsT1vO6i3Ri",
+        "replyto": "nsT1vO6i3Ri",
+        "invitation": "ICLR.cc/2023/Conference/Paper791/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper is about changes that need to be made to error-backpropagation in order to train a leaky-integrate and fire spiking neuron network. A technique that is commonly used is to \"smoothen\" the spike so that gradients do not collapse onto the two values of 0 or infinity. This paper suggests an adaptive smoother. They define a parametrized class of continuous functions (triangles with compact support in their case) that limit to the delta function. They then adapt the support parameter (the width of the triangle) based on the layer and the input. Specifically, (based on samples), they determine what the range of values the membrane potential takes and then use that to set the width parameter to have non-zero finite gradients for a fixed proportion of neurons.",
+            "strength_and_weaknesses": "Strength: The idea introduced is intuitive, experiments show improvements.\nWeekness: The idea is fairly obvious. Implementation is rather laborious and there are no formal/mathematical evaluations of why this intuitive solution ahould give better performance. The authors just suggest a technique and then evaluate it on a set of datasets.",
+            "clarity,_quality,_novelty_and_reproducibility": "Paper is very clearly written. Very limited novelty. I believe the results can be reproduced.",
+            "summary_of_the_review": "The introduction of \"adaptation\" to the surrogate gradient is not novel enough to warrant publication, particularly since there have been so many ways people have tried to get around the gradient issue for spiking neuron networks.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "I do not see any ethical concerns",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_eFt1"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_eFt1"
+        ]
+    },
+    {
+        "id": "07WY6HHGmhx",
+        "original": null,
+        "number": 2,
+        "cdate": 1666363082375,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666363082375,
+        "tmdate": 1669136199756,
+        "tddate": null,
+        "forum": "nsT1vO6i3Ri",
+        "replyto": "nsT1vO6i3Ri",
+        "invitation": "ICLR.cc/2023/Conference/Paper791/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "A specific surrogate gradient is described, the idea is to regulate the sharpness of the triangular surrogate gradient at each iteration so that the proportion of non-zero gradients is controlled at each layer. This simple method can be implemented efficiently and leads to a ~2% improvement on ImageNet and CIFAR 100.",
+            "strength_and_weaknesses": "The method is simple and it can be implemented easily with auto-diff which is a strong plus. The benefit seems to be substantial although more details are required to make sure the benefit comes from the adaptive scaling keeping a stable proportion of zeros and not a naive scaling of beta. So I would find the results much stronger if the performance difference between triangular and triangular+CNPG is investigated further to understand better how it works, I suggest a couple of clarifications and simple experiments which would make the paper better in my opinion:\n\n1) What is the value of beta for the Triangular control on the performance table? Traditionally the performance of the baseline would be optimized by trying different values of beta, for instance in [02, 0.5, 0.8, 1, 1.5, 2., 3.], was it done in the performance table? If not it would make sense to try, or to report at least how beta was chosen and add the performance obtained with the average beta value for Figure 4 (beta=1.5 looks like a good control for VGG16 for instance).\n\n2) Given that the method is rather ad-hoc it is rather important to demonstrate what aspects of the method matters the most. For instance, I wonder whether restarting a training with fixed layer specific betas as shown in Figure 4 would also explained the performance benefit. Crucially, even if this control is good, it does not mean that CNPG is useless because it finds those beta values automatically, but at least it would provide some insights on whether the adaptive aspect of the method is important or whether what matters is to find the right betas.\n\nA strong weakness is that this paper seems embedded into a sub-community of SNN research and ignores many relevant work outside of that: \n\n3) All of what is applied here for surrogate gradient is equally applicable to binary network where the relu activation function is simply replaced by a Heaviside function. A connection to this literature and a fair account of it's progress would be relevant, see [1] for the first publication on back-prop with quantized activation and [2] for the first paper using the triangular derivative as far as I know. On top of citing these two papers, I would find the paper much stronger if a binary ANN model like Esser et al. (basically equivalent to SNN with T=1) would be added to show that the method can also be applied in the broader quantized network community. Along those line, providing the performance of the model with relu and all identical parameters would be a good insight to see how far is the model compared to classical ANNs.\n\n4) There is already an open debate inside the SNN community about the benefit of triangular derivatives and how their sharpness was identified to be a critical parameter, see methods from [3] for instance where the height of beta is referred to as the dampening factor. It would be fair to acknowledge that.\n\n[1] Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation\nYoshua Bengio, Nicholas L\u00e9onard, Aaron Courville\n\n[2] Backpropagation for Energy-Efficient Neuromorphic Computing\nSteve K. Esser, Rathinakumar Appuswamy, Paul Merolla, John V. Arthur, Dharmendra S. Modha\n\n[3] Long short-term memory and learning-to-learn in networks of spiking neurons\nGuillaume Bellec, Darjan Salaj, Anand Subramoney, Robert Legenstein, Wolfgang Maass",
+            "clarity,_quality,_novelty_and_reproducibility": "There are implementation details which are not clear to me and make me feel like algorithm 1 is unnecessarily complicated, but this might be a matter of clarifying what has been implemented and tested. It is probably related to the performance in Table 1 which I could not understand because the algorithm CNPG(B) and CNPG(E) are not defined precisely.\n\nMy understanding is that CNPG can be implemented easily with the current batch without keeping track of $\\mathcal{X}_{record}$. This simple version would be: before the applying the gradient, the vectors of $u$ is available and could be used to compute the corresponding $\\mathcal{X}$ and therefore $\\beta$ directly. Maybe this was version (B), if yes this should be clarified. Then version (E), if it corresponds to algorithm 1, seems to be almost identical to perform the same calculation for $\\beta$ but to apply some kind of moving average on it. If this simple explanation is a good summary for Algorithm I think it would help the reader to make it clear. ",
+            "summary_of_the_review": "Overall the method is simple and might be an important step towards binary ANN and SNN, my hope is that a method of this type can make it perform as-well as real-valued Relu networks. If the claim is true it is one step in that direction. This could have a tremendous impact but a few clarifications are necessary to make sure that the performance gain is coming from the method as described in the paper.\n\n-- Review update, November 6th -- \nI was eager to try so I implemented a simple version of the algorithm in this paper. I tried this approach on a Binary MLP on MNIST with 2 hidden layers (no time steps). On this simple setup the performance was lower than with the regular triangular derivative with constant width. My implementation was certainly not identical, so there might be a way to make it work. I think this paper would have been stronger if it described a simple reproducible setup of this kind.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_Sqv2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_Sqv2"
+        ]
+    },
+    {
+        "id": "8FCBBWSJi7_",
+        "original": null,
+        "number": 3,
+        "cdate": 1666525523189,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666525523189,
+        "tmdate": 1669363678695,
+        "tddate": null,
+        "forum": "nsT1vO6i3Ri",
+        "replyto": "nsT1vO6i3Ri",
+        "invitation": "ICLR.cc/2023/Conference/Paper791/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Spiking Neural Networks (SNN) are biologically more plausible, capable of representing time as well as more energy-efficient versions of more common artificial neural networks. The main difference is that SNNs communicate across layers using additive spikes. However besides the aforementioned advantages, this makes it really hard to train such networks. Three alternatives exist to do it. One is to convert pre-trained ANN to SNN, use heuristics, and lastly use a type of backpropagation method to train these networks. Surrogate gradients help to train SNNs. However, even using surrogate gradients SNNs train less efficiently. Also, the resulting performance of SNNs is usually worse than the one of ANNs.This is because surrogate gradients can only approximate real gradients, this procedure is very susceptible to the problem of vanishing gradients and is overall less stable than in ANNs. The main idea behind this paper is to stabilize the process of training SNNs by keeping track of the proportion of non-zero gradients during training. Experimental results presented in the paper seem to suggest that the proposed strategy produces superior results to published alternatives.",
+            "strength_and_weaknesses": "This paper seems to have a substantial technical depth, overall, for the non-expert, the method proposed in this work seems to be very reasonable and novel. If not for the worrying weakness, presented below, this reviewer would argue for this paper to be accepted.\n\nAccording to this reviewer, the main weakness of this paper is in the results, more precisely in the section Comparison to Existing Work. Going through Table 4 the reviewer could not help to notice some inconsistencies. For example, when discussing the results on CIFAR100 with VGG16 the authors wrote that \"CPNG manages to improve 2.24% accuracy\", while it remained unclear for the reviewer from Table 4, where this 2.24% is coming from. Diet-SNN with an accuracy of 69.67% is 1.65% below the performance of CPNG (71.32%). Also perhaps more surprisingly the other two methods presented in Table 4, under the same CIFAR100 category show much better accuracies, ranging from 73.55% (ANN-to-SNN with time step 32 by Li et al.) all the way to 77.40% (ANN-to-SNN with time step 128 by Li et al.). Another important observation is that the results by Dspike (Li et al., 2021b) are not presented in this category at all, despite the fact that the Dspike performs relatively well on CIFAR100, with superior to CPNG performance of 74.24%. The same or similar situation is with other datasets leaving only CIFAR10-DVS, Dspike is left out of the comparison with usually superior performance. All these create an impression that the authors were trying to manipulate the readers by hiding information that presents their method in an unfavorable light. This reviewer is happy to be proven wrong and pointed at a different reason for these inconsistencies e.g. because Dspike had used a different part of the validation or test set hence making the results incomparable. Nevertheless, even if these other reasons exist for not presenting the results from Dspike, this reviewer strongly believes that the readers should have been surely presented with these reasons in advance. Showing less favorable performance compared to some alternatives should not encourage the authors to hide these alternatives, but rather admit that some other methods seem to have an edge. \n\nGenerally, a paper does require a lot of relevant background, hence might be very hard to read for non-experts. Terms such as delta-function, membrane potential neurons, pre-synaptic input, leaky integrate and fire module, and others are used without being defined nor explained, raising the bar for researchers outside of the spiking neural networks field. Having said this, formulas proposed in the paper to illustrate some key concepts are thoroughly defined and explained, making it possible to follow the narrative albeit missing some details. Another formatting issue that might become apparent for researchers outside of the field who are not as well familiar with terminology is the use of acronyms that were either not defined or defined. I.e. one time defined acronym somewhere in the abstract and later used arbitrarily in the text, is going to be confusing for the unprepared reader e.g. \"SG\", \"tdBN\", etc.",
+            "clarity,_quality,_novelty_and_reproducibility": "This reviewer has an ambivalent opinion about the clarity aspect of this paper. On one hand, this paper demands a lot of background in the field, using a lot of field-specific jargon, on the other hand, as soon as the key concepts are established, it is rather easy to follow the main narrative of the paper. Formulas are very thoroughly explained, which helps to understand the intuition behind the proposed method.\n\nThe proposed method to control the proportion of non-zero gradients seems to be a novel contribution to this work. For this reviewer who is not an expert in the Spiking Neural Networks field, after a brief scan of related literature (including detailed analysis in this paper) this seems to be a significant contribution to the field.\n\nThis reviewer is the least confident in the quality evaluation, because of the issue described in the previous section (i.e. hiding the performance of the alternative approaches). Leaving it aside, the technical depth and experimental design of this publication seem reasonable. There is enough evidence gathered by the authors of the paper to support every claim. But the issue highlighted before seems to be rather substantial, lowering the overall recommendation.\n\nFinally, this work appears to adhere to high standards of reproducibility: the source code in Python is provided, as well as the pseudo algorithm of the proposed approach is published. All the datasets used in the paper are publicly available, hence it is possible to re-run all the described experiments and confirm the results.\n\n",
+            "summary_of_the_review": "Overall, the paper leaves a very good impression from the novelty and reproducibility points of view. Some additional work should be done to improve the clarity of the paper, especially for people who lack the SNN background. Most importantly, additional work is expected to explain the inconsistencies pointed out in the results when it comes to comparison to the existing methods. At the moment it seems as if the authors avoid displaying information that might make their method look inferior. In goodwill, this reviewer leaves enough space for the authors to prove the reviewer wrong, therefore there is a good chance that my recommendation will change as soon as evidence to the contrary is presented. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "Yes, Other reasons (please specify below)"
+            ],
+            "details_of_ethics_concerns": "As pointed out above, this seemed as if when compared to other methods, the authors picked easier comparators, while avoiding those that might make their approach seem inferior. This reviewer is not certain if this is substantial ground for the ethics review, but it seemed important. Also, the reviewer admits the lack of relevant experience in the field, hence admits that the probability of a mistake is high. \n\nUpdate on 25.11: the authors have addressed my concerned above, promising to clarify the comparison with existing approaches, hence I increase my ranking from 3 to 6. ",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_yRYU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_yRYU"
+        ]
+    },
+    {
+        "id": "Bz1b7PuTXa",
+        "original": null,
+        "number": 4,
+        "cdate": 1666627008730,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666627008730,
+        "tmdate": 1666627008730,
+        "tddate": null,
+        "forum": "nsT1vO6i3Ri",
+        "replyto": "nsT1vO6i3Ri",
+        "invitation": "ICLR.cc/2023/Conference/Paper791/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a method to improve the training of spiking neural networks (SNNs) via the surrogate gradient method. Their technique called CPNG controls the proportion of non-zero gradients during network backpropagation. Surrogate gradient functions are only non-zero when the membrane potential is within a certain region about the threshold value. The width of that region can be defined using a single parameter, which has so far remained fixed during training. In order to allow this parameter to vary optimally during training, the authors compute the proportion of neurons that have their membrane potential within that region of non-zero gradients, and adapt the region accordingly. If the proportion is high enough, the width decreases, and inversely, if the proportion is too small, the width increases, so that the overall activity of the network neither explodes nor vanishes. Their method shows performance improvements on all four tasks (CIFAR10, CIFAR100, CIFAR10-DVS and ImageNet) compared to the fixed width surrogate gradient.\n\n",
+            "strength_and_weaknesses": "Strengths\n\nThe paper contributes to improving the surrogate gradient training of SNNs, which should be practical and profitable for the related field of research. The method is relatively simple and well explained to be reproduced.\nThe computational costs of the method are properly indicated and remain limited.\n\nWeaknesses\n\nWhen comparing with the baseline (i.e. without CPNG), it may not be clear that the value of the fixed width is optimised. For a fairer comparison, a hyperparameter search could be done, so that CPNG is compared to the best version of the fixed surrogate gradient function.\nIn relation to that, in table 3 and 6, confidence intervals are only given for CPNG entries. It would be coherent to also include such intervals for the non-CPNG baseline.\nIt appears that the choice of value for the effective domain indicator is only based on a single ad-hoc experiment with two values considered, namely 0.05 and 0.2. Here It would also be more meaningful to make a more advanced hyperparameter search. \nThe grammar could be improved.\n\nRemarks\n\nGiven that membrane potentials evolve over time, it is not exactly clear to me how the effective domain indicator is calculated. I can guess that the mean \u201cmu\u201d is computed over all time steps and all neurons, but it may be clearer to indicate it more explicitly inside the text.\nIt could be interesting to relate the effective domain indicator to the resulting firing rates. Does increasing the former have an impact on the latter?\nThe method is also only tested using a relatively small number of time steps (5-10). It would be good either to increase the number of steps on the same tasks, or to directly apply it to tasks that involve longer sequences such as speech for instance.",
+            "clarity,_quality,_novelty_and_reproducibility": "The work is clear enough and appears original.",
+            "summary_of_the_review": "The authors have the right approach; the method makes sense and is helpful.  However, the evaluation could be improved.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_z3Wm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper791/Reviewer_z3Wm"
+        ]
+    }
+]

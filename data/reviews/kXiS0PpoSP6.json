@@ -1,0 +1,119 @@
+[
+    {
+        "id": "F9qXFW6yO9",
+        "original": null,
+        "number": 1,
+        "cdate": 1666531561396,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666531561396,
+        "tmdate": 1670932128816,
+        "tddate": null,
+        "forum": "kXiS0PpoSP6",
+        "replyto": "kXiS0PpoSP6",
+        "invitation": "ICLR.cc/2023/Conference/Paper3652/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This works studies the frequentist validity of popular epistemic uncertainty estimates, showing that they equal certain \"Bayes excess risk\" measures (Thm. 1) and are *lower bound* for the unobservable excess risk of a stochastic predictor derived from the (approximate) posterior.  The authors argue that such behaviors are undesirable and consistent with the fact that epistemic uncertainty are often underestimated in practice.  Based on these observations, the authors proposed a modified variational inference objective for regression problems, where a conditional variance term is down-weighted (Eq. 21).  Empirically the new objective demonstrates improved performance on regression and contextual bandit tasks.",
+            "strength_and_weaknesses": "This work studies a very relevant problem: whether (approximate) Bayesian epistemic uncertainty estimates are valid upper bounds for the excess risk, in which case they can be viewed as valid in a frequentist sense.  The authors showed that posterior variance-like quantities can be *lower bounds* for the excess risk, which would be a serious issue and worth addressing.\n\nHowever, it appears to me that the authors studied the wrong excess risk: they considered the excess risk of the stochastic predictor derived from the Gibbs posterior,\n$$\nR^l(Y | X, \\mathbf{Z}^N) := E_{Z^n} E_{\\color{blue}q(\\theta\\mid Z^n)} E_{Z=(X,Y)} \\ell(Y, f_\\theta(X)),\n$$ \nas opposed to the deterministic predictor which approximates the true Bayes predictor.  The former predictor only achieves order-optimal excess risk, which is reasonable for studying contraction properties such as predictive error, but usually unreasonable as a target for uncertainty quantification.\n\nAs a concrete example, for homoscedastic regression problems with a square loss, our point estimate is typically based on the posterior mean estimate $\\hat f_n(x) := \\mathbb{E}_{q(\\theta\\mid Z^n)} f_\\theta(x)$, and we are most interested in whether posterior variance quantities such as $\\mathbb{E}\\_{q(\\theta\\mid Z^n)}\\big(f\\_\\theta(x) - \\hat f_n(x)\\big)^2$ upper bounds the excess risk-type quantities for the posterior mean estimator, $\\mathbb{E}\\_{\\nu(Y|X=x)} (\\hat f\\_n(x) - Y)^2 - \\text{(Bayes Risk at $x$)} = (\\hat f_n(x) - f_0(x))^2$.  This corresponds to the scenarios where the credible intervals may have correct coverage.  However, the authors in their Theorem 2 compared this posterior variance with the quantity \n$$\nR^l(Y | x, \\mathbf{Z}^N) - \\text{(Bayes Risk)} = \\underbrace{\\mathbb{E}\\_{q(\\theta\\mid Z^n)}\\big(f\\_\\theta(x) - \\hat f_n(x)\\big)^2}\\_{\\mathrm{BER}(Y|x,\\mathbf{z}^N)} +  \\underbrace{((\\hat f_n(x) - f_0(x))^2}\\_{\\mathrm{PER}(Y | x, \\mathbf{z}^N)}.\n$$\nClearly, the fact that the posterior variance fails to upper bound the above says nothing about its frequentist validity.\n\nAs another sanity check, it is also unconvincing that theoretical explanations for the under-coverage issue can be provided in such general settings, as for the results in Section 3: the theorems apply to the true Bayesian posterior and correctly specified (low-dimensional) parametric models.  Clearly, the right conclusion shouldn't be that under-coverage happens across all such settings.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The writing is reasonably clear, although the notations might be optimized.  E.g., it might be better to highlight the dependency of various quantities such as $ER^l$ on $q$.",
+            "summary_of_the_review": "The authors studied a relevant problem, but appeared to have misinterpreted their results.\n\n**Post-rebuttal update**. \n\nI have read the authors' response but did not find them addressing my concerns.  My concerns were twofold:\n\n1. **The messages in Sec 3.2 were misleading.**\n\nFor the square loss case, the manuscript appears to draw connections between their Theorem 2, which shows that the posterior variance ($Var_{\\theta|z^N} f_\\theta(x)$) *lower bounds* their version of excess risk ($ER^{(2)}$), and the experimental fact that the posterior variance underestimates the epistemic uncertainty (EU); as shown in the following quotes:\n\n> From Eq. (12), Var\u03b8|zN f\u03b8(x) clearly is a lower bound of excess risk and test error, consistent with the well-known result that the variance of the predictor often underestimates EU (Lakshminarayanan et al., 2017).\n\n> First, the widely used EU measurements are the lower bounds of the test error and excess risks. This is consistent with the experimental fact that these EU measurements often underestimate EU.\n\nAs noted in my review and response, this is only because the authors looked at the wrong definition of ER (for this purpose): for squared loss, it equals \n$$\nER^{(2)} = E_{Z^n} E_{q(\\theta|Z^n)} E_{Z=(X,Y)} (f_0(X)-f_\\theta(X))^2,\n$$\nas opposed to \n$$\nE_{Z^n} E_{Z=(X,Y)} (f_0(X) - E_{q(\\theta|Z^n)} f_\\theta(X))^2.\n$$\n(The last tuple $(X,Y)$ denote the test input.) The latter is what we want to compare the posterior variance with.\n\nThe authors misunderstood my definition of \"coverage problem\" in the first response, which I have clarified; in their second response, they noted that my concerned relation about $E_{(X,Y)}(Y-E_{q(\\theta)} f_\\theta(X))^2$ and $E_X E_{q(\\theta)} (f_\\theta(X) - E_{q(\\theta)} f_\\theta(X))^2$ (posterior variance) was not analyzed in this work.  But this is precisely my point: what Sec 3.2 analysed was not useful (and misleading), and to explain the experimental fact ofunder-coverage, one should analyze this relation as opposed to the relation studied in Theorem 2.\n\n2. **The motivation of the algorithm was unsatisfactory.**\n\nAs the authors noted in their second response, the algorithm is motivated by the fact that \"minimizing the standard VI leads to minimizing PR and BER simultaneously, as shown in Eq.~19\". (I think they were referring to the standard ELBO.)  Without further explanation, or restriction of the scope of discussion, it is very unclear why this is a problem that needs to be addressed: if we do not restrict the variational family of choice, the true posterior is the minimizer for the ELBO, and clearly it doesn't always suffer from coverage problems.  The remaining of that subsection (3.3) did not offer any convincing explanation.\n\nIn summary, while the manuscript contains interesting materials (the algorithm and experiments, for example), it appears that the theoretical discussions need to be thoroughly revised.  Therefore, my rating remains unchanged.",
+            "correctness": "1: The main claims of the paper are incorrect or not at all supported by theory or empirical results.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_6WHt"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_6WHt"
+        ]
+    },
+    {
+        "id": "JOPpf5foh4b",
+        "original": null,
+        "number": 2,
+        "cdate": 1666763490666,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666763490666,
+        "tmdate": 1670978504763,
+        "tddate": null,
+        "forum": "kXiS0PpoSP6",
+        "replyto": "kXiS0PpoSP6",
+        "invitation": "ICLR.cc/2023/Conference/Paper3652/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This work explores the relationship among excess risk, widely used epistemic uncertainty and generalization error with convergence analysis in the setting of approximate Bayesian inference. Empirical evaluations on synthetic datasets are carried out to confirm the theoretical results. Further evaluations on UCI datasets and contextual bandit tasks are presented to compare the proposed approach with existing baselines.",
+            "strength_and_weaknesses": "This work focus on excess risk analysis under approximate Bayesian inference instead of an exact setting as in existing work, which is a more practical setting and seems novel to me. The main theoretical contributions are Thm 1, Thm 2 and Thm 3 where Thm 1 connects Bayesian excessive risk under log loss with approximate mutual information and the one under squared loss with variance and Thm 2&3 upper bounds the summation of prediction excess risk and Bayesian excess risk with convergence analysis.\nare nicely explained and seem technically sound.\n\nStill, here are a few concerns:\n- p^q is not defined in Eq 4.\n- I'm confused by Remark 2. What do you mean by \"misspecify noise function\"? Can you explain it in a more formal way?\n- In Fig 1 and Fig 2, I wonder which N are chosen? From the curves, it seems that the N are not uniformly chosen and also the curves are highly non-smooth. The author might what to try with more N to make some smooth curves that clearly shows the relationship among the three quantities.\n- The empirical evaluation would benefit from including more baselines other than particle VI. For example, to include Bayesian Dropout methods including MC dropout, variational dropout, ensembles, Langevin MCMC etc...",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is overall well-written. It makes a reasonable attempt to provide sufficient background for the readers to understand the proposed methods. The theoretical contribution is novel to me.",
+            "summary_of_the_review": "Despite some minor confusion and some potential improvement for the empirical evaluations, the contributions in this work seems solid and novel to me.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_1SWx"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_1SWx"
+        ]
+    },
+    {
+        "id": "r4NMna7lfS",
+        "original": null,
+        "number": 3,
+        "cdate": 1666921104591,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666921104591,
+        "tmdate": 1666921104591,
+        "tddate": null,
+        "forum": "kXiS0PpoSP6",
+        "replyto": "kXiS0PpoSP6",
+        "invitation": "ICLR.cc/2023/Conference/Paper3652/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper derives PAC-Bayes bounds for epistemic uncertainty in terms of excess risk. A new quantity\nis defined called Bayesian Excess Risk which captures the epistemic uncertainty when the true\nmodel is known.\n",
+            "strength_and_weaknesses": "This paper solves a pressing problem in understanding epistemic uncertainty (EU) and connects it very\nwell to the more traditional methods of practically estimating EU. The paper offers novel and useful\ntheoretical contributions which are then supported by demonstratng a regularization strategy and several\nnumeric experiments. The work though would be valuable even without the additional validation.\n\nThe main weakness is some of the contributions could be better signposted in the writing.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This is highly original work that builds very nicely off of Xu and\nRaginsky's recent work on excess risk. The paper is challenging to\nfollow due to the theoretical nature of the contributions. It would\nalso benefit from better signposting where the different versions of\nexcess risk are introduced and the reason why becomes clearer earlier\nin the paper.\n\nThis work is of high quality and significance. Due to the theoretical\nnature of the work, reproducibility is less of a concern.\n",
+            "summary_of_the_review": "This is interesting and useful theoretical analysis of bounding epistemic uncertainty.\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_15vK"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3652/Reviewer_15vK"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "8EX0XGqf5D4",
+        "original": null,
+        "number": 1,
+        "cdate": 1666703544022,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666703544022,
+        "tmdate": 1668607630464,
+        "tddate": null,
+        "forum": "ejR4E1jaH9k",
+        "replyto": "ejR4E1jaH9k",
+        "invitation": "ICLR.cc/2023/Conference/Paper6495/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper addresses an important open question of deriving rates in terms of the expected squared norm of the operator for stochastic weak MVIs without large batchsizes. The result is novel even in the special case of monotone operators. The authors also propose the generalization to the constrained case and propose and analyze the variants with a nonlinear asymmetric preconditioner. The key algorithmic novelty is a modification of Stochastic Extragradient Method that uses bias correction term.",
+            "strength_and_weaknesses": "## Strengths\n1. **Strong theoretical results.** The open question that authors resolved (analysis in terms of the expected squared norm of the operator without large batchsizes) is highly non-trivial. In particular, even in the monotone case, all previous works that have convergence results in terms of the expected squared norm of the operator do rely on the usage of large $\\mathcal{O}(1/\\varepsilon)$ batchsizes (or even worse) to achieve $\\min_{k = 0,\\ldots,K}\\mathbb{E}||F(z^k)||^2 \\leq \\varepsilon$. In contrast, the analysis of the method proposed in this work achieves the same complexity result *with $\\mathcal{O}(1)$* batchsize. Moreover, it is done for weak MVIs with Lipschitz operator, which is a more general setup than monotone Lipschitz case. Even this result makes the paper strong enough to be accepted to the conference. However, the authors do not stop here and generalize their results (and algorithm) to the constrained case and show some interesting (though very hard to read) extensions.\n\n## Weaknesses\n1. **Clarity.** Some parts of the paper are very hard to understand. In particular, it is hard to follow some parts of the proofs (see my detailed comments below). Next, the paper does not provide the intuition behind the algorithm development: why does the bias-correction term was chosen this way? Moreover, Section 8 and Appendix E are very hard to follow due to the lack of the intuition and details. The authors introduce too many notations there, I cannot thoroughly check this part during the time given for reviewing. Therefore, I encourage the authors either to remove Section 8 from the paper or substantially improve the clarity there (why we consider such preconditioners, why we change the algorithms this way, what is the intuition behind the proof).\n\n2. **Strong assumptions.** The key trick allowing the authors to get rid of the large batchsizes is that the authors assume bounded variance and Lipschitzness in mean at the same time (see derivation of formula (C.4)). Usually, these assumptions are not used simultaneously: either bounded variance is assumed without any assumptions like Assumption III or Assumption III is used without bounded variance assumption (instead one needs to assume just boundedness of the variance at the optimum). I think, this should be highlighted more in the paper and listed as a limitation of the derived results.\n\n3. **Numerical experiments.** Based on what is written in the paper, the authors used similar stepsizes for all tested methods. However, this is not a fair comparison: one should tune stepsizes for each method separately. Next, the proposed method was not tested on real problems (minor). It would be interesting to see how BCSEG+ behaves in training GANs, for example. \n\n\n## Main concerns/comments/questions (this is very important to address)\n\n1. The authors write \"When monotone-like conditions holds the story is different since it suffices\nto take diminishing stepsizes.\" I believe, this is not accurate. All mentioned results in the monotone case either provide guarantees in terms of the gap function (and thus do not need large batchsizes) like Juditsky et al. (2011) and Mishchenko et al. (2020) or in terms of  the squared norm of the operator but with large batchiszes like in Gorbunov et al. (2022). Other works consider setups where one can achieve linear rates in deterministic case (and thus these cases are easier). Therefore, the question that the authors resolved was in fact open even in the monotone case.\n\n2. Could the authors explain why the metric chosen in the constrained case is good? How does it relate to the standard squared residual metric like $||z^k - z^{k-1}||^2$?\n\n3. Figure 1 does not imply that SEG+ does not converge in general: it implies only that it does not converge for given stepsize policy.\n\n4. Figure 2: why EG+ does not converge to any predefined accuracy? Since EG+ is a deterministic method, it should converge with fixed stepsizes.\n\n**Below I list the issues with the proofs to justify my claim about the clarity.**\n\n5. In (B.7), the derivation is not accurate: one should have extra $-||v||^2$ in the second step.\n\n6. In (C.1), $b$ is not defined.\n\n7. Why the potential function $\\mathcal{U}_{k+1}$ is chosen this way? How was it found?\n\n8. The formula above (C.4), after the word \"Therefore\": in the first term of the inner product, one should have $F(z^{k-1})$ instead of $\\hat F(z^{k-1})$.\n\n9. Formula (C.6), third row from below\" one should have $+ \\frac{\\gamma^2 \\varepsilon_k}{2}||F(\\bar{z}^k)||^2$ instead of $- \\frac{\\gamma^2 \\varepsilon_k}{2}||F(\\bar{z}^k)||^2$.\n\n10. The end of the proof of Theorem C.2 is very hard to follow (after (C.11)). I have checked it, everything is correct. However, it required me to derive few things myself. The authors should provide all missing derivations with the detailed comments on each step.\n\n11. In (C.16), one should have extra factor $2$ in front of the second $\\gamma L_{\\hat{F}}$ (it goes from (C.27), where in the second row one should have $\\frac{2}{k+1+r}$ in the second multiplicative factor).\n\n12. (C.22) should go before (C.21).\n\n13. The part after (C.23) is very hard to check: the authors should refer to particular inequalities that they use in each step and also explain each step in details.\n\n14. Page 18: \"Plugging the value of $c_\\ell$ and $\\varepsilon_k$ from (C.21)\" --> \"Plugging the value of $c_\\ell$ and $\\varepsilon_k$ from Assumption VI and (C.20)\" \n\n15. The first inequality on page 20: the authors use $||a+b||^2 \\geq ||a||^2 - ||b||^2$, which is not correct. The correct version: $||a+b||^2 \\geq \\frac{1}{2}||a||^2 - ||b||^2$. However, in this case, one should assume that $\\gamma \\leq \\frac{1}{\\sqrt{2}L}$ that reduces the maximal range for $\\rho$. To avoid this one should estimate $||Hz - Hz'||$ instead of $||Hz - Hz'||^2$. In this case, one can use the triangle inequality instead of Young. As the result, the authors will get $(1 - \\gamma L_F)^2$ factor instead of $1 - \\gamma^2 L_F^2$.\n\n16. I do not understand the derivation of (D.13). In particular, I do not see what left-hand side of (D.14) corresponds to. The authors should provide complete derivation with all the details.\n\n17. How (D.15) was obtained? The authors should provide complete derivation with all the details.\n\n## Minor comments\n\n1. Assumption II(ii): the second term inside the norm should be $F(z)$.\n\n2. \"However, Pethick et al. (2022) also showed that the extrapolation stepsize plays a critical role for convergence under weak MVI.\" Could the authors provide a reference to the particular result from Pethick et al. (2022)?\n\n3. Page 13, above (B.3): \"The two latter term are\" --> \"The two latter terms are\"\n\n4. Page 15, the first sentence: \"By step 1.2\" --> \"By step 1.4\"\n\n5. Sometimes the authors use $F(\\bar{z}^k)$, sometimes they use $F\\bar{z}^k$. The notation should be verified.\n\n6. The end of page 16: \"... is sufficient to satisfy (C.13)\" -- > \"... is sufficient to satisfy (C.13) and (C.14)\"\n\n7. Page 20, \"The third term in (D.2) is bounded by\": it is not the third term but its conditional expectation. One should fix it here and everywhere else.\n\n8. In (D.9), $H_k(\\bar{z}^k)$ is not defined. Is it $H(\\bar{z}^k)$?\n\n9. Above (D.18): one should have $\\Gamma = I$.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity.** As I explained above, the clarity should be improved.\n\n**Quality.** Although there are some small inaccuracies in the proofs and problems with clarity, the quality of the paper is high.\n\n**Novelty.** The results are novel. I emphasize that the results are novel even for monotone case.\n\n**Reproducibility.** The authors should provide the exact values of stepsizes that they used for each method.",
+            "summary_of_the_review": "The main results are very good and outweigh multiple weaknesses that the paper has. I strongly encourage the authors to address the issues I mentioned. It will improve the paper a lot. If the authors address my concerns, I will increase my score.\n\n\n========UPDATE==========\n\nI thank the authors for the detailed response to my comments and for improving the paper. The problematic parts became much easier to follow (including Section 8) and almost all of my questions/concerns are resolved. In general, I am satisfied with the changes. Therefore, I am increasing my score from 6 to 8: as I explained in the original review, the paper fully deserves this.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_6PPj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_6PPj"
+        ]
+    },
+    {
+        "id": "6pcSeK61NI",
+        "original": null,
+        "number": 2,
+        "cdate": 1666829320641,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666829320641,
+        "tmdate": 1670441441445,
+        "tddate": null,
+        "forum": "ejR4E1jaH9k",
+        "replyto": "ejR4E1jaH9k",
+        "invitation": "ICLR.cc/2023/Conference/Paper6495/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper provides a stochastic algorithm for a class of problem characterized by weak minty variational inequality. The algorithm modifies stochastic extra-gradient by adding a bias-correction term in the exploration step. ",
+            "strength_and_weaknesses": "Strength:\n\n(1) The design of the algorithm is interesting, as it only uses diminishing stepsize for in one step of EG update and introduces a novel correction term. \n\nI have the following questions:\n\n(1) The paper mentions the lwoer bound $\\rho > \\gamma/2$ from [Pethick et al., 2022] several times and it serves an intuition for the algorithm in page 4. However, based on my understanding, from the example given in  [Pethick et al., 2022], the stepsize $\\gamma$ is fixed to be $1/L$. I am not sure whether that still holds for  other stepsize or time-changing stepsize.\n\n(2) In Theorem 7, the convergence measurement $|| H\\bar{z}^{k\\star} - Hz^{k\\star}||$ seems to only consider the operator F and ignore A by the definition of $H$. Why is it a good measurement here? Also in Algorithm 2, it returns $z^{k+1}$, but I do not know how it will guarantee that it will satisfy the constraint if operator A corresponds to a constraint. \n\n(3) The experiment in Figure 1 is not representative. It is a bilinear game, so it can be easily solved by stochastic EG. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Novelty: the algorithm is original. \nClarity: the paper is not hard to follow, but can be improved. ",
+            "summary_of_the_review": "I find the algorithm interesting, but a few questions remain. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_o1sj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_o1sj"
+        ]
+    },
+    {
+        "id": "03d7VYCwUZf",
+        "original": null,
+        "number": 3,
+        "cdate": 1666938782785,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666938782785,
+        "tmdate": 1670475358292,
+        "tddate": null,
+        "forum": "ejR4E1jaH9k",
+        "replyto": "ejR4E1jaH9k",
+        "invitation": "ICLR.cc/2023/Conference/Paper6495/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper, proposes new variants of stochastic extra-gradient methods for solving inclusion problems that satisfy the minty variational inequality (MVI). The proposed algorithms BCSEG+ (Alg. 1 and Alg. 2) and NP-PDGG (Alg. 3) have been designed and analyzed for solving the inclusion problem under the unconstrained smooth case, constrained case, and min-max problem (8.5) respectively. The most important contribution of this work is that by using the new algorithms it is possible to provide analysis without requiring increasing batch sizes as the algorithm progress. ",
+            "strength_and_weaknesses": "The paper is well-written and the idea is easy to follow. The authors did a great job on the separation of sections and on the presentation of the results. In particular, I find that it is very helpful for the reader that the authors included separate sections for the unconstrained and constrained setting. \n\nHowever, I believe the paper has some issues in terms of notation and numerical evaluation. In addition, the paper missing some relevant recent works on other classes of structured non-monotone problems.\n\nLet me provide some details below:\n\nOn presentation: \n1. There is no part in the paper where the sets $zer T$, and $gph T$ are defined. Even if the definition is trivial is currently missing. In addition, what do we call a maximally monotone operator (assumption on operator A in the main problem)? this detail is required for a self-contained paper. \n\n2. Inequality 3.2 used $\\Gamma$ and $\\Gamma^{-1}$ without a proper explanation of why the  $ \\Gamma^{-1}$ is needed. The standard $L_f$-Lipschitz used identity matrices, so further details are needed. The same holds for Assumption III.\n\n3. The paper mentions in several parts that: ``employing diminishing stepsizes is no longer possible in the weak MVI setting.\" but they do not properly explain why. Why is this true? is there an existing paper that proves that or is it a speculation of the authors? more details are needed.\n\n4. Minor: The deterministic operator is defined as $Fz$ while the stochastic estimator is denoted with $F(z,\\xi)$. It might have been better if one used F(z) as well for the deterministic variant. \n\n5. After the definition of SEG, the paper mentions: ``Even with a two-timescale variant (when $\\beta_k > \\alpha_k$) it has only been possible to show convergence for MVI (Hsieh et al., 2020).\"  what this means exactly? note that (Hsieh et al., 2020) has nothing to do with MVI. \n\nOn proofs:\n1. What is b in equation C.1 in the appendix?\n2. I find that the steps in the proofs require further explanation for the reader to be able to follow easily (probably by splitting steps into several parts). The parts where Young's inequality is used are not always very clear. \n3. In C.8 the previous bound is used by now it has expectation conditional on $f_k$ even if the quantity is deterministic. This is not wrong but it is not standard.\n\nOn experiments: (This is probably an important issue of the current version of the paper) \n\nThe authors mentioned the following: \"Except for BCSEG+, all methods fail to converge in these examples.\" and \"In comparison (EG+) gets closer to a solution in both problems but fails to converge due to the non-diminishing stepsize, while BCSEG+ converges for both example.\" \nIn my viewpoint figure, 2 does not show any benefit of BCSEG+, compared to EG+. both methods converge to a very similar neighborhood $(10^{-2})$ of the solution. Probably the methods should be run for more iterations to obtain something useful. \nAlso, I suspect that the method here is SEG+ and not EG+, right? \n\nMissing references on other structured non-monotone problems: \n\n[1] Yang, J., Kiyavash, N., and He, N. (2020). Global convergence and variance reduction for a class of nonconvexnonconcave minimax problems. NeurIPS\n\n[2] Song, C., Zhou, Z., Zhou, Y., Jiang, Y., and Ma, Y.\n(2020). Optimistic dual extrapolation for coherent nonmonotone variational inequalities. NeurIPS\n\n[3] Loizou, N., Berard, H., Gidel, G., Mitliagkas, I., and\nLacoste-Julien, S. (2021). Stochastic gradient descentascent and consensus optimization for smooth games:\nConvergence analysis under expected co-coercivity.NeurIPS\n\n[4] Loizou, N., Berard, H., Jolicoeur-Martineau, A., Vincent,\nP., Lacoste-Julien, S., and Mitliagkas, I. (2020). Stochastic hamiltonian gradient methods for smooth games. ICML\n\n[5] Kannan, A. and Shanbhag, U. V. (2019). Optimal\nstochastic extragradient schemes for pseudomonotone\nstochastic variational inequality problems and their variants. Computational Optimization and Applications,\n74(3):779\u2013820.\n\n[6] Aleksandr Beznosikov, Eduard Gorbunov, Hugo Berard, and Nicolas\nLoizou. Stochastic gradient descent-ascent: Unified theory and new\nefficient methods. arXiv preprint arXiv:2202.07262, 2022\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Please see the above review for further details. ",
+            "summary_of_the_review": "I give \"6: marginally above the acceptance threshold\" for this work. \nThe theoretical results are novel however there are several points of weakness (in terms of clarity) of the paper and limitations in terms of experiments. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_eJWH"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_eJWH"
+        ]
+    },
+    {
+        "id": "YPX7XkEBajP",
+        "original": null,
+        "number": 4,
+        "cdate": 1666994959839,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666994959839,
+        "tmdate": 1666994959839,
+        "tddate": null,
+        "forum": "ejR4E1jaH9k",
+        "replyto": "ejR4E1jaH9k",
+        "invitation": "ICLR.cc/2023/Conference/Paper6495/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "For the first time, the authors introduces a family of stochastic extragradient-type algorithms that positively solves a class of nonconvex-nonconcave problems which can be cast as stochastic weak Minty variational inequality (MVI). In the monotone setting, extragradient methods adopt constant stepsizes and bounded batchsizes (both of which are critical in practical performances), and when extending to the weak MVI setting, only theories adopting expensive increasing batch sizes per iteration approaches are available.",
+            "strength_and_weaknesses": "Strength\n\nThis work answers affirmatively an open problem by proposing a *bias-corrected* stochastic extragradient (BCSEG+) algorithm that solves stochastic weak Minty variational inequalities without increasing the batch size. As the authors indicated, Pethick et al. (2022) \"su\ufb03ces in the special case of unconstrained quadratic games but can fail even in the monotone case ...\". Also, earlier works such as Hsieh et al. (2020) adopt diminishing but larger exploration stepsize and smaller updating stepsize.\n\n\nWeakness\n\nThere is not much from my perspective, as long as the proof is correct (which I took a high-leve look at but did not go into all details). Two small comments:\n\n--MVI can be short for \"monotone\" variational inequality instead of \"Minty\" variational inequality. Adopting this shorthand as in some earlier work might cause unnecessary confusion. Therefore, I would suggest the authors avoid this shorthand as much as possible.\n\n--The authors should do more literature reviews. Missing reference includes but not limited to \"Bot et al., Minibatch Forward-Backward-Forward Methods for Solving Stochastic Variational Inequalities, 2021\"",
+            "clarity,_quality,_novelty_and_reproducibility": "The authors did a good job in all these given aspects.",
+            "summary_of_the_review": "This paper is theoretically strong in the sense that it made an important step in fixing SEG with constant extrapolation stepsize and diminishing updating stepsize. This makes an important step upon existing work (e.g. Hsieh et al., 2020; Diakonikolas et al., 2021; Pethick et al., 2022) even for the monotone case. This supports my high rating of this work. It would be even better if the authors have a chance to include richer empirical findings relative to this work. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_sw4D"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6495/Reviewer_sw4D"
+        ]
+    }
+]

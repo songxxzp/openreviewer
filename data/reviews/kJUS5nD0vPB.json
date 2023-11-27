@@ -1,0 +1,119 @@
+[
+    {
+        "id": "ThQJTQrHvo4",
+        "original": null,
+        "number": 1,
+        "cdate": 1666603889072,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666603889072,
+        "tmdate": 1668679453952,
+        "tddate": null,
+        "forum": "kJUS5nD0vPB",
+        "replyto": "kJUS5nD0vPB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3086/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes an out-of-distribution detection mechanism for conditional language models (LMs). The authors investigate settings such as (degrees of) OOD detection for summarisation and translation, and using OOD detection to refrain from generating with the model on-the-fly.",
+            "strength_and_weaknesses": "Strengths:\n- The authors address a timely research question, since LMs popularity is (still) on the rise and LMs are deployed almost as out-of-the-box tools for \"language understanding\" or \"language generation\".\n- Quite a number of experiments on different aspects of OOD detection. I like the in-depth investigation of the different ideas proposed/studied in the paper.\n\nWeaknesses:\n- There are some statements/claims that are either not well developed in the text (leaving to the reader to guess the intention of the authors when saying something) or that seem overeaching/inconsistent. Please refer to my comments for detailed examples of these.\n- The paper can be hard to follow at times, and there are a lot of different experiments. Perhaps the authors would have a perceivingly stronger paper by making it less wide and more deep (i.e., cover less different points but go deeper into the points it does cover).",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear enough (nonwithstanding the points mentioned as weaknesses), and includes many interesting experiments. I am not so positive about its reproducibility, since there are no statements about (a plan for open sourcing) code for reproducing the experiments. One point I did not like very much is the fact the authors mention two external baselines at the end of their related work section (the ensemble methods proposed for e.g. machine translation), but do not compare their methods against those baselines. The paper seems to be novel enough, although this is an educated guess by the reviewer (for lack of detailed knowledge about the state-of-the-art).",
+            "summary_of_the_review": "My recommendation is a borderline accept. The reason for \"accept\" is the fact the paper is on a timely research topic and that it includes many varied and interesting experiments. The reson for \"borderline\" is detailed in my comments/questions below.\n\n- The examples of existing works on OOD detection could be greatly improved (2nd paragraph in the introduction). Not sure the cow example is the best one, since it is more an example of \"noisy\" rather than \"out-of-distribution\" input. It is also an example in the vision domain, should you not include an example in the (conditional) language modelling domain?\n\n- Page 2, paragraph 1, last sentence (\"In Section 4, we show that while model perplexity is a reasonable choice for [performing selective generation with] in-domain examples, combining with our OOD score works much better when the input distribution is shifted\") -> Please make it clear that you are talking about selective generation, e.g., I added the text in-between brackets to do that as a suggestion.\n\n- Page 2, section 2: In the first paragraph, it is not clear what is the (practical) relationship between maximum softmax probability (MSP) and perplexity. Please better elaborate your point, the paragraph reads like two more-or-less independent points glued together. A method that comes to mind is the mean over the MSP for a sequential output, for instance.\n\n- Page 3, last paragraph (\"MD0(ztest) := MD(ztest; \u03bcz0 , \u03a3z0 ) is the MD to a background Gaussian N (\u03bcz0 , \u03a3z0 ), fit using a large, broad dataset to approximately represent all domains.\") -> Even though I understand the point, in your introduction you mention that, compared to OOD detection in a standard classification problem, performing OOD detection for CLMs have the added difficulty that CLMs have virtually infinite, unbounded output spaces. This idea of \"approximately\" representing \"all domains\" goes directly against that point. Please defend why this claim/idea makes sense for OOD detection of CLMs. Is the point made in the introduction not so important afterall?\n\n- Page 4, 2nd paragraph (\"While we use the ground-truth outputs to fit N (\u03bcw, \u03a3w), we do not have ground-truth in general for the background examples (e.g. C4). We decode outputs from the trained CLMs and use those output embeddings to fit the background output Gaussian, N (\u03bcw\u03b4 , \u03a3w\u03b4 ).\") -> This sentence is not clear. Please rephrase. Your model requires input/output for the two tasks, i.e., summarisation and translation. You have C4 for summarisation, and ParaCrawl for translation. Please elaborate that ParaCrawl does not have translation pairs, but paraphrases (right?), and that C4 does not include summaries (to the best of my knowledge). Your descriptions seem incomplete and assume that the reader will make the leap about important points that should be made clear in your manuscript.\n\n- Page 4: \"Since we have implicitly defined two classes (...)\" -> There was no implicit definition, I would say this definition of the two classes was explicitly made.\n\n- You are using AUROC as your metric, but I would like to see the plots rather than the summary metric (i.e., the actual curves), perhaps in the appendix. As baselines, you are using the perplexity score but not the maximum softmax probability MSP. Could you not use the mean MSP (over the sequence) as a proxy for OOD? Does it consistently underperform compared to using perplexity?\n\n- Page 6: \"Though RMD and Binary logits OOD scores both perform well at OOD detection, RMD OOD score is better at distinguishing near-OOD from far-OOD.\" -> Why does that matter? That is not what models were trained for. If you had trained models (RMD vs. Binary logits) to distinguish between near-OOD and far-OOD, perhaps the outcome would have been different. This split of near- vs. far-OOD is also a bit arbitrary, if you will make it central in your evaluation/discussion (like you do), perhaps it is a good idea to be more principled about it (e.g., using some objective/concrete measure to make one dataset \"more OOD than\" another). You hint at unigram overlap as a measure of OOD-ness later on, perhaps you should use the \"degree of OOD-ness\" as the percentage of unigram overlap between the two domains, for example.\n\n- Page 6: \"We observed that law has the highest unigram overlap rate (48.8%) and the second highest overall overlap with the in-domain data (Table A.7). This confirms that law is actually not OOD data and explains why no method can detect it.\" -> If your definition of OOD only depends on unigram overlap, you do not need anything other than computing the unigram overlap between domains to perform OOD detection. I find this a very misleading comment, since the fact a dataset has high unigram overlap with another does not automatically rule out this dataset being OOD. You should include more nuance in these statements.\n\n- Page 7: \"Amazon Mechanical Turk workers were asked to evaluate summaries generated by the xsum model on a scale of 1-5 (bad-good) using 100 examples from xsum, cnn dailymail, reddit tifu, and samsum. We collected 3 ratings per example and took the median to reduce inter-rater noise\" -> This is a bad strategy to reduce inter-annotator agreement. You are basically hiding the (possible) disagreement by only using the median, whereas in order to reduce the disagreement (and not mask it) you should instead 1) select high-quality annotators, 2) make the annotation guidelines clear including concrete examples of how to annotate difficult cases, 3) include control examples for annotators, etc. Please at least report the variance of the annotators, so the reader knows how noisy they are.\n\n- Page 8, Section 4.4: \"To evaluate that, we propose using the Quality vs Abstention Curve (QA), analogous to accuracy versus rejection curve used for selective prediction in the classification.\" -> Citation missing. You mention Malinin & Gales (2020); Xiao et al. (2020) later, but it is not clear how exactly they relate to QA. If you are the one proposing this measure, please make it clear.\n\n- Page 8, Section 4.4: \"For translation, the OOD score is better than perplexity when abstention rate \u03b1 > 0.5 and worse than perplexity when \u03b1 < 0.5.\" -> From Figure 5, the cut-off point looks more like 0.6 or 0.65 rather than 0.5. Is that so?\n\n- Page 9, Section 5, last paragraph: \"In this work, we focus on developing scores that can be readily derived from the generative model itself, without much increase in computation.\" -> You did not compute how much time it takes to run your proposed models compared to the baselines. I find it could be a limitation of your work, especially in light of the existing work using ensembles mentioned in your related work section. You also did not include any such ensembles as your baselines. Why?",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_WGqY"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_WGqY"
+        ]
+    },
+    {
+        "id": "B7h-MqEz1h",
+        "original": null,
+        "number": 2,
+        "cdate": 1666670149731,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666670149731,
+        "tmdate": 1666670149731,
+        "tddate": null,
+        "forum": "kJUS5nD0vPB",
+        "replyto": "kJUS5nD0vPB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3086/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper addresses the out-of-domain (OOD) detection for conditional generation tasks. It proposes an OOD score, which is based on the Mahalanobis Distance (MD) to the input and output embeddings of the language model. The MD-based OOD score is computed in relative to a background Gaussian model. Furthermore, the combined OOD score and perplexity correlates well with generation quality, and can be used for selective generation and early rejection based on OOD score. The proposed approaches are validated on summarization and translation tasks.",
+            "strength_and_weaknesses": "Strength:\n(1)\tIt addresses an interesting OOD problem for conditional generation, where OOD errors can get easily accumulated via auto-regressive generation.\n(2)\tIt proposes an effective OOD score. The score is based on the MD to the input and output embeddings of the language model. Relative MD is used to measure the inference time deviation from training data and a background distribution model.\n(3)\tThe OOD score in combination with perplexity provides a good metric for selective generation of near-domain samples with quality control. It correlates well with generation quality. It is simple to deploy to address the domain shift issue at inference time.\n(4)\tExperiments and results are well-explained. Analysis is comprehensive. The analysis of the correlation of perplexity and generation quality with OOD score changes is insightful.\n\nWeaknesses:\n(1)\tNovelty is limited as MD-based OOD metrics have been widely studied and used, though this paper used it in a different setting (non-classification). \n(2)\tIt is not compared with other common OOD detection strategies, such as threshold based, energy based, contrastive based approaches.\n(3)\tIt\u2019s not clear how the proposed method generalizes to other tasks and model structures.\n(4)\tIt is unclear why the embeddings from the final layers are chosen.\n(5)\tIt is unclear how the background data is selected, and how well the background Gaussian is expected to generalize. It seems fitting the background Gaussian is nontrivial and the proposed method is not as light-weight as it claimed to be. More importantly, what if we know nothing about the OOD? It seems the background Gaussian would fail to work when there is no good definition of background data.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity is good. Experiments are well-explained. Analysis is comprehensive. However, there is too much important material in the Appendix. Would suggest to improve the paper structure and format.\n\nNovelty is limited. It addresses an interesting OOD problem in conditional generation. The proposed approaches are effective. However, MD-based OOD metrics have been extensively studied and used.\n\nReproducibility is limited. The OOD score fitting and computation are nontrivial. Though the experiment settings and results are thoroughly explained, it is relatively challenging to reproduce all of them due to lack of necessary implementation details.\n",
+            "summary_of_the_review": "The problem is interesting, the proposed approach is effective, and experiments and analysis are comprehensive.\nNovelty is a bit limited, lack of comparison with other common OOD approaches, and the generalization of the proposed approach is questionable.\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_f7UA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_f7UA"
+        ]
+    },
+    {
+        "id": "Ilnw78FccJg",
+        "original": null,
+        "number": 3,
+        "cdate": 1667398714001,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667398714001,
+        "tmdate": 1667398714001,
+        "tddate": null,
+        "forum": "kJUS5nD0vPB",
+        "replyto": "kJUS5nD0vPB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3086/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Conditional language models often perform poorly on out-of-domain (OOD) data. This might be a reason why they shouldn't be tasked with generating anything for OOD examples at all: generations might be of poor quality and even more unpredictable than normal outputs. In order to predict which examples a conditional language model can be safely applied to, the authors propose a score to detect OOD examples. The score they introduce is Mahalanobis distance, either using the input or the output embeddings. They further show that the latter can be combined with perplexity to obtain an even stronger score.\n\nThe authors perform two types of experiments (on summarization and translation). First, they show that their score can detect OOD data more reliably than baselines. Second, they show that their score can also indicate low-quality generations. ",
+            "strength_and_weaknesses": "Strengths:\n- The paper has a clear motivation and succeeds at what it's trying to do.\n- The experiments are well designed.\n\nWeaknesses:\n- Nothing major.\n\nThere are a couple of typos. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is very clear and its quality is high. It's also novel, though inspired by a similar score for classification tasks. \nThe experiments seem to be reproducible. ",
+            "summary_of_the_review": "I believe this paper will be useful for the community. It should get accepted.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_U7Pj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3086/Reviewer_U7Pj"
+        ]
+    }
+]

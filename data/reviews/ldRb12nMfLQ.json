@@ -1,0 +1,199 @@
+[
+    {
+        "id": "sLOGfj7yh9K",
+        "original": null,
+        "number": 1,
+        "cdate": 1666194934579,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666194934579,
+        "tmdate": 1666194934579,
+        "tddate": null,
+        "forum": "ldRb12nMfLQ",
+        "replyto": "ldRb12nMfLQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1121/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors propose a method for \"learning\" a pre-conditioner network for the conjugate gradient method as it applies to linear systems Ax = b resulting from the discrete Poisson equations.\nThe authors propose to train a CNN model to approximate the inverse of a given matrix A (modulo scaling) by using training data generated from linear combinations of eigenvectors of A which need to be computed first.\nUsing the proposed method in the context of a conjugate gradient solver shows a significant reduction in the number of iterations required to reach a certain residual norm for their specific test application (a wall-clock time reduction is indicated for larger grid sizes).",
+            "strength_and_weaknesses": "Strengths:\n- The paper does a good job explaining the specific problem setup.\n- The paper indicates that there is a possible generalization effect by scaling the grid size for a given problem instance and this could be explored further.\n\nWeaknesses:\n- The paper addresses a very specific problem type and is not as general as the title suggests.\n- For someone not familiar with the literature on approximating matrix inverses the paper could improve on motivation for the network architecture, for example why are non-linearities even necessary / helful if the learned function is linear.\n- The paper does not contain a theoretical analysis of the computational complexity of obtaining eigenvalue and matrix inverse approximations. To me it is not clear why a method that uses stochastic gradients (Adam) should converge to a good matrix inverse approximation faster than more specific deterministic approaches, especially if you already have a sample of eigenvectors available.\n- The experimental setup is not always well motivated and seems somewhat arbitraty, for example it seems to me that the choice of m=10k example eigenvectors should be somehow related to the eigenspectrum.\n- The paper does not consider the computational cost of the whole end-to-end setup. Is the method useful if only a single solve with the matrix A is performed given how expensive it is to generate the training set and train the network? If we require multiple solves with the e.g. similar matrices A, then how many solves are typical for a given PDE solver and how useful can this method be? What residual norm for the linear system is required in order for the PDE solver to converge?\n- The paper does not show how well the network model actually learns / generalizes on a validation set and does not compare different architecture options in that way.\n- I'm not sure whether the FluidNet baseline is used in the correct way (just using a model pre-trained on a different matrix does not the intended use)\n\n**Suggestions and questions:**\n\nAbstract:\n- \"require many millions of unknowns\" seems fuzzy to me, I would use different wording that \"require\" here\n- in general the abstract could be made more concise\n- mention some more relevant quantitative data points in the abstract such as the actual computational cost involved in training the inverse model (not just iteration count)\n- explain why a neural network approach is helpful when the inverse is a linear function (or is it a linear neural network)?\n- explain the connection between SGD updates and Krylov subspace updates and the information complexity involved (why can the data be more efficient than the Krylov updates)\n- obvious necessary improvement would be to consider different sources of linear systems (or otherwise make the title of the paper more specific and pick a different target publication venue)\n\nIntroduction:\n- \"since this decreases the degree of nonlinearity\" what is meant by nonlinearity here?\n- \"We use unsupervised learnin\" how is this unsupervised learning? There is \"supervision\" from A, right?\n- Do they account for changing A in every iteration of a PDE solver? Or is the approach mostly suitable for repeatedly solving with the same A?\n- How does the approach really generalize to unseen A?\n- Learning or computing a perfect inverse for a given A would in principle solve the problem perfectly, but that is not a very useful insight.\n\nRelated work:\n- \"However, in computer graphics applications, at least four orders of magnitude [...]\" would be good to have references for these claims.\n- The figure is not really related to the method explained in the paper. I would rather use an illustration the demonstrates the workflow or method of the paper.\n\nMotivation:\n- For the paper targeting an ML conference I would say providing the PDE and math related to the problem is not really that helpful. I would rather focus on explaining the resulting structure of the matrix. But explaining just the discretization scheme does not tell the reader a lot about how the matrix will look like.\n\nMethod:\n- Is there going to be an explanation on the effect of their pre-conditioner approach on the eigenspectrum of the matrix (as this reflects conditioning / convergence properties of CG)?\n- Why not a linear function for the pre-conditioner network?\n- Explain where the network is trained in relation to the PDE solver earlier in the paper\n\nArchitecture:\n- \"Our approach has modest training requirements\" what does that mean quantitatively? Also the rest of the sentence, these statements are too vague to be meaningful.\n- Again, need to discuss whether a network trained for a given matrix for a given set of boundary / initial conditions is in any way useful to another problem\n- Again, not sure why the approach is called unsupervised, the Matrix vector product with a given A is a form of supervision\n- Explain earlier and clearly where the \"training input vectors\" come from for you network training\n- Isn't getting approximate eigenvector for A just as expensive as solving the system? When reading that these are used I can imagine that they will be very helpful in approximating and inverse because finding them is essentially as hard as finding the inverse.\n- What does it mean to \"effectively approximate the full spectrum\"?\n- There should be much more focus on the computational cost and tradeoff of these aspects of how to compute the eigenvectors etc., which ones to compute (computing them for different parts of the eigenspectrum can have different difficulty, depending on the eigenvalue distriubtion).\n- Does m=10k work equally well for all different kinds of n? That seems somewhat implausible? m should probably depend on the discretization? Are the experiments run on m as hyperparam presented in the work? Is the cost of computing m eigenvectors part of the computational cost comparison? What type of pre-conditioner could be constructed with m=10k eigenvectors explicitly?\n- What is the motivation for the 9 constant in the definition of c_j^i? Where does theta=500 come from?\n- Need to discuss exactly what is the cost of the m Lanczos iterations? That seems like information that would typically be usable to kick start the system solve for A as well.\n- The concrete numbers used for the grid sizes and so on points to the fact that this paper is quite specific to a given application and should possibly be titled as such\n\nModel Architecture:\n- Would be helpful to get some intuition on why convolutions may be suitable for the type of A. A guess would be that since PDE solutions are smooth and neighboring entries in A related to spacial neighborhood in the discretization grid somehow the convoultion helps with generating smoother pre-conditioners in that same sense? What does the inverse of A look like in terms of \"smoothness\" structure? Does convolution hurt sparsity?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: The paper is clearly written but could benefit from a shift in emphasis. For example instead of explaining the details of the specific PDE from which the matrix is generated it could be more useful to discuss the type of structure that results from such PDEs, i.e. what does the sparsity pattern look like, what does the pattern of the inverse look like, plot the matrix elements as a distribution to see smoothness properties etc.\n\nQuality: The paper is somewhat limited in it's scope and quality could be improved significantly by a) generalizing to more example use cases when trying to keep it an experimental paper and b) analyzing the theoretical considerations of the approach such as for example how much can the network even learn to help reduce the residual given a certain number of m eigenvectors for training\n\nNovelty: I'm not sufficiently familiar with the literature in order to judge the novelty of the presented approach.\n\nReproducibility: I don't see any references to the code but the method itself is explained well enough to facilitate reproducibility in principle.\n",
+            "summary_of_the_review": "I do not recommend to accept the paper in its current form since the specific application does not necessarily seem relevant to the audience of ICLR and otherwise the analysis of the approach is still a little bit too superficial to warrant publication. The paper could be improved by extension to other types of matrices, a more in depth analysis of the presented method, e.g. how and what the pre-conditioner network learns based on e.g. what parts of the eigenspectrum it sees, a better explanation of the total computational costs and also computational complexities involved in the compared approaches and perhaps a more comprehensive treatment of baselines.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No concerns",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_gFH2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_gFH2"
+        ]
+    },
+    {
+        "id": "7hZG1m4igW",
+        "original": null,
+        "number": 2,
+        "cdate": 1666375659489,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666375659489,
+        "tmdate": 1666375659489,
+        "tddate": null,
+        "forum": "ldRb12nMfLQ",
+        "replyto": "ldRb12nMfLQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1121/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper presents an iterative method to solve large sparse pos. def. linear systems of equations with a deep learning technique to select step sizes. The authors demonstrate the efficacy of their approach on linear systems that arise from incompressible flow applications, which are after standard Chorin's splitting end up being shifted discrete Poisson equations. The paper uses deep learning to improve the quality of the search directions that appear in the conjugate gradient method. ",
+            "strength_and_weaknesses": "The most important thing about iterative methods such as conjugate gradient (CG) for discrete Poisson equations is preconditioning.  By making the step direction selected from a deep learning approach, there is no longer any theory. In particular, there is no underlying polynomial approximation problem that CG is solving, i.e., min_{p in P_k, p(0) = 1} max_{lambda = eig of A}|p(lambda)|. Therefore, one cannot get any idea of how to successfully precondition A, which for this iterative method to be practical on a range of problems will be necessary. For the discrete Poisson equations, the authors show that one can improve the selection of search direction after doing lots of matrix-vector products. \n\nI suspect that the authors have ignored the tensor-product structure in the matrix A^{(0,1)^3}.\n\nThe network is designed for and trained exclusively using data related to a single discrete Poisson matrix, which likely limits the generalizability of the present model. The multigrid method is a more general and extremely fast solver for discrete Poisson equations. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The manuscript is clear, novel and the results look reproducible.  However, the novelty in the manuscript is in a direction that does not seem fruitful to me. In particular, the manuscript only demonstrates an improvement over CG for one example problem.  ",
+            "summary_of_the_review": "The authors treat the search direction in CG as a kind of hyperparameter that can be selected by a deep learning approach. This means that there is no way to mathematical understanding of this iterative method. This makes it impossible to design good preconditioners so the approach is unlikely to generalize or be understanding from a mathematical perspective. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_GXf5"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_GXf5"
+        ]
+    },
+    {
+        "id": "7p7Hvpls6o",
+        "original": null,
+        "number": 3,
+        "cdate": 1666486560404,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666486560404,
+        "tmdate": 1666487913424,
+        "tddate": null,
+        "forum": "ldRb12nMfLQ",
+        "replyto": "ldRb12nMfLQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1121/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "In this paper, the authors consider the general problem of solving a linear system of equation in the case that the matrix is positive semi-definite (and sparse). The authors study a data-driven variation of conjugate gradient to solve the linear system. The algorithm (DCDM) is an iterative algorithm inspired by conjugate gradient algorithm where the descent direction is computed using a trained convolutional neural network. In the paper, the authors specialize their presentation of the algorithm for the incompressible flow problem. Comparison of performance DCDM, CG and preconditioned CG is provided. ",
+            "strength_and_weaknesses": "Below are my opinions that would strengthen the paper:\n\n- The will benefit from a clearly outlined contribution section. \n\n- Terms in the paper are used before explaining what they mean (eg., A-conjugate (in page 2), A-orthogonal (in page 4)). The paper would benefit from a notation section. What does $(0,1)^3$ mean in the paper?\n\n- Is the number of iterations required to find a solution using DCDM bounded (similar to CG and Krylov subspace methods)? An analysis on the convergence of DCDG is lacking. What conditions on the trained network would be needed for such an analysis to be feasible?\n\n- The linear system considered (please correct me if I am wrong) in the paper requires the matrix $A$ to have entries in the interval $(0,1)$. Is the algorithm limited to such matrices or can it be generalized larger intervals? If so, why?",
+            "clarity,_quality,_novelty_and_reproducibility": "I believe the paper sometimes lacks clarity (see above for points on notation and contribution). The algorithm details are provided however a link to existing codebase would aid in reproducibility.",
+            "summary_of_the_review": "I believe the main idea in the paper is interesting however the paper lacks clarity and the contributions of the work is not clear. An analysis of convergence of the algorithm is also needed. For these reasons, I believe the paper is marginally below the threshold for acceptance.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_2Pr7"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_2Pr7"
+        ]
+    },
+    {
+        "id": "n2cyZVQuI4",
+        "original": null,
+        "number": 4,
+        "cdate": 1666554533828,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666554533828,
+        "tmdate": 1666625803532,
+        "tddate": null,
+        "forum": "ldRb12nMfLQ",
+        "replyto": "ldRb12nMfLQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1121/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposed a data-driven modification of the CG algorithm for the solution of SPD linear systems. The proposed algorithm updates the approximate solution using a forward pass of a neural network which is trained with some of the lowest eigenmodes of \na discretization of the elliptic operator without internal boundary conditions. Numerical experiments demonstrate the effectiveness of the proposed scheme in terms of number of iterations and solution runtime. ",
+            "strength_and_weaknesses": "Strengths: \n1) The authors present an interesting data-driven approach to solve elliptic SPD linear systems. To the best of my knowledge, the method is novel. The training stage is described sufficiently well.\n2) The experiments suggest that the scheme works.\n3) The paper is clear and well-written.\n4) The supplemental material is very good (codes+video).\n\nWeaknesses: \n1) The proposed scheme appears to be impractical. Even with the best case settings, training takes from 20 minutes to 120 minutes (for the two smaller grids). These timings are nowhere on Table 1. What about the 256 grid? Also, do these timings include the Lanczos phase or only the training phase after the eigenmodes are computed? I suspect Lanczos is not included but I would like the authors to clarify this.\n\n2) In Table 1, the authors avoid to compare the solution phase of their method against ICPCG, which is nonetheless included later on in Figure 4, but this time they do not report timing results. Please report timings for ICPCG as well. Also, since the problem is elliptic, AMG (algebraic multigrid) is probably a better choice to compare against as this is the state-of-the-art method currently used. Please add this option in addition to Incomplete Cholesky. Based on the timings the authors report, the proposed scheme is slower even compared to plain CG, let alone state-of-the-art AMG preconditioned CG. Indeed, even if I count only two epochs, 60 minutes each, DCDM requires 7200+22 seconds versus 24 seconds for CG. Why is DCDM useful? Because the solution phase is faster? This portion of DCDM reported seems to be tiny compared to the overall running time of the scheme if I count Lanczos+Training. Am I missing something?\n\n3) Even if DCDM was faster with the training time included, it is still extremely impractical as it requires the computation of a huge number of eigenmodes just for the training phase. What is the wall-clock time required to perform 10000 Lanczos iterations? Is this time included in the results shown?\nThis is a /*huge*/ amount of Lanczos vectors required (and eigenmodes computed). The amount of memory required to save the Lanczos vectors is several orders of magnitude more than that of ICPCG which requires only storage for about six vectors plus the preconditoner (since the authors use Incomplete Cholesky this is pretty low). \n\n4) Please report all timings in the revised version.\n\nMinor comment: DeflatedPCG should be renamed as DeflatedCG, as the former indicates that deflation is applied on an already preconditioned variant of CG, which is not the case here. ",
+            "clarity,_quality,_novelty_and_reproducibility": "All good.",
+            "summary_of_the_review": "While I like the topic and the initiative by the authors, and I would like to give a higher score, the proposed method is simply impractical. Unless the authors can show that the timings of Lanczos+Training+Solution is lower than that of ICPCG, there is no reason for a scheme as the one proposed in this paper. Moreover, the memory requirements seem to be enormous compared to ICPCG. Not everyone has access to a 512GB RAM machine. To the latter, please add the need to store CG vectors to enforce A-orthogonality (which can be expensive in terms of both memory and computations).",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "NA",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_GZHi"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_GZHi"
+        ]
+    },
+    {
+        "id": "n_wAAJPi6j",
+        "original": null,
+        "number": 5,
+        "cdate": 1666857628654,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666857628654,
+        "tmdate": 1666857628654,
+        "tddate": null,
+        "forum": "ldRb12nMfLQ",
+        "replyto": "ldRb12nMfLQ",
+        "invitation": "ICLR.cc/2023/Conference/Paper1121/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose a machine-learning method to accelerate conjugate descent by training a convolutional network to regress good descent directions. The central idea---to obtain conjugate directions via self-supervised learning---is simple, creative, and it works very well. The authors effectively combine a number of techniques from numerical analysis and numerical linear algebra. They apply their method to build a fast Poisson solver and show that it consistently outperforms principled solvers as well as recent ML-accelerated solvers on realistic benchmarks.\n",
+            "strength_and_weaknesses": "The idea proposed by the authors is simple, effective, and by my standards the right way to use neural networks to accelerate forward solves. Instead of attempting to directly regress the solution or trying complicated things, which more or less never give reconstructions that are good for applications (and tends to horribly overfit training data), they opt to accelerate an iterative scheme in a new way, by regressing a new descent direction. Although there exist some related ideas, the whole package with the self-supervised training scheme and a well thought-out training set construction is quite novel as far as I can tell.\n\nI further find the idea to be very well executed. The authors clearly have a strong understanding of numerical analysis and numerical linear algebra. The literature overview and the problem description are very clear. The experimental validation is convincing and the reproducible code is provided in the supplementary material. I do have a couple of questions to clarify below but overall my impression is very positive.\n\n\n- You write that \"We only ask that our network approximate the inverse up to an unknown scaling since this decreases the degree of nonlinearity and since it does not affect the quality of the search direction (which is scale independent).\" My intuition is that the degree of nonlinearity in the network which computes the descent direction is not important. Rather, the norm of the vector computed by the network would almost certainly not be the optimal step length and so it makes sense to compute it exactly as you do in your loss. (That is, even if the network was trained to regress something with a specific norm it would be opportune to rescale it; one might try training like that and rescaling only at test time.)\n\n- I don't think that your training strategy is unsupervised. Rather, the supervision is performed through the operator $A^\\Omega$. A commonly used term in this situation where you have the residual both as input to f and as the target is \"self-supervised learning\".\n\n- The abstract suggests that the number of iterations required by your method is independent of the problem size, but Table 1 indicates otherwise. Could you clarify this?\n\n- I find it a bit surprising that the model from the third epoch was optimal at resolution 128^3. Is \"optimal\" meant in the training loss sense or in the sense that it performed best at test time? If the latter is the case, does the loss keep decreasing after the third epoch? And if not, can you speculate why?\n\n- What exactly is meant by the \"data dependency\" of incomplete Cholesky preconditioners on page 2? Is this alleaviated by the presented method (I am wondering about the word \"However, \")\n\n\n### Minor\n\n- please add callouts (a, b, c, d) in Figure 4 even though they seem obvious\n- please use the same color for the same algorithm in all subfigures, otherwise it's quite confusing (you might also consider other ways to vary the line style as well as using a color scheme that is friendly to the color blind---red / green is quite bad)\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is very clearly written and as far as I can tell original. Reproducible code is provided in the supplementary material.",
+            "summary_of_the_review": "As stated above, I think this is a good paper. It addresses an important problem, finds an effective way to use machine learning (via self-supervision), and does exactly what it says in the introduction, without overselling or underselling. I would be happy to see this paper accepted.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_nmQe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1121/Reviewer_nmQe"
+        ]
+    }
+]

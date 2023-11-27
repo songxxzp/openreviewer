@@ -1,0 +1,159 @@
+[
+    {
+        "id": "N_DJR2_r5D-",
+        "original": null,
+        "number": 1,
+        "cdate": 1666101862112,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666101862112,
+        "tmdate": 1666101862112,
+        "tddate": null,
+        "forum": "c5tbxWXU9-y",
+        "replyto": "c5tbxWXU9-y",
+        "invitation": "ICLR.cc/2023/Conference/Paper1302/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper considers the problem of *unsupervised domain adaptation* (UDA): described as a supervised learning problem where the source and target domain distributions are different and the learning algorithm has access to labelled source and unlabeled target data.\n\nThe paper considers the *empirical-to-population* (EP) generalization error in this setting, which is defined as \n$$\\textnormal{Err}(w) = R_{\\mu'}(w) - R_s(w),$$\n\nwhere $R_{\\mu'}$ is the population risk in the target domain distribution $\\mu'$ and $R_s$ is the empirical risk in the source domain with a dataset $s = \\lbrace z_i\\rbrace_{i=1}^n$ sampled i.i.d. from the source distribution $\\mu$. \n\nTraditionally, in the domain adaptation literature, the studied error is the *population-to-population* (PP) generalization error\n$$\\widetilde{\\textnormal{Err}}(w) = R_{\\mu'}(w) - R_\\mu(w),$$\n\nsince one may decompose the EP generalization error $\\textnormal{Err}$ into the PP error and the classical generalization error, for which there is a large literature in its characterization, namely\n$$\n    \\textnormal{Err}(w) = \\widetilde{\\textnormal{Err}}(w) + \\big[R_\\mu(w) - R_s(w) \\big].\n$$\n\nThe paper employs known techniques from the classical generalization community to bound differences of expectations of the same function to develop bounds of both the EP error and the PP error. These bounds are both tighter and more insightful than previous bounds: e.g., the bounds in Section 5 can make use of the unlabeled data. This way, also taking from the classical generalization community, they find bounds on the stochastic gradient Langevin dynamics algorithm (SGLD).\n\nThen, they use the insights obtained from the derived bounds to develop regularization strategies that result in better EP generalization error in their experiments.",
+            "strength_and_weaknesses": "**Strengths**\n\n* The paper combines nicely the known techniques to bound the classical generalization error in the UDA setting. Typically these are only used to bound the PP error and not the EP error.\n\n* The resulting bounds are often tighter than those in the literature and some of them provide new insights into the UDA problem.\n\n* The resulting regularization strategies obtain better results than the known schemes to improve domain adaptation.\n\n**Weaknesses**\n\n* Although the classical generalization error papers introducing the techniques used to bound the difference of expectations are quickly cited in the related work section, it is not clear in the main text where and how these techniques are used or how they inspired the bounds in the main text. \n\n    * Section 4.1. is strongly powered by Lemma A.1. which is basically Lemma 1 in *[Xu and Raginsky 2017]* letting $\\mathcal{X} \\times \\mathcal{Y} = \\Theta$, $P_{X,Y} = Q$, and $P_{X} \\otimes P_{Y} = P$.\n    * Section 4.2. (Theorem 4.4., Corollary 4.3, and the discussion around them) is based on *[Rodr\u00edguez-G\u00e1lvez et al. 2021]*.\n    * Section 5.1. is first based on the disintegration ideas from *[Negrea et al. 2019]* and then on the decompositions of *[Rodr\u00edguez-G\u00e1lvez et al. 2021]*.\n    * Section 5.2. is based on the information-theoretic analyses of SGLD and noisy SGD *[Pensia et al. 2018, Bu et al. 2019, Negrea et al. 2019, Haghifam et al. 2020, Rodr\u00edguez-G\u00e1lvez et al. 2021b, Neu et al. 2021, Wang and Mao 2022]*. \n    * Also in Section 5.2., it is stated that gradient penalty is strongly theoretically justified for standard supervised learning based on Theorem 5.3. Similar observations can be made from the results on standard generalization error from both the information-theoretic *[Negrea et al. 2019, Haghifam et al. 2020, Rodr\u00edguez-G\u00e1lvez et al. 2021b, Neu et al. 2021, Wang and Mao 2022]* and ODE analysis *[Smith et al. 2021]* communities.\n\n* The discussion around the lower bound on the target domain population risk of Corollary 4.1. is confusing (at least to me). The result says that $R_\\mu(w) - \\sqrt{2R^2 D_{\\textnormal{KL}}(\\mu' \\lVert \\mu)} \\leq R_{\\mu'}(w)$. The discussion refers to this as a fundamental difficulty in UDA learning, since using the same predictor $f_w$ the population risk in in the target domain cannot be lower than that of the source domain minus a constant depending on the domain difference. However, I understand this as a potential advantage: one can design algorithms that attain lower population risk in the target domain than in the source domain when the domains are sufficiently different. \n\n* The discussion in Section 5.3. can be strengthened. The authors note that the expected cross-entropy loss for each $Z_i$ can be decomposed as (6) $$\\mathbb{E}[\\ell(f_W(T_i),Y_i)] = H(Y_i|T_i) + \\mathbb{E}[D_{\\textnormal{KL}}(P_{Y_i|T_i,W} \\lVert Q_{Y_i|T_i,W})] - I(W;Y_i|T_i).$$ \nThen they proceed to say that minimizing the expected cross entropy may not adequately reduce $H(Y_i|T_i)$ but increase $I(W;Y_i|T_i)$. However, note that $I(W;Y_i|T_i) = H(Y_i|T_i) - H(Y_i|T_i,W)$, and therefore (6) can be simplified to $$\\mathbb{E}[\\ell(f_W(T_i),Y_i)] = H(Y_i|T_i,W) + \\mathbb{E}[D_{\\textnormal{KL}}(P_{Y_i|T_i,W} \\lVert Q_{Y_i|T_i,W})],$$\nsuggesting that minimizing the expected-cross entropy will minimize $H(Y_i|T_i,W)$. Since conditioning reduces the entropy $H(Y_i|T_i,W) \\leq H(Y_i|T_i)$, so minimizing $H(Y_i|T_i,W)$ does not need to minimize $H(Y_i|T_i)$, effectively having an effect of maintaining a large conditional mutual information $I(W;Y_i|T_i)$.\n\n* The proof of Theorem 4.2. seems to need the extra assumption of having symmetric losses, i.e., losses such that $\\ell(x,y) = \\ell(y,x)$ for all $x,y$. \n\n(*Sorry for the slight change in notation in the following two bullet points, the OpenReview render is not happy with subscripts in the expectation symbols $\\mathbb{E}$*.)\n\n* Theorem 4.3. and its proof seem a little confusing to me. In *[Germain et al. 2020]* the domain disagreement is defined as $$\\textnormal{dis}(P_X,P_{X'}) = \\big| E_{W,W'} \\big[E_{X'}[\\ell(f_W(X'),f_{W'}(X')] - E_{X}[\\ell(f_W(X),f_{W'}(X)] \\big] \\big|,$$ \nhowever in the text it is written as $$\\textnormal{dis}(P_X,P_{X'}) = \\big| E_{W,W',X'}[\\ell(f_W(X'),f_{W'}(X')] - E_{W,W',X}[\\ell(f_W(X),f_{W'}(X)] \\big|,$$ \nwhich is confusing since usually there is a relationship between $W$ and $X$, as the parameters of the model's function depend on the data. Hence, it appears like if in the proof of Theorem 4.3. there is a flaw regarding the conditioning. Let's focus on the first array of three inequalities and on the first term on the right-hand-side. Essentially, the proof states that $$\\sup_{W, W' \\in \\mathcal{W}^2} E_{X'}[t \\ell(f_W(X'),f_{W'}(X')] \\leq E_{W,W'} \\big[E_{X'}[t \\ell(f_W(X'),f_{W'}(X')] \\big] \\leq E_{W,W',X'} [t \\ell(f_W(X'),f_{W'}(X')],$$ \nand if $W$ and $X$ are related this is not true. \n\n    * This may be easily fixed by making sure that the independence of $W,W'$ and $X$ and $X'$ is clear in the definition from *[Germain et al. 2020]*.\n\n* In Theorem B.1. it is stated that without loss of generality one may assume that $\\alpha \\leq \\mathbb{E}[e^{g(\\hat{Z})}] \\leq \\mathbb{E}[e^{g(Z)}]$, where $\\hat{Z} \\sim \\hat{\\mu}$ and $Z \\sim \\mu$, for some constant $\\alpha > 0$ and any $g$. I can understand the fist inequality concerning $\\alpha$, but I do not see why the moment generating function of $g(Z)$ dominates that of $g(\\hat{Z})$ in general.\n\n* In Theorem B.2., after solving for Theorem 11.2.1. in *[Cover and Thomas, 2006]* one gets the standard dependence on the probability $\\frac{1}{n} \\log(1/\\delta)$, not $\\frac{1}{n \\log \\delta}$.\n\n\n**References**\n\n*[Cover and Thomas, 2006]* Elements of information theory. \\\n*[Xu and Raginsky, 2017]* Information-theoretic analysis of generalization capability of learning algorithms.\\\n*[Pensia et al. 2018]* Generalization error bounds for noisy, iterative algorithms. \\\n*[Bu et al. 2019]* Tightening mutual information based bounds on generalization error. \\\n*[Negrea et al. 2019]* Information-theoretic generalization bounds for SGLD via data-dependent estimates. \\\n*[Germain et al. 2020]* PAC-Bayes and domain adaptation. \\\n*[Haghifam et al. 2020]* Sharpened generalization bounds based on conditional mutual information and an application to noisy, iterative algorithms. \\\n*[Rodr\u00edguez-G\u00e1lvez et al. 2021b]* On random subset generalization error bounds\nand the stochastic gradient Langevin dynamics algorithm. \\\n*[Smith et al. 2021]* On the origin of implicit regularization in stochastic gradient descent. \\\n*[Rodr\u00edguez-G\u00e1lvez et al. 2021]* Tighter expected generalization error bounds via Wasserstein distance. \\\n*[Neu et al. 2021]* Information-theoretic generalization bounds for stochastic gradient descent. \\\n*[Wang and Mao, 2022]* On the generalization of models trained with SGD: information-theoretic bounds and implications.  ",
+            "clarity,_quality,_novelty_and_reproducibility": "* **Clarity**: The paper is clear and well-written.\n\n* **Quality**: The quality of the paper is good. As mentioned in the review, the resulting bounds are tighter and some of them reveal interesting insights. Also, the regularization scheme empirically performs better than previous schemes in the literature.\n\n* **Novelty**: While the techniques are not novel and have been employed previously (see weaknesses), their use in the UDA is novel as far as I know. Nonetheless, the resulting bounds and insights are indeed new, as well as the regularization technique.\n\n* **Reproducibility**: \\\n    *Theory*: I reproduced all the proofs except for the questions that I placed the authors in the weaknesses. \n    \n    *Experiments*: There is code provided to reproduce the experiments.  I hope this code is then uploaded to some easily accessible repository and with an easy link in the main text.",
+            "summary_of_the_review": "This paper finds upper bounds on the empirical-to-population (EP) and population-to-population (PP) generalization error in unsupervised domain adaptation (UDA). \n\nTo do so, the paper employs various techniques used to bound the classical generalization error. Using these techniques the resulting bounds are tighter than other bounds in the literature and some provide interesting insights on what is necessary/important to succeed in UDA. \n\nFinally, the paper uses such insights to develop regularization strategies that result in better domain adaptation than previous schemes.\n\nThe paper is a good contribution to the community and therefore I lean towards acceptance. Nonetheless, there are some issues to improve (see Weaknesses) such as proper crediting to the inspiring work on bounding the classical generalization error, from which most of the bounding techniques are taken; the discussion around Corollary 4.1. and (6); the assumptions needed for 4.2.; the point raised about Theorem 4.3.; and some statements in Theorems B.1. and B.2. I believe all of them are small and doable during the rebuttal phase.\n \n\n**Minor comments and nitpicks that did not impact the score of the review**\n\n* In the third paragraph of the introduction you use the terms PP and EP without explaining them. It would be good to write what they mean.\n* In the 4th line of the Preliminary, 'hypothesis space of ~~interesting~~ interest,'\n* In page 3, line 5, 'an algorithm $\\mathcal{A}$ that takes'\n* In Assumption 3: is $\\beta$-Lipschitz ~~continues~~ continuous.\n* Also in Assumption 3. Lipschitz continuity is defined with respect to a metric $d$. So I recommend to say that $\\ell(f_w(X),Y)$ is $\\beta$-Lipschitz continuous in $\\mathcal{Z}$ with respect to a metric $d$ on $\\mathcal{Z}$ for any $w \\in \\mathcal{W}$.\n* You say that (3) is remarkable. What is remarkable about such a result? It seems reasonable and in line to the previous literature. \n* In page 5, could you add a reference (or some references) after the claim that \"A common method is to assign pseudo labels to target data based on a learned source classifier\". \n* In Theorem 4.5 and its proof, the Lipschitz constant should always be $\\beta$, sometimes you also write $L$.\n* There is a change in notation for probabilities in the second to last paragraph in page 8. The one starting with \"Notice that...\".\n* In the proof of Theorem 4.2 one can go from (8) to the equation after (9) directly using the triangle inequality.\n* Could you provide the exact equation or theorem for the classic VC-dimenstion generalization bound in the proof of Theorem B.1.\n* In the last line of page 18: 'might exist a ~~more optimal~~ faster convergence rate'.\n* One can go directly from the third to the last equality in Section C.7. using the classical definition of conditional mutual information $I(X;Y|Z) = H(Y|Z) - H(Y|X,Z)$.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_mqeg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_mqeg"
+        ]
+    },
+    {
+        "id": "DmKI-JU3eCV",
+        "original": null,
+        "number": 2,
+        "cdate": 1666148151492,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666148151492,
+        "tmdate": 1666148151492,
+        "tddate": null,
+        "forum": "c5tbxWXU9-y",
+        "replyto": "c5tbxWXU9-y",
+        "invitation": "ICLR.cc/2023/Conference/Paper1302/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper use an information-theoretic framework to analyze the generalization ability of hypotheses and\nlearning algorithm of unsupervised domain adapation problem.",
+            "strength_and_weaknesses": "Strength:\n1\u3001The authors rigorously prove some generalization error bound. One of the bounds is associated only\nwith the learning algorithm, which is very different from other work.\n2\u3001The author designs a new algorithm on the UDA problem based on their theory and achieves good\nresults compare to other methods in the otatedMNIST and Digits datasets.\n3\u3001The author has relaxed the previous strong assumptions[1], so that the conclusions drawn are closer to\nthe real situation. And the author add gradient penalty based on this, which can be applied to any existing\nUDA algorithm\n[1] A. Tuan Nguyen, Toan Tran, Yarin Gal, Philip Torr, and Atilim Gunes Baydin. KL guided domain\nadaptation. In International Conference on Learning Representations, 2022. URL https:\n//openreview.net/forum?id=0JzqUlIVVDd.\n\nweakness\uff1a\n\n1\u3001The experiments are limited. Experiments on some popular datasets ( Office-Home, Office-31) have not been reported in the paper. The authors do not state how the results of the experiments match the theory analyzed clearly. \n\n2\u3001I don't understand how the first inequality sign of Equation (14) is derived from Lemma 1. How to use the independence condition between the algorithms  and unseen target data.\n\n3\u3001Compare to other UDA paper, this paper lack visual instructions such as t-SNE.\n\n4\u3001The paper lacks ablation experiments with gradient penalties to demonstrate the effectiveness of this design.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and the code is provided.  \n",
+            "summary_of_the_review": "This paper give some bounds of UDA problem. The authors propose generalization error bounds relevant only to the learning algorithm, which is very different from previous work. In addition, the authors analyze previous work and relax its strong assumptions. And based on this, a controlling label information algorithm is proposed. However, there are some details of the proof that are not clearly written. Besides, there is a lack of explanation of experimental results and theoretical analysis.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "None",
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_DmXB"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_DmXB"
+        ]
+    },
+    {
+        "id": "AvJgVkDBI7F",
+        "original": null,
+        "number": 3,
+        "cdate": 1666577577257,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666577577257,
+        "tmdate": 1666577577257,
+        "tddate": null,
+        "forum": "c5tbxWXU9-y",
+        "replyto": "c5tbxWXU9-y",
+        "invitation": "ICLR.cc/2023/Conference/Paper1302/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This work proposed the information-theoretic generalization error analysis of UDA. Especially the authors provided two approaches, PP generalization error and expected EP generalization error, which are based on the change-of-measure inequalities. Then the authors discussed these bounds about existing algorithms, especially margin alignment. Finally, based on the theoretical analysis, the authors proposed two algorithms: gradient regularization based on mutual information and controlling label information based on the entropy decomposition. The numerical experiments support the usefulness of these algorithms.",
+            "strength_and_weaknesses": "# Strength\n-  The authors discuss how the obtained bound relates to existing algorithms in detail. The authors discussed how the KL divergence obtained by the change-of-measure inequality relates to margin alignment methods in Theorem 4.2 and Sec 5.3.\n- The second generalization error bound (expected EP generalization error) in Theorem 5.1 seems novel and leads to the useful algorithm in Theorem 5.3.\n- The obtained algorithm is solid based on Theorem 5.3 and seems easy to implement and improve existing methods, as shown in Table 1.\n\n# Questions and Weakness\n- According to the Appendix, the authors used cross-entropy loss, but I am not sure the cross-entropy loss satisfies Assumption 2 of subgaussianity since the cross-entropy loss is unbounded.\n- In the algorithm, when taking the gradient of the gradient penalty, does the Hessian appears in the update rule? Or did the authors use detach function in pytorch so that the Hessian would not appear?\n- The method of controlling label information requires additional memory and computation since it requires the subnetwork to generate $\\tilde{W}$.\n- I would like to know the exact definition of $P_{W,Z'|X'_j=x'_j}$. Does this mean $Z'=(Y',X')$ is the test data in the target domain, and $X'_j=x_j'$ is the training data of unlabelled data in the target domain ?\n- I would like to know the performance of CL+GP, where both the controlling label information and gradient penalty is applied. Does this lead to better performance? Or does the use of two techniques regularize the information too much and is harmful to UDA?",
+            "clarity,_quality,_novelty_and_reproducibility": "Paper is well written and not difficult to follow. The present generalization error bound, especially Theorem 5.1 and obtained algorithms seems novel. \n",
+            "summary_of_the_review": "This paper presents the novel information-theoretic generalization error bound in UDA, which significantly generalizes the existing analysis and algorithms.\nAlso, the authors showed that the gradient penalty is useful in UDA by connecting it to the obtained MI in the generalization error bound. I think the results obtained in this paper are worth publication.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_DzXY"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_DzXY"
+        ]
+    },
+    {
+        "id": "vaItClzhGFd",
+        "original": null,
+        "number": 4,
+        "cdate": 1666770854112,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666770854112,
+        "tmdate": 1666771188132,
+        "tddate": null,
+        "forum": "c5tbxWXU9-y",
+        "replyto": "c5tbxWXU9-y",
+        "invitation": "ICLR.cc/2023/Conference/Paper1302/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This work provides UDA bounds based on the information-theoretic tools. Accordingly, new UDA methods are proposed with empirical evidence. ",
+            "strength_and_weaknesses": "Strength:\n\n1. The theoretical analysis in Section 5 is interesting and novel to me.\n\n2. Applying SGLD to UDA, though itself is not initially developed in this paper, is novel to me.\n\n\nWeakness:\n\n1. As the authors claimed, the KL term upper bounds some other measures (e.g., Wasserstein distance), which indicates that the bound is looser and therefore less informative. \n\n2. In the literature, algorithm-dependent bounds have already been developed. For example, in [1], the expected target loss is upper bounded in terms of the performance gap, which depends on the learning algorithm. Unfortunately, the authors did not provide an in-depth analysis of or comparison with existing works along this line, which is related to this paper. \n\n3. Page 5: squared loss does not satisfy the triangle inequality. In fact, it satisfies the \\emph{approximate triangle inequalities} [2].\n\n4. The entire theoretical analysis in Section 4 is incremental \u2013 it is more like a rephrasing of existing conclusions using the information-theoretic language, which does not provide any new insight. For example, it is hard to understand what is the difference between $\\lambda^*$ in Theorem and $\\lambda$ in [3].\n\n5. More detailed description is needed to understand the intuition behind $I(W;Z|X_j\u2019)$ or $I(X_j\u2019;Z|W)$.\n\n6. The authors noted that the bound in Theorem 5.3 only depends on $n$. From my aspect, it indicates that the bound cannot verify the benefits of target data, but just SGLD itself. In other words, there is a gap between Theorem 5.1 and Theorem 5.3.\n\n7. The empirical results are not convincing. The authors should evaluate the method on more practical benchmark data sets (e.g., Office-Home, VisDA, DomainNet\u2026). In addition, compared with a recent baseline (KL), the improvement is not significant.\n\n\n[1] Wang, B., Mendez, J., Cai, M. and Eaton, E., 2019. Transfer learning via minimizing the performance gap between domains. Advances in Neural Information Processing Systems, 32.\n\n[2] Crammer, K., Kearns, M., & Wortman, J. (2008). Learning from Multiple Sources. Journal of Machine Learning Research, 9(8).\n\n[3] Ben-David, S., Blitzer, J., Crammer, K., Kulesza, A., Pereira, F., & Vaughan, J. W. (2010). A theory of learning from different domains. Machine learning, 79(1), 151-175.\n\n\nQuestions:\n\n1. On page 5, is the random variable T\u2019 above Eq. 4 sampled from the source or target? \n\n2. Remark 5.1, why the mutual information will vanish as $n, m \\rightarrow \\infty$ (as it is already defined over the expectation)?\n\n3. Theorem 5.1, the average over $m$ and $n$ seem unnecessary since RHS is already defined over the expectation.\n\n4. The mathematical definition of $I^{T_j\u2019}(W;Y_i|T_i)$ is not clear to me.\n\n5. Theorem 5.3 is strange to me -- does it mean a small T will give a better generalization performance?\n\n\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Some details and intuitions need more clarification. ",
+            "summary_of_the_review": "While this paper provides some new insights into UDA, I don't think it is ready to publish in a top-tier conference (e.g., ICLR) given the weaknesses mentioned. However, it could be a good paper if the authors can carefully address the issues.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_jaro"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1302/Reviewer_jaro"
+        ]
+    }
+]

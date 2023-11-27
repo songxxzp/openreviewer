@@ -1,0 +1,158 @@
+[
+    {
+        "id": "Vfvpq_D5b1",
+        "original": null,
+        "number": 1,
+        "cdate": 1666469260878,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666469260878,
+        "tmdate": 1666582606565,
+        "tddate": null,
+        "forum": "KdwnGErdT6",
+        "replyto": "KdwnGErdT6",
+        "invitation": "ICLR.cc/2023/Conference/Paper5174/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "While it is known that Deep Neural Networks (DNNs) are in over-confident, and require calibration in practice, the authors empirically show that a popular dyanamic sparse training method, Rigging the Lottery Ticket (RiGL) appears to suffer from worse confidence calibration than a comparable dense model in practice. The authors propose a method based on RiGL, The Calibrated Lottery Ticket (CiGL), to improve confidence calibration while achieving similar or better generalization. The authors provide a proof claiming to show that their proposed CiGL method can be considered a hierarchical variational approximation to a probabilistic deep Gaussian process. The authors demonstrate the effectiveness of their method compared to standard RiGL, as well as RiGL calibrated with existing methods for dense models, on the ImageNet, CIFAR10, and CIFAR-100 datasets with a range of relevant models. The authors also perform an ablation analysis of CiGL to understand the contributions of different aspects of the method.",
+            "strength_and_weaknesses": "## Strengths:\n* Overall a well-written and well-motivated paper with a novel and intuitive method for addressing calibration with sparse training.\n* As far as I'm aware, the authors are the first to identify and study the problem of calibration in sparse training and RiGL specifically (but see below on the \"comprehensive\" claim).\n* Explicitly identifies and discusses the connection with dropout that alert readers will be questioning as soon as they start reading the paper.\n* The authors present experiments comparing their method, CiGL, with a popular dynamic sparse training method CiGL is based on, RiGL, and show comparable accuracy across a range of datasets and models.\n* The authors present experiments showing that the Expected Calibration Error (ECE) of the proposed CiGL method is consistently and significantly lower than both RiGL, and existing methods of calibrating neural networks applied to RiGL.\n* The authors present ablation studies to explore the importance of different components of their method.\n* The results are in general very well presented, in particular Figure 4 is a brilliant way of visualizing the relative calibration of each of the methods at different sparsities.\n* The method is well-motivated by comparing it with variational approximation of deep Gaussian processes, and dropout, although the former could be done better (see below).\n\n## Weaknesses:\n* Massive over-claim on the experimental front that really weakens what is otherwise a strong set of contributions. Multiple times in the paper it's claimed this is the first \"comprehensive study on the reliability of sparse training...\", and general statements are made about sparse training methods in general having issues with calibration/over-confidence. However the paper only looks at one sparse training method: RiGL (not even SET) as far as I can see. While the results there are indeed enough to motivate the author's method, and to make the community question the over-confidence of other sparse training methods, they are far from comprehensive enough to claim this applies to *all sparse training methods*. As far as I'm aware, the authors are the first to identify and study the problem of calibration in sparse training, and this would be a much better supported (and very strong) claim to make already.\n* In Algorithm 1, the specific pseudocode used for updating the joint weight/mask running mean, i.e. $W_{CigL}=\\frac{W_{CigL}\\cdot n_{models}+W^{(t)} \\odot Z}{n_{models}+1}$ is known for being extremely numerically unstable method in practice to calculate a running mean, and will for any moderate number of time steps $t$ results in a significant loss in floating point precision. The authors should detail if they used a numerically stable algorithm (e.g. Welford's algorithm) for this in their code, and if not repeat experiments with such a method or explain why their method is not sensitive to the expected loss in precision.\n* In section 2.1 the authors claim that \"Existing sparse training methods use only one mask to determine the sparse topology, which is not sufficient to explore the space well enough to find a reliable model\". This is obviously false even for the one sparse training method they use, RiGL. The idea of dynamic sparse training (DST) methods not exploring the space well is explored in \"Do We Actually Need Dense Over-Parameterization? In-Time Over-Parameterization in Sparse Training\" by Liu et al., and there it's shown that DST methods can be made to explore most of the parameter space using the ITOP measure.\n* When motivating the CiGL method in 3.1 the authors claim that \"...added randomness in the weight update step and leads to better exploration of the weight space.\". Better than what? Assuming RiGL/other sparse training methods, this statement has no evidence behind it, and could be quantified as in existing work, i.e. with ITOP. The authors could instead show the difference in ITOP for RiGL and CiGL to present an analysis that would quantify the difference in exploration.",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall a well-written and well-motivated paper with a novel (as far as I'm aware) and somewhat intuitive method for addressing calibration with sparse training. Some notable issues on the clarify front however:\n\nMajor Issues:\n* ECE acronym is not defined until page 6\n* ADOPT seems to be used instead of CiGL in a number of the figures/tables, without being explained. I'm assuming that it's just an old name for CiGL that stuck around...\n* There is much more focus on the existence of a proof that there is an equivalence between CiGL and variational approximations of a deep Gaussian process itself than motivating why this should matter to the reader! Section 4.2. should be the introduction to 4.1 to address this, and in the introduction a brief statement based on 4.2 should be added to motivate this contribution.\n* Multiple times it's claimed that both the model weights and masks are \"averaged\", and this is true, but the way this is written it led myself at least to believe these operations were independent, and in particular wonder what \"mask averaging\" is/can be effected. In Algorithm 1 a (joint) running average of the masked weights is performed, and it appears that this is what is being discussed. Although it's possible I'm in the minority in how I read this, I would reword this to avoid giving the reader the impression these are independent.\n\nMinor:\n* I would mention, briefly, the connection with dropout earlier in the introduction if only to mention to the reader that it's discussed later in the paper.",
+            "summary_of_the_review": "This paper presents a novel and pressing finding that will be of great interest to the sparse training research community. Overall it's well written with a good empirical evaluation, and motivation. Unfortunately the misleading over-claim of the comprehensiveness of the empirical evaluation significantly weakens what is otherwise a very strong contribution. There are also potentially significant issues with the algorithm presented and the paper's clarity on some points. Overall *most* of these issues are relatively easy to address, and the paper has the potential to be a strong contribution that I would be happy to see accepted if they are in the rebuttal (and my rating below at present reflects the assumption they will be).",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_db8U"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_db8U"
+        ]
+    },
+    {
+        "id": "5FjYL1A9Fs",
+        "original": null,
+        "number": 2,
+        "cdate": 1666492516812,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666492516812,
+        "tmdate": 1669881145441,
+        "tddate": null,
+        "forum": "KdwnGErdT6",
+        "replyto": "KdwnGErdT6",
+        "invitation": "ICLR.cc/2023/Conference/Paper5174/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper focuses on studying the reliability of sparse training. The authors specifically analyze the reliability (the expected calibration error) of RigL and find the solutions learned by RigL are often over-confident. Stemming from this observation, they propose to draw several random masks besides the one learned by RigL, and an average is used to perform a weight-level ensemble to calibrate sparse models. I believe this research topic is important for the sparse training community. However, this paper is overall narrowly targeted and completely misses several important prior works on this topic, significantly diluting its values.  ",
+            "strength_and_weaknesses": "## Strength\n\n(1) The paper is well-motivated and straightforward to read.  \n\n(2) The research topic is important for sparse training. \n\n(3) The proof of CigL can be viewed as a hierarchical variational approximation has its theoretical values.\n\n## Weaknesses\n\n(1) The paper claims that they comprehensive study on the reliability of sparse training. However, they narrowly focus on only one sparse training method RigL, which is far away from a comprehensive study. Since gradient is used to grow new weights, it is natural for RigL to be over-confident. To draw a more general conclusion, we need to study other sparse training methods, at least SET (Mocanu2018) that randomly activates weights should be included. Do we also observe the same over-confident in other types of sparse training? For instance, it has been shown that Lottery Tickets enjoy better uncertainty estimation than dense networks [1,3].\n\n(2) The paper claims that they are the first to study the reliability of sparse training, which I am afraid is not true. Without specifically searching, I can list at least three recent works on the reliability of sparse training [1,2,3] which are completely overlooked in the submisison. Specifically, I find the CigL algorithm shares a significant overlap with [2] where exactly the same weight averaging is used to improve the performance and reliability of sparse training. Besides, [2] has also studied the effectiveness of cyclic learning rates and other types of sparse network averaging. I highly encourage the author to distinguish CigL itself from these prior works. Maybe directly comparing with them to show CigL's superiority. \n\n(3) Since prior works have shown the power of weight averaging [2] of subnetworks in improving performance, robustness, and uncertainty estimation, it is not surprising that CigL can outperform RigL in uncertainty estimation.\n\n(4) I expect there should be a pruning operation after averaging of two subnetworks with different masks, to ensure the same sparsity level after averaging. Unless I misunderstand, could the authors clarify why CigL does not need this pruning operation? \n\n(5) I understand that CigL can be viewed as an approximation to the deep GP using hierarchical variational inference after reading their proof. Could the authors elaborate more on how this approximation benefits sparse training further in terms of reliability?\n\n(6) Many terms are not introduced properly, such as ADOPT and W_CigL. What architectures and datasets are used for Figure 1?\n\n[1] Calibrate and Prune: Improving Reliability of Lottery Tickets Through Prediction Calibration. AAAI 2021\n\n[2] Superposing Many Tickets into One: A Performance Booster for Sparse Neural Network Training. UAI 2022. \n\n[3] Can You Win Everything with A Lottery Ticket? TMLR. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is straightforward and quite clear to understand. However, the technique novelty is significantly insufficient given the overlap with prior works. ",
+            "summary_of_the_review": "This paper studies an interesting topic for sparse training. However, given the insufficient study of different sparse training methods and a significant overlap with prior works, the merits of this paper are degraded largely.\n\n\n## After rebuttal\n\nI am satisfied with the authors' feedback. I raise the score to 8. I would like to see the promised changes in the revision. \n\nRegarding related work R1, R2 and R3, I understand the difference between LTH and sparse training. However, they should be discussed as related work, given their highly related research goals and topics to this paper (i.e., sparse NNs and calibration).",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_JN9S"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_JN9S"
+        ]
+    },
+    {
+        "id": "hIEjEZgu-Q6",
+        "original": null,
+        "number": 3,
+        "cdate": 1666666278868,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666666278868,
+        "tmdate": 1670859570320,
+        "tddate": null,
+        "forum": "KdwnGErdT6",
+        "replyto": "KdwnGErdT6",
+        "invitation": "ICLR.cc/2023/Conference/Paper5174/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors study the calibration of models trained using the sparse training algorithm RigL and show that sparse models are more overconfident than dense architectures of similar accuracy. They propose CigL, a modified version of RigL intended to calibrate sparse models and demonstrate that it produces models that are equal to or higher accuracy than RigL while also having lower degrees of over confidence.",
+            "strength_and_weaknesses": "The paper is well written and the method is clearly motivated by the studies on over confidence in RigL-trained models. The experimental results are encouraging for CigL as a method for producing high quality and well-calibrated sparse neural networks.\n\nIn some places I found the paper to be difficult to understand. The ECE metric isn't defined until section 5.1, but is referenced repeatedly in the abstract and introduction. I had to re-read the first few sections to understand whether lower or higher ECE was indicative of over confidence. I also found the details algorithm to be unclear, particularly how \"M\" is used and which weights receive gradients on each iteration. In Algorithm 1, I see no reference to how the \"M\" mask is applied to the weights. I do see the use of the \"Z\" mask during gradient computation, but without the application of \"M\" it would seem that the entire weight matrix must be maintained across training. This is in contrast to RigL, which is designed to enable sparse storage and computation throughout training (outside of periodic gradient computation for mask updates). I'd like to understand the answer to these questions to more accurately evaluate this paper and to explain why CigL appears to produce significantly higher quality models for a given level of sparsity.\n\nLastly, the phrase \"RigL + ADOPT\" is used in various figures but ADOPT is never defined. It seems this maybe a prior name for the proposed CigL technique?",
+            "clarity,_quality,_novelty_and_reproducibility": "The writing is clear, aside from the issues discussed above. The quality of the work is high and I believe the study and proposed algorithm are novel. I'd like for the description of the algorithm to be improved such that I can more accurately compare the proposed algorithm to RigL and other sparse training algorithms.",
+            "summary_of_the_review": "The paper is interesting and potentially impactful, but some information is missing or unclear which makes it challenging to evaluate the proposed algorithm relative prior work.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_HnVS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_HnVS"
+        ]
+    },
+    {
+        "id": "ossiNGU_c_",
+        "original": null,
+        "number": 4,
+        "cdate": 1666745430311,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666745430311,
+        "tmdate": 1669671652732,
+        "tddate": null,
+        "forum": "KdwnGErdT6",
+        "replyto": "KdwnGErdT6",
+        "invitation": "ICLR.cc/2023/Conference/Paper5174/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "In this paper, they proposed a new sparse training method to produce sparse models with improved confidence calibration. A deterministic mask and a random mask are introduced for exploiting the weight magnitude and gradients and exploration.",
+            "strength_and_weaknesses": "+The mechanism of random mask and deterministic mask is interesting, and there is also a connection to Gaussian Process and hierarchical variational inference.\n\n+The empirical performance looks good.\n\n-It seems that the weight moving averaging (WMA) process is not integrated into the analysis of section 4.1. On the other hand, the figure. 5 shows that WMA significantly reduces the ECE value, which is much more obvious than the random mask. With this evidence, the analysis of section 4.2 seems questionable since the major confidence calibration comes from WMA instead of the Bayesian formulation.\n\n-The process in Algorithm.1 and the Bayesian approximation introduced in section 4.1 is not well aligned, especially when learning the mask $M$. In Algorithm.1, the mask $M$ is updated using weights and gradients, like RigL in every $\\Delta T$ steps. In section 4.1, the mask $M$ is only related to the weight magnitude. Also, weight $W$ and $M$ are updated iteratively. Why the approximation of section 4.1 still holds when the learning of $M$ is so different? Also, WMA is omitted in section 4.1.\n\n-In Eq.(3), the authors show that $q(M_l | U_l) \\propto \\text{exp} (M_l\\odot |U_l|)$. This formulation seems wired: $M_l$ appeared in both left and right head sizes of $\\propto$. In addition, it's confusing whether $M_l$ is learned or sampled from a distribution. From the context, authors show that $M$ is updated by maximizing $q(M_l | U_l)$. If $M$ is updated and has exact 0 or 1 values, why are you sampling $M$? In addition, if $M$ is sampled, this is still not aligned with Algorithm.1. Algorithm.1 updates $M$ deterministically. \n\n-In the final section, the authors provide four arguments in (a), (b), (c), and (d), and they are not very well supported. For example, in (b), the authors say that \"It gradually becomes equivalent to a shallow model.\" How this conclusion arrives? There are no experiments to show measurements like effective depth.\n\n-What is ADOPT? This is not explained in the paper.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The writing is mostly clear. The idea of combining the deterministic and random masks seems novel. The code is provided for reproducibility.",
+            "summary_of_the_review": "In summary, the idea of combining the deterministic and random masks seems novel. It's a good attempt to connect the proposed method with GP using hierarchical variational inference. However, there are some inconsistencies between the analysis of section 4.1 and Algorithm.1; for example, WMA is ignored, and the learning of $M$ is different. In addition, the confidence calibration seems to come from WMA instead of the Bayesian approximation. In addition, the arguments in section 6 are not well supported.\n\n_____________________________________\n\nThe authors clarify most of my concerns. As a result, I increased my score to 6.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_3t4S"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5174/Reviewer_3t4S"
+        ]
+    }
+]

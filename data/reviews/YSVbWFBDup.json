@@ -1,0 +1,158 @@
+[
+    {
+        "id": "X8IZHEVuin",
+        "original": null,
+        "number": 1,
+        "cdate": 1666067111986,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666067111986,
+        "tmdate": 1666067111986,
+        "tddate": null,
+        "forum": "YSVbWFBDup",
+        "replyto": "YSVbWFBDup",
+        "invitation": "ICLR.cc/2023/Conference/Paper3528/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In contrast to existing works on weakly supervised contrastive learning, this paper considers how weakly supervised information such as noisy labels and semi-supervised labels affects the downstream performance of contrastive learning. The theoretical analysis provided in this paper is based on the spectral contrastive loss and augmentation graph, a recent theoretical framework proposed by HaoChen et al. (2021). The authors incorporate weakly supervised information into the augmentation graph by using a convex combination of label and feature similarity adjacent matrices. As a result, it is shown that the downstream linear classification error can be improved unless the noise rate is moderate and the representation dimension is not very large.",
+            "strength_and_weaknesses": "### Strengths\n\nThis paper seems to be the first one to consider how weak supervision helps contrastive learning, not the other way around, how contrastive learning can elicit useful information for weakly supervised learning. In practice, it is a natural scenario to do contrastive learning with a bunch of unreliable data, which aligns with the main goal of this paper.\n\n### Weaknesses\n\nIn contrast to the original augmentation graph discussed in HaoChen et al. (2021), the formulation discussed in this paper looks slightly strange and puzzling.\n\n1. At the beginning of Section 3, $n$ is defined to be the number of training data, but soon after $n$ is assumed to be the domain cardinality $|\\\\mathcal{X}|$. Consequently, the training data covers the entire domain $\\\\mathcal{X}$ exactly, which is already a little bit unrealistic (but this may be fine if we focus only on the analysis of the expected loss).\n2. In Section 3.3, $n_L + n_U = n$ is assumed, but this could also be strange because it is unnatural that the number of labeled and unlabeled data is exactly the same as the domain size $n = |\\\\mathcal{X}|$.\n3. The authors observe the different behaviors of the eigenvalues and error bound depending on the relationship between $n_U$ and $k$, the representation dimension. I suppose that $n = n_L + n_U$ is the source of these behaviors, which would not be intrinsic to contrastive learning itself. Indeed, it could hardly happen that \"when $k$ is larger than $n_U + r$, the lower bound of $\\\\lambda_{k+1}$ is unaffected by the noise rate\" (Section 5.2). If it does happen, demonstrating that the downstream performance improves with larger $k$ empirically would be an important step for supporting the validity.\n4. In Section 4.2, the posterior probability matrix for unlabeled data $\\\\mathbf{Y}_U$ is assumed to be a $(n_U \\\\times n_U)$-matrix, but I believe it should be a $(n_U \\\\times r)$-matrix. Accordingly, $\\\\tilde{\\\\mathbf{Y}}$ in equation (6) should be $(n_L + n_U) \\\\times r$. Moreover, $\\\\mathbf{Y}_U$ must not be an identity matrix because it is a posterior probability matrix and hence satisfies the sum-to-one constraint.",
+            "clarity,_quality,_novelty_and_reproducibility": "I raised some unclear parts of this paper with minor typos and grammatical suggestions. Addressing them should improve the quality of this paper.\n\n**Important remark**: In Section 4, the authors \"formulate\" the augmentation/similarity graph for semi-supervised noisy labels together with feature similarity. At a first sight, this formulation looks rather arbitrary. For example, the assumed posterior probability for unlabeled data looks not a natural one without having dependency with labeled data, and the feature similarity $\\\\mathbf{A}_0$ and label similarity $\\\\mathbf{A}$ is concatenated by the convex combination. But eventually, I realized that this \"formulation\" is a kind of the authors' \"design\" of data augmentation, but not a distributional assumption on the underlying similarity among data.\n\nI misunderstood this point because HaoChen et al. originally introduced the augmentation graph (in the unsupervised setup) and its weights to assume/model the underlying possibility of data augmentation. Thus, I suppose it's important to emphasize that this paper introduces an (apparently arbitrary) matrix $\\\\mathbf{A}$ to specify how to augment data.\n\nAnother (slightly) confusing wording might be the section title of Section 4.1 \"Similarity Graph **Induced** By Noisy Labels\" (and Sections 4.2 and 4.3 as well). The graph does not seem to be induced from the underlying nature, but the authors specify a convenient one for the latter purpose as far as I understand.\n\n**Minor**\n- In the third paragraph of Section 1, \"On the other hand\" in the fourth line may sound logically unnatural.\n- In Section 3.1, `diag` -> `\\mathrm{diag}`,  `const` -> `\\mathrm{const}`, and $A$ -> $\\\\mathbf{A}$ (the fifth line).\n- In Section 3.3, `<<` -> `\\ll` (the fourth line).\n- In Section 4.2, \"Therefore\" in the second line may sound logically unnatural. Such conjunctions appear a little bit too frequently in this paragraph, distracting readers.\n- In Section 4.2 (the second last line), \"as the noise rate $\\\\gamma$ increases, $\\\\alpha$ increases and $\\\\beta$ decreases\" -> \"$\\\\alpha$ **decreases** and $\\\\beta$ **increases**\".\n- In Section 4.3 (the second line), \"as the augmentation graph arbitrary unlabeled samples\" -> \"as the augmentation graph **of** arbitrary unlabeled samples.\" (?)\n- In Section 5.1 (three lines after Proposition 1), $\\\\bar{A}_L$ -> $\\\\bar{\\\\mathbf{A}}_L$.\n- In Section 5.2 (right after Proposition 2), the text looks strange.\n- In Section 5.3, the definition of $g_{f,B}(\\bar{x})$ appearing in the fourth line looks a circular definition. The linear projection matrix $\\\\mathbf{B}$ should be involved in it.\n- In Section 5.3 (the fifth line), $\\\\mathcal{L}(f)$ is needed in the definition of $f_{\\\\mathrm{pop}}^*$\n- In Section 5.3 (Assumption 2), many notations are not defined properly. It is essential to show what $y(x)$, $\\hat{y}(x)$, and $\\\\mathcal{P}_{\\\\bar{X}}$ are. Moreover, $x_i$ and $y_i$ in equations (21) and (22) are not given yet.\n- In Section 5.3 (Theorem 1), why does the definition of the downstream error $\\\\mathcal{E}$ involve the augmentation $\\\\mathcal{A}$? I do not think using augmentation in the downstream task is a common practice.\n- In Section 5.3 (Theorem 1), \"$B^* \\\\in \\\\mathbb{R}^{r \\\\times k}$ with norm $\\\\|B^*\\\\|_F \\\\le 1/\\\\tilde{\\\\lambda}_k$\" is unclear. It seems that $\\\\tilde{\\\\lambda}_k$ has not been defined yet so far. In addition, it is ambiguous whether this norm bound is a newly-introduced assumption or a corollary of the assumptions so far.",
+            "summary_of_the_review": "The authors provide and demonstrate an interesting way to leverage weakly supervised information in contrastive learning by extending the framework of unsupervised contrastive learning. Nevertheless, there are several points that could be improved in the final version as pointed out in the above sections.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_v3Am"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_v3Am"
+        ]
+    },
+    {
+        "id": "U5SrmHyDgs7",
+        "original": null,
+        "number": 2,
+        "cdate": 1666633218262,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666633218262,
+        "tmdate": 1666633218262,
+        "tddate": null,
+        "forum": "YSVbWFBDup",
+        "replyto": "YSVbWFBDup",
+        "invitation": "ICLR.cc/2023/Conference/Paper3528/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This work aims at using weakly supervised information to improve contrastive learning. Following the work of HaoChen et al. (2021), this work also defines spectral contrastive loss and shows the graph under noisy and semi-supervised noisy conditions. After theoretical analysis, a mixed loss is verified on CIFAR-10.   ",
+            "strength_and_weaknesses": "This is a relatively interesting topic. The whole paper is well-written. The logic flow is very clear. Two citations should be considered in the Introduction together with Yan et al. (2022). \nhttps://arxiv.org/pdf/2205.00186.pdf\nhttps://arxiv.org/pdf/2108.04063.pdf\n\nOverall, the experiments are weak. Only one dataset and two baselines are used. In table 1, the proposed method decreases as the others. So why not showing more results, e.g., step by 5% from 0 to 1? It will be more convincing to see the robustness of the proposed method. Why no result at 0%? SimCLR did you use InfoNCE? If so experiment part should include the eq. 32 by plugging in InfoNCE. Did you run 1000 epochs for all the experiments? \n",
+            "clarity,_quality,_novelty_and_reproducibility": "Novelty: The paper heavily follows HaoChen et al. (2021), which I feel is incremental work. \n\nReproducibility: no code or link is provided, so hardly to say.",
+            "summary_of_the_review": "The motivation is clear and the topic is interesting, but the work seems incremental. The experiment part is weak. It will be better to see more experiments.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_kEnG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_kEnG"
+        ]
+    },
+    {
+        "id": "jFX3fiERMu",
+        "original": null,
+        "number": 3,
+        "cdate": 1666667782549,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666667782549,
+        "tmdate": 1670826015326,
+        "tddate": null,
+        "forum": "YSVbWFBDup",
+        "replyto": "YSVbWFBDup",
+        "invitation": "ICLR.cc/2023/Conference/Paper3528/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "++++++++ After Rebuttal +++++++++++++\n\nIn the rebuttal and follow up discussion, the author(s) have clarified my questions and provided additional empirical results to support their claims. I am adjusting the score accordingly. \n\n(Author(s) please make sure the MIX loss are clearly defined in the revised manuscript.)\n\n+++++++++++++++++++++++++++++++++\n\nBuilding on the theoretical framework of the spectral contrastive learning, this paper studies the theory for weakly supervised contrastive learning. In particular, the author(s) presented a unified contrastive learning framework for two typical weakly supervised learning setups: noisy label learning and semi-supervised learning, and showed that under mild noise level both settings can improve the error bound of unsupervised contrastive learning with a carefully chosen hyper-parameter. Some empirical evidence is provided to support the claims. ",
+            "strength_and_weaknesses": "### Strength\n* This paper is well-written, relevant concepts and notations are clearly defined. Although much of content is very technically involved, the author(s) have accompanied these sections with remarks and analyses that are more accessible to non-expert audience. \n* Studying the theoretical foundation for semi/weakly-supervised contrastive learning is a timely topic. This provides theoretical guidance most closely related to the popular pre-training + fine-tuning paradigm. \n* Excellent discussion of the relevant literature, the coverage is adequate and up-to-date. That said, I think [A] will make a nice addition to the list, which discussed more generic settings of weak supervision. \n\n\n\n### Weakness\n* Experiments are a bit loose. \n    * It is not clear how the author(s) make the labeled/unlabeled split in the experiments. I am assuming SimCLR and SupCon have used all data, and Mix also used all data both as labeled and unlabeled. If that is the case, then this is different from the setting used in the theoretical analysis, where labeled/unlabeled do not overlap. \n    * Not an apple-to-apple comparison. The chosen baselines (SimCLR and SupCon) used the InfoNCE, while Mix used SpecNCE. It is well known that InfoNCE has some issues which motivates many follow up works [B, C, D, E], including SpecNCE. So the gain in Mix may not come from the theoretical predictions made in this paper, but rather gains from SepcNCE itself.\n    * Only Cifar-10 results are reported, which is insufficient by current standards. The author(s) should at least include miniimagenet or tieredimagenet results. \n    * The author(s) should also characterize the variability of the results, as the reported gains could be well within normal statistical fluctuations. While I understand pre-training can be costly, at least repeat the experiments on smaller datasets such as MNIST and report the standard deviation for the accuracy. \n* To summarize the key take-away: (1) adding labeled data on top of self-supervised learning improves accuracy; (2) if the labels are too noisy, then it will wash away the information resulting no improvement. Although I appreciate the theoretical rigor, these are a bit straightforwardly intuitive and practitioners have long been practicing based on similar hunches. \n\n#### References\n[A] Strength from weakness: Fast learning using weak supervision. ICML, 2020 \n\n[B] Simpler, Faster, Stronger: Breaking The log-K Curse On Contrastive Learners With FlatNCE\n\n[C] Provable guarantees for self-supervised deep learning with spectral contrastive loss. NeurIPS 2021\n\n[D] Provable Stochastic Optimization for Global Contrastive Learning: Small Batch Does Not Harm Performance. ICML 2022\n\n[E] EqCo: Equivalent Rules for Self-supervised Contrastive Learning\n",
+            "clarity,_quality,_novelty_and_reproducibility": "### Clarity. Very good (mostly)\nOther than the sloppy experiment setup, this paper is clearly written. Notations and concepts well defined and explained, nice discussion of background and related work. \n\n### Quality. Mixed\nMotivation, literature review and theoretical development are good, experiments need to be strengthened. \n\n### Novelty. Okay\nWhile the analyses is new, this work did not offer original recipes to guide the practice of weakly-supervised contrastive learning. Also the author(s) did not cover whether/how insights from this study can merit non-contrastive weakly-supervised learning. \n",
+            "summary_of_the_review": "Overall this paper is written with clarity. My major reservation is due to two points: (a) the key conclusions are aligned with intuition and they do not lend additional insights to better guide practice; (b) the comparison reported in the experiments is not aligned with the theory developed here (see my comments in the weakness, basically the author(s) used InfoNCE as baseline when they use have used SpecNCE). \n\nI look forward to hearing the author(s) thoughts during the rebuttal discussion. Should more convincing argument or empirical results surface I will be happy to adjust my score. \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_V7qm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_V7qm"
+        ]
+    },
+    {
+        "id": "eJYx6Vyux7",
+        "original": null,
+        "number": 4,
+        "cdate": 1673135189086,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1673135189086,
+        "tmdate": 1673145171137,
+        "tddate": null,
+        "forum": "YSVbWFBDup",
+        "replyto": "YSVbWFBDup",
+        "invitation": "ICLR.cc/2023/Conference/Paper3528/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "Contrastive Learning (CL) has become popular for both unsupervised and fully supervised settings. Recent empirical studies have indicated that CL can also be beneficial under weakly (ex noisy label) or semi-supervised settings. \n\nThis paper studies CL under weakly supervised setting and proposed an approach Mix where they propose to use a convex combination of unsupervised (infoNCE) and supervised contrastive loss (supcon): \\theta infoNCE + (1 - \\theta) supcon. \n\nThey analyze this algorithm using tools from spectral contrastive learning Haochen et.al. and show some empirical validation comparing with supcon and infoNCE on cifar and imagenet benchmark.",
+            "strength_and_weaknesses": "Strength:\n--------------\nExtending the theoretical framework on Haochen et.al. to weak supervision ~ by leveraging stochastic edges with prob \\theta between samples. \n\nusing a combination of supcon and infoNCE is done before for semi-supervised setting (suNCEt:   https://arxiv.org/pdf/2006.10803.pdf )  and biased weak supervision (Positive Unlabeled Contrastive: https://arxiv.org/pdf/2206.01206.pdf )\n\nWeakness :\n----------------------\n1. The empirical evaluation is limited - only on CIFAR-10 comparing infoNCE, supCon and the proposed approach. \nI feel we need further empirical evidence over multiple datasets and under various noise levels. \n\n2. This loss is very similar to \"consistency regularization\" where one would add a semantic consistency term (eg. infoNCE loss) with supervised loss (CE) see for example: \nhttps://arxiv.org/pdf/2011.01403\nhttps://arxiv.org/pdf/2106.08226\nhttps://arxiv.org/pdf/2010.07835\n\nIsn't this equivalent to https://arxiv.org/pdf/2011.01403 where instead of cvx comb of supcon and infoNCE they use cvx combination of CE (label consistency) and supcon / infoNCE etc (semantic consistency) -- since they tackle finetuning. \n\nIsn't Mix just applying the same idea of enforcing semantic consistency by using label agnostic infoNCE ? \n\n3. The parameter \\theta is critical for the success of the method - it should be dependent on \\gamma the noise rate. as pointed out by authors (and is the obvious intuition) that as noise rate is higher we should rely more on self supervision - which is label agnostic hence robust. what would be the dependence ? For example on Table 2 the authors show performance of Mix to be somewhat robust for different noise levels - it is critical for understanding the merit of the method to show the optimal \\theta used for different values of \\gamma. When does \\theta_opt go to 0 - when all labels are corrupted ? a plot of \\theta_optimal vs \\gamma over multiple datasets is going to be helpful.\n- 3.a. From Figure 1 it seems using Mix has little effect when \\gamma is slightly high - for example at \\gamma = 20% theta_opt = 0.1 whereas \\gamma = 5% theta_opt = 0.9 so on slightly high gamma \\theta -> 0 i.e. using infoNCE. \n\nI am really ** Surprised ** by your Table 2 results especially the gap with infoNCE at large noise levels - which such small theta  \n\n4. Linear Probing: How did you linear probe ? on held out clean data ? or on noisy data. If on noise data - what loss did you use for linear probing ? since standard CE would result in performance degradation even if the encoder is high quality. \n-- 4.a. As seen from Table 2 SimCLR results it seems you linear probed on noisy data since the infoNCE-encoder is identical for different \\gamma. \n-- 4.b How about you linear probe on clean data ? i.e. the encoder is trained on noisy supervision but the linear head is trained with clean \n \n",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall, the paper is clearly written and easy to follow. See comments above ",
+            "summary_of_the_review": "The theoretical contributions are somewhat novel , but I feel the paper lacks algorithmic novelty (or rather they do not position the contribution w.r.t relevant literature ex - semi supervised , consistency regularization literature where similar algorithm has been used). \nEmpirical evidence is somewhat lacking - especially does not flesh out the strategy to select theta , make this algorithm work well in reality. \n\nFirtsly, cheers to the authors on tackling this important problem in a systematic way -  Overall, I feel the authors might want to dive deeper and investigate further and submit a stronger paper in next ML venue - will be looking forward to the findings. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_pQcs"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3528/Reviewer_pQcs"
+        ]
+    }
+]

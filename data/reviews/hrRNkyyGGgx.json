@@ -1,0 +1,158 @@
+[
+    {
+        "id": "OgJL8yDlC8a",
+        "original": null,
+        "number": 1,
+        "cdate": 1666045934966,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666045934966,
+        "tmdate": 1666719383058,
+        "tddate": null,
+        "forum": "hrRNkyyGGgx",
+        "replyto": "hrRNkyyGGgx",
+        "invitation": "ICLR.cc/2023/Conference/Paper4209/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper combines continuous time state-space models with transformer themes.  The method is applied to large language and speech modelling tasks, and is compared to some baselines.  The method appears to perform well.  Some analysis of the temporal characteristics of the learned model are explored.  As far as I can tell, no code or supplementary materials were submitted. ",
+            "strength_and_weaknesses": "# Strengths:\nThe paper appears to perform favourably on the tasks presented.  \n\n# Weaknesses:\nThe authors highlight three core contributions of the paper: multi-head parallel attention, head gating, and combination with attention through a bi-directional SSM.  I do not agree with any of these claims.  \n\n(1.1)  I am not convinced that stacking the layers is a better architecture, as the \u201cablations\u201d you provide are a bit confusing (unclear how performances change with overall depth).  I also don\u2019t understand how you allow multi-head parallel processing where S4 does not? \n\n(1.2)  I do not believe you have correctly assessed how S4 implements attention, and so I do not believe you have \u201ccontributed\u201d this.  (see comment below)\n\n(1.3)  S4 uses a bidirectional SSM, which is not mentioned in your submission.  I also don\u2019t fully understand why a transformer would _require_ bidirectionality in the SSM layer, as the transformer itself is all-to-all.  Ultimately, I find the overall architecture a little confusing.  I\u2019d like Figure 3 to be explained a little more fully, maybe with some accompanying math close to or within the figure, to concretely define the spaces that each element operates on, its computational complexity etc.  \n\n\n## (2)  Connections with S4:  \nI find the presentation and connections to previous work, specifically in the arc of S4 papers, to be chronically lacking.  \n\n(2.1)  _I implore the authors to comment on this prior to me making my final judgement, as I may have misunderstood their claims._  Most significantly, I believe the description of S4 and the use of GLU activation is incorrect.  In Equ. (8), the authors claim that S4 uses GLU activations applied to each two-dimensional output channel per input channel.  To my understanding, this is incorrect, as S4 applies GLU to the entire $y_k^{1:H}$ vector.  The interhead gating proposed in (9) is actually a special case of the GLU activation used by S4, where the number of output dimensions is strictly tied to twice the number of input channels with size-two block-diagonal weights.  As this is the core contribution of the paper, this is a critical point. \n\n(2.2)  The bidirectional design (Section 3.4) is also proposed by S4.  This is not mentioned.  To the reader, it appears that this bidirectional design is novel.  The parameterization used in Equ (7) is also a special case of the parameterization in Goel+ [2021], but this is not highlighted. \n\n(2.3)  The block-diagonal interpretation was also explored by Smith+ [2022] (although I accept that this is probably acceptable as concurrent work).  \n\n(2.4)  Was S4 evaluated using the original codebase released by Gu+ [2021], or did you use your own S4 implementation? \n\n(2.5)  Broader discussion of LSSL, S4, HTTYH, S4D, DSS, Sashimi etc is chronically lacking.\n\n## (3) Core claim on contributions:  \n(This also relates to the exposition of S4 above) I do not understand the author's claim that S4 cannot capture different timescales.  The whole premise of S4 is that each SISO SSM is imbued with its own timescale, and hence can integrate information over different timescales.  Recent work, particularly How To Train Your HiPPO [Gu+, June 2022, arXiv], has explored this further, studying the kernel that S4 is implicitly using.  This paper, although recent, should still have been cited, since it tackles very similar core ideas as here.  It is also not clear to me how multi-head attention actually facilitates the claimed improvement in the ability to capture timescales.  Maybe this is true, but with the very limited intuition provided in Section 4.3, I don\u2019t agree that better performance on benchmark tasks can be directly attributed to the new mechanism.  I am not convinced that the authors didn\u2019t simply tune a larger model, with more parameters, flexibility, expressive non-linearities etc, until they got better performance \u2013 which then they post-hoc attribute to the capturing of timescales.  \n\n(3.1)  You state: \u201c... long and short term dependency would both be useful in sequence modelling\u2026\u201d.  I do not believe you have backed the claim that yours offers this whereas S4 does not  \u2013  this was pretty much the whole point of S4.  \n\n(3.2)  As an example, I would look at the eigen spectra of each learned latent SSM, for both SSM and the Stateformer, since this describes the temporal dynamics of the filter.\n\n## (4)  Empirical validation:  \nI am not overly familiar with the particular benchmarks that the authors present.  I would like to know why they didn\u2019t use the LRA benchmark [Tay+, 2021] or the Speech Commands dataset [Warden, 2018], as these seem like much more standard and widespread benchmarks.  These also don\u2019t require numerous A100\u2019s, and so also help reproducibility.  \n\n(4.1)  How were hyperparameters selected for the different methods? \n\n(4.2)  Table 1 is very unclear to me.  Does the 16L-2S model actually have 32 layers?  Or are 16 layers arranged into eight blocks of two.  \n\n(4.3)  It is unclear what each variant in the table is exploring.  It appears to me that a soup of different layers and architectures have been tested and the best one is being reported as a substantial scientific contribution.  \n\n(4.4)  The evaluation in Section 4.3 is not explained very well.  I do not understand how the curves in Figure 4 were generated, and so I cannot evaluate the validity of the claims.  I am not even entirely sure what the curves are showing. \n\n\n\n# Minor Weakness / Typographical Errors:\n(a) Figures and tables should be floated to the top or bottom of pages.\n\n(b) Footnotes should be avoided if possible.  \n\n(c) States are missing a time index, e.g. in Equ. (8) it should be $y_{k, n1}$, where $k$ is the time index in the sequence.  \n\n(d) I think that the claim in Section 3.2 that the shared recurrence parameters stabilise training is unsupported.  I also don\u2019t think the second half of that claim (that multi-head frameworks give it the flexibility to learn multiple timescales) is fully supported either.  This may be me misunderstanding the analysis presented in Section 4.3.  \n",
+            "clarity,_quality,_novelty_and_reproducibility": "I do not think the paper is especially well written.  The differences between the different models is often difficult to tease apart and relate to the content introduced earlier in the paper.  The actual analysis methods for the experiments in Section 4.3 are totally missing.  \n\nI think the work is somewhat original, but the strong and immediate links to existing work are not explored, and make it very unclear to the reader what is a novel contribution.  \n",
+            "summary_of_the_review": "Overall I do not think this paper is currently at the requisite level for publication.  Obvious links to existing work are missing.  I am not confident the core contribution itself is actually novel.  Standard evaluation benchmarks are missing.  The clarity of the written communication is poor.  \n\nI am willing to entertain the idea that my understanding of S4, or my understanding of particularly Equ. (8, 9) are incorrect.  If this is the case (and it is indeed how the authors claim it to be) then this would improve the paper slightly in my eyes, but probably not enough for me to rate the paper as acceptance worthy.  \n\nI also note that this paper is one of as many as half a dozen papers submitted to ICLR advancing S4.  \n",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_PQ8K"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_PQ8K"
+        ]
+    },
+    {
+        "id": "TtScEWwxLb4",
+        "original": null,
+        "number": 2,
+        "cdate": 1666625099330,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666625099330,
+        "tmdate": 1666625099330,
+        "tddate": null,
+        "forum": "hrRNkyyGGgx",
+        "replyto": "hrRNkyyGGgx",
+        "invitation": "ICLR.cc/2023/Conference/Paper4209/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Tasks: Automatic speech recognition (ASR, measure WER), language modeling (measure PPL)\n\nTwo new models are proposed, which are based on state space models (SSMs).\n\nThe newly proposed models are: MSSM and Stateformer. The MSSM purely uses the SSM, with residual connections and some layer norm. The Stateformer is like a Transformer, i.e. it uses multi-head attention, and it has a new block type which embeds the MSSM.\n\nOn ASR, on Librispeech, without using an external language model, new state-of-the-art results are achieved.\n\nFor language modeling, the new model performs just the same as the sliding window attention model.\n",
+            "strength_and_weaknesses": "\nStrengths:\n\n- Good state-of-the-art results with the Stateformer on speech recognition.\n\nWeaknesses:\n\n- The code is not released. No information is given on the code.\n- No real improvement for language modeling.\n- Speech recognition lacks experiments also with an external language model. It's good to also see the numbers without, but using an external language model is the more realistic setting for speech recognition.\n- Subsampling seems to be non-standard, and suboptimal. See below.\n- How does it compare when replacing the SSM by a RNN or LSTM? It is said that SSMs are equivalent to linear RNNs. So what exactly is the advantage of a SSM? This does not become clear. Such experiments should be done to really see the difference.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The state space model is equivalent to a linear RNN. So what happens if the same experiments are done, but with a RNN or LSTM? Is a SSM or MSSM really adding anything?\n\nTransducer for ASR. Without external language model.\n\nCode?\n\nThe subsampling methods for ASR all seem non-standard. A standard subsampling can for example be seen here:\u00a0https://github.com/espnet/espnet/blob/4138010fb66ad27a43e8bee48a4932829a0847ae/espnet/nets/pytorch_backend/transformer/subsampling.py#L162\nIt even cites the Conformer for their Conv-based subsampling, but the Conformer uses a different type of subsampling. Yes, it also uses convolution for this subsampling frontend, but it's not just a single layer, and not 1D Conv but 2D Conv.\n\nTable 2, where is the Conformer?\n\nStateformer and MSSM, how does it perform with Conv subsampling? Where do I see this? Or is this missing? Why is it missing? From table 2, from the Transformer experiments, it looks like Conv subsampling would be much better?\n\nComputational cost? For training and recognition.\n\nWhat happens with more number of heads\u00a0for the MSSM? Table 2 suggest it might become even better? Why was this not tested?\n\nHow exactly does the final MSSM model look like, e.g. from table 2, 3 and 4? It's not totally clear. I assume, for ASR it is in all cases bidirecitonal? But probably not the LM? This is not really explained and defined well. Where is the SSM defined exactly? In Sec 2.1 I see some equations, but now what exactly is SSM(x)? It's not really clear to me.\n\nIn the Stateformer, how does this MSSM block look like exactly? Is this exactly the same as before (figure 2)?\n\nTable 4 on LM, with the same number of updates, there does not seem to be a difference. With more updates, MSSM gets better, but what about the other models? This is missing from the table, and it cannot really be compared directly as is.\n",
+            "summary_of_the_review": "It's an interesting extension of the SSM, applied to speech recognition and language modeling, and it achieves state-of-the-art (SOTA) results on Librispeech without external LM.\n\nThere are some weaknesses though. Some of them can be improved now by better clarification, but not all of them, where more experiments should be done.\n\nStill, due to the good results for speech recognition, I think it's interesting enough.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_F93h"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_F93h"
+        ]
+    },
+    {
+        "id": "c2ZIbPQqk-",
+        "original": null,
+        "number": 3,
+        "cdate": 1666674636101,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666674636101,
+        "tmdate": 1669050787086,
+        "tddate": null,
+        "forum": "hrRNkyyGGgx",
+        "replyto": "hrRNkyyGGgx",
+        "invitation": "ICLR.cc/2023/Conference/Paper4209/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper proposes some architectural changes to the S4 model and applies it to speech recognition and language modeling tasks.\n",
+            "strength_and_weaknesses": "Amendment after rebuttal:\n\nThe original review pointed out that many of the contributions in this work are equivalent to flags available in the public S4 model. The authors have since submitted supplementary code showing that while based on the public model, several of these newer modifications are implemented somewhat differently.\n\nThis points to one of the main weaknesses of the submission, that the proposed changes are each not particularly novel. The other main weakness is a lack of discussion and comparison to very closely related prior work.\n\nThe strengths of the paper lie in the empirical results, which show strong performance in a number of speech recognition benchmarks as well as language modeling.\n\nA much more detailed review and discussion is contained in the comments, with suggestions for improvement in the experiments and presentation.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity/Novelty: Despite being primarily based on the S4 model, the connection to this and other very closely related models is not clear in the presentation. Each individual contribution to the model is reasonable but not particularly novel, and could also be better described technically and positioned with respect to prior work.\n\nQuality: Aside from the presentation, this paper has fairly strong application results, focusing on speech, as well as some interesting analysis (e.g. visualizations of the learned kernels).\n\nReproducibility: Code has been provided post-rebuttal, and I believe that the results will be reproducible when fully released.\n\n",
+            "summary_of_the_review": "This paper proposes several modifications to the S4 model and architecture to achieve state-of-the-art results in speech recognition. Weaknesses are a lack of clarity in the details of the model, and a major lack of discussion and comparison to related work.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_qqzq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_qqzq"
+        ]
+    },
+    {
+        "id": "7uOkZq5Gpzq",
+        "original": null,
+        "number": 4,
+        "cdate": 1667316726247,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667316726247,
+        "tmdate": 1667316726247,
+        "tddate": null,
+        "forum": "hrRNkyyGGgx",
+        "replyto": "hrRNkyyGGgx",
+        "invitation": "ICLR.cc/2023/Conference/Paper4209/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposed a multi-head state space model (MSSM) and the Stateformer which is a combination of bidirectional MSSM and self-attention. The performance of MSSM and Stateformer are evaluated on Librispeech for ASR. Further, the effectiveness of MSSM is explored on the MLM task.",
+            "strength_and_weaknesses": "**Strengths**\n\nThe paper is generally well-written.\n\nThis work is a quick application of the recently proposed Linear State-Space Layer (LSSL). The ideas of multi-head and a combination of bidirectional MSSM and self-attention seem to be novel.\n\nAs compared to existing SSM methods, this paper introduces a simpler parameter initialization manner and the multi-head structure. In the librispeech experiment, the Stateformer obtains the SOTA performance.\n\n**Weaknesses**\n\n\"Stateformer 25L\" performs close to \"Gulati et al. 2020\" (better only over testclean). So the real benefit taken by Stateformer could be questioned. Can the authors argue against this concern?\n\nTraining with the auxiliary classifiers is not common in ASR. As said in the paper, \"Our Baselines\" and \"Our proposed models\" in this large configuration are trained using auxiliary classifiers. It brings a further concern that the superior performance of \"Stateformer 25L\" may be partly due to the use of auxiliary classifiers. It is better to have an ablation study.\n\nHow the perplexities are calculated for masked language models?\n\nCompared to the improved results in ASR, the improvement on masked language modeling seems weaker. MSSM needs 20K additional updates to perform better than Sliding window. The authors should compare different models for the same number of training iterations.",
+            "clarity,_quality,_novelty_and_reproducibility": "see above.",
+            "summary_of_the_review": "See above.\nThe major concern is about the experimental evaluations.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_aXdZ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4209/Reviewer_aXdZ"
+        ]
+    }
+]

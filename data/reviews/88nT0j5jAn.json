@@ -1,0 +1,119 @@
+[
+    {
+        "id": "h30mvavXyBR",
+        "original": null,
+        "number": 1,
+        "cdate": 1666674203915,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666674203915,
+        "tmdate": 1666674532171,
+        "tddate": null,
+        "forum": "88nT0j5jAn",
+        "replyto": "88nT0j5jAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper5139/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents a method for few-shot learning on wide varieties of novel of dense prediction tasks (not just semantic classes) on images.  The method applies meta-learning episodes to a vision transformer, trained to predict label tokens, which are decoded to final labels using a convolutional net.  The final attention step of the transformer is applied using features from support images as the keys, but encoded features (\"label tokens\") as the values; this effectively transfers labels from the support set to the query image, as combinations of support label tokens, which are subsequently decoded to final labels.  The system is evaluated using 10 tasks from the Taskonomy dataset, comparing against fully-supervised baselines as well as current few-shot semantic segmentation methods, finding excellent performance in both 10-shot and larger 200-shot settings, sometimes competitive with fully-supervised training in only the 10-shot setting.\n",
+            "strength_and_weaknesses": "This paper was clear, presented an interesting new problem and has excellent results.  I much enjoyed reading it.  Questions and comments I had are below:\n\n* What is the computational cost of the system, compared to a fully-supervised model (DPT) inference?  Given already-encoded support set features, what the cost to execute one query inference, including query image encoding and matching?\n\n* Was any loss or gradient balancing needed between task types (between the different loss measures), and how was this applied?\n\n* While the motivation of nearest-neighbor lookup is clear, I think the multiheaded attention is more sophisticated than simple NN on key to label tokens, particularly with multi-scale features, as it is here.  Since each head outputs a projection of values, which are linearly combined, based on a projection of keys and queries, different parts of different support images can be used for different components of the label token.  In particular, there can be differences in scale:  Low frequency parts of the token requiring wide contexts can match to one relevant set of support features, while high frequency edge transitions requiring local context *for the same query prediction and task* might match to other support features, even from support images having completely different global context or layout.  How much have you seen this occur, and how important is the number of heads in the MHA matching?  What other sorts of components have this behavior?  Some discussion of this would be nice.\n\n* intro sec 1:  \"the model learns the similarity in image patches that capture the similarity in label patches\":  This seems it would require a relatively large number of tasks of different types, in order to cover differently relevant ways of matching, and indeed the 80/20 5-fold cross-eval does seem to supply a fair number.  What about varying the number training task types --- in what ways does the method fail?\n\n* sec 5.2: discussion on why the method outperforms few-shot semantic segmentation baselines:  the two points here, while likely large factors for most tasks, don't explain the performance difference for semantic segmentation task, where the model described in the paper also performs better.  Do you have any ideas about this difference, and can it explain a large portion of the gains for other tasks as well?\n\n* Decomposing the problem to single-channel output tasks also may have a factorization effect, that stands to improve performance --- does it?\n\n* Are biases in the encoder tuned for each output channel separately, or jointly for all output channels in the test task (for multi-channel tasks like SN)\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "See above.",
+            "summary_of_the_review": "This is an excellent paper that describes a very effective approach to a new and interesting problem.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_arpe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_arpe"
+        ]
+    },
+    {
+        "id": "drydsWAO6qi",
+        "original": null,
+        "number": 2,
+        "cdate": 1666956159329,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666956159329,
+        "tmdate": 1666956159329,
+        "tddate": null,
+        "forum": "88nT0j5jAn",
+        "replyto": "88nT0j5jAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper5139/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a few-shot multitask learner, Visual Token Matching (VTM), for dense prediction tasks. VTM is composed of four components including an image encoder which contains shared and separate parameters for different tasks, a label encoder which is kept the same across tasks, a matching module and a label decoder to read out desired dense predictions. The method is benchmarked on Taskonomy dataset and shows significant improvement over prior work of few-shot multitask learning. ",
+            "strength_and_weaknesses": "Strengths:\n- The idea is novel and intuitive. I very much enjoy many designs of the architecture. Just to list a few:\n  - The image encoder has shared and separate portion of parameters across different tasks. Leveraging the bias-tuning idea, the few-shot learning optimizing biases should be very efficient.\n  - Multi-channel labels are split into single-channel ones. This design enables flexible joint learning of multiple tasks\n  - The token matching module provides a straightforward way of aggregating labels from the support set. It is also multi-resolutional to support learned aggregation on different abstraction levels.\n- The results are impressive. VTM outperforms few-shot learning baselines significantly. The qualitative results also appear to be better than baselines.\n- The paper is well-written and designs are well-motivated. \n\nWeaknesses:\n- Limitation on model architecture. The method requires a same architecture for all tasks. This design may lead to suboptimal architecture for different tasks. I don't see an easy way to enable flexibility of architecture for different tasks within the proposed paradigm.\n- Limitation on training data. I could be wrong on my understanding of the experimental setting but apparently in the meta training, labels of 8 training tasks are all used for each image example. Although Taskonomy supports such a setting with comprehensive labels, in the real world it could be too expensive to obtain so many dense labels for each image. Have you tried an alternative setting, where in the meta training stage, each training image only comes with one type of annotation? This setting will be more realistic and can be extended to real-world datasets by combining multiple datasets for different dense understanding tasks.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and clear to understand. It is an original and novel work to the best of my knowledge. I'm not sure about the reproducibility and I encourage the authors to share the code including experiment configs upon acceptance.",
+            "summary_of_the_review": "Overall this is an inspiring paper with a well-designed and effective method for few-shot multitask learning on dense prediction tasks. Despite aforementioned limitations of the architecture and the training data, it is a work worth reading by a large community. I hope the authors can provide more thoughts regarding the weaknesses during the rebuttal phase. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_hDLX"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_hDLX"
+        ]
+    },
+    {
+        "id": "k-2xQG_Sm_",
+        "original": null,
+        "number": 3,
+        "cdate": 1667519001135,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667519001135,
+        "tmdate": 1668997777258,
+        "tddate": null,
+        "forum": "88nT0j5jAn",
+        "replyto": "88nT0j5jAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper5139/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper tackles few-shot dense prediction from image, i.e. tasks where the input is an image and the output is a per-pixel prediction. The authors propose a Transformer-based meta-learning approach: learning some dense prediction tasks in an episodic fashion helps the model generalize to novel tasks. Most of the parameters on the model are shared, so a small-scale finetuning is needed to learn a new task.\n\nThe architecture is simple: the target image and the support images are split into patches that are featurized using a Transformer. Then the target patches attend to the support patches. Based on their similarity, a target patch inherits the weighted label encoding of each support patch. The label encodings are summed over all patches into a single vector. Another network upsamples this vector to the full image resolution.\nThere are two important details here. First, all weights are shared across tasks, except for the bias terms in the image encoder. This forces us to finetune for a new task, but the actual number of parameters is small. Second, supposing that the output has C channels, the proposed model predicts a dense map for each channel separately. This allows generalization to an arbitrary number of channels at test time.\n\nThe authors test their approach on Taskonomy, by splitting 10 dense prediction tasks into 8 for training and 2 for testing (5-fold validation). They compare against fully-supervised and few-shot baselines and significantly outperform the few-shot ones while sometimes performing on par with fully-supervised approaches. Their ablation indicates that finetuning for new tasks is necessary and that most of the times their network benefits from context (attending to the support set) to improve performance.",
+            "strength_and_weaknesses": "Strengths:\n\n(1) The problem of few-shot multi-tasking for dense prediction is important and unexplored.\n\n(2) The proposed approach is simple and intuitive, without task-specific inductive biases or extreme computational complexity. The experiments show that it works well.\n\n(3) The writing is clear and helps the understanding of the motivation, desiderata, solution.\n\n\nWeaknesses:\n\nThere are some discussions/comparisons that are missing.\n\n(1) Could you please explain the technical differences between the w/o Matching baseline and DPT? Equivalently, if we add a support set on DPT, how different is this from the proposed model?\n\n(2) The proposed architecture is not specifically designed for few-shot settings. In fact, if we compare the w/o Matching variant from Table 2 to the results of the baselines in Table 1, it does pretty well. This is good but also raises the question of how much the fast generalization is a result of the powerful architecture vs the multi-tasking meta-training. These additional experiments would shed light on this:\n(a) What is the performance of the proposed model if trained fully-supervised? Does it scale well when a lot of data is there? How does it compare to DPT? (b) How does out-of-the-box DPT work after few-shot finetuning?\n\n(3) From Table 2 it appears that fine-tuning is very important. This is fine as long as we care about the performance on the novel tasks only. But once finetuned, the model could forget the training tasks. This makes the approach less significant from the point of continual learning. Could you evaluate the forgetting, i.e. what is the performance on the training tasks after finetuning on the novel tasks?\n\n(4) Training for more tasks jointly is a harder job for the model but makes the dependency on the support set stronger. How important is that aspect for the proposed model? If you train on 5 tasks and test on 5 vs 8-2 vs 2-8, how does the performance change? It would be nice if you keep 2 novel tasks as fixed and then train the model on 2, 5 and 8 tasks and show how the performance on the two held-out tasks changes.\n\nQuestions:\n\n(a) Is the whole support set used in a forward pass? That's fine in 10-shot, but when you have 275 support images, do you still feed all of them at the same time? Would it make sense to finetune on 275 support images but use only a fixed set of them during inference? In that case this approach could scale to large datasets as well.\n\n(b) Why do you think that you need to finetune the model? Isn't the support set enough to provide the task description? Could somehow the support set predict the task-specific parameters to use?",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and clear.\n\nThe contributions are original and few-shot adaptation to general dense prediction tasks is indeed unexplored (although task-specific few-shot methods exist, e.g. for semantic segmentation).\nThe proposed method needs to be finetuned for a novel task. I would like to see some discussion in the related work section about methods that do not need to finetune, e.g. some prompting approaches in language (e.g. GPT-3) and vision (e.g. the recent work \"Visual Prompting via Image Inpainting\" or other similar).\nOn a technical level, the architecture combines existing modules in an elegant way.\n\nAn experienced reader would probably be able to reproduce parts of this work, as it is based on well-known components. If the authors release their code it would be useful to the community.",
+            "summary_of_the_review": "In general I like the motivation and technical aspects of this paper. I feel the problem is important and the approach seems to make a step towards the right directions. However, I feel that some comparisons that could make the arguments stronger are missing. In addition, I am concerned about depending on finetuning, although I recognize that continual learning is not the focus of this work. I'm looking forward to the discussion with the authors and will happily vote for accepting the paper if they address my questions.\n\nAfter the rebuttal, all my concerns were addressed and I strongly recommend this paper for acceptance.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_1qaw"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5139/Reviewer_1qaw"
+        ]
+    }
+]

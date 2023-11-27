@@ -1,0 +1,120 @@
+[
+    {
+        "id": "4N9Htp8L86",
+        "original": null,
+        "number": 1,
+        "cdate": 1665953868627,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665953868627,
+        "tmdate": 1669477865568,
+        "tddate": null,
+        "forum": "FILleBqk31S",
+        "replyto": "FILleBqk31S",
+        "invitation": "ICLR.cc/2023/Conference/Paper5623/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "KL divergence between the teacher outputs and the student outputs is commonly used for knowledge distillation. However, this may not be optimal. The authors propose a method to perturb the KL divergence by modifying terms in its Maclaurin expansion. This implicitly modifies the teacher outputs to form a \"Proxy Teacher\". The authors claim and derive a proof that the proxy teacher has the ability to reduce the gap between the true risk and the distillation risk. Connection to Label Smoothing (LS) is also derived. Experiments on multiple NLP datasets show improved performance from the proposed PTLoss over the usual KL loss as well as related methods like LS.",
+            "strength_and_weaknesses": "Strengths:\n\n1. The authors consider an interesting modification to the usual KL objective by perturbing the leading terms in its Maclaurin expansion for knowledge distillation.\n\n2. They show how this perturbation subsumes label smoothing as a special case.\n \n3. Experimental results on multiple NLP datasets seem to show that the proposed objective outperforms the usual KL loss, LS loss and others. \n\nWeaknesses and suggestions for improvement:\n\nI think there are quite a few weaknesses and things that are unclear in this version of the paper, I list them below:\n\n1. Based on my reading of the paper, it appears that only the KL loss, LS loss or the proposed PTLoss is used for knowledge distillation. It is my understanding that a combination of cross-entropy loss and a version of the KL loss is used usually. I am wondering if the authors missed mentioning this in the paper or if they have a different setup.\n\n2. Definition of true risk $R(\\mathbf{f})$ is defined differently in Eq. (1) and in Eq. (28) in the supplement. I think Eq. (28) makes more sense in that there is a true distribution $\\mathbf{p}^*(x)$ that is inaccessible and we are trying to approximate with the PTLoss and the proxy teacher. If $\\mathbf{y}$ (the one-hot labels) were the true distribution, then we would use it directly.\n\n3. It is not at all clear from the paper as to how the best Proxy Teacher is found in Eq. (19) and how that relates to Eq. (21) to find the best $\\eta$. For Eq. (19), the authors just say that it is solved numerically, perhaps they should elaborate. My guess is that random $\\eta$'s are sampled, and for each $\\eta$, $\\mathbf{p}^{t_{PT}}$ is found numerically and the corresponding ${\\hat{D}}$ in Eq. (21) is computed. Finally, the $\\eta$ that corresponds to the $\\mathbf{p}^{t_{PT}}$ that results in the smallest ${\\hat{D}}$ is selected. The authors should clarify whether this is the procedure, and should make this clear in the paper. \n\n4. There are parts of in Section 4.1.2 and 4.1.3 that are seem to be wrong or assumptions that are not justified. The authors write towards the end of 4.1.2 that \"Assume the student functional space is complicated enough, then we can replace the $\\mathbf{f}$ by $\\mathbf{f}^{t_{PT}}(x)$. I don't understand what this means or how we can do this.\n\nIn Section 4.1.3, the authors write: \"We also replace $\\mathbf{p}^*(x_n)$ with $\\mathbf{y}_n$.\" This does not make a lot of sense to me. If the whole point is to get closer to $\\mathbf{p}^*(x)$, why replace it with one-hot labels. If one-hot labels were good, using just the cross-entropy loss should be fine right? l think this is the main problem with the theoretical analysis.\n\n5. All the experiments are done with real-world datasets with unknown $\\mathbf{p}^*(x)$. What the paper needs is an illustrative experiment with a toy dataset where the $\\mathbf{p}^*(x)$ is known exactly, so that the authors can show that the proposed PTLoss gets closer to the desired output compared to one-hot labels, KL loss and LS loss. I would suggest the authors look at Section 2.2 in this recent paper which does exactly this for essentially the same problem:\n\nRin et al. BETTER SUPERVISORY SIGNALS BY OBSERVING LEARNING PATHS, ICLR 2022\n\nI think this is an important and necessary experiment\n\n6. All the theoretical analysis presented is for binary classification. Can the authors provide details how to extend these ideas for multi-class problems?\n\n7. Experimental results should be reported over multiple runs, with means, standard deviations and statistical significance results. Otherwise, it is not possible to determine whether the performance improvements exist.\n\n8. I would suggest the authors discuss the FilterKD that I mentioned above. I think the ideas are very closely related. Ideally, experimental comparisons should be provided.\n\n9. Similarly, I would like the authors to present some comparisons against SOTA KD methods such as Contrastive Representation Distillation which I believe would help readers a lot, but this is not required.\n\n10. I am not very familiar with the datasets used in the paper. It would help me a lot and many readers I think if the authors could consider an image recognition dataset such as CIFAR-100 or ImageNet-100. Again, this is just a suggestion, not too important.\n\n11. This is minor, but using $[0,1]^2$ as the support for a probability distribution is not perfect, as not all pairs of numbers in the $[0,1]$ interval would form a probability vector.\n\n12. I think it should be $\\mathbf{y}^T log(Z(f(x)))$ in Eq. (2) and there should be a $\\mathbf{y}^T$ multiplying the RHS is Eq. (4) right? ",
+            "clarity,_quality,_novelty_and_reproducibility": "I think the paper has some novelty. But in terms of clarity, quality and reproducibility, many improvements are needed as I have listed above.",
+            "summary_of_the_review": "I think the authors are tackling an important problem, and they have an interesting idea to improve the usual KL loss for knowledge distillation. However, I don't think the theoretical analysis is sound and I believe the experiments needs to be done better as well. Given these concerns, I am recommending rejection. \n\nI hope the authors can respond to my review in case I have misunderstood some parts of the paper. \n\nUPDATE AFTER AUTHORS' RESPONSE:\n\nThe authors use a KD setup which is different from the usual setup of having access to both ground-truth labels and teacher outputs -- only the teacher outputs are used for KD in this paper. I think the theoretical analysis makes more sense to me now. However, having experiments which also use the cross entropy loss assuming known ground-truth can help make the paper more broadly useful. And also including an experiment on CIFAR-100 and/or Tiny ImageNet to make it easier to put this work in context with the dozens of existing KD works. I do appreciate the results on the toy dataset which seems to agree with their theoretical analysis. Given these improvements to the paper, I am increasing my rating to a 6. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No ethical concerns.",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_Djov"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_Djov"
+        ]
+    },
+    {
+        "id": "2lY3TR0z3X",
+        "original": null,
+        "number": 2,
+        "cdate": 1665958916685,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665958916685,
+        "tmdate": 1665958916685,
+        "tddate": null,
+        "forum": "FILleBqk31S",
+        "replyto": "FILleBqk31S",
+        "invitation": "ICLR.cc/2023/Conference/Paper5623/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Summary.\n\nThis paper is dedicated to investigating knowledge distillation. The authors argue that the vanilla learning objective of knowledge distillation is sub-optimal since there exists a discrepancy between the teacher's output distribution and the ground truth label distribution. Therefore, they introduce the PTLoss with a Maclaurin series and perturbed leading-order terms. Both theoretical and empirical results are conducted.",
+            "strength_and_weaknesses": "Pros.\n\n1. Both empirical and theoretical analyses are provided.\n2. The paper is well-written and easy to follow.\n\n\nCons.\n\n1. Related works are outdated and not sufficient. Take knowledge distillation as an example. There are tens of KD papers from 2021 and 2022, but none of them are cited.\n2. Only limited datasets are considered. The paper's proposals seem to be general methods, which should be validated in diverse representative tasks (e.g., ImageNet classification, detection, segmentation, and GLUE NLP benchmarks) to support their effectiveness.\n3. The improvements are marginal. Need multiple runs and an error bar to show the significance of benefits.\n4. Missing comparisons with important literature like \"Revisiting Knowledge Distillation via Label Smoothing Regularization\" and \"Do We Need Zero Training Loss After Achieving Zero Training Error?\".\n5. The authors argue the limitation of a discrepancy between the teacher's output distribution and the ground truth label distribution. It is hard to say the discrepancy is a bad thing. Because lots of input samples like ImageNet images in vision can be multi-label but the ground truth is usually a one-hot label. Thus, a soft label is actually more appropriate to represent the true data distribution, ",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity is good.\n\nQuality and Novelty are fair.\n\nReproducibility is unknown.",
+            "summary_of_the_review": "A borderline paper needs more studies.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_BGUG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_BGUG"
+        ]
+    },
+    {
+        "id": "rwrCT4arhUD",
+        "original": null,
+        "number": 3,
+        "cdate": 1666674013728,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666674013728,
+        "tmdate": 1670767729430,
+        "tddate": null,
+        "forum": "FILleBqk31S",
+        "replyto": "FILleBqk31S",
+        "invitation": "ICLR.cc/2023/Conference/Paper5623/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper, the authors propose a KD algorithm that can improve the generalizability of students through perturbation of the teacher's output distribution. The PTLoss proposed in this paper is obtained by expressing a KL-based loss function through a Maclaurin series and then perturbing the terms of the preceding order in this series. The paper shows theoretically and experimentally that this new loss function can show higher KD performance than other competitors.",
+            "strength_and_weaknesses": "The proposed algorithm is systematic, well-organized, and has a solid theoretical background. This paper goes beyond simply pertu\u3137rbating the distribution of teachers and proposes the best perturbation strategy, and several results presented in the experimental results demonstrate that this strategy is effective.\n\nDespite the advantages mentioned above, I believe the experiment was conducted only in a relatively narrow space. Empirical validation for more diverse scenarios will be more helpful in demonstrating the effectiveness of the algorithm.\nFirst of all, how does this algorithm work with students of larger capacity? Some KD algorithms test not only if a student has a lower capacity than the teacher but also if they have the same or greater capacity.\nNext, how does the proposed algorithm work if the teacher is not a single network but an ensemble of multiple networks?\nFinally, I wonder how the proposed algorithm can work for images, which is another big area where KD is applied.\n\n\n---\nAfter reading the reviews of other PCs and the authors' replies, \n\nI lower my primary score to 6.\nI still think this paper is well written and has enough contributions to be accepted, but as reviewer BGUG points out, this paper does not sufficiently cover state-of-the-art KD algorithms. For example, it would have been nice to have compared more recent methods in Table 5.1, as well.\nAlso, the application of the proposed algorithm is limited at this point. As the authors also mentioned, it would be good to explore computer vision further, the effectiveness of the proposed PTLoss according to the relationship between student and teacher capacity, etc., in future work.\n\n---",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is good enough in all four respects.",
+            "summary_of_the_review": "Overall, I read this paper interesting and lean to positive. Additional experiments will help to confirm the effectiveness of the proposed algorithm.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_yv5C"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5623/Reviewer_yv5C"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "CSnO-XhaFf",
+        "original": null,
+        "number": 1,
+        "cdate": 1665614566062,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665614566062,
+        "tmdate": 1665665298369,
+        "tddate": null,
+        "forum": "NEEtm5laNK1",
+        "replyto": "NEEtm5laNK1",
+        "invitation": "ICLR.cc/2023/Conference/Paper5549/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper provides an algorithm to improve zero-shot open-vocabulary classifiers by better prompting them. The authors propose to (1) create sub-classes for each parent classification category using existing (human-created) or inferred (GPT-3 generated) label hierarchies, (2) perform standard zero-shot classification on the sub-classes, and (3) aggregate the results to associate probabilities with the parent category. The paper provides empirical evaluation of the method on various datasets and additionally ablates key design decisions related to their use of labels, GPT-3, and aggregation strategy.",
+            "strength_and_weaknesses": "**Strengths**\n\n*S1.* The work is well motivated.\n \n*S2.* The work seems novel. I have only seen GPT-3 used in zero-shot open-vocab classification in concurrent work and consider this to be novel.\n\n*S3.* The method is general for classification problems and does not require additional training.\n\n*S4.* The ablations test major design decisions and shed light on when a practitioner may or may not want to make similar decisions. \n\n*S5.* Method is simple and easy to implement.\n\n*S6.* The introduction and method section are very well written.\n\n**Weaknesses**\n\n*W1.* Related work could be more comprehensive and the paper could be better situated in the literature. More specifically, here are some suggestions for references. I suggest doing a more comprehensive literature review of recent work.\n\nTransfer learning:\n* LiT: tuning text towers while keeping language tower fixed (https://arxiv.org/abs/2111.07991)\n* Visual prompt tuning: tuning learnable visual prompt (https://arxiv.org/abs/2203.12119)\n* Model Soups: ensembling many fine-tuned CLIP models in weight space (https://arxiv.org/abs/2203.05482)\n* Patching CLIP models on downstream tasks while maintaining zero-shot performance on tasks where CLIP is already successful (https://arxiv.org/abs/2208.05592)\n* CLIP-CL: similar to Model Patching above (https://arxiv.org/abs/2207.09248)\n* ...\n\nZero-shot prediction:\n* CLIP-ViL: showing the limitation of ZS CLIP in VQA-like settings (https://arxiv.org/abs/2107.06383)\n* CoW: showing how CLIP can be adapted to do object navigation without additional training (https://arxiv.org/abs/2203.10421)\n* ...\n\nAdditionally, I suggest adding a section on hierarchical classification.\n\n*W2.* The paper states: \"Here, we reweight each set of subclass probabilities by its superclass probability. In this way, we can attempt to avoid the behavior in which CLIP makes an incorrect subclass prediction despite a confident and correct superclass prediction, and thus bias our model to never do worse than the raw superclass predictions.\"\n\nWhile this is maybe meant to provide intuition for the method, it reads like a claim that is not supported. I suggest making it clear that this is intuition and not some mathematical/provable property of the algorithm related to \"bias\".\n\n*W3.* How does the proposed method perform on ImageNet? Without ImageNet evaluation it becomes hard to compare the proposed method to other methods.\n\n*W4.* It seems many of the datasets are chosen because it is easy to construct class hierarchies. However, the method is presented as a general purpose zero-shot image classification improvement over CLIP. To be convinced of this, I would be interested to see results on more datasets. Please consider Cars, DTD, EuroSAT, GTSRB, KITTI, MNIST, RESISC45, SUN397, which Ilharco et al. (https://arxiv.org/abs/2208.05592) use because they are tasks ZS CLIP is known to struggle on. Note: dataloaders for these datasets can be found [here](https://github.com/mlfoundations/patching/tree/main/src/datasets).\n\n*W5.* The main experimental setup has baselines that may not be fair points of comparison. Specifically, not all datasets in the original CLIP paper use the ImageNet prompt templates. For example, CIFAR-10/Food101 use different prompts (see [here](https://github.com/openai/CLIP/blob/e184f608c5d5e58165682f7c332c3a8b4c1545f2/data/prompts.md)). What are the deltas between the 75 prompt set and the set that OpenAI provides? For Food101 specifically, there seems to be a discrepancy of ~2% between the ZS number reported in the manuscript and the L/14-336px number reported in the CLIP paper in Tab 11. For datasets that OpenAI did not evaluate in their original paper, some prompt engineering on a val set or some validation that ImageNet prompts are reasonable seems needed.\n \n*W6.* It seems that the experimental setup is sufficiently different in cases where the hierarchy exists and when it does not for me to compare the performance between col 2 and 3 in Table 1. For example, in the *GPT-3 map* the authors include the superclass label in the label set, while in *Existing Map* they do not. It would be good to standardize the algorithm being compared in the two settings. Another idea is to provide the full results in the appendix (i.e., *GPT-3 map* w/ superclass labels, *GPT-3 map* w/o superclass labels, *Existing map* w/ superclass labels, *Existing map* w/o superclass labels).\n\n*W7.* I am not able to completely understand the experimental setup for \u201cNoisy Available Hierarchies\u201d from the text provided. Consider adding an appendix for that section to give more details on how the subclasses are constructed from the ImageNet hierarchy.\n\n*W8.* How do things look if the label set size is 1 or 100 (i.e., m=1 or m=100)? Doe these more extreme values of m affect the performance? At least m=1 should be worse than zero-shot, which seems like a valuable bases of comparison.\n\n*W9.* Some visualizations of cases where the vanilla zero-shot and CHiLS models disagree could be helpful to provide intuition.\n\n*W10.* I am not clear on the linear class ensemble experiment from reading the text. Is the following correct? For a single class, loop over all subclasses and ImageNet prompt templates computing the CLIP text features. Average all of these features to represent the single class as a feature. Repeat for all classes to get a zero-shot classification head.\n\n*W11.* The method involves expanding the zero-shot head at test time. There is a compute and memory overhead associated with this that may limit the scalability of the method when many classes or subclasses are targeted. For example, for the 1000 ImageNet classes, with m=10, the instantiated head would have 10k classes.\n\n**Minor**\n\n*M1.* The Radford et al. 2021 caption example is \u201ca photo of a {}.\u201d not \u201ca photo of a {}\u201d as presented in the manuscript. The difference is the period at the end of the prompt, which may make a difference in downstream performance.\n\n*M2.* This is a relevant reference when discussing CLIP confidence in the method section: https://arxiv.org/abs/2106.07998\n\n*M3.* For Sec. 4.4 is there some theory as to why weighting is necessary in one case and not in the other?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "* The use of GPT-3 in zero-shot open-vocabulary image classification is novel (also appearing in concurrent work as the authors recognize).\n\n* While I have not seen hierarchical classification methods applied in zero-shot image classification, these kinds of techniques are well studied in the literature in more classical ML settings. The authors can improve the manuscript by positioning their hierarchical classification algorithm relative to others. However, the authors do not claim to present hierarchical classification in-and-of-itself as novel.\n\n* I have a minor concern about reproducibility given that the GPT-3 component of the work uses a temperature parameter of 0.7 and hence introduces some randomness into the results. However, the authors release all generated labels and hence the numbers in the paper should be reproducible for the datasets presented.\n\n* Some of the experiments require better explanation and could benefit from appendices giving more experimental details (see W7, W10).\n\n* The introduction and method section are very well written.",
+            "summary_of_the_review": "The paper provides a method to prompt open-vocabulary models for zero-shot image classification, which leverages class hierarchies. It is straightforward to implement and the authors provide some empirical evidence that their method performs significantly better than the baseline, especially when hierarchies are known for a dataset.\n\nHowever, I currently recommend weak rejection of the manuscript. I am most concerned about the lack of benchmarking on ImageNet (*W3.*), the performance of the method on at least a few more standard classification datasets (*W4.*), the fairness of the zero-shot baselines (*W5.*), and the clarity of the presentation associated with some of the ablations studies (*W7.*, *W10.*).\n\nI am willing to revisit my evaluation during the rebuttal/discussion period.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_msk3"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_msk3"
+        ]
+    },
+    {
+        "id": "qVw9aujdhEq",
+        "original": null,
+        "number": 2,
+        "cdate": 1666599861433,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666599861433,
+        "tmdate": 1666599861433,
+        "tddate": null,
+        "forum": "NEEtm5laNK1",
+        "replyto": "NEEtm5laNK1",
+        "invitation": "ICLR.cc/2023/Conference/Paper5549/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies zero-shot image classification with class hierarchy.\nA Classification with Hierarchical Label sets (CHiLS) model is proposed to improved classical CLIP model.\nThis model leverages predefined subclasses, and perform CLIP on them first to obtain a set of class embeddings.\nThese subclass embeddings are aggregated together to form the embedding of class of interests that facilitate zero-shot image classification.\n\n",
+            "strength_and_weaknesses": "\n- The outstanding problem of this paper is that it is of not self-contained. It lacks of proper definition and review of referred models, terminologies, and problem setup. For example, \"CLIP\", \"prompt\", \"open vocabulary models\".\n\n- The idea of dividing a super class into a set of subclass is not new, and therefore the contribution is not significant enough.\n\n- The sensitivity of the proposed model on the different levels of granularity of the class hierarchy is unclear.\n\n- Lacks of proper comparisons with related works in line of zero-shot image classification.",
+            "clarity,_quality,_novelty_and_reproducibility": "In terms of clarity, this paper can be improved further by providing proper introduction of the problem formulation, related works. \n\nThe proposed method looks pretty straightforward. \nWhile it is interesting to see the improvement of performance, it is only a modest incremental work over the arts.",
+            "summary_of_the_review": "The paper improves the previous arts CLIP by leveraging class hierarchy, which can be seen as a modest incremental work.\nUnfortunately, the reviewer does not find it is novel enough.\nBesides, the writing and empirical study can be further improved. \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_oLxZ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_oLxZ"
+        ]
+    },
+    {
+        "id": "ug7ETT1YYH",
+        "original": null,
+        "number": 3,
+        "cdate": 1666699127471,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666699127471,
+        "tmdate": 1668780121776,
+        "tddate": null,
+        "forum": "NEEtm5laNK1",
+        "replyto": "NEEtm5laNK1",
+        "invitation": "ICLR.cc/2023/Conference/Paper5549/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a method to improve predictions of the CLIP model by utilizing a potential structure/hierarchy among classes. Instead of generating predictions on the target classes only, the authors propose to generate predictions on a set of all target labels\u2019 subclasses (which are more granular) and use predictions in subclass space to decide which target class (superclass) to output.  \nFor finding subclasses the authors use either use an existing hierarchy of labels or generate them by prompting a GPT-3 model.",
+            "strength_and_weaknesses": "Strengths:\n\n- (S1) A practical and easy-to-implement/utilize method\n- (S2) In the case of existing class hierarchy, the experiments indicate a very significant improvement over not relying on that class hierarchy (although see W2)\n- (S2) The experiments cover w/ and w/o hierarchical explicit information (although see W1)\n    \n\nWeaknesses:\n- (W1) The paper doesn\u2019t clearly show whether the proposed approach is valid/useful only on datasets where some hierarchical structure between classes exist (regardless whether explicitly present or not) or is something that would work on any generic problem/datasets. The authors do address in their experiments two scenarios: one with hierarchical information provided explicitly and another with a hierarchy generated from a GPT model. However, a good class structure/hierarchy may or may not exist even if it is not explicitly provided or utilized. Taking ImageNet as an example - there are many animal/plant species with a very deep hierarchy, many closely related classes on one hand, but on the other hand, some classes have a very shallow hierarchy and few only loosely related classes (I would suppose maybe classes like \u201ccliff\u201d or \u201ctraffic sign\u201d?). The authors however seem to choose datasets where one could expect some hierarchy to exist, even if not explicitly present. How would the method behave on datasets like e.g. StanfordCars where all classes are somewhat similar and it\u2019s unclear if some meaningful hierarchy exists, or even the whole ImageNet where maybe there are groups of classes with a nice hierarchy/structure and groups of classes where such hierarchy might not exist?\n- (W2) The authors present results for their method but no comparisons to any alternative approaches. One would expect at least some simple baselines that utilize the hierarchical structure of labels.\n- (W3) On many datasets the improvement in accuracy is very significant, but on some other, like \u201cliving17\u201d or \u201cfruits-360\u201d there\u2019s a relatively much smaller improvement. This is not explained/discussed by the authors - is it something related to some properties of the hierarchies?",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written and proposes a simple, yet conceptually novel approach to utilize label hierarchy.\nThe authors provide code and most implementation details seem to be available.",
+            "summary_of_the_review": "Not so clear how general or practically useful the method is: how specific the results are to datasets/problems with some class structure (whether explicit or implicit). The most significant improvements are when utilizing an existing hierarchical structure of labels but it\u2019s unclear how much of that improvement is specific to the proposed method as no alternative approaches or simple baselines utilizing such information are considered.\n\n**EDIT: Updated the score to lean towards acceptance. The authors' comments are generally convincing and the updated version of the paper makes the scope of the contributions clearer.\nAlso, the additional results provide more insight into the model's performance and in which scenarios it is expected to work well.**",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_ohpn"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_ohpn"
+        ]
+    },
+    {
+        "id": "p9ls4nw52c",
+        "original": null,
+        "number": 4,
+        "cdate": 1666785469230,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666785469230,
+        "tmdate": 1666785808755,
+        "tddate": null,
+        "forum": "NEEtm5laNK1",
+        "replyto": "NEEtm5laNK1",
+        "invitation": "ICLR.cc/2023/Conference/Paper5549/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper, authors propose to utilize the label hierarchies to boost the performance of CLIP for zero shot classification. The main steps include the generation of the subclasses for each class by either using the GT label hierarchies or by querying GPT-3, then conduct the CLIP  via these sub-classes, and finally map the sub-classes back to their parents. The performance gain has been observed on the benchmark datasets.",
+            "strength_and_weaknesses": "Strength:\nThe paper is generally well-written with a clear motivation and decent performance gain.\n\nWeakness:\nThe main concern would be the proposed model is essentially an ensemble of sub-class based CLIP models, though authors address this concern via comparisons against linear average approach, the novelty is still somewhat limited.",
+            "clarity,_quality,_novelty_and_reproducibility": "The organization of the paper and the overall writing is clear. And one should be able to reproduce with the firm understanding of the CLIP model.",
+            "summary_of_the_review": "Overall, the paper is well-written, and easy to follow, yet the main concern as expressed in the weakness part is the novelty, as it resembles a lot with an ensemble model.\n\nMoreover, if the hierarchical structure does not explicitly exist in the label vocabulary, how would the proposed model handle it, namely, you cannot rely on the ready-to-go GT structure or query it via the GPT model. It is somewhat unfair if the compared models can also utilize these structures to boost their performance. Authors are suggested to clarify their proposed model in a more general sense.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_VtPj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5549/Reviewer_VtPj"
+        ]
+    }
+]

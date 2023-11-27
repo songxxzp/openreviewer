@@ -1,0 +1,158 @@
+[
+    {
+        "id": "vu2BtwP6GMn",
+        "original": null,
+        "number": 1,
+        "cdate": 1666254606749,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666254606749,
+        "tmdate": 1669123807911,
+        "tddate": null,
+        "forum": "3aQs3MCSexD",
+        "replyto": "3aQs3MCSexD",
+        "invitation": "ICLR.cc/2023/Conference/Paper5433/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper analyzes data augmentation in detail for (small) computer vision tasks with (small) networks. In particular, the paper analyzes the following aspects of data augmentation:\n* What is the *exchange rate* between augmentations and more data?\n* How does augmentation help OOD generalization in comparison to more data?\n* How does augmentation relate to invariance in the models?\n* Augmentations add a source of randomness to SGD that can help to find \"flatter minima\".\n* A large number of experiments is done, mostly on CIFAR-related datasets, with a variety of architectures and dataset sizes. The exchange rate is based on fitting of power-law curves to the results.\n",
+            "strength_and_weaknesses": "**Strengths**\n* The topic of the paper is interesting and relevant to ICLR. The concept of an \"exchange rate\" between augmentations and more data is intuitive and the paper motivates it well.\n* The experiments are extensive and cover interesting questions.\n* The paper is generally well-written and easy to follow. \n* All important design decisions are explained and the used code is included in the supplementary material.\n* The detailed analysis of gradient standard deviation during training with and without augmentations is specifically interesting in my opinion.\n\n**Weaknesses**\n\nThe extrapolation into regimes where the use of augmentation corresponds to a \"negative amount of additional training data\" seems a bit strange to me, at least under \"normal conditions\" like in Fig.1. I think most practitioners would argue that this is not plausible. This seems to correspond to interpolations into an accuracy that approaches the best achievable rates. Also, f_{ref}^{-1} may not be well-defined any more for accuracies that are significantly above the largest observed \"reference\" accuracy. It looks to me like the extrapolations beyond the max. possible \"number of base samples\" are more confusing than they help. Further, this may point to potential problems in the functional form of the power law that was used, maybe the used functional form is too simple to yield good results in extrapolation?\n\nThis extrapolation effect then seems to also lead to some non-obvious conclusions, e.g. \"diverse but inconsistent augmentations [...] are hindrances at scale\" where it is not entirely clear to me that the qualification \"inconsistent\" is obvious from the experiments. \n\nStill regarding extrapolation:\n* In Fig3 (left) it seems that for width 4 (and partially for width 8) augmentations *hurt* performance when using more than 100k training samples. This seems quite surprising and would probably warrant an explicit discussion. Or maybe TrivialAug is just not useful in this setting? Similar for Fig.3 (right) and the SwinTransformer.\n* In Fig4 (right) it also seems somewhat implausible that for a number of base samples in the thousands, augmentations would be worth a factor of 100 more in training data (even though this is for generalization under distribution shift). Similarly, the graphs seem to indicate that for \"horizontal flips\", the augmentation is worth \"minus half the training data\" for ~100k base samples. This is also somewhat implausible to me.\n\nAt the start of Sec.3, I had a hard time understanding what exactly \"0\", \"1\", etc. mean in Fig.2 and Fig.5. I read Section 3.1.1 several times and I am still not sure how to exactly interpret the experiments. I'd appreciate it if the authors could clarify this.\n\nSimilarly, in the second paragraph of Sec 4.2 it was not clear to me how exactly the train and test data are constructed. E.g. often only rotations by multiples of 90 degrees are used for digital images, and the x-range of Fig.7 (left) also only goes up to 4. Does this mean that up to 4 samples were used? But then the test data would be included in the train data for 4 samples per class, which seems not to be the case. I'd appreciate it if the authors could clarify this a bit more.\n\nI had the impression that the conclusions drawn in Sec 4.2 are a bit too strong. The experiment is interesting but it seems ultimately a bit simple and some further analyses (e.g. breakdown of improvements by classes, example successes and failures) are needed. It seems not impossible that for large augmentation ranges, the network could just learn to recognize dominant color distributions in this particular scenario. Can this be ruled out?\n\n**Additional Comments**\n\nSec. 3.1.2 / Fig. 3 (left) - this seems to point to the fact that augmentation/regularization helps more with increased model capacity. Maybe this is obvious, but I don't think I saw this being discussed in the paper.\n\nI am slightly confused that the authors use a ResNet *18* for CIFAR-like images. In the original paper by He et al. a ResNet *20* was specifically designed for CIFAR-like data, while the *18* version is used for larger ImageNet images. On the other hand, the authors discuss in the Appendix that they used a \"usual CIFAR-10 stem\" and refer to the \"Bag of Tricks\" paper. In that paper I did not find any mention of CIFAR, though. I also briefly looked at the code and got the impression that the \"18\" version seems to use a [2, 2, 2, 2] configuration (which is the classical ImageNet variant as far as I understand). But I may have been confused here or it is considered irrelevant for the experiments here. Could the authors clarify this? \n\nIt would also be good if the best achieved accuracies of the networks could be compared to results from the literature. Here, the goal would not be to claim state-of-the-art performance, but it would be good for the reader to see that the experiments are run in a regime that is sufficiently close to other published numbers, such that it remains plausible that the drawn conclusions remain valid in that regime and are not influenced too much by operating far from that point.\n\nA few additional related works that could be relevant (I'm not suggesting all of these need to be included or cited):\n* [Bad Global Minima Exist and SGD Can Reach Them](https://arxiv.org/pdf/1906.02613.pdf) has some results on how augmentation is related to \"better minima\".\n* [How to train your ViT? Data, Augmentation, and Regularization in Vision Transformers](https://arxiv.org/pdf/2106.10270.pdf) also discusses the relation between augmentation, regularization, and training data size.\n* [A Group-Theoretic Framework for Data Augmentation](https://arxiv.org/pdf/1907.10905.pdf) also seems relevant in this context.\n\nMinor comments/typos (not affecting evaluation):\n* p.1 \"benefits of augmentations and the number of samples rises\": and->as ?\n* Fig. 2 (and potentially others): The colors for \"1\" and \"random\" are hard to distinguish.\n* p.4 \"can be attributes simply\" -> attributed\n* In Fig.6, does \"Aug\" here mean \"only flipping\"?\n* Sec.4.1: I think another common name for \"prediction averaging\" is \"test-time augmentation\", and \"orbit selection\" is also called \"normalization\". Maybe it would be useful to mention these, not sure.\n* p.7 \"We instantiate and E2CNN\" -> an\n* References: in some reference titles, lowercase is used where it shouldn't, e.g. \"lie group\", \"sgd\", \"bayesian\", \"cnns\".\n* References: in some references, only the ArXiv version is references, while the paper has appeared in a conference or journal, too.\n\n---------------\n### Update after authors' response\n\nI would like to thank the authors for their clarifications and the changes made to the paper. I think these have addressed my concerns and I think the quality of the paper has improved overall. I am still a bit worried that the nuances of the results in the extrapolation regime are easy to miss for the reader. (De-emphasizing these in the graphs would be one way to address that.) But overall I think the paper is now above the acceptance threshold. Therefore I am increasing my score.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: high; the paper is written in a manner that makes it easy to follow in most parts\n\nQuality: see strengths/weaknesses above\n\nNovelty: medium; that there exists a relationship between augmentation, regularization, and data size is probably well-known, but this paper examines this relationship in an explicit way and adds more puzzle pieces\n\nReproducibility: high; the authors have provided the code with which the experiments were run",
+            "summary_of_the_review": "The paper contains several interesting novel ideas and results. However, there are also several issues around extrapolation and interpretation of the results. I therefore think that the paper in its current form is marginally below the acceptance threshold, but I would be happy to increase my score during the discussion period if some of the concerns can be addressed by the authors.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_G4Yp"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_G4Yp"
+        ]
+    },
+    {
+        "id": "AD00FGGa-i0",
+        "original": null,
+        "number": 2,
+        "cdate": 1666426131966,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666426131966,
+        "tmdate": 1666426131966,
+        "tddate": null,
+        "forum": "3aQs3MCSexD",
+        "replyto": "3aQs3MCSexD",
+        "invitation": "ICLR.cc/2023/Conference/Paper5433/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper investigates the reason why data augmentation is effective in learning models. They look into different hypotheses: how augmentation encourages invariance, variance regularization, providing an additional source of stochasticity. They also look into the scaling laws of augmentation. The findings of this paper shed light on where and when augmentation is most effective in computer vision.",
+            "strength_and_weaknesses": "- The idea is nice, focusing on getting a better understanding of the impact of data augmentation is an important research direction. The findings can improve how data augmentation is done in both computer vision and NLP tasks.\n\n- The presentation of \"takeaway\"s from the analysis of each section is helpful for summarizing the findings.\n\n- The authors mainly focus on computer vision where the image manipulation functions\u00a0are very straightforward (e.g., flipping an image). I'm wondering how the findings and takeaways of this work generalizes to text augmentation as well. In NLP, by manipulating texts to augment the datasets, we inadvertently introduce noise. That is because [automatic] context manipulation can lead to grammatically or semantically incorrect sentences. What is the authors' insight about their findings in this scenario?\n\n- In figure 3 the authors show that\u00a0SwinTransformer is less positively impacted by the augmentations in comparison with other architectures. Is that interpreted\u00a0as how transformers are in general less impacted or is there something about the\u00a0SwinTransformer architecture in particular?",
+            "clarity,_quality,_novelty_and_reproducibility": "This work is clearly written and the message is evident to the reader without any struggle. The experiments are sound and the quality of the work is well done. \nThey investigate the impact of data augmentation from different views and provide insight into when and where it's more effective. This is a valid and useful idea and it contributes to the field of research. ",
+            "summary_of_the_review": "This work is well-motivated, clearly explained, and sufficiently supported by analysis. There are some questions for the authors (see section Strength And Weaknesses), however overall it's a valuable contribution to the field. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_WExn"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_WExn"
+        ]
+    },
+    {
+        "id": "CqK8pOlCbjN",
+        "original": null,
+        "number": 3,
+        "cdate": 1666671773841,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666671773841,
+        "tmdate": 1666671773841,
+        "tddate": null,
+        "forum": "3aQs3MCSexD",
+        "replyto": "3aQs3MCSexD",
+        "invitation": "ICLR.cc/2023/Conference/Paper5433/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper tries to quantify the value of augmentation by measuring its effectiveness compared to adding more data. It tried to also examine the effectiveness under different settings such as model size, variants, and out-of-distribution settings. Lastly, it tried to explain why augmentation is effective by measuring gradient standard deviations and noted that it has a regularizing effect because it flattens the gradient.",
+            "strength_and_weaknesses": "While benefits of augmentation are quite well proven empirically, there wasn't too much valuation of one additional data collected. This paper delves into when, how much, and what augmentations can help which is quite practical. \n\nWhile it lays a good starting point, it mostly deals with empirical finding on a relatively small and simple dataset. Without a theoretical finding, one would need to conduct similar experiments outs to evaluate usefulness of augmentations on a specific dataset, model, and/or task. Given that the shape of the curve can differ by any of those factors, the paper can be seen as only reinforcing intuitions built by others but the conclusion is mostly limited to CIFAR and CINIC dataset. \n\nAlso, given that experiments dealt with models with relatively low capacities and very small number of classes, it certainly would have been more interesting to see evaluation done on more complex task where there are more uncertainty in data and where it is difficult to over train (in the paper, model was trained sometimes up to 160 epochs). For example, the benefit of augmentation is less noticeable, at least compared to other charts in the main body of the paper, in the figure 17 and 19 and it certainly is less interesting for SwinTransformer, a model with more capacity.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "While the paper looks quite reproducible, it is unclear how one can fairly compare multiple runs with potentially different levels of training. For example, assuming that the validation metrics are reported from the ones before overfitting, a base model may have peaked at N epoch while an augmented one can peak at M. Without reporting effective flops for each of the runs, it is unclear whether a data augmentation is a worthy trade-off to adding another data sample. ",
+            "summary_of_the_review": "Augmentation is a technique often employed by ML practitioners for its practical values. The paper tried to quantify trade-off between augmentation vs. one additional labeled data and this framework of trade-off can benefit the practitioner to make the right decision at the right time.\n\nHowever, despite its very empirical nature, it lacks experiments on different tasks, on datasets of varying size and complexity, and on state-of-the-art models since, at their scales, the augmentation may exhibit very different characteristics. Without them, this paper can only be served as intuition reaffirming data but cannot be used as a rule or a way to generally compute the exchange rate.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_iXJA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_iXJA"
+        ]
+    },
+    {
+        "id": "BQrp6wGhZ_T",
+        "original": null,
+        "number": 4,
+        "cdate": 1666891854357,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666891854357,
+        "tmdate": 1666891854357,
+        "tddate": null,
+        "forum": "3aQs3MCSexD",
+        "replyto": "3aQs3MCSexD",
+        "invitation": "ICLR.cc/2023/Conference/Paper5433/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "In this paper, the authors empirically investigate the effects of data augmentation on model performance. They first define a performance metric called \"exchange rates\", measuring the effects of data augmentation in terms of the size of extra real data required for the same performance. From various perspectives such as consistency and diversity of the augmentation method, base sample size, model capacity and architecture, in-distribution vs. out-of-distribution, they find interesting empirical performance patterns. They further study whether the performance boost can be solely attributed to utilizing invariance in the data distribution. Finally, they link the empirical findings with the implicit regularization and flat minimum literature by measuring the gradient norm and flatness metric of the trained models. ",
+            "strength_and_weaknesses": "Strength\n- Data augmentation is an area that has huge practical impact but is short of systematic studies. This paper is an important addition.\n- The \"exchange rate\" concept provides a new tool to measure the effects of data augmentation. I think it has the benefit of being more universal / \"normalized\" compared with other metrics such as \"accuracy improvement\", when applied across datasets and model architectures.\n- Many aspects / hypotheses are considered; conclusions are drawn using carefully designed experiments.\n\nWeakness\n- While I understand that the power-law model is a visually plausible and convenient choice, I don't find it overwhelmingly convincing. For example, in Figure 1 (left) the performance of the baseline seems to also saturate close to 200k base samples, yet the power-law model assumed a linear extrapolation.\n- I find the words \"repetition\"/\"repeat\" in Sec. 3.1.1 and Figure 2 to be confusing. Literally it seems to mean iterating through the same dataset (with the same order) without generating new data. From the context, however, it seems to represent how many augmented data are generated (measured as multiples of base samples). Could you confirm if the latter understanding is correct? Also, what does \"random\" mean in the legend of Figure 2?\n\nOther feedback: \n- The paper only studies label-preserving data augmentations; conclusions about other data augmentation methods, e.g. mixup, require further research.\n- On the benefit of data augmentation for out-of-distribution dataset, it seems to me that links could be drawn from the area of domain adaptation and / or (un)supervised pretraining, etc. Given previous research in those areas, it is not surprising that diverse augmented data may work better than real data from the source domain.",
+            "clarity,_quality,_novelty_and_reproducibility": "- Clarity: The paper is easy to follow in general (only a few comments; please refer to the previous section). Take-away messages also help to orient the readers.\n- Quality: The paper is well-written; the experimental design and result presentation are of high quality.\n- Originality: The paper's approach to measure the performance influence of data augmentation is new, to the best of my knowledge.\n- Reproducibility: Data sheets and code are attached for reproducibility.\n",
+            "summary_of_the_review": "The paper presents a systematic empirical investigation of an important topic in modern machine learning -- data augmentation. The idea of measuring data augmentation performance in \"units of data\" can be applied and compared across datasets and model architectures, and brings in a new perspective to interpret the performance improvement. The paper is well-organized, with well-controlled experiments and clear presentation of results to support the conclusions of each section. All in all, I think the paper would be a valuable addition to the literature of data augmentation research.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_VSLP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5433/Reviewer_VSLP"
+        ]
+    }
+]

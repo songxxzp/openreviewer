@@ -1,0 +1,119 @@
+[
+    {
+        "id": "da5ph_dczeF",
+        "original": null,
+        "number": 1,
+        "cdate": 1666736722214,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666736722214,
+        "tmdate": 1666736722214,
+        "tddate": null,
+        "forum": "oIkZyOytR3g",
+        "replyto": "oIkZyOytR3g",
+        "invitation": "ICLR.cc/2023/Conference/Paper3990/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors have observed that DT (for offline RL) lacks the ability to stitch suboptimal sub-trajectories, and propose the following two-step procedure:\n\n1) learn a Q function using the CQL critic\n2) relabel the RTG of the offline dataset using the learned critic, then train a DT on the relabelled dataset\n",
+            "strength_and_weaknesses": "This manuscript studies an interesting question for DT and offline RL. The idea of RTG relabelling is simple, the resulting algorithm is easy to implement. It does improve DT's performance on several antmaze tasks.\n\nOverall, I see this is an interesting idea, yet I think further explorations can be made in a few directions to make the current manuscript a strong submission. See discussions below.\n\n*  What the authors want to show in Figure 1 is that trajectory 1 and 2 have very different and even polarized RTGs, when conditioning on a reasonable RTG (which can be out of distribution), DT might predict the suboptimal move at the initial state. \n\nA minor point I want to mention --  the example trajectory 2 in Fig 1, actually suggests the MDP the authors consider is not episodic. For continuing tasks/MDPS, people tend to use discounted rewards, and the RTG would be finite (assuming bounded reward).  Assuming episodic MDP (a finite horizon or a terminating state), trajectory 2 wouldn't contain any infinite RTG either. The original paper of DT actually implicitly assumed episodic MDP. I believe the above idea can be illustrated with examples with finite RTGs as well.\n\n* Given this example, the central question to answer becomes how to choose the right move if the optimal subtrajectory is associated with suboptimal RTG. I can see the problem can be generalized to if the return distribution of the offline dataset contains different modes, how to stitch suboptimal trajectories associated with trajectories in different modes. The authors propose a DP approach to relabel the RTGs. I suggest the authors present the algorithms in the main paper for clarity, also use the concise math notations like :  R_{t-1} = max(R_t, Vhat(s_t)) + r_{t_1}, where Vhat is the estimated value function.\n\nOne particular design I noticed is that for each input sequence, the RTG is further relabelled as in Algorithm 2. The authors argue this is to keep the consistency between the reward and RTG within an input sequence. I'd suggest the authors run an ablation experiment to verify this is needed, and give some explanations. Will the performance of DT crash with such inconsistency? \n\nBesides, this means, for the same state action tuple (s_t, a_t), the associated RTG will be different when it is sampled in different input sequences. I wonder if this is related to data augmentation / perturbation -- you smooth out the input data distribution by those \"noisy\" RTGs, and I wonder how much performance gain will you obtain by introducing this extra labelling step. \n\n* It's better to give more details for the experiments, e.g. - how many evaluation rollouts per seed are taken? Besides, each algorithm only takes 3 seeds. Preferably, the authors can run experiments with 5 to 10 seeds. (The authors can also use the stratified bootstrap to compute statistics rather than mean: https://arxiv.org/pdf/2108.13264.pdf )\n\n* For the experiments, the proposed QDT improves upon DT on some antmaze tasks, but the performance is roughly the same as DT on the mujoco tasks (both the delayed reward mode and the normal mode). It suggests the improvement is marginal. For the ablation experimment shown in Fig 4,  DT and QDT perform all most the same.  I'm also curious why CQL works for antmaze with sparse rewards, but not Gym tasks with delayed reward?\n\nThe results are also somewhat inconsistent. QDT improves upon DT for antmaze tasks with dense rewards, but the performance are roughly the same for Gym tasks whose rewards are also dense. I'd suggests the authors try to answer why such inconsistency happens.",
+            "clarity,_quality,_novelty_and_reproducibility": "As far as I know, this work is original. The paper is written clearly, but the presentation can be further improved.",
+            "summary_of_the_review": "A paper with interesting idea but lacks ablation study. The experiment results show some inconsistent patterns and it is unclear the proposed method can perform consistently better than state-of-the-art.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_C8yF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_C8yF"
+        ]
+    },
+    {
+        "id": "4Z-EzYXflj",
+        "original": null,
+        "number": 2,
+        "cdate": 1666759796387,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666759796387,
+        "tmdate": 1666759796387,
+        "tddate": null,
+        "forum": "oIkZyOytR3g",
+        "replyto": "oIkZyOytR3g",
+        "invitation": "ICLR.cc/2023/Conference/Paper3990/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper tries to unify Q-learning and Decision Transformer (imitation learning), which hopes to allow DT to obtain some level of trajectory stitching capabilities.",
+            "strength_and_weaknesses": "Strength:\n- This is a very timely paper. Augmenting Decision Transformer is a very trendy area at this moment -- using $V(s)$ to relabel RTG is a very straightforward idea, but this is the first paper to do it. Not only did they implement the change, but they also showed a comprehensive set of experiments AND motivated the change well. I find it impressive to pull this off in such a short time.\n- This paper is not afraid of revealing QDT's weakness. There are quite a few experiments and discussions that show that QDT does not quite work (yet). This might be a problem if this isn't such a fast-moving area of research -- since this area is very hot, any kind of new insight is valuable. The authors clearly know this and aren't afraid of sharing these negative results on their own algorithm. This will allow fast iteration of ideas and future research to build on these observations. \n- CQL overestimates Q values (despite conservatism). This problem has been pointed out in [1], and I'm also glad the author dedicated a whole paragraph to discuss this and offered a small ablation experiment.\n\nWeakness:\n- I wish more thought could be put into the algorithm design and address the weaknesses/issues discussed. But I also understand there isn't enough time to get these done.\n- QDT essentially only works (outperforms DT) in 1 environment (aka Maze2D). So, even though the idea is cool and well-motivated, there's not enough evidence that this is the **right** algorithm. But then again, research is iterative, and future papers will probably get it right.\n\n[1] A Workflow for Offline Model-Free Robotic Reinforcement Learning",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear and of relatively high quality. The author is confident the result can be reproduced.",
+            "summary_of_the_review": "If the Decision Transformer were not a hot topic at this very moment (2022 Fall), this paper should be rejected because although the idea is novel, it's a bit simplistic and Important weaknesses haven't been fully addressed. However, because this field is very hot and fast-moving, we should reward fast workers -- people who can try out ideas and offer interesting insights (even if their idea \"fails\"). In this case, I would consider QDT a failed attempt but a very interesting failed attempt. Although this is the direction we all want to go, QDT isn't the right approach. In the spirit of 1). Rewarding negative results (and the honesty of the authors); 2). Encouraging more work in this fast-moving area; 3). Reward how well-written this paper is and how insightful the discussions/experiments are; I recommend this paper be accepted.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_QqTj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_QqTj"
+        ]
+    },
+    {
+        "id": "vhRu32Lf-g",
+        "original": null,
+        "number": 3,
+        "cdate": 1667344874922,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667344874922,
+        "tmdate": 1667347605455,
+        "tddate": null,
+        "forum": "oIkZyOytR3g",
+        "replyto": "oIkZyOytR3g",
+        "invitation": "ICLR.cc/2023/Conference/Paper3990/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper focuses on the problems with two popular offline RL algorithms: DT (which struggles with inferring optimal policies from partial solutions, referred to as the stitching problem) and CQL (which struggles to propagate rewards with a long time horizon). To address the shortcomings of both methods, the authors propose a method (QDT) that modifies returns in training trajectories with value functions (learned via CQL) when returns are lower than learned value functions, then uses this data to train DT. \n\nOn environments selected to test either stitching ability (Maze2D) or learning with sparse rewards (Mujoco with delayed reward), the authors demonstrate that, while QDT rarely outperforms both DT and CQL, it can learn when either of the two methods fails.   ",
+            "strength_and_weaknesses": "The paper does a good job of defining and demonstrating the problems through both examples and the choice of environments. The experiments are fairly extensive and I appreciated the thorough discussion on the limitations of the method. The results are mostly consistent with the hypothesis that DT struggles with the stitching problem and CQL struggles with the delayed rewards.  \n\nGiven the problems with DT are most acute when the training dataset does not contain (near) optimal trajectories, I found the experiment with an increased percentage of removed top trajectories (Fig 4) particularly interesting, and would appreciate seeing the same experiment run on multiple environments. It should be noted QDT starts outperforming DT only in the regime with 60-50% bottom trajectories. Overall QDT seems much closer to DT than CQL in performance. Why is that the case?  \n\nSince the main contribution is the method by which the returns are relabelled, Section 3 should be rewritten to be clearer and move the theory and pseudo-algorithm from the Appendix to Section 3. The lack of strong theoretical justification for the given procedure is one of the main weaknesses of the paper.  \n\nCQL outperforms DT/QDT on Maze2D even with sparse reward, which seems inconsistent with the initial hypothesis. Why is this the case? Separating dense and sparse environments in Table 2 would highlight this better. \n\nI'd be also curious to see the results with more random seeds if the authors ran more experiments since the submission. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The specific approach proposed in this paper is novel to my knowledge, though I am not following offline RL literature very closely. \n\nThe writing is mostly clear, though it could benefit from improving the structure of the paper (see my comments on Section 3) and making the writing overall tighter.  \n\nThe paper mentions, but does not elaborate on the details of the hyper-parameter search. This should be added to the Appendix. \n\nOther suggestions to improve clarity:\n- add calculations for Figure 1 in the Appendix (while easy to check on their own, it would help some in following the paper) \n- I don't think p4 of Related work adds much to the paper, I would skip it and prioritize elaborating more on the methods section\n- bold the best methods in Table 2, 3 and 4; maybe highlight which are sparse vs dense environments in Table 2\n- clarify the meaning of the shaded area in Fig 4 ",
+            "summary_of_the_review": "To improve the ability of DT to learn from partial solutions, the authors propose a method (QDT) that modifies returns in training trajectories with value functions (learned via CQL). On environments selected to test either stitching ability or learning with sparse rewards, the authors demonstrate that, while QDT rarely outperforms both DT and CQL, it can learn when either of the two methods fails.   \n\nThe paper would be stronger if the proposed method had: (a) stronger theoretical justification, (b) better empirical results (regularly matching the best method in either setting), (c) the authors did a more thorough investigation into the performance difference between CQL and QDT (partly mentioned as left for future work in Section 6: conservative weight).",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_J4fs"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3990/Reviewer_J4fs"
+        ]
+    }
+]

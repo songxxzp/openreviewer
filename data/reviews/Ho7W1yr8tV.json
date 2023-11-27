@@ -1,0 +1,158 @@
+[
+    {
+        "id": "OXX6hxE6caL",
+        "original": null,
+        "number": 1,
+        "cdate": 1666632273997,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666632273997,
+        "tmdate": 1668107309279,
+        "tddate": null,
+        "forum": "Ho7W1yr8tV",
+        "replyto": "Ho7W1yr8tV",
+        "invitation": "ICLR.cc/2023/Conference/Paper4874/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose FIDEM, a framework (i.e., modeling choice) to compute a parameter which minimizes the average population risk over all clients. Their proposal is essentially sample average approximation with use of importance reweighting. They identify a quantity which is useful in this computation: the sum of density of the test distributions over the train distribution of a given client (see eqn. 3.1). They then propose DRM for estimating this ratio. ",
+            "strength_and_weaknesses": "My main concern with this paper is that the formulation is problematic in the case of no intra covariate shift. In particular, imagine that you have K clients, all of which have no internal shift (i.e., their train and test distributions are the same), yet their covariate laws are different. In the notation of this paper you have $p_i := p^{\\rm tr}_i = p^{\\rm te}_i$ for all i, but $p_i \\neq p_j$ for distinct $i,j \\in [K]$. \n\nIn the setting described above, FIDEM is attempting to minimize the average risks across all the clients, but still employs likelihood-reweighting, which will lead to greater variance but with no gain in de-biasing. This is not necessary. In this case, one can simply minimize the average empirical risks (i.e., minimize the sum of the client loss over all the network only reweighting by the number of samples on each client) --- and this will be an unbiased approximation of the average empirical risk. The authors need to justify why this formulation is beneficial in this (important) setting. For instance, look at equation (C.1). The approach suggested here amounts to debiasing the estimate for R_1 and R_2, even though this does not matter from the perspective of minimizing the sum of the two risks. \n\nOtherwise, my concern is that this paper is not very original. The main contribution of this paper (from a technical perspective) is the identification of the quantity r_k(x) as given in equation (3.1). This is very straightforward, and is essentially moving one sum inside another. Not only that, the authors themselves cite papers of Sugiyama et al, which has proposed reweighting ERM. This is not at all a new observation beyond moving a sum inside another for $K > 2$ (typically prior work on IW-ERM uses just a two client setting, but this is a very minor technical detail.)\n\nFinally, the authors' assumptions regarding their likelihood ratio estimation procedure are very strong. Their condition assumes that all the train and test distributions are mutually absolutely continuous with respect to one another. This for instance, precludes the possibility that the train and/or test distributions of different clients have any difference in their supports. We know this is not necessary, for instance, in the setting of a well-specified linear model, in which case, the only requirement to learn under covariate shift is that the distributions all place some mass in all subspaces (but note that is is possible to have different supports). \n\nI would also point out that the experimental evaluation is lacking greatly. The majority of the paper studies covariate shift, yet only one example is given and the result is quite similar to FIIDEM. Finally, the authors should provide more evaluations on e.g. image tasks, as have been proposed by others in the community (e.g. the WILDS datasets, LEAF datasets, etc.)\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Please see above regarding quality and originality. \n\nThe paper is well written and the theoretical statements are clearly stated. ",
+            "summary_of_the_review": "I currently recommend that this paper is rejected. The methodology is relatively standard (importance reweighting). While the authors do propose some new HDRM estimator for the likelihood ratio, the formulation in the case of only inter-client shift (but no intra-client shift), as well motivated by recent surveys (e.g. Kairouz et al) on FL, is highly problematic, as it introduces greater variance (e.g. from estimating a likelihood ratio). \n\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_rE23"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_rE23"
+        ]
+    },
+    {
+        "id": "5Q9vNt7aZS",
+        "original": null,
+        "number": 2,
+        "cdate": 1666677903687,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666677903687,
+        "tmdate": 1670535422388,
+        "tddate": null,
+        "forum": "Ho7W1yr8tV",
+        "replyto": "Ho7W1yr8tV",
+        "invitation": "ICLR.cc/2023/Conference/Paper4874/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper focuses on federated learning under covariate shift using direct density ratio estimation. This work establishes high-probability generalization guarantees and the benefit of importance weighting in terms of excess risk through bias-variance decomposition in a ridge regression problem. The experimental results of the proposed method is significantly better than the vanilla federated averaging in Fashion-mnist and C-mnist datasets.",
+            "strength_and_weaknesses": "Strength:\n\nEven though the theory is built on a set of previous works, the results under the federated setting is new.\n\nThe empirical results are impressive.\n\nThe result also covers cases when the covariate shift correction is working better than ERM.\n\nWeakness:\nThe experiments are not relevant to the theory. For example, for theorem 2, it would be nice to have it validated in the experiments.\n\nThe new federated learning setting is similar to the covariate shift to me. Most of the analysis under vanilla covariate shift can be easily applied to the federated learning setting. I may be wrong, but at least it is not that clear in the paper what is the hard part of generalizing analysis on the nnBD to federated learning.\n\nThe analysis on nnBD is general while the analysis for the excess risk is for rigid regression and also for one-hot cases. They are not that connected, so we do not know how to think about the whole federated learning in an end-to-end fashion. From the literature, it seems the two analyses are rooted in different lines of previous research. It would be nice to build a more natural connection between them.\n\nThe experiments are limited that more real federated learning settings should support the proposed method. \n\nTarget shift is a slightly different setting than covariate shift even though important weighting is still an effective method there. However, in target shift, you do not need nnBD methods for density ratio estimation. So I am not sure why it is included in the experiments.",
+            "clarity,_quality,_novelty_and_reproducibility": "The technical sections are relatively sound.\n\nThe presentation of the math is relatively clear, however the writing can be significantly improved. The transition between sections can do a better job of preparing the readers for different content. \n\nI do not find code repositories. There are limited details mentioned in the main paper. Appendix includes enough details for reproducibility.\n",
+            "summary_of_the_review": "This paper will benefit from a significant restructure and rewriting to make the theoretical results more connected with each other and expand the experiments. How federated learning imposes new challenges to the analysis and methodology should also be emphasized. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_Yvya"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_Yvya"
+        ]
+    },
+    {
+        "id": "VRnOdX4S0r",
+        "original": null,
+        "number": 3,
+        "cdate": 1667537886288,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667537886288,
+        "tmdate": 1667537886288,
+        "tddate": null,
+        "forum": "Ho7W1yr8tV",
+        "replyto": "Ho7W1yr8tV",
+        "invitation": "ICLR.cc/2023/Conference/Paper4874/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes an important sampling approach to handle inter and intra client distribution shifts in the federated learning setting. To this end, the authors propose Federated Importance-weighteD Empirical risk Minimization (FIDEM) algorithm to optimize a global FL model, along with new variants of density ratio matching methods, in particular \na histogram-based density ratio matching method. Then, we introduce another variant dubbed as FIIDEM) that  does not require any form of data sharing among clients and enjoys the same level of privacy and same communication costs as FedAvg.\n",
+            "strength_and_weaknesses": "The proposed density ratio matching method is a natural generalization of existing methods to federated settings with a binning technique to achieve this goal which can be implemented in parallel in a simple way: clients first share unlabelled test samples with the server. The server returns the randomly shuffled pool of samples to all clients. On the theoretical side, the authors provide bounds on the error of estimating ratios, and generalization of  FIDEM. I have a few concerns about the results:\n\n- Consider a simple setting where there are $n$ users, $n/2$ with data sampled from distribution $\\mathcal{D}$ (e.g., covariance $\\Sigma$) and the rest from $-\\mathcal{D}$ ($-\\Sigma$). In this case, understanding it is an extreme case, if we shuffle the data, with high probability no client can make informative ratio estimates due to discrepancy among distributions. But I was not able to infer this from the derived bound.\n\n- I appreciate authors who honestly mention that  clients need to compromise some level of privacy and share unlabelled test samples with the server, but this is too restrictive in FL. Moreover, in an FL setting, usually the number of clients is assumed to be extremely large (at least in cross-silo) each with possession of a small data set. Since the error of standard empirical discrepancy estimation methods between pair of data sources $i$ and $j$, which also applies to ratio estimation, is bounded by $O\\left(1/\\sqrt{n_i} + 1/\\sqrt{n_j}\\right)$ where $n_i$ and $n_j$ are number of samples in data sources, I am not sure how these methods can be applied to cross-device FL (would be more suitable to cross-silo setting with no privacy concern).\n \n",
+            "clarity,_quality,_novelty_and_reproducibility": "I appreciate the author's effort to make the paper as readable as possible, but in most cases it is hard to follow the results and presentation could be improved.\n",
+            "summary_of_the_review": "Overall, the paper studies an interesting question in learning from multiple heterogeneous data sources, but I did not find the theoretical results and proposed algorithm novel/exciting enough due to issues discussed above. Also, I have concern about the applicability of algorithms to FL as advertised by authors which makes me lean toward rejection.\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_Vgm5"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_Vgm5"
+        ]
+    },
+    {
+        "id": "xLIiUSTd0SB",
+        "original": null,
+        "number": 4,
+        "cdate": 1667546203743,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667546203743,
+        "tmdate": 1671411300753,
+        "tddate": null,
+        "forum": "Ho7W1yr8tV",
+        "replyto": "Ho7W1yr8tV",
+        "invitation": "ICLR.cc/2023/Conference/Paper4874/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper focuses on the covariate shift in the federated learning framework. In sec 2.2, they formulate FIDEM and show that it is consistent. Also, they briefly discuss its modifications in terms of privacy. The modified objective function is named as FIIDEM. In Sec 3, they discuss the estimation of the ratio $r_k(x)$ in Eq. (3.1). The detailed estimation procedure is discussed in Sec. 3.1 and Sec. 3.2. The theoretical guarantee is in Sec. 4. In Sec 4.1, they study the estimation of $\\hat{r}_k$ and put the result in Theorem 1. In Sec 4.2, they consider the ridge regression as an illustrative example to show FIDEM outperforms the classical ERM in reducing the regret. In Sec. 5, they present the numerical results and draw the conclusions iin Sec. 6.",
+            "strength_and_weaknesses": "Strength: \nFirst, this paper consider a very interesting issue. Also, it is well written and can convey its basic ideas to the readers. \n\nWeakness:\n1. The biggest concern is that FIDEM contains the probability $p^{\\textup{te}}_{\\ell}$ (c.f. Eq. (2.1)). This information is w.r.t. the testing data and should not be used in training. \n\n2. Certain statement is not correct. In Prop. 1, they claim FIDEM __converges in probability to the optimal solution__. Notice that __converge in probability__ has a specific meaning in probability. It is used to distinguish with the concepts __converge in distribution__, __almost sure converge__, and $\\ell_p$ converge. After checking their proof, I think the authors actually mean __convergence in distribution__. Also, their proof is not complete. They should also prove that they can switch the order of $\\min$ and $\\lim$. \n\n3. The notation is a little messy. In Thm.2, the regularization coefficient $\\lambda$ is not stated explicitly and it is in a very similar form of the $\\lambda_i$ (the probability).\n\n4. Also, the indexing is not consistent between the main context and supplementary material. For example, Proposition 1 in the main context is denoted as Proposition 2 in the supplementary material.\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is well-written & can convey its basic idea to the readers.",
+            "summary_of_the_review": "Although this paper is well written, it contains serious problem such as using the testing information during training. \nAlso, certain claims are not accurate (see my comments above). ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_S6qR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4874/Reviewer_S6qR"
+        ]
+    }
+]

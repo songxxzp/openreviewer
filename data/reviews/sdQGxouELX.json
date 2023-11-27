@@ -1,0 +1,120 @@
+[
+    {
+        "id": "YNVgd1u8ON",
+        "original": null,
+        "number": 1,
+        "cdate": 1665935119553,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665935119553,
+        "tmdate": 1669738808109,
+        "tddate": null,
+        "forum": "sdQGxouELX",
+        "replyto": "sdQGxouELX",
+        "invitation": "ICLR.cc/2023/Conference/Paper4719/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The work presented in this paper addresses the important problem of multimodal representation learning. Following a large body of work in this domain, the proposed approach builds on an extension of a Variational Auto Encoder (VAE) such that it can encode and decode multiple modalities. The crux of the idea presented in this paper is to partition the latent space into modality-specific and shared latent variables, making sure that the modality-specific latent are not \u201cpolluted\u201d by the share information. This is achieved through a modification of the ELBO that originates from the work of Shi et al. \u201819, that uses a mixture of experts approach to obtain the joint approximate posterior. By decomposing the ELBO following Shi et al. \u201819, they observe that for a given modality, the portion that pertains to all other modalities should be trained by assuming a learned \u201cpseudo\u201d prior for their latent variables.\nExperimental results use mainly two datasets: PolyMNIST, which is a variant of MNIST including background images to simulate multiple modalities, and the CUB dataset, which contains two modalities: images and captions. In their experiments, the authors rely on standard metrics from the literature (or their reinterpretation) including generative coherence (both conditional and unconditional) and generative quality (measured through the lenses of the FID score). Experiments serve the purpose of illustrating that the proposed method strikes a good balance between the two objectives (coherence and quality), which is a pain point of previous work.",
+            "strength_and_weaknesses": "Strength:\n\n* This work follows a line of research that tackle an important problem, that of multimodal representation learning\n\n* The paper is well written, clear, and easy to follow, and builds on many previous work, with the added value of clarifying some aspects of prior work that where not completely clear in the original papers\n\n* Experiments are well conceived \n\nWeaknesses:\n\n* The idea presented in this work (to the best of my understanding) can be summarized as follows: shared information should not pollute modality-specific latent information. To ensure this, a variant of the mixture of expert ELBO is derived, by introducing learnable pseudo-priors that induce the reconstruction of a given modality to rely solely on its modality-specific latent space. A natural question is as follows: since you assume independence between shared and modality-specific latent spaces, and further you constrain modality-specific information to be solely responsible for reconstruction, then why not training individual VAEs, one per modality, then a multimodal VAE to learn a shared representation, and then \u201cstitch\u201d together all latent spaces?\nIn other words, what I miss is a naive baseline to double check that the idea presented in this paper is a valid approach when compared to a simpler method.\n\n* I find Expression (5) in the main paper not very clear. In a previous workshop paper that presents the very same idea and the very same method I find the use of a tilde on the \u201cother-modalities\u201d private latent variables easier to understand and more clear. On the good side, I think the textual explanations of the ELBO are much more useful in this version of the paper.\n\n* In the experiments, unconditional coherence seem to be a more difficult objective to attain, as was also shown in prior works. In this case, we usually sample from the prior on the latent space, and only rely on decoders to generate each modality. Then we check the coherence of each generated modality. 1) It would be useful to clarify how does this work when you have a latent space that is segregated. I assume you take the prior of each modality-specific latent, and the shared prior, but it would be good to state this clearly (in the appendix). Why do you only have results on PolyMNIST for this challenging metric, and not for CUB? \nMoreover, when we look at table 3 in the appendix (for PolyMNIST), we can see that the proposed method really struggles to achieve high generation quality (there, the MVAE approach based on PoE works better). It is also interesting to note that additional \u201ctricks\u201d to improve base models (importance sampling, double reparametrization), seem to hurt generation quality, which is not expected.\n\n* In the experiments, when we look at \u201ccompetitors\u201d, we learn that if the capacity is sufficient, then the modality-specific encoder can learn all the information (both shared and private) such that an adverse effect of a shortcut appears. But if all information is stored in the modality-specific latent space, and this is true for each modality, then wouldn\u2019t this be enough to achieve coherence? Aren\u2019t we simply looking at the \u201cfallacy\u201d of the MoE approach that, by construction, samples only one of the components for the generation?\n\n* Fig 5 raise several questions. \n** Fig 5b indicates latent classification accuracy, obtained by training a simple linear model on \u201cfreezed\u201d encoders that produce latent features. It seems counter intuitive to state that lower accuracy is better. This is because the goal is to show that if we only use modality-specific encodings we should not be able to classify correctly, if the hypothesis of no shared information being present in those latent spaces. Beside the fact that I am not convinced that this metric (first introduced in Shi et al \u201819) is useful to state anything about the latent space natural segregation, I think that comments to this figure should be more informative. \n** Fig 5 c: I assume this figure is for the conditional generation right? Since there are works that criticize the use of FID score to assess the generative quality [1], I wonder why we do not have a table with likelihood values, or Bit per Dimension, which can also be useful to assess the quality of the model.\n** Overall, from the three sub-figures in fig 5, we can remark that mmJSD is a close competitor to MMVAE+. I think this should be acknowledged and commented.\n\n* The last paragraph before section 4.3 claims for an optimal balance between coherence and generation quality. How can you claim optimality?\n\n* In section 4.3, qualitative results for the CUB dataset, in terms of coherence, use an original metric discussed in the appendix. This is an important detail that I think should be discussed at least a minimum in the main paper. Indeed, the proposed metric is somehow questionable and should be put upfront for the reader to properly understand. In my opinion, it is not clear why you could have not used the same technique used in Shi et al \u201819, by taking the learned representation of your ResNet, in a similar way as if you used a pre-trained network. The introduction of artificial captions and the count of correctly colored pixels suffers from the problems stated by the authors, e.g. counting only the background color. Using the top-2 most frequent pixel colors might work in some cases an not others, so I am not sure how much can we rely on this coherence metric. Also, as commented above, this is conditional coherence, which seems an easier task to achieve than unconditional coherence. Do you have any comments why, and why didn\u2019t you show unconditional coherence metric fo CUB?\n\n\n[1] @misc{FID_critics,\n  url = {https://arxiv.org/abs/2203.06026},\n  author = {Kynk\u00e4\u00e4nniemi, Tuomas and Karras, Tero and Aittala, Miika and Aila, Timo and Lehtinen, Jaakko},\n  title = {The Role of ImageNet Classes in Fr\u00e9chet Inception Distance},\n  publisher = {arXiv},\n  year = {2022},\n}\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper reads very well, it is clear that it presents high quality work and a thorough experimental campaign.\n\nOn the novelty, one could comment that the presented method is a variant (eq 5) of known methods, and that the key observation of trying to avoid \u201cpollution\u201d of private latent spaces is not new. However, I think the derivation to be correct, and \u2014 contrary to some previous work \u2014 the authors spent effort and energy in proving that the proposed ELBO is indeed a valid ELBO. In a previous version of this work, appeared as a workshop paper in ICLR 2022, the appendix show the proofs for Lemma 2 which I found interesting, because it attempts at showing that the parameters of the private encoders do not depend on cross-modal reconstruction. I wonder why in this version that lemma has been omitted.\n\nConcerning the reproducibility of the work, I think this is somehow easy, as the key idea consists in a somehow \u201cinnocent\u201d modification of the ELBO of the MMVAE approach. As such, this is a good point for this work.",
+            "summary_of_the_review": "In summary, this work is well presented, well written and the motivation is clear. I think this line of work presents the important trade-off between coherence and generation quality that affects VAE-based method for multimodal representation learning, and this is commendable.\nI have spotted some problems that can be summarized as: 1) given the key idea in this work, it would be possible to conceive a naive baseline to make sure that the claims presented in the paper are indeed correct, and this is missing, 2) Experiments seem not to be conclusive about the superiority of the proposed method with respect to state of the art. There cases in which this seems true, and others in which the \u201coptimality\u201d of the proposed solution cannot be verified.\n\nLastly, since this work is not completely novel, and the strength are not on the methodological contributions, I would advice the authors to improve the experimental section, by considering at least one additional dataset [2], or [3].\n\n[2] Vasco M, Yin H, Melo FS, Paiva A. Leveraging hierarchy in multimodal generative models for effective cross-modality inference. Neural Netw. 2022 Feb;146:238-255. doi: 10.1016/j.neunet.2021.11.019. Epub 2021 Nov 24. PMID: 34906760.\n\n\n[3] @misc{https://doi.org/10.48550/arxiv.2107.07502,\n  url = {https://arxiv.org/abs/2107.07502},\n  author = {Liang, Paul Pu and Lyu, Yiwei and Fan, Xiang and Wu, Zetian and Cheng, Yun and Wu, Jason and Chen, Leslie and Wu, Peter and Lee, Michelle A. and Zhu, Yuke and Salakhutdinov, Ruslan and Morency, Louis-Philippe},\n  title = {MultiBench: Multiscale Benchmarks for Multimodal Representation Learning},\n  publisher = {arXiv},\n  year = {2021},\n}\n\n\n============================\n\nPost rebuttal comments\n\n============================\n\nI've read the various discussions in the rebuttal, and find the new results compelling in verifying the merits of the proposed method. I will update my score from 5 to 8.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A",
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_GWdS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_GWdS"
+        ]
+    },
+    {
+        "id": "nsR3wpQHTVD",
+        "original": null,
+        "number": 2,
+        "cdate": 1666670545538,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666670545538,
+        "tmdate": 1669781060293,
+        "tddate": null,
+        "forum": "sdQGxouELX",
+        "replyto": "sdQGxouELX",
+        "invitation": "ICLR.cc/2023/Conference/Paper4719/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper introduces a new multi-modal VAE model which includes modality-specific latent variables, as well as shared latent variables with the latter encoded through a mixture-of-experts model.  The new variational bound allows to utilize private latent variables that do not hinder cross-modal coherence and generation, in contrast to previous work where this does not hold in a robust way. Empirical results against different multi-modal VAEs for different benchmark datasets illustrate that the approach improves generative coherence and generative quality.\n\n----\nPost-rebuttal comments:\n\nFollowing the response from the authors and the other reviews, I keep my accept recommendation. \nThe authors have addressed my question as to how the (conditional) generative performance changes when additional modalities are available. The new experiments indicate that generative performance does not decrease, in contrast to some previous work.\nThe additional experiments to address comments from the other reviewers also improve the experimental validation of the suggested approach.\n\n----",
+            "strength_and_weaknesses": "Strengths:\n- Previous work on multi-modal generative models have struggled to yield both generative coherence and generative quality. The suggested approach illustrates an empirical improvement for both criteria on challenging multimodal datasets. \n- The suggested variational objective is interesting and new, as far as I am aware. It offers a different approach to include modality specific latent variables compared to previous work that appears more robust.\n\nWeaknesses:\n- It is not clear to me if the gap between the variational bound and the log-likelihood does increase with increasing modalities (as in Daunhawer et al., 2022)? \n- Do additional modalities compromise the generative performance? It would be helpful to see how the generative/cross-coherence performance varies empirically, for instance in the PolyMNIST experiments with different numbers of modalities.\n\nActionable feedback:\n- The proportionality following eq. (4) is not clear to me.\n\n\nComments:\n- It appears that the auxiliary prior distributions could be quite general. Is there a specific reason why they have been chosen to be zero centered Gaussians? Does the tightness of the bound relative to the log-likelihood depend on the KL divergence between $p$ and $r$ or $q(w_m|x_m)$ and $r(w_m)$, and could I improve generative quality, for example, by using implicit densities for r(as I do not need to evaluate their density)?\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written. The presentation is clear with literature cited appropriately.",
+            "summary_of_the_review": "The paper suggests a novel variational bound for multi-modal VAEs that seems well motivated and appears to yield good empirical results. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_VT76"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_VT76"
+        ]
+    },
+    {
+        "id": "QZm2mUUhTdL",
+        "original": null,
+        "number": 3,
+        "cdate": 1666725360286,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666725360286,
+        "tmdate": 1669921448244,
+        "tddate": null,
+        "forum": "sdQGxouELX",
+        "replyto": "sdQGxouELX",
+        "invitation": "ICLR.cc/2023/Conference/Paper4719/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper provides a modified version of the existing MMVAE model called MMVAE+ for weakly-supervised generative learning with multiple modalities. The paper aims to overcome the trade-off between generative quality and generative coherence by suggesting having separate latent encoding for both shared and private features within each modality and a new ELBO. The authors also introduce auxiliary distributions for private features to achieve the cross-modal reconstruction. Experiments show their model achieves both good generative coherence and high generative quality in challenging experiments.\n",
+            "strength_and_weaknesses": "Strengths\uff1a\nThe paper is well-written, clear and well-organized.\nExperiments show their model achieves both good generative coherence and high generative quality and is robust to the size of the private space.\n\nWeaknesses:\n(Lee, Pavlovic 2021) should also be included as a baseline. \nIt would be good to have an ablation study for the auxiliary distributions.\nThe figures can be improved:\nIt would be better to have an explanation on the boxes, lines and dashed lines for Figure 2.\nIt would be better to have an explanation for the other rows in Figure 3, why do they come in blocks?\nThe axis should be consistent in Figure 5. In (b),  lower is better but 0 is at the top, which confuses the readers.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is written with good clarity in terms of how the ideas and model formulations are conveyed to the readers. \n\nExtensive experiments justify the problems the authors raise and the effectiveness of the solution they provided.\n\nAlthough with good experiments and results, the paper lacks contribution and novelty to the problem and the solution, as factorizing subspaces for private and shared features of different modalities and introducing cross-modal reconstruction loss have been implemented in (Lee, Pavlovic 2021) paper, which should also be included as a baseline.  Comparing Eq (4) with (5),  (5) is adding the sum(n!=m) term in (4) again, with the auxiliary distributions. It would be good to have an ablation study for the auxiliary distributions to show the novelty.\n",
+            "summary_of_the_review": "Although the paper is well written and the arguments are well justified, the paper lacks technical and empirical novelty to contribute as the problem and solution has been raised by an existing publication. \n\n-----------------------------------------------------------------------\nPost rebuttal comments:\n\nAfter reading the rebuttal and the other reviews, we raise the score to 6.\n\nAs one of the contributions is the auxiliary distribution, it would be interesting to see how different choices of auxiliary distributions would affect the experiment results.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_i3y6"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4719/Reviewer_i3y6"
+        ]
+    }
+]

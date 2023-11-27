@@ -1,0 +1,158 @@
+[
+    {
+        "id": "lNdSJkDgq15",
+        "original": null,
+        "number": 1,
+        "cdate": 1666161276563,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666161276563,
+        "tmdate": 1668588612748,
+        "tddate": null,
+        "forum": "nulUqBMpBb",
+        "replyto": "nulUqBMpBb",
+        "invitation": "ICLR.cc/2023/Conference/Paper3227/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a value-based RL architecture that is aimed at achieving good generalization, in the settings of \"contextualized\" MDPs (where the agent is trained on one set of MDPs and tested on a different set sampled from the same distribution). This is achieved by encouraging a more explorative behavior during training. The architecture itself builds on and combines concepts from distributional RL, ensemble training, and classic exploration approaches (UCB-like and Thompson sampling). The method is evaluated on two benchmarks of procedurally generated RL environments. ",
+            "strength_and_weaknesses": "The paper tackles a challenging benchmark and has good evaluation methodology, including an ablation study for the different components of the architecture, and comparison with strong baselines. The empirical results are strong, or at least competitive with the state-of-the-art on an aggregate level. \n\nOn the other hand, the main conceptual message of the paper seems confused, and some claims are not well supported by neither theory nor empirical evaluation (see main issues below). Moreover the large heterogeneity of performance on individual task basis (Appendix D) makes the empirical results much less conclusive.\n\nMain issues:\n\n* The distinction between \"Value-based\" and  \"policy optimization\" (I will refer to these as PG, for policy gradient) which is emphasized repeatedly in the paper seems a bit arbitrary. First, most (if not all) PG methods discussed and compared to are some kind of an actor-critic (\"hybrid\") architecture which does, in fact, involve Value estimation/learning.\n\n* The tabular example does not seem to support the later claims at all. \n\t* First, the claim that (in Procgen) \"the agent can often end up in states that  are suboptimal for the training MDPs.\" is far from being trivial and it requires at least a convincing demonstration by examples. It seems that the main issue in Procgen is generalization in terms of good \"semantic\" feature extraction for the state structure (identifying platforms from background, enemies, etc.) rather than learning to adapt to a \"new task\" in the same environment (e.g., different target or initial state).\n\t* The exploration of the PG agent is by no means more sophisticated than that of the $\\epsilon$-greedy agent, both rely on purely random (and uniform) exploration (moreover, the entropy regularization have no real effect here, as is seen clearly in Fig. 6c). The main reason limiting e-greedy compared to PG here is most likely the reliance on 1-step updates versus trajectory-based updates. In PG, after each rewarding episode the policy for states along the entire trajectory will be updated. By contrast, the simple Q-learning has to \"propagate\" values back from the rewarding state. But, and related to the previous point, this is not an essential limitation of *value*-based (for example, TD($\\lambda$) will not suffer from this). \n\n* Some strong claims are made about exploration and its components but the supporting evidence is too weak. Importantly, this kind of claims are very hard to support based on some aggerated performance measure alone, as they are really claims about the behavior and learning of the agents (in specific tasks). Most conclusions about why Alg1 > Alg2 are not much more than interpretations, which may or may not be a key reason.\n  Particular examples: \n\t- The mentioned \"importance of Distributional RL\" (which seems not inline with NoisyNet performance, for example)\n\t- The ez-greedy \"not accounting for what the model already knows\" as opposed to the proposed architecture.\n\t- Even the fact that the learning is successful in reducing the epistemic uncertainty is not exemplified.\n More generally speaking, the fact that \"exploration as a key factor for good sample efficiency and generalization\" is almost a triviality. And surely it doesn't provide an answer for the question \"why value-based approaches work well in singleton MDPs but not in contextual MDPs\". (see previous points as well).",
+            "clarity,_quality,_novelty_and_reproducibility": "There are technical issues, inaccuracies, or misleading sentences throughout. Most of these are minor enough that they could be easily fixed, but some require more attention. A lot of terms are used without being explicitly explained or defined, in both the Figures and the main text. \n\nSpecific points:\n\n**Introduction + Background**:\n\n- It would be much better to provide an explanation, even a minimal one, for *what* are Value-based and Policy-optimization methods and how do they differ **in the introduction**. The terms are used freely in the Introduction and then only explained in the \"Background\" section. It would be enough to include one or two citations to some classic works on value-based / PG (or perhaps a review, e.g. , instead of the long lists of more recent cited works.\n\n- The explanation of PG methods is lacking and would be totally unhelpful (and even misleading) for someone who's not already well familiar with them. Most crucially, it should be mentioned that there is a policy *parameterization*, what is the involved \"gradient\", add some more specific references other than the generic textbook one. e.g., Williams 92 or Sutton 99)\n\n- The indicator function notation for a greedy policy (which is used throughout) is a confusing abuse of notation (for example, the same $a$ is used on LHS and in the argmax so the RHS is the same regardless of the action). The argument inside the indicator is not even a logical condition but just an action. It is better to simply explain in words, or use a better notation (defined by cases, for example).\n\n**Tabular**:\n-  The \"suboptimality\" measure shown in Figure 2 is only defined somewhere in the appendix. Should be clearly defined in the main text.\n  \n- it is not clear how the policy is parameterized for the PG agent (direct representations of the probabilities, with a projection step? Softmax?) It is only mentioned in the appendix that it's softmax but should defenitely be included in the main text.\n  \n- \"greedy is naive and only works for simple environments\":  the second part is misleading. The original DQN works were entirely based on $\\epsilon$-greedy exploration, and performed well on many non-trivial environments, despite the exploration strategy being, indeed, naive.\n  \n- The sentence about Boltzman exploration (another term which is used but not defined; in addition other instances in the paper uses \"Softmax\" and not \"Boltzman\") is misplaced or out of place.\n  \n- **Important**: the use of a \"plug-and-play\" version of the standard bandit UCB here is wrong, and is inconsistent with the rest of the paper. It is definitely not the method in the cited Chen et al. 2017 (which uses ensembles rather than straight visit counters). This use of counters might be by itself  a rather naive form of exploration (e.g. Fox et al. 2018)\n\n**Exploration via distributional ensemble**\n- What is the justification for using a Normal posterior in the Thompson sampling action-selection? is this an approximation? Just few sentences before it is mentioned that \"the unimodal nature of a Gaussian in parameter space may not be sufficient for effective uncertainty estimation\", so why here it is used again?\n- In general this section, particularly \"Uncertainty estimation\" is hard to follow, and does not feel enough self-contained. This describes the key elements in the proposed architecture of the paper and should be more accessible.\n\n**Experiments**\n- The measures used for evaluation should be explained explicitly, especially as these are not (yet) very standard.\n- Related, the use of both \"optimiality gap\" and \"mean\" is redundant here as optimality gap = 1 - mean (assuming the $\\gamma$ threshold is 1; see Agarwal et al. 2021 Fig. A.32 ).\n- The \"sample efficiency\" paragraph: It is hard to draw any conclusions if we don't see the comparison of DQN and PPO on the \"contextualized\" settings. There's no PPO in Fig. 4, maybe it's about as good as DQN there too?\n- The \"partial observability\" paragraph: the citation of Singh 94 is misleading, as it has nothing to do with policy optimization vs. value-based methods (and the policy of value-based methods can also be stochastic, depending on the action-selection rule). Partial observability surely affect PG methods as well. Another term (\"dynamic programming\") is used here out of context. \n\t- The task-ID experiment is rather strange. First, it is entirely not obvious that \"each individual environment $\\mu$ is Markovian\" on the level of visual inputs (This is not even true for Atari games in general) and when a complicated function-approximator is used. The different environments are not different \"tasks\", so the taskID information is indeed kind of useless here for the network, I find it hard to understand why the paper mentions that it is \"surprising\" that this doesn't help training. In general, the conclusion or claim that \"partial observability may not be the main problem in such environments\" is another strong claim that is far from being sufficiently supported.\n\n**Related work**\n- The paper does not deal at all with \"exploration-exploitation tradeoff\" so it's not clear why this is the way the paragraph about \"Exploration\" starts. Rather than providing a long list of tangentially related exploration papers (which can never be exhaustive, and since this is not a review on exploration, nor should it be) it is better to spend the place in explaining the how the paper actually *relates* to the literature (it is currently somewhat there, but gets lost among many non-relevant references)\n  \n- \"Our work is the first one to highlight the role of exploration for faster training on contextual MDPs and better generalization to unseen MDPs\" -- this is certainly inaccurate. Many works on \"task agnostic RL\", or \"multitask RL\" and so on have emphasized the importance of exploration for task adaptation, etc. See for example Zhang 2020, Lee 2020 (and references therein), the ICLR workshop on task-agnostic RL, etc.",
+            "summary_of_the_review": "The architecture proposed in the paper seems effective and the results are overall promising. However at its current form the paper is missing a coherent (and supported) main message. It offers some general high-level intuitions about the importance of exploration, but how and if these are actually related to the proposed performance of the algorithm is unclear, and probably cannot be deduced based on performance metrics alone (without considering the behavior, and/or some more direct measure for its \"explorativitiy\"). Taken together with the technical issues, the paper seems not ready for publication at its current stage.\n\n\n**EDIT**\nThe revised manuscript is an improvement, and the authors have addressed most of the technical issues raised in my review.\nI've changed my recommendation to reflect these improvements.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_WM6p"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_WM6p"
+        ]
+    },
+    {
+        "id": "dPUroDdGj-",
+        "original": null,
+        "number": 2,
+        "cdate": 1666429127652,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666429127652,
+        "tmdate": 1666429127652,
+        "tddate": null,
+        "forum": "nulUqBMpBb",
+        "replyto": "nulUqBMpBb",
+        "invitation": "ICLR.cc/2023/Conference/Paper3227/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a value-based RL method (termed EDE) to improve generalization in procedurally generated environments such as Procgen. In particular, the authors introduce two novel modifications to QR-DQN: UCB exploration with learned epistemic uncertainty (UCB) and temporally equalized exploration (TEE), which greatly boosts the zero-shot test performance on Procgen.",
+            "strength_and_weaknesses": "**Strength:**\n\n* Solid experiments\n* Significant empirical improvements\n* EDE would serve as a strong baseline for future works and be of importance to the RL generalization community.\n\n**Weaknesses:**\n\nThe connection between \"more effective exploration during training\" and \"better generalization in testing\" is weak. I understand Sec.3 is meant to build this connection. However, since the tabular example is quite far from the realistic setting in Procgen, it is hard to say this is the reason why EDE works well in Procgen. In fact, from Tab.2&3, it seems that the improvements of EDE on testing levels are highly correlated to the improvements on training levels. So a more plausible logic flow is: better exploration -> better performance on training levels -> better zero-shot generalization on testing levels.\n\nDespite the weaknesses, I do think the empirical contributions of this paper are good on their own. So I would suggest the authors reposition the paper from a different perspective.\n\n**Minor issues:**\n\n* In ablation results in Sec.5.1, please add reference to Fig.4.\n* Some statements are not grounded and may mislead readers.\n  * First paragraph in introduction section: \"In this work, we aim to understand why value-based approaches work well in singleton MDPs but not in contextual MDPs\". The statement that value-based approaches does not work well in contextual MDPs is unsupported. The only seeming evidence in the context is that most existing SOTA methods on Procgen are based on PPO. But this is probably because the baseline code released from Procgen authors is PPO.\n  * Second paragraph in introduction section: \"the main goal of exploration is to learn an optimal policy for that environment\". This is not correct. Exploration is also useful in the absence of reward. From the context, I assume the authors want to make a contrast that exploration in singleton env can only benefits that environment while in CMDP exploration in one env may also help other envs. However, I see this more of the difference between singleton env and multiple envs. In CMDP, anything we change in one env will likely affect the behaviour in another env. In short, this is not specific to exploration.",
+            "clarity,_quality,_novelty_and_reproducibility": "* Clarity: Ok but some statements are problematic.\n* Quality and Novelty: The quality is good and the proposed method is novel.\n* Reproducibility: The authors provide implementation details but do not provide code. They promise to open-source the code during discussion period.",
+            "summary_of_the_review": "In summary, I think the paper makes good contributions to the field, but requires some modifications before acceptance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_iatu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_iatu"
+        ]
+    },
+    {
+        "id": "GpaZN6vma4Q",
+        "original": null,
+        "number": 3,
+        "cdate": 1666530889110,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666530889110,
+        "tmdate": 1666530889110,
+        "tddate": null,
+        "forum": "nulUqBMpBb",
+        "replyto": "nulUqBMpBb",
+        "invitation": "ICLR.cc/2023/Conference/Paper3227/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies the task of generalization in RL tasks defined by contextual MDPs (CMDPs). In contrast to meta-RL tasks, this paper focuses on tasks where the agent should learn a policy that performs well on all MDPs instantiated by a CMDP. The paper argues that exploration is key to improving the performance of RL algorithms in such tasks. Here the goal of exploration is not to find a more rewarding policy for a single task, but to better explore the state space to perform well on test tasks. The proposed EDE algorithm estimates the epistemic uncertainty of the Q function to guide exploration. EDE is evaluated on the Procgen and the Crafter benchmarks.",
+            "strength_and_weaknesses": "Strength:\n\n- Although the idea of separating aleatoric and epistemic uncertainty is not new, this paper shows that this idea can be used to improve generalization in RL environments. \n\n- The experiments conducted in the paper are comprehensive: the diversity of the adopted tasks and baselines is large enough to demonstrate the superiority of the proposed method. \n\nWeaknesses and questions:\n\n- It is unclear to me how the bootstrap learning procedure of the Q function affects the estimation of epistemic uncertainty. The uncertainty estimation process adopted in the paper is well-studied on tasks such as classification and environment model estimation. However, it is unclear to me whether the estimation is still accurate when Q-learning style updates are applied. Therefore, I believe this paper should provide at least some intuition into this. \n\n- Prior work such as SAC and TD3 maintain two value heads to mitigate the value overestimation problem of Q-learning. Since EDE also uses multiple value heads, is it possible that it also implicitly mitigates the value overestimation problem? It would be nice to do an additional ablation study to verify this.\n\n- In the abstract and the introduction, the authors mentioned that there is a gap between policy-based methods and value-based methods. However, the paper does not discuss why policy-based methods work better than value-based methods. And the paper is mainly about the importance of exploration + uncertainty estimation, which can also be applied to policy-based methods. It would be nice to either adjust the story or provide more discussion on why the proposed technique works for value-based methods in general.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written in general (question #3 mentioned a part that is unclear to me) and the experiments are convincing. The novelty of this paper is quite limited since the uncertainty estimation techniques are adapted from prior work, and the primary contribution of the paper is to successfully apply such techniques to the task of generalization in RL. ",
+            "summary_of_the_review": "Although the adopted uncertainty estimation techniques are not new, the paper demonstrates that epistemic uncertainty is useful to guide exploration to improve generalization in RL. The effect of uncertainty estimation under a bootstrapped target (Q function learned by Q-learning) is not discussed in the paper, which in my opinion, is a weakness of the paper. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_R7TS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_R7TS"
+        ]
+    },
+    {
+        "id": "y4bM7lElJ9",
+        "original": null,
+        "number": 4,
+        "cdate": 1666615372747,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666615372747,
+        "tmdate": 1670312094486,
+        "tddate": null,
+        "forum": "nulUqBMpBb",
+        "replyto": "nulUqBMpBb",
+        "invitation": "ICLR.cc/2023/Conference/Paper3227/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper argues that effective exploration strategies can improve generalization in contextual MDPs (CMDPs). The paper proposes a method called exploration via distributional ensemble (EDE), which uses a deep ensemble to (1) disentangle epistemic uncertainty from aleatoric uncertainty and (2) encourage exploration by trying to reduce the epistemic uncertainty. EDE is shown to achieve SOTA for value-based methods in two popular benchmarks.",
+            "strength_and_weaknesses": "### Strengths\n\nI really like the idea of casting the generalization problem as an exploration problem. I agree that the standard RL formulation may be too task-centered, which makes it difficult for the agent to learn about the environment. The paper shows that this narrow focus may negatively affect generalization.\n\n### Weaknesses\n\nI am quite confused about what the true objective of this paper really is. The paper starts by claiming that any effective exploration strategy can improve generalization. Then, it proposes a method that targets exploration. I am not certain whether the proposed method is somehow addressing generalization directly (didn\u2019t see any evidence for this in the paper) or if it is just another exploration method. If the latter, then the paper makes two separate contributions: \n\n (1) The hypothesis that exploration can improve generalization in CMDPs, which is interesting and seems to be partly supported by the experiments. \n\n (2) A method for encouraging exploration that does not seem very novel since it is based on existing ideas, and whose performance should be compared with other exploration methods.\n\n\n### Questions/Suggestions\n\nThe abstract and introduction state that policy-based methods perform better than value-based methods in CMDPs. The authors identify exploration as the main reason for value-based methods not being able to generalize well in CMDPs. Is this suggesting that the reason policy-based methods outperform value-based methods is mainly that the former are more effective at exploring?\n\nIn order to be able to properly assess the novelty of the method, Section 4 should list only the ideas that are original and move those that belong to previous work to the background section. From what I understand, only equalized exploration is original here. I believe this idea is interesting and could be highlighted and further evaluated in the experiments. \n\nHave you investigated the reasons why EDE performs better in terms of median/IQM but falls behind IDAAC when looking at the mean? \n",
+            "clarity,_quality,_novelty_and_reproducibility": "### Clarity\nThe paper is generally clear although I think it is extremely cluttered. It is clear that the text on page 5 is well below the margin. There is also very little space between sections in general. It is okay to play a bit with the formatting to try to fit the paper into the page limit but this paper is definitely overdoing it. This is really unfortunate because I think there is a lot of content that could have been left out or at least made more concise like the introduction and the background sections. Also, Section 5.3 doesn\u2019t add much to the story of the paper and could be moved to the Appendix.\n\n### Novelty\nThe idea of using exploration to improve generalization seems novel. The proposed exploration method is not very novel.\n\n### Reproducibility\nThe code was not included in the submission which makes it hard to reproduce the results. The authors say that the code will be provided during the discussion.\n",
+            "summary_of_the_review": "As mentioned before, this paper makes two separate contributions: (1) claiming that generalization can be improved with better exploration, and (2) proposing an exploration method. I don\u2019t think it is fair to asses the paper as a whole since the contributions are somewhat orthogonal. I believe that the first contribution, although certainly interesting, is insufficient for acceptance in its current form. The second contribution does not seem very novel since the method is just a combination of previous solutions. Moreover, in order to determine its value, the method should be compared against other exploration methods.  \n\nMy suggestion to the authors is to focus on one of the two. Either try to develop the first idea, providing further analysis and experiments (using different exploration strategies) to show that bad exploration is indeed the cause for poor generalization, or work on the exploration method and show that it can outperform other exploration strategies. This last direction is probably riskier since there are many works that focus on this problem.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_ziZP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3227/Reviewer_ziZP"
+        ]
+    }
+]

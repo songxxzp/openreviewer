@@ -1,0 +1,120 @@
+[
+    {
+        "id": "qrUA2NIemfa",
+        "original": null,
+        "number": 1,
+        "cdate": 1666890308062,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666890308062,
+        "tmdate": 1666890308062,
+        "tddate": null,
+        "forum": "DwOaHJJKy9",
+        "replyto": "DwOaHJJKy9",
+        "invitation": "ICLR.cc/2023/Conference/Paper4643/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a semantic mutation operator for genetic programming (GP), which aims at creating new diverse candidate solutions while keeping a good connection with the parent solutions. Semantic GP is a common approach that aims at exploiting the behavior of programs or subprograms (e.g., the output generated for given test cases used for evaluation) instead of their structure. This signal has been shown as relevant to be included in the optimization methods of GP, optimization guided purely on the structure of GP solutions being non-smooth or continuous, with simple changes in the structure leading to huge differences in the behavior. The proposed semantic mutation operator is presented and evaluated for three specific problems, that is real-valued function approximation, gradient-descent-based optimization function, and a loss function for reinforcement learning.",
+            "strength_and_weaknesses": "Strength\n- Straightforward proposal for a novel semantic GP mutation operator.\n- Apparently good empirical performances in three applicative contexts.\n\nWeaknesses\n- The proposal is relatively simple and incremental considering the work presented so far on semantic GP. There is no detailed overview of semantic GP, nor a good analysis of the similarity and differences of the current approach with the literature on the topic is missing.\n- The experiments are done on specific problems and lack detailed comparison with other common semantic GP approaches.\n- The paper writing quality is below average, and details on the method proposed are missing or unclear at times.\n- The overall proposal appears relatively niched.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Sec. 3.1, presenting the mutation objective is relatively clear, although quite abstract, it presents the approach in terms of a generic distance measure.\n- The generic function is detailed in Eq. 2 as a scaled L1 norm over the semantic variables, but still an abstract scaling function p_i(s(G)), where G is not clearly defined given that the distance is stated as d(J,K), so between J and K. What\u2019s G, and what\u2019s its use? According to Eq. 1, the G is in fact used as J=M(G) and K=G for Eq. 2. I\u2019m confused by this notation, better explanations are required.\n- The second term of Eq. 1, which is the diversity term, appears quite ad hoc. I get it does some kind of adjustment for getting diverse solutions, but is there any more formal or conceptual justifications for that part? I mean, why not just summing the L2 norm with all individuals in the current population as diversity?\n- Is the scaling between the three components of Eq. 1 with \\mu parameter enough and allow the best combination of these components. The scale may vary between these, would a distinct scaling factor between them allow better performances?\n- It is stated at the beginning of Sec. 3.2 that \u201cWe minimize (1) by generating several candidate mutations, and then use CMA-ES to fine-tune the constants.\u201d. Ok, but how many individuals are we generating before picking the best one according to Eq. 1? And what is the effect of the number of individuals generated on the quality of the mutations?\n- In Sec. 3.2, details are missing on the raw mutation. For instance, how the choice of the replacement of z with the expressions done uniformly? How is the new node used and constructed? Is the new node replacing the current node directly, or a new subtree is made? And how about the arity, do we restrict the new node to have the same arity than the old one? If not, how do we proceed to enforce validity of the tree? Many details on that mutation operator are missing.\n- Also, still in Sec. 3.2 on the raw mutation, it is stated that \u201cc\\in{0 1} is a \u201cgating\u201d constant that allows continuous linear interpolation between the old and new node and is initially set to a value such that the new node has the same value as the old node.\u201d I see that this is the case for c=0, but how can this be enforced for c=1? (Conversely for zc expression, where the semantic is preserved for c=1, but not for c=0).\n- In the \u201cOptimizing\u201d paragraph, it is stated that s_i = max{10^-5,min(|u_i|, |u_i-1|, |u_i+1|)}. What do the indices i stand for? Why set the u in +- 1 range? I don\u2019t get this part, the tricks of that equation are unclear to me, I am not sure how this helps to handle large or small constants.\n- In Sec. 3.3, paragraph \u201cSampling and/or mutation\u201d, it is stated \u201cWith probability 0.2, this is re-evaluation, which allows reducing the fitness measurement error for potentially high fitness programs\u201d. Wait, what is that? I mean, if you have the fitness of an individual that is not modified, you don\u2019t need to re-evaluate it. If it is modified, then you should re-evaluate. I don\u2019t get why and for what purpose we would re-evaluate some individuals picked at random, some explanations are required here.\n- In the \u201cMutation rates and parsimony pressure\u201d, it is stated that \\mu and \\beta are picked randomly according to some distribution for each mutation. That\u2019s quite fancy, this is an extra layer of complexity over the proposed mutation operator. I would like to see an ablation study over these to demonstrate the added value of proceeding that way.\n- Paragraph \u201cCollecting sample inputs for the semantics\u201d, it is stated that \u201cthe evaluation workers also collect program inputs when evaluating a program\u201d. Why doing so, what\u2019s the use? How does this affect the optimization process?\n- Performance and ablation in Sec. 4.1 is interesting to show the effect of diversity and simplicity, but these results are for one case. I would have been good to conduct this ablation over several problems.\n\nUsing CMA-ES for constant optimization is a big deal in my opinion, as (200x128)=25600 fitness evaluations are spent on making this tuning for each mutated individual. We usually count the sample efficiency of GP in term fitness evaluation, and as such, this is very not sample efficient if we compare with other GP approaches that are not optimizing constants that way. I fear this may be the part of the optimization model that is making most of the job in terms of results.\n\nAs mentioned before, a big issue with the proposal is the lack of comparison with other semantic GP approaches, like the ones presented in Vanneschi et al. (2014), and more standard GP approach.\n\nVanneschi, L., Castelli, M., & Silva, S. (2014). A survey of semantic methods in genetic programming. Genetic Programming and Evolvable Machines, 15(2), 195-214. \n\nThere is a lack of evaluating the approach on benchmark problems for GP, like symbolic regression functions (see SRBench, https://github.com/cavalab/srbench). That would allow us to properly evaluate and compare performance with the state of the art.\n\nThe application contexts proposed are interesting uses of the approach, although I am not convinced they are of practical interest. Principled approaches are much preferable to learned ad hoc criterion, unless a clear added value is presented (this is not the case here). It is even stated at the end of sec. 6.1 that the learned optimizer is not generalizing outside the task suite, exposing some kind of overfitting. That limits greatly the interest for such an approach.\n",
+            "summary_of_the_review": "The proposal is simple, but the explanations are not very clear, many elements are not justified, there is a lack of comparison with other related methods and the problems tackled are non standard (not common benchmark in the field) nor of practical interest by themselves.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A",
+            "recommendation": "1: strong reject"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_zufj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_zufj"
+        ]
+    },
+    {
+        "id": "-_X3FmGTQXS",
+        "original": null,
+        "number": 2,
+        "cdate": 1667381660868,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667381660868,
+        "tmdate": 1667381660868,
+        "tddate": null,
+        "forum": "DwOaHJJKy9",
+        "replyto": "DwOaHJJKy9",
+        "invitation": "ICLR.cc/2023/Conference/Paper4643/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents a mutation operation to generate semantically close and diverse individuals in genetic programming. The proposed method generates a candidate program minimizing the mutation objective that takes into account the distance between parent, child, and previously evaluated programs. Then, the proposed method enables to the generation of a candidate program that is close but not too close to the parent and is not close to previously evaluated programs. To validate the effectiveness of the proposed concept, the authors apply the proposed method to simple regression, learning an optimizer, and learning reinforcement learning loss tasks. In the simple regression task, the proposed method can accelerate the search efficiency compared to existing mutation operations. In addition, the proposed method could find a better solution than existing algorithms in learning an optimizer and learning reinforcement learning loss tasks.",
+            "strength_and_weaknesses": "[Strength]\n* A novel mutation operation taking into account the semantic similarity is introduced.\n* The effectiveness of the proposed method is demonstrated for not only simple problems but also meta-learning tasks.\n\n[Weaknesses]\n* The reviewer is not an expert on this topic and is not confident whether the proposed semantic distance between programs defined in (2) is novel or not. The technical novelty of the distance function should be clarified. \n* In the proposed method, it seems that minimizing the objective of (1) and distance calculation requires generated programs' execution, and such cost should not be ignored. The reviewer is not sure that the experimental comparison with existing methods was fair. It would be better to compare the performance under the same number of program executions or computational budgets.\n* In the experiments on learning an optimizer and learning a reinforcement learning loss, although the use case of the proposed method is demonstrated, the advantage of the proposed method on such tasks compared to other genetic programming methods is unclear.\n* The concept of the proposed method can be understandable. However, it seems difficult to re-implement it because the authors did not provide the code and detailed information on the implementation.\n\n[Minor Comments]\nWhat does `sin_big` mean in Figure 1-4?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "* The reviewer feels that the technical difference between the proposed method and existing semantic genetic programming methods is not clear. The technical contribution should be made clear.\n* The advantage of the proposed method on meta-learning tasks against existing methods is not clear, although the authors mentioned such experimental comparison is difficult due to the cost of reproducing existing methods.\n* The authors did not provide the code and did not report the detailed experimental settings. The reviewer thinks that it is hard to reproduce the experimental results.\n",
+            "summary_of_the_review": "The topic treated in this paper is interesting and important. However, the reviewer feels that the technical novelty and empirical evidence of the advantage of the proposed method are unclear. Such weakness should be addressed to accept the paper.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_6oRb"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_6oRb"
+        ]
+    },
+    {
+        "id": "R1jRNDyUt0m",
+        "original": null,
+        "number": 3,
+        "cdate": 1667467051698,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667467051698,
+        "tmdate": 1667467051698,
+        "tddate": null,
+        "forum": "DwOaHJJKy9",
+        "replyto": "DwOaHJJKy9",
+        "invitation": "ICLR.cc/2023/Conference/Paper4643/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a new sampling method for genetic programming based on the semantics. The idea is that for each step, the algorithm would sample a new variant with different semantics (based on some distance function) that is also different from previous historical samples. Based on this idea, the authors demonstrate that this method improves sample complexity on a bunch of tasks, including function regression, learning an optimizer, and learning RL losses.",
+            "strength_and_weaknesses": "Strength:\n- The paper provides several instantiations of the method, all seem quite interesting.\n\nWeakness:\n- The method seems pretty simple and not very surprising, so not sure how much conceptual novelty there is. I'm not an expert on genetic programming, so would leave it to other reviewers who have more domain expertise on this topic.\n- For the learned optimizer experiment, there's no comparison with other methods. In fact there is a rich literature of previous works on this problem, i.e., how to select the hyperparameters in an algorithmic way. More comparison with them would be great.\n- The experiments are definitely too small scale. E.g., for the learned optimizer, it's unclear whether it works on larger NN models, so the findings in this paper may be not relevant to modern deep learning. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is written clearly with good quality. ",
+            "summary_of_the_review": "This paper mainly provide experiments on small scale datasets and lack comparison with existing methods. I'm not an expert on genetic programing, so I'm not sure how important these tasks are for the community --- from my perspective the tasks (e.g., learning optimizer and learning RL loss) are not super relevant these days especially when the experiments are only carried out on small datasets. Thus, I'll vote for rejection based on my current understanding, but would love to follow other reviewer's suggestion if they are more confident on this topic.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_kHGQ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4643/Reviewer_kHGQ"
+        ]
+    }
+]

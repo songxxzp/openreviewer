@@ -1,0 +1,158 @@
+[
+    {
+        "id": "CoMH56MSTFA",
+        "original": null,
+        "number": 1,
+        "cdate": 1666603613083,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666603613083,
+        "tmdate": 1670279658043,
+        "tddate": null,
+        "forum": "k1FHgri5y3-",
+        "replyto": "k1FHgri5y3-",
+        "invitation": "ICLR.cc/2023/Conference/Paper1274/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This work proposes FedPM, a scheme for communication (and as a byproduct, computation) efficient federated learning. Instead of training the neural network weights with, e.g., FedAvg, the authors propose to freeze the network at its random initialisation and then only train a *binary* mask over the weights, to prune some connections, in a federated fashion. The benefit of this approach is that the client-to-server communication now becomes much cheaper, due to communicating (potentially encoded) binary vectors instead of full precision weights. To train the binary mask, the authors propose to employ a distribution over masks, the probabilities of which are a server side parameter. On each round, this distribution is communicated to each client, which then optimises it locally on their own data by 1) sampling binary masks according to this probability distribution, 2) sparsifying the weight according to the sampled mask, 3) doing the forward pass with the sparsified network and 4) approximating the gradient of the loss with respect to the parameters of the probability distribution with the straight-through estimator [1](although the authors do not explicitly mention it). The reduction in the upload costs comes from having each client communicate to the server a random sample from the locally training distribution over the masks (which is binary) instead of the actual distribution over the masks. The download cost of FedPM is the same as FedAvg (since the probabilities are real values and one for each weight). To aggregate the binary masks at the server, the authors propose to use the Bayesian aggregation from Ferreira et. al. Finally, to accommodate for computationally fast inference, the authors also propose to randomly initialise the weights to be binary with a specific scaling that leads to better behaved gradients. \n\n[1] Bengio et al. Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation, 2013",
+            "strength_and_weaknesses": "Strengths\n- Simple method\n- Good results\n\nWeaknesses\n- Limited technical novelty\n- Some clarity concerns ",
+            "clarity,_quality,_novelty_and_reproducibility": "This submission is mostly clearly written and I believe has enough information to allow for reproducibility. A couple of things that could be better elaborated / improved upon are the following:\n- The gradient estimator the authors use is an instance of the straight-through estimator (STE) described at [1], with quite a lot of follow-up literature (especially on the sparsity / quantization in neural networks front). I would therefore encourage the authors to update their text accordingly. It should be noted that the STE estimator is a biased estimator, thus it is unclear how this affects convergence of the local training. \n- The authors mention at the end of page 4 the \u201cBernoulli\u201d function; does that refer to the Bernoulli probability mass function? If yes, the author should probably use the latter, otherwise they should elaborate. \n- I believe more discussion is warranted for the $\\alpha$, $\\beta$ parameters of the Beta distribution. For example, why do they need to be reinitialised? Is there collapse otherwise? How do you handle the bimodality when alpha, beta < 1 (i.e., what do you pick as the mode)?\n- The authors propose to use the Kaiming He initialisation to control the variance of the neuron outputs when initializing the frozen network. How does the sparsity of the layer affect this? \n- A question on appendix C; as far as I understand, the bias correction requires the true theta (which is private) so how can you use it in practice?\n\nFinally regarding the novelty. I believe that the novelty of this work is on the experimental evaluation and comparison with other relevant baselines and not on the technical side. First of all, having a probability distribution over random masks at the server, communicating it to the client to optimise it and then having the client send back a random binary sample from the optimised distribution (and computing the average at the server) is not new and has been proposed before at [2]. The extra addition of this work then is to consider frozen weights (which has been proposed at Zhou et al.) and the Bayesian aggregation at the server, which, as far as I understand, was already proposed in Ferreira et al. The privacy analysis seems to again be taken directly from Imola & Chaudhuri, so the main extra novelty seems to be the bias correction term, which however is not part of the main paper. \n\n[2] An Expectation-Maximization Perspective on Federated Learning, Louizos et al., 2021\n",
+            "summary_of_the_review": "Given the aforementioned comments, I am leaning towards not recommending acceptance of this work; the technical novelty is small (as it is a combination of prior ideas) and the empirical novelty, while appreciated, is not enough for me to push this work over the acceptance threshold.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_iZTn"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_iZTn"
+        ]
+    },
+    {
+        "id": "qjKm4OqF_D",
+        "original": null,
+        "number": 2,
+        "cdate": 1666647619097,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666647619097,
+        "tmdate": 1669315725340,
+        "tddate": null,
+        "forum": "k1FHgri5y3-",
+        "replyto": "k1FHgri5y3-",
+        "invitation": "ICLR.cc/2023/Conference/Paper1274/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a new approach to communication efficient federated learning. They keep the weights of the model fixed after random initialization via a SEED. and then only train the probabilistic mask over the model in collaboration with all the clients. They reduce the communication of requirement to less1bpp during model upload from clients to server. I have a couple of questions for the authors, \n\n\n1. The paper argues that they reduce the communication cost to less than 1bpp every round. However, there are two communication steps in each round: server to clients in before each round and clients to server. While in the second step the communication is less than 1bpp as instead of communicating the masks, clients communicate a sample from the probabilistic mask, as per the paper ( algorithm line \u201cReceive..\u201d, section 3.1.1 first line), clients receive the actual probability mask  (not a sample)  from the server. Then the total cost of communicating 2xmodel_size in usual FL is reduced to only (model_size (download) + mask (upload)). Are we assuming large discrepancies in download and upload bitrates ? \n\n2. If the above assumption is incorrect, then the comparison baselines which were chosen to be  1bpp should also be revised and compared with baselines with larger communication footprint including naive FL which has 2xmodel_size communication.\n\n3. In section 3.3, paper mentions that they use a discrete support for P_w for improving inference storage cost. However if the final weights are ternary, we can eliminate the managing the mask and directly use this for better communication ( at-least client to server communication) . The paradigm would be as follows, each maintains the floating-point models \\theta_i, the final weights are used after applying an activation like tanh. Then while communicating the model to server, you sample from this tanh(theta) to have a support of {-1, 0, 1} (you can consider the factor of sigma separately).  I am curious what the authors think about this.\n\n",
+            "strength_and_weaknesses": "[strength]\n1. The approach is novel and unexplored. \n2. the problem being tackled is important \n3. paper is well written\n[weaknesses]\n1. See the points 1-2 above",
+            "clarity,_quality,_novelty_and_reproducibility": "See above",
+            "summary_of_the_review": "The major concern for me is that I am not sure if communication is really being reduced. While volume of upload data is surely reduced, the volume of download data is clearly not. I would like to understand the rationale behind this and if i am missing something. This is the basis of my current score.\n\n[post rebuttal] The authors have sufficiently addressed my concerns. i am raising my score.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_19LP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_19LP"
+        ]
+    },
+    {
+        "id": "IWvs0kQChM",
+        "original": null,
+        "number": 3,
+        "cdate": 1666650682334,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666650682334,
+        "tmdate": 1669225932415,
+        "tddate": null,
+        "forum": "k1FHgri5y3-",
+        "replyto": "k1FHgri5y3-",
+        "invitation": "ICLR.cc/2023/Conference/Paper1274/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposes a combination of ideas and methods to enable low-bit-width communication in federated learning. \nThe authors combine the idea of learning a sparse sub-network of a randomly initialized model through a binary mask with a stochastic sampling scheme of said mask to communicate with the server and further a bayesian aggregation scheme. These algorithms exist in the literature but not applied successfully to FL as presented here. \n\n",
+            "strength_and_weaknesses": "This paper's strength lie in the excellent exposition and description of the method. The paper is very pleasant to read, easy to follow and written in a convincing way. \n\nThe weakness of the paper lies in the experimental evaluation. The model & data-set combinations are not up-to-date with the literature. Generally speaking, (wide) ResNet or more edge-device friendly models would be more realistic than these VGG-type models. Especially with respect to the compression angle, I would like to understand how wider networks are influenced by the subnet-selection problem in the federated setting - also I'm curious if convolutional-only models (such as ResNets) perform equally well. \nThe data-set setting does consider partial participation and heterogeneity through label-skew and differing dataset-sizes, which is highly commendable. At the same time, most FL papers consider settings with >50 clients, such as Femnist (3.6k clients) or even NLP tasks on the Stackoverflow dataset with approx 340k clients. Alternatively, I'd be curious to understand how, staying with the experimental theme of the paper, TinyImagenet (64x64) split across several hundred clients performs here. \nThat being said, the existing experiments do convince me of the value of the proposed algorithm.\n\nIn terms of ablations, I would have liked the authors to provide more guidance on the resetting of the server-side $\\alpha$ and $\\beta$. What is happening to require the resetting in the first place? How does the frequency of resets influence the convergence? And how does non-iid data influence this behaviour? This heuristic seemingly is very important to good results, so I am curious to learn more. Please provide more detail on your statement: \"... design an improved aggregation strategy with a Bayesian approach so that the previous masks at the server are not hard replaced \u2013 a useful strategy specifically in unbalanced non-IID splits\"\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity & quality of the writing is extremely high. I truly enjoyed reading the paper. \nThe novelty of the work is good, it feels like a successful combination of existing ideas with additional insights.\nThe authors provided code with this submission:\nI have looked at the code and while it is not complete in the sense that it enables replicating all experiments, it allows me to gain additional insights and re-implement in my own code-base. \nI noticed that the initialization scheme discussed in the paper does not correspond to the implementation. In the paper, the authors detail initializing by randomly choosing between $-\\sigma$ and $\\sigma$ where $\\sigma$ corresponds to the standard deviation of the Kaiming Normal distribution. For ReLu activation, $\\sigma$ should be $\\sqrt{(2/n_l)}$, however the authors choose $e \\sqrt{(1/n_l)}$, which is ever-so-slightly different. I am curious about that choice. \n\nI would encourage the authors to append additional `params.yaml` that allow the reproduction of all experiments in this paper. \n\n",
+            "summary_of_the_review": "Very interesting paper with a convincing story. The experimental section could be improved. I am happy to raise my score should the authors provide experiments with more modern network architectures and FL settings with a larger number of clients. \n\n-- post rebuttal -- \nI have read the rebuttal and revised manuscript. The authors have addressed my concerns and I have raised my score",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_Un54"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_Un54"
+        ]
+    },
+    {
+        "id": "JP6TJimpuF",
+        "original": null,
+        "number": 4,
+        "cdate": 1667008844368,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667008844368,
+        "tmdate": 1669943884895,
+        "tddate": null,
+        "forum": "k1FHgri5y3-",
+        "replyto": "k1FHgri5y3-",
+        "invitation": "ICLR.cc/2023/Conference/Paper1274/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "**UPDATE**  \nI thank the authors for providing an extensive response. I carefully read it and discussed with the other reviewers. I'm glad the authors clarified their major design choices and supported them with new experiments. One issue that remains is that of limited evaluations, but with the extra support added in the new version of the paper, I feel more confident that the proposed methodology will generalize to other setups.\n\n---------\nThis paper studies communication-efficient federated learning with random sparsification of the network weights. The main idea of the work is to use the lottery ticket hypothesis and try to find a good subnetwork by estimating a sparsifying mask. The mask parameterized by a vector of probabilities $\\theta$, which, in turn, are estimated using a score mask $s$, whose softmax gives us $\\theta$. Moreover, the authors use multiple clients that run gradient descent to estimate the best mask and then communicate only the binary vector produced randomly from the local estimate. By receiving multiple random masks, the authors build a Bayesian estimator to produce a global model.",
+            "strength_and_weaknesses": "The main strength of this work is in the presented empirical improvements on the considered benchmarks. The proposed method is shown to outperform all competitors both in terms of test accuracy and communication efficiency.\n\nWhat makes me concerned is the way the method was derived and studied. Most of the ideas do not look well-motivated. For instance, the authors explain that the mask $\\theta$ cannot be used with regularization because it may lead to a performance drop, so they instead use softmax. However, it is not apparent to me why there would be a performance drop with regularization but no performance drop with score mask. In the majority of cases, I think that an ablation study is required to show that the made choices were the right ones. As of now, the paper just selects a set of ideas that are not justified using theory and then proceed to study the empirical behaviour of the resulting method. I am left with the feeling that I do not understand why the method performs well and if it will generalize to other problems. This is especially troubling since the evaluations are limited to simple problems (CIFAR-10/100, EMNIST, small networks).",
+            "clarity,_quality,_novelty_and_reproducibility": "I do not see major issues with paper writing. The novelty aspect is explained quite well.\n\nSome minor issues:  \nPages 4-5: I do not understand why the authors sometimes write $M^{k,t}$ and sometimes $m^{k,t}$  \nPage 4: there seems to be a typo in the update rule for $s^{k,t}$ because both sides have the same indices  \nCan the authors use a higher resolution for Figures 2, 3, and 4? It'd be even better if the figures were produced from pdf files\n",
+            "summary_of_the_review": "While the work clearly explains the points that are novel, they do not seem justified or derived in an intuitive manner. The proposed modifications to prior work are somewhat arbitrary and do not follow a rigorous mathematical derivation or empirical evaluation of different options. While the experiments show that the resulting method performs better on a number of problems, it is not apparent that the same improvement would hold universally and where exactly the improvement comes from. For instance, the method converged to better test accuracy on conv10-cifar100, but why it is not explained why it is so.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_EaNE"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1274/Reviewer_EaNE"
+        ]
+    }
+]

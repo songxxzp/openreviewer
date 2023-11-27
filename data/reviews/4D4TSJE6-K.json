@@ -1,0 +1,158 @@
+[
+    {
+        "id": "iaTRcBc-ekE",
+        "original": null,
+        "number": 1,
+        "cdate": 1666538489426,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666538489426,
+        "tmdate": 1666538489426,
+        "tddate": null,
+        "forum": "4D4TSJE6-K",
+        "replyto": "4D4TSJE6-K",
+        "invitation": "ICLR.cc/2023/Conference/Paper2116/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper considers the application of language models (LM) to mathematics reasoning tasks, noting that many existing datasets only contain one reference solution. This is problematic since many derivations may lead to the same answer, and therefore maximum-likelihood estimation of the LM may lead to overfitting. The main idea is the observation that samples generated from the model during training (\u201cself-sampled\u201d) can be evaluated to see if they yield the correct answer, and if so those alternate solutions may also be rewarded for a suitable choice of loss function. To this end, three loss functions are compared: MLE augmented with the additional samples (MLE-Aug) yielding the correct answer, maximum marginal likelihood (MML) which marginalizes over the candidate set, and smoothed MML which interpolates between MLE-Aug and MML.\n\nAdditionally, the paper proposes learning from partially-correct solutions. The challenge is to identify sequences which contain a prefix which evaluates to a necessary step of the correct solution. To do so, the idea is to exploit both self-sampled (correct) solutions and the gold reference to identify semantically equivalent prefixes (produce the exact same set of variable values). The longest partially-correct prefix is used for learning, which is distinguished from other sequences only by the lack of a distinguished end-of-sequence token.\n\nExperiments on MathQA-Python and GSM5.5K-Python demonstrate that both self-sampled solutions and the inclusion of partially correct solutions improve model performance. The MLE-Aug loss function outperforms the MML losses in all cases. In addition, the resulting model produces diverse solutions, which likely contributes to the improved pass@k results.\n",
+            "strength_and_weaknesses": "Overall, while the contributions are straightforward and, in the case of learning from partially-correct solutions, of somewhat limited scope (doesn\u2019t generalise to more general coding tasks), the paper addresses important limitations of existing training methods for math reasoning tasks.\n\nRegarding the proposed multi-target learning objectives, it\u2019s not clear why MML would be expected to work. If multiple solutions produce the correct output, shouldn\u2019t they all be rewarded? As in contrastive learning, wouldn\u2019t we want to reward correct solutions, but downweight the probability mass assigned to incorrect ones? Additionally, I would have liked to see other objectives considered, such as ranking-based objectives or sequence-level (e.g. minimum bayes risk).\n\nRegarding learning from partially-correct solutions, the additional filtering required (line 8 in Alg. 1) seems like an important limitation, given the footnote about the impact on performance. In general, identifying \u201ctrivial variants\u201d seems like a hard problem, given the potential for malformed code during training which could make it hard to filter based on compiled ASTs. \n\nIn the limitations section, the issue of spurious solutions which achieve the correct solution by chance is raised. While it\u2019s stated that this issue is \u201crare\u201d in the domain under consideration, how was this quantified? Furthermore, given the persistent buffer of solutions maintained during training, is there a concern that early versions of the model may be more likely to produce spurious solutions, which would then remain throughout training in the solutions buffer?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall, I found the paper to be well-written, although at times the writing could be improved, for example by adding additional motivation for the multi-target losses considered. The experimental evaluation is well-done and, given the model sizes involved, could be reproduced by others fairly easily. The main concern regarding reproducibility is the implementation of the solutions buffer, which involves lots of small details that would be difficult to get right without access to the original implementation; will it be released?",
+            "summary_of_the_review": "While the scope of the paper is fairly limited (math reasoning), the contributions are worthwhile and soundly evaluated. There is a story (discussed in the limitations) for broader applicability of the proposed ideas. While the relatively small model sizes considered may limit the absolute performance of the model, this is also a strength when it comes to reproducibility, so in the balance I would say this is a positive. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_bPyF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_bPyF"
+        ]
+    },
+    {
+        "id": "O13a4tU5_1",
+        "original": null,
+        "number": 2,
+        "cdate": 1666584886094,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666584886094,
+        "tmdate": 1670594145921,
+        "tddate": null,
+        "forum": "4D4TSJE6-K",
+        "replyto": "4D4TSJE6-K",
+        "invitation": "ICLR.cc/2023/Conference/Paper2116/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes an approach to solve math word problems (MWPs) via fine-tuning with self-sampled solutions that can be partially correct. The approach relies on a text-to-code formulation: a generative model, which is to be fine-tuned, receives the MWP text and aims to generate a snippet of python code, which, upon execution, returns the solution to the input MWP. Under this formulation, the paper proposes to augment the training data with samples from the generative model itself. Samples whose computation returns the correct solution to the problem are marked as correct and are used as additional data for fine-tuning. Samples whose computation returns an incorrect solution but some intermediate steps are correct are marked as partially correct and are also used for fine-tuning. The paper establishes a method to find such partially correct solutions (via backtracking the implicit computation state of the generated code/program). Evaluation results suggest that fine-tuning with self-sampling and with partially correct solutions both contribute to improved performance. ",
+            "strength_and_weaknesses": "### strengths \nIn my opinion (authors please correct me if I'm wrong) the proposed approach seems like a clever data augmentation method. The technical contribution lies in finding partially correct solutions, which, thanks to the problem formulation, can be identified through the computation state of the generated solution (a code snippet/program). More broadly, I think this approach can be useful beyond MWP solving; for example, I can imagine applying similar approach to identify partially correct code/programs, which can potentially be useful for improving text-to-code models, with additional implications for computer science education for identifying and hinting a learner's partially correct code submissions.\n\n### weaknesses\nI have a question on the problem formulation. There is certainly nothing wrong with formulating the MWP solving as a text-to-code problem. My concern is: is this the best way to solve MWPs? Or put another way, is MWP the best setting to showcase the proposed method's effectiveness? In my opinion (correct me if I'm wrong), the trending approach for MWP solving specifically (I'm not talking about other math reasoning tasks) is to take advantage of models trained on natural language and generate solutions in natural language. This is because much of MWP's reasoning involves simple mathematics (often simple arithmetics, i.e., the two datasets that the authors considered) but a lot more commonsense reasoning and natural language narratives. I think there is a reason that recent methods take advantage of language model's capability in generating texts, and tackle MWP solving via chain-of-thought prompting, majority voting, etc., all of which rely on generating natural language texts that lead to the final solution. \n- Could the author comment on why they take the text-to-code approach, rather than text-to-text approach, for MWP solving, and the pros and cons of each?\n- Additionally, it would be helpful to compare these two approaches experimentally, although I understand it could be very laborious. Note that currently some of the better performing approaches for MWP solving can reach solution accuracy of > 50% [1, 2]\n\nOne more question: is it the case that the correctness criterion for a sampled solution only rely on whether the execution of the sampled solution gives the correct final answer? If this is the case, the fine-tuning data perhaps, and inevitably, will include samples whose final result is correct but intermediate computation step is wrong. How would this scenario impact the performance of the proposed approach?\n\n\n[1] https://arxiv.org/abs/2110.14168\n\n[2] https://arxiv.org/abs/2206.14858",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper's presentation is clear and easy to follow.",
+            "summary_of_the_review": "The paper describes an interesting approach (text-to-code, self-sampling with partially correct solutions) to solve math word problems. I have some concerns on the problem formulation compared to the (seemingly more natural to me) text-to-text approach. I am very open to increase my score. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_dnGk"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_dnGk"
+        ]
+    },
+    {
+        "id": "rE7QZCZSis6",
+        "original": null,
+        "number": 3,
+        "cdate": 1666713133498,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666713133498,
+        "tmdate": 1666713133498,
+        "tddate": null,
+        "forum": "4D4TSJE6-K",
+        "replyto": "4D4TSJE6-K",
+        "invitation": "ICLR.cc/2023/Conference/Paper2116/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Making pre-trained language models (PLMs) generalize to perform multi-step math reasoning problems is a challenging task. One of the main challenges is that during the fine-tuning stage, only one reference solution is used as supervision, preventing the model from exploring a more diverse solution space. To mitigate this issue, this paper proposed learning from self-sampled solutions. The self-sampling stage yields both fully-correct solutions and partially correct solutions, leading to more efficient exploration of the solution space. They conducted experiments on two math reasoning datasets, namely,  MathQA and GSM8K. The experimental results show that with training on FCS and PCS, the generated solutions are more diverse and improved the Pass@K over the baseline when $k$ is large. They also compared different loss functions and found that MLE-Aug loss function works the best when training with multiple solutions.",
+            "strength_and_weaknesses": "Strengths:\n- This paper successfully integrates several of the ideas in the literal, e.g., learning from execution, and semi-supervised semantic parsing, and improves the model performance on complex math reasoning.\n- I liked the idea of using partially-correct solutions to encourage the model to explore the solution space. However, it would be better if the authors could explore a more general definition of the PCS.\n\nWeaknesses:\n- One of my major concerns about this paper is that the experiments were only conducted on two similar math reasoning datasets. Theoretically, the method could be generalized to other semantic parsing tasks like text-to-SQL and more general code synthesis. It would be more convincing if they can show the proposed method also works on other datasets/domains. \n- I am also not totally convinced by the improvement presented in Sec 4.2, where the authors use Pass@k as the evaluation metric. We see that when $k$ is small, the improvement is quite marginal. It is quite possible that although the generated solutions are more diverse, the correct solution only appears a few times. I think using the majority vote of the generated $k$ solutions as the answer would be a better metric because, in the real use case, we only want to give the users a few solutions.\n \nOther comments:\n- One experiment I would like to see is *Number of saved FCSs and PCSs vs. Training iterations vs. dev performance*. When is the model able to sample diverse solutions? Do the diverse solutions decrease the convergence speed while improving the dev performance?\n- In Table 2, the comparison to Codex is not fair as you can easily achieve much better performance with chain-of-thought prompting.\n- I think the comparison of the different loss functions is not closely tied to the main idea of this paper. It would be better if the authors can use more space to explore the boundaries of the proposed method. For example, experiment with other semantic parsing tasks. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: This paper is clearly written and well-structured. It is easy for the readers to capture the main idea.\n\nQuality: The proposed method is technically sound and intuitive. The system built by the authors is potentially useful to the community and could encourage follow-up work on this topic.\n\nNovelty: This paper does not present a brand new idea for tackling complex math reasoning problems, but it is a good example of combining several good ideas in the literature and making it work for an important task.\n\nReproducibility: I think the community may have trouble replicating the results if the code is not released as there are multiple stages for the proposed framework, e.g., online sampling and filtering, and each stage could potentially affect the final results.",
+            "summary_of_the_review": "In general, this paper is well-motivated and contains several interesting ideas. However, I think the experiments are not convincing enough to show the generalizability of the proposed method (see weaknesses for details). At the current stage, I don't think it is not fully qualified as a top-tier conference publication. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_2ima"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_2ima"
+        ]
+    },
+    {
+        "id": "DsGPJjZPhxq",
+        "original": null,
+        "number": 4,
+        "cdate": 1666933760326,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666933760326,
+        "tmdate": 1666933899792,
+        "tddate": null,
+        "forum": "4D4TSJE6-K",
+        "replyto": "4D4TSJE6-K",
+        "invitation": "ICLR.cc/2023/Conference/Paper2116/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper studies finetuning on model sampled solutions to coding problems. The idea is to sample python solutions to problems, keep solutions that return the correct result in a buffer and finetune on them. The authors experiment with a few different losses for finetuning on the self-sampled solutions and evaluate their approach on two math reasoning datasets. They find that while pass@1 is not always improved from this approach, pass@k (for k >1) shows decent improvement.",
+            "strength_and_weaknesses": "Strengths\n- The idea is really interesting and there are some nice improvements in pass rates for k > 1.\n- I liked the exploration of the different loss functions as they tend to weight self-generated samples differently.\n- The approach to keep partially correct solutions is also interesting as it potentially allows for bigger solution set to finetune on.\n\nWeaknesses\n- The problem seems to be very code motivated, so it is not clear to me why more code datasets were not tried instead of math datasets (which are converted to code).\n- pass@1 is not generally improved by this approach. This is a bit unsatisfying as, at test time, given a math problem one does not typically have test-cases to run the generated code against and verify the answer, so it is really pass@1 that matters more than any pass@k. Another concern is that maybe the pass@k just improves because there is more data (not necessarily correct) to finetune on that improves the diversity of model samples.\n- Experiment details are not fully explained and it could be tough to reproduce.\n\nQuestions for authors:\n- What if you were to just sample solutions and finetune on them without caring about correctness? Will this yield an improvement on pass@k as well or is it much worse? \n- The supplementary says that only one solution is sampled per problem. This is a bit confusing. Are you saying that one sample is enough to get a correct solution from the model? Please clarify: (1) how many samples are there for each problem (2) how many problems are in a gradient update (3) how many solutions of those sampled execute to correct answer (as a function of training steps).",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity\n- There is some lack of clarity around experiment details. The final training algorithm is a bit unclear around how many samples are generated, is the buffer refreshed whenever a problem is revisited.\n\nQuality\n- Overall the paper is well written,\n\nNovelty\n- The paper is related to a cluster of ideas around self-training, though the execution and the problem domain is somewhat new.\n\nReproducibility\n- Code is not provided and experimental details are a bit lacking.",
+            "summary_of_the_review": "I am going with a weak accept. See weakness section for explanation. Experiments on more code generation problems (where pass@k is more reasonable metric) would have been more convincing, but I like the overall approach of this paper.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_bc3k"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2116/Reviewer_bc3k"
+        ]
+    }
+]

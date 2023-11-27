@@ -1,0 +1,158 @@
+[
+    {
+        "id": "4qODQ5-U5G",
+        "original": null,
+        "number": 1,
+        "cdate": 1666360203074,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666360203074,
+        "tmdate": 1670364727253,
+        "tddate": null,
+        "forum": "8taH4yjN62m",
+        "replyto": "8taH4yjN62m",
+        "invitation": "ICLR.cc/2023/Conference/Paper5124/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper investigates the role of position encodings in contrast to contextual encodings in BERT-based models. They illustrate two biases of these encodings: locality (a tendency to focus on nearby tokens) and symmetry (a tendency to focus at a particular distance from the target to the same degree whether the distance is measured backwards or forwards). They decompose attention into the sum of position and contextual components, and ablate each component to measure the role of the remaining representation. They then propose several modifications to the encoding scheme in order to test their intuitions about the biases of the default scheme (one of these modifications, sequence combination, appears to lead to a performance improvement).",
+            "strength_and_weaknesses": "\nStrengths:\n- I find the question they are attempting to ask about the role of position encodings to be an interesting one.\n- I have never seen a clear discussion of the symmetry property, although it is evident in attention heat maps in every paper on transformers. \n- More importantly, I have never seen a discussion of the potential drawbacks of a symmetry bias. It\u2019s not something that I had considered before, and it makes me curious about human cognition: are we better able to handle symmetric word swaps than random word swaps, for example? I expect not. This is a clear example of cognitively implausible behavior at the position encoding level, although to be fair nobody is claiming any kind of cognitive plausibility in position encoding. I would like to see the focus on symmetry expanded.\n- I was impressed by the incorporation of research in psycholinguistics to discuss word swaps. I would actually have liked to see a longer discussion of the implications of the different studies, in terms of local and more distant word swaps.\n- In future work or versions of this paper, I would be extremely interested to see the symmetry and locality biases treated separately.\n- The new method of Sequence Combination as an alternative to adding together position and contextual encodings appears to work well.\n\nWeaknesses:\n- My main problem with this paper is that I do not find the experiments to be particularly convincing evidence of the properties that they discuss. In particular, they use a new encoding scheme to artificially impose strict symmetry and locality, and find that performance is somewhat damaged but not too much. I don\u2019t know what result they would consider to be evidence against the importance of symmetry and locality, perhaps some very extreme blow to performance? In general, I don\u2019t think that the performance of these simplistic position encodings give any particular evidence as to whether their biases are *also* the reason why the original encoding scheme worked.\n- I would have liked to see more variety in the position encoding schemes being used, rather than using only BERT\u2019s default position encoding.\n- When you set the contextual or position encoding to zero, you create a significant distribution shift in representations. Perhaps taking an average would be better? In general, I\u2019m skeptical about these kinds of causal interventions on a fully trained model. You are changing the expected norm and representational geometry, and that might change to different degrees depending on which component you are removing. \n- They seem to be arguing that symmetry in the attention weights means that you can swap the position of different tokens without changing the meaning of the sentence, but that\u2019s not clear to me? I feel like I need an explanation that either gives the mathematical process or diagrams the reason why this would be the effect.\n- I would like to see for learned position encodings whether symmetry is a learned property.\n- The experiments on simplistic position encodings bear a significant resemblance to Alibi, and I\u2019m not sure what they contribute over that scheme in terms of understanding https://arxiv.org/pdf/2108.12409.pdf\n- There are nonlinear interactions between the position encodings and the context. Currently they consider these interactions to be part of the position encoding, but I\u2019m not convinced that that\u2019s appropriate. It\u2019s possible that some of the bias they are talking about is due to the isolated role of position $\\frac{(p_iW^Q)(p_jW^K)^T}{\\sqrt{d}}$ so I think that experiments should separately consider what happens when interactions are included or removed.\n    - When you measure the effect of removal, do you just straightforwardly remove it or do you take an average value or do you retrain the network to work without the encoding in question? There is a big difference between these strategies because you are creating a very large domain shift by removing a component of the representation, but that doesn\u2019t necessarily mean that the information of structure within that component is as important as it seems based on changes effected by the wholesale removal of a component.\n    - Maybe you should be considering something like shapley values.\n- There should be an explicit comparison between their word swap probe and other existing methods for behaviorally testing the role of word order. Currently I\u2019m not clear on what the new contributions are of this particular experiment.\n- Do you have a metric for measuring symmetry? That would be better than all of the figures. Even something simple like the matrix norm of the difference between the original attention matrix and its transpose.\n- There is a lack of detail about the implementation of sequence combination, although it seems like it should be one of these strongest points in the paper.\n\nMinor/references:\n- This paper needs extensive editing for typos (\u201cencoings\u201d, mismatched subject-object number, etc).\n- Probably should add a note as to why autoregressive models aren\u2019t relevant to position encodings research http://arxiv.org/abs/2203.16634\n- Sharp Nearby, Fuzzy Far Away: How Neural Language Models Use Context https://arxiv.org/pdf/1805.04623.pdf\n- When you describe the symmetry property, make sure to clarify the axis of symmetry. Even with the example given, which initially just confused me, it took me a while to understand that this was referring to equidistant tokens having the same weight rather than the same weight applying both to both key-query and query-key directions.\n- \u201cBEET-A\u2217-s\u201d I don\u2019t understand what this string means.\n- \u201cwe adopt widely used 10 probing tasks\u201d \u2014 make sure that you actually cite each of the tasks separately, rather than only the benchmark paper that aggregates them.\n- \u201cFor surface tasks, the surface knowledge is stored more in bottom layer \u2026\u201d I find this a confusing sentence\n- Don\u2019t start a sentence with a variable name if you can help it, as in the paragraph before equation 10 (https://jmlr.csail.mit.edu/reviewing-papers/knuth_mathematical_writing.pdf)\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "There are some significant details left out about the sequence combination. The paper needs some extensive proofreading for grammar/typos/local errors, but is otherwise clear and well structured. The novelty is limited, as the existing literature contains both behavioral analysis of word swaps and simplified alternatives to position embeddings based on similar intuitions. The quality of these experiments is reasonable, but I'm not convinced that they offer strong support for the authors' intuitions.",
+            "summary_of_the_review": "The paper has two potentially significant contributions: a discussion of the drawbacks of symmetry bias in position encoding and a new (to my understanding) method of \"sequence combination\" that presents an alternative to summation of position and contextual encodings.\n\nHowever, the other experimental results and methods proposed are unconvincing to me as evidence of their claims of the importance of locality and symmetry. Furthermore, they are very similar to existing work in the analysis and architecture literature, most of which is uncited here.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_gutD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_gutD"
+        ]
+    },
+    {
+        "id": "3nHZVo4UOK",
+        "original": null,
+        "number": 2,
+        "cdate": 1666605174717,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666605174717,
+        "tmdate": 1666605174717,
+        "tddate": null,
+        "forum": "8taH4yjN62m",
+        "replyto": "8taH4yjN62m",
+        "invitation": "ICLR.cc/2023/Conference/Paper5124/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper investigates the role of position encoding of pre-trained LM (BERT base) for sentence-level downstream tasks (NLI, STS):\n- By visualizing the attention heat map of PLM given a sequence of the same repeating token, this paper finds that LOCALITY and SYMMETRY are two key features of the position encoding of PLM.\n- By shuffling spans in different lengths of SNLI data and testing with these shuffled texts, this paper finds PLMs are less sensitive to local word order.\n\nThis paper also proposed two handcrafted position encodings, by adding positional bias to the context attention scores. \n- By training BERT and BERT with the proposed encoding methods, this paper finds the proposed encoding methods can outperform BERT a lot.",
+            "strength_and_weaknesses": "Strength:\n- Some probing experiments are novel and the findings are interesting\n- The proposed methods get good results\n\nWeaknesses:\n- Many details are missed, which makes parts of this paper hard to be understood. 1) what are the learnable form of equations 12 and 13? A random initialized matrix? 2) What is PA(X)? Multiply X with the PA matrix? 3) The results of STS and SICK-R seem much better than RoBERTa-large. What is the metric of STS and SICK-R? Spearman or Pearson? STS has 12-16 and STS-B, which one is used in this paper? 4):\n- The proposed method is similar to AliBI, in terms of adding a bias mask to the attention scores. Is there any discussion of the difference or which one is better?\n- The models are all BERT-base trained with 600K steps. Experimenting with another model can help to support the claims of this paper. For example, show the BERT-large/RoBERTa can also be improved.",
+            "clarity,_quality,_novelty_and_reproducibility": "- The analysis part is novel with good quality.\n- The paper is easy to read but missed many details (see weaknesses). Some typos for example BERT->BEET\n- The final part of this paper, where a strong position encoding method is proposed, but it was not detailed and analyzed where the improvements are from. This part can be improved by adding another PLM with the proposed position encoding method.",
+            "summary_of_the_review": "This paper should be improved before it can be published because:\n\nNo discussion between Alibi[1] and the proposed method;\nMissing details to understand the results;\nOnly experimented with the BERT base model.\n\n\n\n\n[1] Press, Ofir, Noah Smith, and Mike Lewis. \"Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation.\" International Conference on Learning Representations. 2021.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_LpaP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_LpaP"
+        ]
+    },
+    {
+        "id": "kKDukJISkUd",
+        "original": null,
+        "number": 3,
+        "cdate": 1666641935736,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666641935736,
+        "tmdate": 1669144367195,
+        "tddate": null,
+        "forum": "8taH4yjN62m",
+        "replyto": "8taH4yjN62m",
+        "invitation": "ICLR.cc/2023/Conference/Paper5124/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a deep study on positional encoding for transformer models. They visualize the positional attentions for various models and point out that the current learned positional encodings have two important properties: locality and symmetry. Based on the two properties, they design handcrafted positional encodings and show their advantages by conducting experiments.",
+            "strength_and_weaknesses": "Strength\n- Comprehensive studies.\n\nWeaknesses\n- There are too many important contents putting in the appendix. For example, the equation of the proposed encodings should be put in the main context.\n- Maybe I misunderstood. But why the symmetry is inconsistent with the examples \u201ca man playing an electric guitar on stage\u201d is totally different from \u201can electric guitar playing a man on stage\u201d? I feel like the symmetry just implies that the attention of the i-th word to the j-th word is almost equally important to the attention of the j-th word and the i-th word. From my point of view, the locality does capture the meaning change in this case.\n- In the original Transformer paper, they also design the positional encodings based on sine and cosine. It's satisfied the locality and symmetry properties as well and is reported to have similar performance to the learned positional encodings. So I am not super excited about the experimental results.\n\nQuestion\n- It's a bit interesting that handcrafted + learnable is better than handcrafted and learnable separately. Is it because handcrafted provides better initialization? I suggest to explore this direction more.",
+            "clarity,_quality,_novelty_and_reproducibility": "- Similar conclusions have already analyzed by previous work (such as visualizing the positional attentions and handcrafted sine and cosine positional encodings).\n- Something unclear to be clarified (see the second point of the weakness)",
+            "summary_of_the_review": "Something unclear to be clarified and similar conclusions have already analyzed by previous work.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_eCeS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_eCeS"
+        ]
+    },
+    {
+        "id": "Fkn3FqP36zE",
+        "original": null,
+        "number": 4,
+        "cdate": 1666656632610,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666656632610,
+        "tmdate": 1668619390895,
+        "tddate": null,
+        "forum": "8taH4yjN62m",
+        "replyto": "8taH4yjN62m",
+        "invitation": "ICLR.cc/2023/Conference/Paper5124/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies the role that positional embedding play in large language models through a series of probing tasks. In particular, they first use the previously proposed task of *Identical Word Probing (*where the same word is repeated and passed to a model and the attention weights in the attention-mechanism are visualized) and find that, similarly to previous work, these embeddings seem to pass two properties to the attention weights: symmetry and locality. \n\nThey then propose a new probing task, *word swap probing,* where words inside constituents are swapped and the predictions of the model are compared. For example, they observe that swapping word inside noun/verb/etc... phrases as little effect on the predictions, as expected, but that swapping agent and patient also don\u2019t change prediction when it should. They also propose a set of hand-crafted positional encodings that satisfy the locality and symmetry properties and show that they perform comparably to learned kernels. \n\nThe authors explore how positional and contextual encodings encode different linguistic features through a series of linguistic probing tasks, finding that positional encodings encode knowledge for lower-level, syntactic probing tasks while on semantic tasks contextual embeddings/encodings perform better. The authors conclude with a new proposed positional encoding mechanism, where-as an attention mechism is applied only to the positional encodings and after another mechanism is applied to the contextual encodings (ie embeddings), finding that it performs comparably or better than a BERT models trained with traditional positional encodings.",
+            "strength_and_weaknesses": "In terms of strenghs\n- The paper has a very throughout analysis of different models and positional encodings\n- It proposes several contributions, including a new probing task and several positional encoding methods.\n\nMy main problem with this paper at the moment is that it could be much better written: The overall narrative of the paper is unpolished and it\u2019s hard at first to understand the contributions of the paper. I had to go multiple times back-and-forward in this paper to understand what was new in it. The introduction of two different positional encoding methods in different sections is confusing (even if one only serves the purpose of understanding the role of positional encodings). A lot of attention/space is dedicated to locality and symmetry properties of positional encodings, which from my understanding, isn\u2019t very novel and has been explored in previous work.",
+            "clarity,_quality,_novelty_and_reproducibility": "As mentioned, the quality of writing undervalues the contributions of this paper. Some other aspects that could improve reading\n- Some methodology is under-discussed in the main paper. For example, the Identical Word Probing task used in Figure (2) task in never defined in the main text.\n- The paper has (in my opinion) an over-extended discussion around anecdotical cases. For example, the \u201ca man playing an electric guitar on stage\u201d is discussed multiple times in different sections of the paper.",
+            "summary_of_the_review": "This paper provides an extensive analysis of the role of positional embeddings in language encoders. While the analysis is throughout and covers many aspects, and there are some novel contributions in terms of diagnosis tasks and positional encoding methods, the quality of the narrative and writting is sub-par to the point that it's hard to understand the contributions of the paper. \nOverall I still think the contributions are novel enough to warrant this conference, and would be willing to increase my score if writing was improved.\n\nUPDATE: The updated manuscript improved the quality of writing massively. There are still some concerns that other reviewers highlighted (such as if these findings generalize to models other than BERT). Overall, raising my score to 6.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_WDLJ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5124/Reviewer_WDLJ"
+        ]
+    }
+]

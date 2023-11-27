@@ -1,0 +1,119 @@
+[
+    {
+        "id": "6545rzfP6_m",
+        "original": null,
+        "number": 1,
+        "cdate": 1666622356942,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666622356942,
+        "tmdate": 1666622356942,
+        "tddate": null,
+        "forum": "YlGsTZODyjz",
+        "replyto": "YlGsTZODyjz",
+        "invitation": "ICLR.cc/2023/Conference/Paper5835/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper considers using VAEs for out of distribution (OOD) detection . The authors argue that the standard normal prior for latent variables is too concentrated to allow a proper representation of \"in distribution\" data and propose to use instead a distribution that is concentrated around a sphere in the latent space. The authors show in experiments that this \"tilted Gaussian\" prior is indeed better suited for the OOD task.  Furthermore, they  propose an even stronger approach based on fine-tuning an ensemble composed of the learned VAE and an additional VAE with a different prior on test data.",
+            "strength_and_weaknesses": "Paper strengths:\nThe authors show that learning VEAs with the proposed alternative prior is feasible and provide a justified approximation for the KL-divergence between standard Gaussians and the \"tilted Gaussian\" prior. The OOD classification is then done by thresholding the estimated likelihood.  The authors propose a second and stronger OOD classification approach via an additional fine-tuning of an ensemble of two VAEs with different prior distributions, which is interesting (even though it introduces additional run-time cost). The experiments are convincing. They show that the first proposed method (based on estimated likelihood) is competitive and that the advanced method outperforms state of the art methods based on generative models.\n\nPaper weaknesses:\n- I find the motivation given in Section 4.2.1, which claims to explain known issues of generative models for OOD detection as a consequence of low entropy distributions of OOD data, rather not convincing. I would rather assume that the \"places\" to which a VAE encoder maps OOD data is not fully predictable since such data were not used in training. It might be just the \"smoothness\" of the learned encoder/decoder mappings, that in most cases ensures that OOD data have smaller likelihood in the resulting model. \n\n- I would have expected an experimental comparison with known VAE models that use more general priors as e.g. VampPrior.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well organised and clearly written. The proposed methods for OOD detection by VAEs with tilted Gaussian priors are novel and interesting. The experiments are well designed and convincing.",
+            "summary_of_the_review": "The \"out of distribution\" recognition task is of high practical relevance. The paper proposes interesting and novel methods for such tasks which are based on VAEs.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_Sn18"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_Sn18"
+        ]
+    },
+    {
+        "id": "4wIpvqIgm8",
+        "original": null,
+        "number": 2,
+        "cdate": 1666630723867,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666630723867,
+        "tmdate": 1666630723867,
+        "tddate": null,
+        "forum": "YlGsTZODyjz",
+        "replyto": "YlGsTZODyjz",
+        "invitation": "ICLR.cc/2023/Conference/Paper5835/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper presents two related ideas on the topic of unsupervised density modeling for out-of-distribution detection. The area of specific focus within this topic is variational autoencoders (VAEs).\n\nFirst, they suggest an alternative prior for the latent code z of the generative model. Instead of the standard multivariate Gaussian, they suggest that p(z) should be a *tilted* Gaussian (see Defn 3.1 and Fig 2), with one hyperparameter \\tau > 0. The key idea is that in high dimensions (when d_z is large), the highest density does not occur at one point (the origin), but \ninstead on a d_z-1 dimensional subspace wherever the vector z has magnitude such that ||z|| = \\tau.\n\nTable 1 compares these two candidate distributions in terms of the *volume* and *probability mass* assigned to the space whose density (pointwise) is above 25/50/75% of the maximum density. The tilted Gaussian's set has much larger volume and probability mass than the usual Gaussian (e.g. at 25%, tilted mass is >88%, standard is below 2%).\nAn essential claim is that because the tilted prior's high-density regions are larger, there is less \"conflict\" (my term) in the ELBO objective between the expected likelihood and the KL between q and prior.... the KL term can afford to map example features to more diverse codes, rather than crowding the origin.\n\nSeveral useful facts are presented about this distribution, which (I believe) this paper is the first to propose\n* normalizing constant is given in Eq 4\n* exact KL from any Gaussian to a tilted Gaussian is given in Eq 5\n* upper bound on the KL from any Gaussian to a tilted Gaussian is given in Eq 6\nEq6's tractable bound makes training expedient, as the exact KL is expensive.\n\nSecond, the work proposes a new paradigm for training OOD detection called \"Will it Move\". The idea is to first train an unsupervised VAE (with the tilted prior) on \"normal\" training data. Given an unlabeled set U containing both \"normal\" and \"OOD\" samples, we can learn to classify the OOD ones by *fine-tuning* according to a weighted objective (Eq 8) that sums an ELBO using tilted prior on the normal training data with an ELBO using the standard Gaussian prior on the mixed U data. The intention is that OOD samples in U will freely move (in latent space) to be better explained by the Gaussian prior, while the ID samples in U will stay put (because they are similar enough to the normal data).\n\nExperiments in Table 2 examine training on Fashion MNIST / CIFAR10 then distinguishing between ID samples and OOD ones from another dataset (MNIST or KMNIST ... / SVHN or LSUN or CelebA or ...). The Will-it-Move paradigm's AUROC is above 0.94 for all dataset pairs tested, while using the VAE ELBO as a OOD score in some cases gets only 0.67 for Gaussian prior and 0.88 for tilted prior.\n",
+            "strength_and_weaknesses": "\n# Strengths\n\n* The tilted prior is new to me and seems useful as a way to improve the volume of high-density regions\n* Results in Table 2 are convincing across many dataset pairs that the Will-it-Move idea works well for OOD\n* Comparisons to many other VAE-like approaches to OOD detection in Table 2 are welcome\n* Volume analysis in Table 1 is compelling argument for tilted prior over standard Gaussian\n\n# Weaknesses\n\nThere's several issues that I'd appreciate hearing about from the authors in rebuttal\n\n* W1: Several AUROC scores far less than 0.5 seem suspicious\n* W2: Runtime Scalability of Will-it-move test?\n* W3: Experiments only compare to other VAE models\n* W4: Perhaps compare to a Gaussian prior with larger variance?\n* W5: Exact design choices could be more clear in paper",
+            "clarity,_quality,_novelty_and_reproducibility": "\n## Novelty\n\n### Contribution 1: Titled normal prior\n\nThe definition of the tilted Gaussian appears new (to me)\nNo related work is cited, so I conclude the authors claim the definition of this distribution as a contribution.\n\nOne possibly related distribution to cite is the Skew-Normal distribution: https://en.wikipedia.org/wiki/Skew_normal_distribution\n\nI do think that some more work could be done by the authors to situate this distribution in the broader literature of \"tilted\" distributions within statistics. Even defining what statisticians mean by \"tilted\" would be helpful.\n\n### Contribution 2: Will it move (WIM) for OOD detection\n\nI'm rather familiar with OOD literature, and I don't know of approaches that \"fine tune\" the encodings of a probabilistic model at \"test time\", so this seems novel enough to me. In terms of context and comparisons, I think enough related work on how to turn probabilistic models into OOD scores has been cited already.\n\nIt may be interesting to connect the WIM idea with the sub-field of positive-unlabeled learning (PU learning).\n\n\n## Quality\n\n\n### W1: Several AUROC scores far less than 0.5: suggest max(AUROC,1-AUROC) instead\n\nReporting AUROC scores below 0.5 (chance) always suggests that something odd is happening. Indeed, Fig 3 and Table 2 each show several dataset pairs where AUROC goes well below 0.5. What is probably happening is what is described in \"Do Deep Generative Models know what they don't know?\", where the OOD dataset images are *simpler* than the ID images (e.g. MNIST simpler than Fashion MNIST), and thus the OOD images get *higher* likelihood scores (flexible deep models can reconstruct them better), so if we threshold out low likelihood we select OOD more often than ID. This phenomena has been widely reported.\n\nWhat to do about it? I suggest that what should be reported here is max(AUROC, 1.0 - AUROC). In otherwords, allow for post-hoc \"flipping\" of all classifier decisions if you discover it is much better for the pair of datasets under consideration. This is logically coherent (could use a small validation set if you want to be careful) and should resolve some issues with Table 2. For example, the Gauss method applied to MNIST vs CIFAR10 currently reports an AUROC of 0.0 (not bold), but in fact this means a perfect classifier can be built (and should be bolded), as long as we know to flip the prediction. \n\nWithout such changes, I worry naive readers will take the wrong messages away from some of Table 2.\nIt would be fine to mark such cases with an asterisk or similar, so that it's clear when flipping is applied.\nIt would also be fine to provide as a target dataset a mix of simpler and more complex images, to show that in \"real\" applications such tricks don't always work.\n\n### W2: Scalability of Will-it-move test?\n\nNeeding to run parameter updates *at test time* for the WIT task seems expensive. Can you clarify how the runtime is for the datasets you're looking at and better discuss the pros/cons of this procedure in light of runtime concerns?\n\n### W3: Experiments only compare to other VAE models\n\nThe current paper nicely examines results within the subfield of VAE models.\nHowever, plenty of other work from diverse methods pursue the OOD detection problem, and the paper could perhaps have a larger impact if more effort was made to compare to other work outside of VAEs or even outside deep generative models.\n\nFor example, deep learning approaches such as:\n\n* NDCC: Novelty Detection Consistent Classifiers (Cheng & Vasconcelos CVPR 2021)\n* ODIN: (Liang, Li, and Srikant ICLR 2018)\n\nor countless others, including other paradigms for DGMs based on GANs or normalizing flows\n\nI don't think this is strictly necessary and I understand if it is too much effort, but I think the payoff of such experiments is that the tilted VAE's performance could be understood by a broader community. Please understand I'm less interested in asking \"did you beat state of the art?\" and more interested in understanding \"how does this recent VAE advance fit into the big picture? how far would VAEs have to improve to compete against X?\".... Without this big picture, I'm worried the impact of the paper would be to VAE-focused researchers only (though I still think that is enough to get published).\n\n\n\n### W4: Perhaps compare to a Gaussian prior with larger variance?\n\nTo better understand the advantage of the approach, I'm interested in comparing it to a (simpler) alternative.\nI'm not totally convinced this alternative would work better, but I'd appreciate the authors' thoughts.\n\nIf the claim is that the volume of \"high density\" needs to be large, perhaps this could be accomplished by keeping the Gaussian prior, but allowing its variance to increase (perhaps by a lot). \nWe fix the prior's covariance at identity for reasons of simplicity, but it could be any multiple of identity as long as the scale is fixed.\n\nThis thought is motivated by a post-hoc analysis of Fig 1.... if the \"radius\" of the prior were just made larger, but the encoder and decoder were held fixed, clearly more data points would lie in the high-density regions and at least some of the claimed benefits of the tilted prior could be achieved by a (simpler) Gaussian one.\n\n\n## Reproducibility\n\n### W5: Exact design choices could be more clear in paper\n\n* What value of hyperparameter \\tau is used\n* How to balance minibatches of the multi-task Will-it-Move objective? esp if X is larger than U or vice versa?\n* What encoder architecture is assumed?\n* What decoder architecture?\n\nSeems like some of these choices are mentioned in Supplement, but could be better foreshadowed in main paper, and supplement could offer a nicer table (not just a dense paragraph) for easy lookup.\n\n## Clarity \n\nOverall, I found the manuscript rather easy to follow. \n\nOne point of note is that its actually well-understood that in high dimensions, the mass (not density) of a Gaussian concentrates in a thin spherical shell at some distance from the origin, rather than near the origin.\n\nSee:\n* Blog post by John Cook: https://www.johndcook.com/blog/2011/09/01/multivariate-normal-shell/\n* Fig. 3 in paper by Betancourt: https://arxiv.org/pdf/1701.02434.pdf#page=8\n\nSec. 3.2 says that for the tilted prior, \"the radii ||z|| of points drawn from this distribution are near \\tau with high probability\". It's useful/important to note that (surprisingly), that for some (different) radius, the same can also be said for the Gaussian. Naturally, this is just an interesting connection, not trying to say anything is at issue in the comparison of relative volumes/masses of the high-density regions in Table 1.\n\nMinor issues:\n\n* in Sec. 2.2, the claim that one-sided tests of the likelihood \"performs surprisingly poorly\" probably needs a citation\n* typo at bottom of page 2: \"used construct more\"\n* typo on page 6: \"over a single of sample\"\n\n",
+            "summary_of_the_review": "Overall this paper has two ideas that both seem elegant and useful, especially the tilted Gaussian prior as a way to avoid KL collapse problems (all examples push to the origin in code space).  Technical novelty is high, ideas appear sound, experiments are convincing. I recommend accepting.\n\nI do look forward to hearing the authors' thoughts during discussion period: I think I raised a few points that will improve the paper further.\n\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_damh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_damh"
+        ]
+    },
+    {
+        "id": "Q68N3nyUS1u",
+        "original": null,
+        "number": 3,
+        "cdate": 1666682440329,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666682440329,
+        "tmdate": 1666682440329,
+        "tddate": null,
+        "forum": "YlGsTZODyjz",
+        "replyto": "YlGsTZODyjz",
+        "invitation": "ICLR.cc/2023/Conference/Paper5835/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper addresses the problem that the high probability density region of the ordinary Gaussian prior becomes small as the latent dimension increases in VAE.\nThe authors proposed a tilted Gaussian. This distribution on the hypersphere is exponentially larger in volume than the Gaussian according to the dimension. It is easy to use because it is close to the ordinary Gaussian in terms of formulation, and we can straightforwardly implement the algorithm on top of the naive VAE.\nThey also proposed the Will-It-Move test, where they fine-tune the parameters of the VAE to improve OOD detection performance further.\nExperimental results on multiple public datasets demonstrate that the proposed method performs better than existing methods.",
+            "strength_and_weaknesses": "*Strength\n- The model is easy to implement by changing the parameter definition in the naive VAE algorithm.\n- The model is reasonable to the problem they address and simple enough as it only has a single hyperparameter.\n\n*Weaknesses\n- Although the WIM test is reasonable for their purpose, it uses samples from both the training and the OOD distribution. I wonder how we can access OOD distribution. Also, if we can have access to the OOD distribution, why don't they simply use samples from the OOD distribution itself?\n- Section 2 is unclear in relation to the proposed method. Especially, Section 2.1 just lists existing methods.\n- It is better to have a more detailed discussion on and comparison with the hyperspherical VAE (Davidson et al., 2018), which also uses hyperspherical.",
+            "clarity,_quality,_novelty_and_reproducibility": "*Clarity\n- How do the authors compute mu^*?\n- The format of the caption for Table 1 has some problems.\n- There is no description for Isoradial projection.\n- In Figure 3, it is better to describe what each chart is, e.g., \"the result in each step ??\". Also, this figure is not described in the main text.\n- typo: in the caption of Figure1, \"the tiltled VAE.\"\n\n*Quality\n- Please see the above comments.\n\n*Novelty\n- The proposed method seems to be novel.\n\n*Reproducibility\n- Code is available on GitHub.",
+            "summary_of_the_review": "The proposed method is reasonable, and the experiments are good.\nHowever, the comparison is only with the anomaly detection methods, and there is no comparison with the VAE variants that are proposed with the same motivation as the proposed method.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_T18J"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5835/Reviewer_T18J"
+        ]
+    }
+]

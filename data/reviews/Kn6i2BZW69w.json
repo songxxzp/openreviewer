@@ -1,0 +1,158 @@
+[
+    {
+        "id": "ynVMkIetau",
+        "original": null,
+        "number": 1,
+        "cdate": 1665729396189,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665729396189,
+        "tmdate": 1665729396189,
+        "tddate": null,
+        "forum": "Kn6i2BZW69w",
+        "replyto": "Kn6i2BZW69w",
+        "invitation": "ICLR.cc/2023/Conference/Paper177/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper introduces a novel idea of reducing memory footprint during training by dropping elements in the intermediate tensors whose absolute values are closest to zero.\n\nThis paper makes clear contribution in terms of the following aspects:\n* proposed a novel approach that is different than gradient checkpointing which requires recomputation, activation compression which uses quantization rather than sparsification or gradient approximation which has a pre-define fixed threshold.\n* induces a natural noise reduction that could benefit SGD convergence, which is theoretically proven and justified by experiments;\n* demonstrates the effectiveness of the approach with comprehensive experiments, which shows that in most of the cases, most (70% - 90%) of the elements in the intermediate tensor could be dropped with even better accuracy.\n",
+            "strength_and_weaknesses": "Strength\n* The unsurprisingly positive side effect of helping noise reduction in SGD convergence makes this method outstanding, specifically compared with some of other gradient approximation or quantization works, which if not tweaked carefully to balance with memory saving, could lead to inferior performance;\n* The proposed approach can be simple enough as a pure python plugin to a PyTorch model (Appendix A.4), which is an advantage to practitioners who wanted to quickly test;\n* This approach does not require rematerialization, is orthogonal to quantization, and do not have performance overhead compared with methods like GACT which requires to time-consuming profiling.\n\nWeakness\n* Saving the indices, which is an 32bit integer or possibly 64bit on large tensors, could be extra non-trivial storage overhead. The possibility of swapping them to CPU, which as mentioned in the paper indeed helps to mitigate the issue, would incur another overhead of slow transfer between CPU and GPU. Consider an optimistic case where 90% of the elements are pruned (fp32), but needs one extra int32 index, the compression rate becomes 5x. Compared with 4bit quantization which is 8x, it does not have significant advantage; In the worse case, if only 70% of the elements are pruned to retain accuracy, then the compression rate drops to 1.67x, which would be less ideal in general.\n* The general tradeoff between training speed vs accuracy is unclear. While Table 5 presents comparison between the proposed method and activation quantization approaches, it is not clearly demonstrated how this approach is compared with other lines of work, for example, rematerialization.\n* It\u2019s unclear why the proposed work is only used in FC cache in Table 5. Would be more positive evidence if it could show benefit of pruning other caches while retaining the same level of accuracy. Appendix A.5 provides some general explanation on the inapplicability to a network\u2019s first and last layer, which is completely understandable, but it is not clear how it is connected to Table 5.\n* GPU sorting or min-K could be highly non-trivial to optimize beyond using `torch.topk`, and this could possibily incur non-negligible overhead in terms of training speed. The overhead of such operation is not carefully studied in the experiment section.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "* Clarity and quality. The paper is clearly written and extremely easy to follow.\n* Novelty. The paper made clearly novel contribution on top of existing work.\n* Reproducibility. The code is uploaded to an anonymous repo for reproducing the results. Although the reviewer does not have bandwidth to carefully check given limited time span of review period, the experiments and theory in this paper look quite clear and consistent.\n",
+            "summary_of_the_review": "This paper is clearly written with clear novelty and contribution. The reviewer believes that its strength outweighs its limitation, and would love to get some clarity in rebuttal, specifically on weakness 1, 2 and 3.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_zGSK"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_zGSK"
+        ]
+    },
+    {
+        "id": "EyFfxY-2Qkd",
+        "original": null,
+        "number": 2,
+        "cdate": 1666641236160,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666641236160,
+        "tmdate": 1668814814059,
+        "tddate": null,
+        "forum": "Kn6i2BZW69w",
+        "replyto": "Kn6i2BZW69w",
+        "invitation": "ICLR.cc/2023/Conference/Paper177/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a strategy, named DropIT, for activation compression during training. The proposed method can be applied with random dropping or min-k based dropping. The authors show that DropIT can also reduce the gradient noise during training, and provided empirical evidence that the proposed method can drop up to 90% intermediate tensor elements on FC and convolutional layers.",
+            "strength_and_weaknesses": "Strength\n\n- The paper is well-written and easy to understand. The graphical illustration really helps build understanding of the proposed technique.\n- The evaluation is on large scale vision datasets (eg. ImageNet and COCO), also vision transformers are included.\n\nWeakness\n\n- A large volume literatures on Dropout are ignored by the authors? I would think this line of work is directly related to this paper.\n- I am not comfortable with the theoretical analysis shown in Section 3.4.\n    - $g_{min-k} = \\alpha g_{gd} + \\beta n(0, \\sigma)$ (Equation 8) does not look like a good approximation to your min-k operation. Simply speaking, min-k is non-linear and I do not really understand how this linear function can approximate that well?\n    - The convergence proof is confusing. Surely your bound is tighter if you use a learning rate that is scaled by $\\frac{1}{\\alpha}$? Like this does make too much sense, if I say SGD has a smaller LR and its LR scale is greater than my noise scale, it is surely tighter under the L-smooth condition. What is the actual point of showing this? Do you consider this as a proof?\n- The theoretical gain is not achievable.\n    - The results in Table3 is confusing. In my opinion, the authors are saving \u2018memory bandwidth\u2019 but not really using smaller GPU memory. Are you sure your forward activation values are kept on-chip (in SRAM or Cache) in between the feedforward and backward computation? I thought the GPU model will have to push these values into DRAM after finishing one layer of forward computation and load them back from DRAM for backward computation? If this is the case, the proposed technique does not optimize for SRAM space, but in fact is optimizing for the DRAM bandwidth. I will say this is an equally important topic for efficiency since most training workloads are DRAM-bound, but I do not think this paper is making a clear discussion on this.\n    - \u2018the memory reduction is precisely controlled by \u03b3,\n    *i.e*. \u03b3 = 90% means the reduction is 11.26\u00d70.9\u2019 \u2192 I simply disagree with this statement and do not think this is achievable with out custom silicon.",
+            "clarity,_quality,_novelty_and_reproducibility": "I raised most of my concerns in the Weakness part.\n\nThe quality of the theoretical analysis is worrying as I have pointed out. I think the approximation and convergence analysis are a bit stretched. The paper also ignores a good number of prior work of different forms of Dropouts, which are directly connected to this proposed idea. \n\nOn the novelty side, the paper also claims that they are the first to look at the activation sparsification problem. I would suggest many alternative Dropout papers are attempting this same problem but probably from a different angle. The training efficiency perspective on this problem is novel, but not really any of these random or min-k based dropping methods. \n\nThe authors also mainly focused on theoretical performance gains instead of the real implications of the proposed method. You can not simply say fine-grained sparsity of this can directly translate to hardware benefits. There are generally overheads in this. For instance, you might want to reduce the storage using index-based storage or certain encoding schemes. But this also means there is an overhead of encoding and decoding, the authors simply ignored these factors, and I suggest this makes the reported performance gains unrealistic.",
+            "summary_of_the_review": "Given the concerns on the theoretical analysis and novelty of this paper, I do not think it is ready to be accpeted to ICLR at its current format. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_xcyW"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_xcyW"
+        ]
+    },
+    {
+        "id": "BJg3D9jdBC",
+        "original": null,
+        "number": 3,
+        "cdate": 1666660322678,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666660322678,
+        "tmdate": 1666660322678,
+        "tddate": null,
+        "forum": "Kn6i2BZW69w",
+        "replyto": "Kn6i2BZW69w",
+        "invitation": "ICLR.cc/2023/Conference/Paper177/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper presents a method that reduces the memory usage of training/fine-tuning for convolutional neural networks and vision transformers. The idea is to prune away insignificant intermediate tensors (i.e., those that are low in value) required for the back-propagation. The method has been tested on DeiT and R-CNN models. It has been shown that up to 90% of intermediate tensors can be pruned away without any performance degradation. However, this reduction doesn't linearly translate into memory reduction. For example, it was shown that with sparsity rate of 90%, there is only about 1 GB memory reduction when fine-tuning DeiT on CIFAR-100.",
+            "strength_and_weaknesses": "(Strengths:) In general, I believe the idea of reducing the memory usage of neural networks during training/fine-tuning is of paramount importance specially for transformer models. This work is an attempt to address this issue with a novel idea. The paper is also well-written and easy to understand.\n\n(Weaknesses:) However, I am not convinced about the effectiveness of the proposed method due to lack of sufficient experiments. More precisely, the choice of DeiT and fine-tuning it for 1000 epochs doesn't reflect the effectiveness of the proposed method. Instead, I believe ViT models should be used for fine-tuning which requires up to 4 epochs. Moreover, I expected to see more CNNs tested such as ResNet-18/MobileNet on CIFAR and ImageNet as an example. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "I believe the contribution of this paper is novel and clear. The code has been provided which makes the results reproducible although I haven't tested the code myself.\n ",
+            "summary_of_the_review": "In my opinion, the contribution of this paper is novel and is addressing a real challenge which memory usage reduction during fine-tuning. However, the proposed method was not fully tested which makes me wonder about its generality. For the rebuttal, I would like to see how this method works when fine-tuning ViT-base model on CIFAR-10 and CIFAR-100 for 3 to 4 epochs, which is a common practice. It would be great to include some results from BERT on GLUE and SQuAD tasks too (again when fine-tuning it for a couple of epochs). I would also like to see some results for small-size CNNs such as MobileNet on ImageNet-1K or even ResNet-18 on CIFAR-10. I am also wondering why there is only 1GB memory reduction on DeiT when gamma is 90% in Table 5; how much of the memory usage is dedicated for the intermediate tensors out of 6.66GB in this case? ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_Ltqg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_Ltqg"
+        ]
+    },
+    {
+        "id": "eI95MljzbH-",
+        "original": null,
+        "number": 4,
+        "cdate": 1667258327551,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667258327551,
+        "tmdate": 1669656965167,
+        "tddate": null,
+        "forum": "Kn6i2BZW69w",
+        "replyto": "Kn6i2BZW69w",
+        "invitation": "ICLR.cc/2023/Conference/Paper177/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose DropIT, where stashed intermediate tensors are pruned via a Top-K function and converted to a compressed sparse format. This sparsification reduces the memory consumption of stashing, enabling larger batch sizes and faster training. During the backward pass, the stashed tensors are first decompressed to dense representation since the sparsity is usually not high enough for sparse matmuls to be effective.\n\nThe authors show that by scaling the learning rate, DropIT can actually decrease the gradient noise.\n\nExperiments show that a variety of vision benchmarks such as DeiT and R-CNN can be trained on datasets like ImageNet and COCO with 70%-90% sparsity without reducing the final accuracy. This is a great result. However, wall-clock time improvements seem less impressive, without only about 10% run time improvement in Table 5.\n\nEDIT: raised score from 5 to 6 after rebuttal",
+            "strength_and_weaknesses": "Strenghts:\n - Straightforward and easy to implement method that seems fairly robust, at least on vision benchmarks\n\nWeaknesses:\n - The idea is not novel: it's already part of the GIST paper. GIST combines Min-K stashed activation compression with binarized stashed ReLU masks. The GIST paper is systems-focused and contains multiple techniques. This paper gives a more focused study of the Min-K sparsity technique and is still a useful result.\n - The memory savings is great but the actual run time savings seem unimpressive. Perhaps it would be better to focus on benchmarks which are much more memory-hungry such as Transformers. These models are typically trained with microbatching and increasing the microbatch size should grant a big performance boost.\n\nQuestion:\n - The proof that DropIT can decrease the gradient noise depends on Equation 8, where the noise introduced by the Min-K sparsification is modeled as $g_{min-k} = \\alpha g_{gd} + \\beta n(0, \\xi^2)$. It's not clear to me why this noise is zero-mean. In CNNs, we have non-symmetric activation functions like ReLU. Min-K sparsity would change the means of the stashed activations tensors, which in turn would change the means of the gradient update tensors. I am not an expert here so I would like to see the authors' response.\n\n[1]https://ieeexplore.ieee.org/abstract/document/8416872?casa_token=0XtaIex9huQAAAAA:RwuzO_eOgBsEms6Y3XESj66oOFSaihBdAT0vVXlq_YETd7xlO_ifa9feFTDT0wrGlU1KKM7D",
+            "clarity,_quality,_novelty_and_reproducibility": "The authors give some details on how their pytoch implementation works, and combined with the simplicity of the technique it should not be hard to reproduce the results. The paper is also clear and well-written.\n\nThe theoretical proof seems to be based on shaky assumptions. I'm not an expert in this area so I would like to see the authors' response.\n\nThe novelty of the idea does not seem very high. I already mentioned the GIST paper and there may be other papers which study pruning on stashed activations.",
+            "summary_of_the_review": "DropIT proposes Min-K pruning of stashed activations to save memory. This isn't a novel idea and has been investigated in at least the GIST paper[1]. However, this paper is still useful as it presents an isolated study on this technique and presents impressive results on memory savings for vision benchmarks.\n\nI would raise the score if I see additional discussion regarding the assumptions for the theoretical proof and results on more memory-intensive benchmarks.\n\n[1] https://ieeexplore.ieee.org/abstract/document/8416872?casa_token=0XtaIex9huQAAAAA:RwuzO_eOgBsEms6Y3XESj66oOFSaihBdAT0vVXlq_YETd7xlO_ifa9feFTDT0wrGlU1KKM7D",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_GQ3x"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper177/Reviewer_GQ3x"
+        ]
+    }
+]

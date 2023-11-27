@@ -1,0 +1,159 @@
+[
+    {
+        "id": "CsuYjFVbEA-",
+        "original": null,
+        "number": 1,
+        "cdate": 1666350850042,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666350850042,
+        "tmdate": 1670616854450,
+        "tddate": null,
+        "forum": "en9V5F8PR-",
+        "replyto": "en9V5F8PR-",
+        "invitation": "ICLR.cc/2023/Conference/Paper5206/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposes a new model to enforce hard logical constraints on neural networks. The model proposed, called NASR, has three main components: \n\n1) A neuro-solver: which is made of one (or more) neural networks. It takes as input the datapoints in the dataset and returns an initial prediction (which might contain violations of the constraints), \n\n2) A Mask-predictor: which is a neural-based model that takes as input the initial prediction made by the neuro-solver at returns a mask over such output. The $i$th element of the mask is equal to 1 if the $i$th element needs to be changed in order to satisfy the constraints, and 0 otherwise. \n\n3) A Symbolic Solver: which (as the name says) is a symbolic solver that will correct those elements of the prediction (or facts, as they are called in the paper) which have been identified by the mask-predictior to make the final output compliant with the constraints. ",
+            "strength_and_weaknesses": "**Strengths:**\n- The paper presents the novel idea of selecting which facts need to be changed in order to make the prediction complaint with the constraints. This effectively reduces the search space for the solver, and it might be a useful intuition for future works.\n- The presented method is intuitively easy to understand. \n\n**Weaknesses:**\n- The paper needs significant rewriting. It lacks a lot of details, and while intuitively is easy to follow, when it comes to the details it becomes a very fuzzy. This is the main problem I have with the paper, which I though think can be solved with some effort. See comments on Clarity below for more details on how to address the issue.\n- The experimental analysis has been done on a single task which limits the understanding on how this model would perform in real-world datasets. \n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "**Quality:** \n\nThe paper presents a good idea but the clarity of the paper and the experimental results can be improved. If that is done the quality of the paper can be greatly improved. \nThe are also some mistakes/things I struggle to understand: \n1. At page 3 you write that $\\mathcal{Z} = [0,1]^k$ where $k$ is the size of the input. Shouldn't it be the size of the output (i.e., $|\\mathcal{Y}|$)?\n2. The equation at page 3 and 6 are different. One is the Hadamard product between $ns()$ and argmax() while the second is the product of two argmax. Is there a reason behind this difference?\n3. Also, what does it mean to do the argmax between two argmax? \n4. It is not clear to me what would happen if the output of the neuro-solver would satisfy the constraints. In that case, can the mask-predictor change the prediction anyway or is there a check done that the masking cannot be done in that case?\n5. In general, when $D_{mp}$ is created shouldn't there a check that the noise added actually create assignments that violate the constraints? E.g., suppose that I have the constraint $A \\to B$ and that the correct assignment is $A=1, B=1$, I can add noise to this and generate $A=0, B=1$. This instance still satisfies the constraints, and thus it would not be helpful in training the mask predictor. \n6. In the generation of the sudoku dataset for the mask predictor you write \"In general, the latter option is not always possible: for example, in the case of the visual Sudoku task (see Example 1), this would require the ability to sample minimal symbolic Sudoku boards uniformly at random, which is still a non-trivial open problem.\". Why would you need to sample a minimal symbolic Sudoku? Doesn't the mask-predictor anyway take as input the full output (i.e., the sudoku completely filled in)? \n7. What is $\\delta$ in the reward equation?\n8. Can you add in the appendix how you encode the sudoku rules? (i.e., the full list and which fragment of logic has been used). Also how do you encode the rules that only the masked facts should be changed?\n9. Would it be possible to also have the experiment on the scene graphs? (This wouldn't dramatically changed my assessment, however it would make the paper much more complete)\n10. The authors have only proposed as baseline to add a solver on top of the perception module. However it is not the only possible way. In [1], for example, the authors show how it is possible to correct a complete prediction so that the constraints are guaranteed to be satisfied. Would it be possible to add such baseline?\n\n\n**Clarity:**\n\nThe paper needs some rewriting. Here there are some suggestions: \n- In the introduction itself, the authors should clearly state what is: \n  1. The expressivity of the constraints admitted by the framework. It seems to be it is propositional logic, as the pipeline requires to have one element in the prediction of the neuro-solver for each atom (this implies that even if you admit predicates, the space of your variables is still finite, thus the predicates are just syntactic sugar)\n  2. The exact machine learning task on which the authors are trying to impose the constraints (e.g., supervised, semi-supervised etc.). It seems to be the fully-supervised setting. An in particular a case of a multilalbel classification problem, where each output must be in $[0,1]$ and there can be multiple labels associated to each prediction. \n- Figure 1 and example 2 are misleading. The authors implement and test only for the sudoku task, and they do not go into the details on how the architecture would look like for the problem of object detection with constraints. Thus they should be removed. \n- The paper states that as long as there are no false negatives the constraints are satisfied. This I think would apply only in the case of object detection (while in the case of the sudoku, everything should work even with false negatives. Is that correct?)\n- Figure 1 and 2 are misplaced. They should be moved earlier in the paper.\n- I personally would change the \"Neuro-Solver\" to simply neural-network. This would make the pipeline much clearer. (In the end these will literally be one or more neural networks). \n- You introduce the \"Perception\" module only in the \"Experimental Setup\" section, which might be confusing for the reader. I would again just talk about \"neural network\" and then say that for the particular sudoku task you have one that takes care of the perception and one to fill in the sudoku. \n\n**Novelty:**\n\nThe paper presents a novel idea which has the potential to have an impact on the community. Some of citations are missing, see the list of references below.\n\n**Reproducibility:**\n\nWill the authors make the code publicly available?\n\n**References:**\n[1] Eleonora Giunchiglia, Mihaela Catalina Stoian, Salman Khan, Fabio Cuzzolin, Thomas Lukasiewicz. ROAD-R: The Autonomous Driving Dataset with Logical Requirements. Machine Learning, 2022.\n\n[2] Nicholas Hoernle, Rafael-Michael Karampatsis, Vaishak Belle, and Kobi Gal. MultiplexNet: Towards fully satisfied logical constraints in neural networks. In Proc. of AAAI, 2022.\n\n[3] Marc Fischer, Mislav Balunovic, Dana Drachsler-Cohen, Timon Gehr, Ce Zhang, and Martin Vechev. DL2: Training and querying neural networks with logic. In Proc. of ICML, 2019.\n\n[4] Alessandro Daniele, Emile van Krieken, Luciano Serafini, Frank van Harmelen. Refining neural network predictions using background knowledge. Machine Learning, 2022.\n\n[5] Paolo Dragone, Stefano Teso, and Andrea Passerini. Neuro-symbolic constraint programming for structured prediction. In Proc. of IJCLR-NeSy, 2021.\n\n*Please update the paper accordingly (the current score has been given according to the potential of the paper)*\nNote: the new experimental results are **not** a necessary addition.  ",
+            "summary_of_the_review": "TL;DR: paper could improve a lot if some parts were rewritten and a lot of details clarified. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_ndKP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_ndKP"
+        ]
+    },
+    {
+        "id": "GYNC8xBqThZ",
+        "original": null,
+        "number": 2,
+        "cdate": 1666620353777,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666620353777,
+        "tmdate": 1668868262169,
+        "tddate": null,
+        "forum": "en9V5F8PR-",
+        "replyto": "en9V5F8PR-",
+        "invitation": "ICLR.cc/2023/Conference/Paper5206/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors introduce a hybrid neuro-symbolic pipeline, denoted NASR, that combines a fast but inaccurate neural reasoner with an accurate but slow symbolic reasoner.  The two components are combined using a neural module trained to identify mistakes in the output of the neural reasoner, and using the symbolic reasoner to fill in the gaps.  The resulting pipeline is trained using a mixture of supervised learning and reinforcement learning.  Empirical results on four visual sudoku data sets with different characteristics are reported, showing improved accuracy over the neural reasoner at a much lower cost than a fully symbolic solution.",
+            "strength_and_weaknesses": "PROS\n- The method is significant in that it targets a known weakness of existing NeSy approaches.\n- The proposed pipeline (and accompanying training procedure) is intuitively appealing.\n- The empirical results on visual sudoku look promising.\n- The text is generally well structured and easy to follow.\n- The related work section is reasonable and gives an overall fair representation of existing approaches.\n\nCONS\n- The evaluation only considers visual sudoku.\n- The results do not report the time required for training the various models.\n- Improvement over the symbolic baseline can be small if the neural method makes many mistakes.\n- Some references are missing.\n- Some aspects of the pipeline are a bit unclear.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity**:  The paper is reasonably well written.  There are only a handful of minor issues with the text, including:\n- p 4: \"that do not violateS\"\n- p 5: \"r indicates the reward\" - not defined yet, please add a forward pointer to the equation in p. 7.\n- p 6: \"ADADELTA optimizer\" -> the ADADELTA optimizer.\n- p 6: \"the number of output layer being 1-dimensional\" - rephrase.\n- p 7: \"we improve the performance\" -> improve on\n- Equations: the $\\odot$ symbol stands for Hadamard product, but it cannot\npossibly work as intended if the deleted cells have value $0$, as shown in,\ne.g., Figure 2.\nThese can all be easily fixed.\n\n(1) One aspect that is not clear from the text is how (masked) neural predictions that are unsatisfiable are handled by the symbolic solver.  This information *might* be part of Table 3, which was however hard for me to parse.  One option would be to split the Table into several sub-tables and provide more hand-holding in its interpretation.\n\n**Quality**: The proposed approach is sensible and appears to work as intended.  The idea of using attention to combine a neural and a symbolic solver is actually quite clever.  The empirical evaluation also looks solid, but incomplete, for two reasons.\n\n(2)  NASR is only evaluated on visual sudoku.  This is an interesting application in that it is to complex for many exact NeSy approaches.  It is also true that the evaluation encompasses four different visual sudoku datasets.  However, given that NASR scales better than existing approaches, it would have been nice to apply it to more complex and realistic applications than sudoku alone.\n\n(3) A more critical issue is that - as far as I could see - the training times are not reported.  (Did I miss anything?)  Training time is not a detail:  the *whole point* of NASR is to make inference more efficient at the expense of training time.  As long as the neural solver is task-specific (meaning that it has to be trained anew for each task being solved), training time cannot be trivially amortized across tasks, although it *can* be amortized across test points.  Now, training NASR involves combining supervised learning and an RL stage, which in turn requires to invoke the symbolic solver (correct?).  I expect this step to be quite time consuming, and actually more time consuming than training a neural solver alone (no RL).  The symbolic solver easily wins the competition, as it requires no training at all.  Of course I might be mistaken, and it could be that NASR is very efficient to train - but this should be clearly shown empirically.  A plot that compares training times of different approaches would be very useful - and I think quite important.  I expect the authors to address this point in their rebuttal.\n\nI *will* increase my score once this issue is resolved.\n\n(4) Sometimes NASR is just not worth the hassle.  Namely, if the neural reasoner performs poorly, NASR is essentially equivalent (in terms of accuracy) to but slightly slower (due to the less-than-useful neural step) than the symbolic reasoner.  See for instance Figure 7.  This is mentioned briefly in p. 2, but I think it deserves to be stated more clearly in the main text, at the bare minimum in the conclusion.  This is not a huge deal for me, and the issue of how to prevent this from happening could be addressed in future work.\n\n(5) One final aspect is that it is not clear (to me, at least) how infeasible (masked) neural predictions are dealt with, as in this case the symbolic solver cannot provide any output.  How are these accounted for in the performance measures?\n\n**Novelty**:  The proposed method is novel and clearly positioned against the state of the art.\n\nA few methods (like ProbLog, Vampire, etc.) mentioned in the \"Symbolic Solver\" paragraph are used without references.  These should be added.\n\n**Reproducibility**  The paper is not accompanied by source code and I could not find any mention of plans for future code releases.\n\nAs a side note, I am grateful that the authors didn't make use of the \"thinking fast and slow\" slogan.",
+            "summary_of_the_review": "Intuitively appealing and promising contribution with flawed empirical evaluation.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_8rGg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_8rGg"
+        ]
+    },
+    {
+        "id": "6cTlJfSiAq",
+        "original": null,
+        "number": 3,
+        "cdate": 1666642994202,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666642994202,
+        "tmdate": 1666642994202,
+        "tddate": null,
+        "forum": "en9V5F8PR-",
+        "replyto": "en9V5F8PR-",
+        "invitation": "ICLR.cc/2023/Conference/Paper5206/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors proposes a new framework that tries to combine neural perception and symbolic reasoning.  In general, this framework consists of three components: (1) Neural Solver (NS) (2) Mask Predictor (MP) and (3) Logical Solver (LS).  The NS computes an initial solution for the input tasks, then the MP predicts the incorrect parts of the initial solution and a masked solution (the incorrect parts are masked as 0) is generated. Fianlly, this masked solution is fed into the LS to get the final solution. The NS and MP models are trained with supervised learning firstly. Then the reinforcement learning (RL) is employed to fine-tune the NS and MP models leveraging the LS results. The authors validate their framework on Visual-Sudoku tasks and shows that in most cases, they can perform better than the state-of-the-art methods.",
+            "strength_and_weaknesses": "Strength:\n    (1) Use reinforcement learning to combine the perception part and the reasoning part. \n    (2) Predict the incorrect parts of the initial solution to reduce the search space for the logical solver.\n\nWeaknesses:\n    (1) It would be better to show how the framework on another domain, now there is only one single domain: Visual Sudoku. The predicate classification task is really a good one.\n    (2) It would be better to give or show the inituion of why the framewoke works. From the experimental results, the framework works better on SATNET dataset (avg 36 hints) v.s. the 17hints dataset. That's very interesting since from the sudoku perspective, 17 hints is supposed to be much harder than 36 hints. But for here, this can be understand since 36 hints means more images (\"noisy digits\") that the model needs to recongnise. So here comes the question, is the framework learned which digits are classified incorrect or learned something else?\n    (3) The input of the mask predictor is only the solution generated by the neural solver, following (2), then this mask predictor cannot consider the error of the perception results. So I am wondering if the mask predictor can also consider use the the original problem as part of the input? \n    (4) Some literature are missing, e.g., [1][2][3]. Though you are focusing on different perspectives and the setting are not the same. But it would be better to talk about them in the paper.\n\n[1] Brouard, C\u00e9line, Simon de Givry, and Thomas Schiex. \"Pushing data into cp models using graphical model learning and solving.\" International Conference on Principles and Practice of Constraint Programming. Springer, Cham, 2020.\n[2] Mulamba, Maxime, et al. \"Hybrid classification and reasoning for image-based constraint solving.\" International Conference on Integration of Constraint Programming, Artificial Intelligence, and Operations Research. Springer, Cham, 2020.\n[3] Bai, Yiwei, Di Chen, and Carla P. Gomes. \"CLR-DRNets: Curriculum Learning with Restarts to Solve Visual Combinatorial Games.\" 27th International Conference on Principles and Practice of Constraint Programming (CP 2021). Schloss Dagstuhl-Leibniz-Zentrum f\u00fcr Informatik, 2021.",
+            "clarity,_quality,_novelty_and_reproducibility": "Questions:\n    (1) For the RL refinement step, both the NS and MP models' parameters are updated right?\n    (2) For computing the accuracy, are you directly compare the answers and the labels?\n\nMinor:\n    (1) For fig 2, the two from the last digit of the ns solution, masked solution vector are not match.",
+            "summary_of_the_review": "The paper proposes a novel neural-symbol framework. Its basic idea is to use neural network to compute an intial answer, and predict the incorrect parts of it then use a logical solver to get the final answer. However, the framework is only validated on a single domain: visual Sudoku. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A.",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_6T4W"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_6T4W"
+        ]
+    },
+    {
+        "id": "szmFVms4-bO",
+        "original": null,
+        "number": 4,
+        "cdate": 1666663768507,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666663768507,
+        "tmdate": 1666663768507,
+        "tddate": null,
+        "forum": "en9V5F8PR-",
+        "replyto": "en9V5F8PR-",
+        "invitation": "ICLR.cc/2023/Conference/Paper5206/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a novel neurosymbolic method that allows an efficient (but potentially error-prone) neural solver to be corrected by a precise (but inefficient) symbolic module. The intervention from the symbolic module is mediated by a learned neural module, allowing the overall system to exploit both the efficiency of the neural solver, and the precision of the symbolic solver only when needed. ",
+            "strength_and_weaknesses": "## Strengths\n- The proposed method presents an interesting and elegant way of combining the relative strengths of neural and symbolic reasoning approaches. The use of a learned module to decide when to invoke the symbolic reasoning module is a nice solution that avoids the circular challenge of using a symbolic module to check whether the neural solver is correct, and the approach works surprisingly well (one might have expected that the learned mask-predictor would suffer from the same limitations that the neural solver does in the first place).\n- The method performs well against other neurosymbolic approaches (and against purely neural or purely symbolic approaches) on a challenging visual sudoko task.\n- The model is robust to perceptual noise, and can solve problems in an efficient manner.\n\n## Weaknesses\n- The major weakness is that the approach still requires the use of handcoded, task-specific knowledge, i.e. the rules of sudoku are programmed into the symbolic module, rather than being able to learn the rules or receive the rules in natural language as human reasoners do. However, despite this limitation (which is broadly shared by current neurosymbolic methods, and a major open challenge), the proposed method constitutes an elegant solution to a specific problem in integrating neural and symbolic approaches, and should be a useful contribution to the literature.\n\n### Other notes\n- There is an interesting connection between the proposed approach and the 'two systems' perspective in psychology (e.g. [1] and [2]).\n\n[1] Kahneman, D. (2011). Thinking, fast and slow.\n\n[2] Sloman, S. A. (1996). The empirical case for two systems of reasoning. Psychological bulletin, 119(1), 3. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written, and the proposal is novel. The authors do not provide code for the reported simulations.",
+            "summary_of_the_review": "The paper proposes an interesting neurosymbolic method that can exploit both the efficiency of a neural reasoning approach together with the precision of a symbolic reasoning approach, mediated by a neural module that learns when to invoke the symbolic module. The method elegantly optimizes the tradeoff between efficiency and precision, and outperforms competing neurosymbolic methods.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_PAJH"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5206/Reviewer_PAJH"
+        ]
+    }
+]

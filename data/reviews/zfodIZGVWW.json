@@ -1,0 +1,119 @@
+[
+    {
+        "id": "7V-WrBk7Ha",
+        "original": null,
+        "number": 1,
+        "cdate": 1666620694213,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666620694213,
+        "tmdate": 1666620736425,
+        "tddate": null,
+        "forum": "zfodIZGVWW",
+        "replyto": "zfodIZGVWW",
+        "invitation": "ICLR.cc/2023/Conference/Paper3198/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The submission presents a new optimizer, Amos, which can heuristically determine the initial learning rate and adjust its decaying schedules for LR and L2 regularizer during training. The experiments show that Amos converges faster than AdamW on language models.",
+            "strength_and_weaknesses": "#### Strength\n- The proposed optimizer can adaptively choose the decaying schedules for learning rate the L-2 regularize coefficient during training.\n- There are fewer sensitive hyper-parameters compared to the previous optimizers.\n\n#### Weaknesses\n-  Since the optimizer is not explicitly designed for the language model, the absent experimental results on other tasks, such as the vision or RL tasks, degenerate the contribution of this optimizer.\n- Some typos, e.g., step one in Algorithm 1, in which the $g_t$ should be bold. The bold and normal formats are used at will in the $\\alpha_t$ below Eq.(2).\n- Actually, $\\hat{v}_t$ is not nearly equal to $E[M_2(g_t)^2]$. In general, we have $$(\\hat{v}_t - E[M_2(g_t)^2])^2 \\leq \\beta (\\hat{v}_t - E[M_2(g_{t-1})^2])^2 + \\frac{\\beta^2}{1-\\beta}(E[M_2(g_t)^2] - E[M_2(g_{t-1})^2])^2$$ (see [1], Lemma 2), which is large until convergence. Hence it is strange to replace  $\\hat{v}_t$ with $E[M_2(g_t)^2]$.\n- The approximation in Eq.(4) is confusing. Since $\\alpha_t g_t$ can be small when we are close to convergence, but $\\rho_t \\theta_t$ is not. We can not ignore $\\rho_t \\theta_t$ directly.\n- Why $\\rho_t $  should be normalized by $E[M_2(g_t)^2]$? The stated reason ``the L2-regularizer should (on average) not depend on the norm of $g_t$'' seems weak and not solid.\n- Lack the comparison to some strong baselines, such as LAMB and Adam's variants.\n\n\n[1] Stochastic compositional gradient descent: algorithms for minimizing compositions of expected-value functions.",
+            "clarity,_quality,_novelty_and_reproducibility": "The wring and presentation is not good, and there are too many heuristic derivations without further details. However, if all the heuristic parts are right, the novelty is enough. Since how to adaptively adjust the LR and weight decay with theoretical guarantee remains open.",
+            "summary_of_the_review": "Due to the missing (1) experimental results on general tasks, (2) lack of convergence guarantee, and (3) too many confusing mathematic details in derivations, currently, I hold a negative score on the paper.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_Fga8"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_Fga8"
+        ]
+    },
+    {
+        "id": "7YzRdPMyyb",
+        "original": null,
+        "number": 2,
+        "cdate": 1666726348265,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666726348265,
+        "tmdate": 1666726348265,
+        "tddate": null,
+        "forum": "zfodIZGVWW",
+        "replyto": "zfodIZGVWW",
+        "invitation": "ICLR.cc/2023/Conference/Paper3198/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes Amos, an adaptive optimization method for deep learning. It combines various aspects, most notably an adaptive weight decay term and a step size involving an expected scale of model parameters, informed by structural knowledge about the model being trained. It is evaluated in extensive experiments on pretraining Transfomer models.",
+            "strength_and_weaknesses": "### Strengths\n\n1. Improving optimization algorithms and/or estimating their hyperparameters using structural knowledge of the model is a very promising research direction. To my knowledge, this is one of only a few papers that uses model characteristics to inform the optimization hyperparameters (beyond layer-wise normalization and/or step sizes).\n\n2. The experiments on Transformers are extensive and consistently demonstrate significant improvements over state-of-the-art competitors. Given the importance and immense cost of such training tasks, that is a very significant improvement.\n\n### Weaknesses\n\n1. My main criticism is that the method combines a large number of aspects without proper ablations. If a method gives very good results, but we can't pin down which innovation really drives that improvement, the scientific value is greatly diminished. Comparing Eq. (1) to Adam or RMSProp, I can see at least 6 components/innovations that could be seen as largely independent and I would like to see investigated in isolation\n    - The factored learning rate involving the \"model-oriented scale\"\n    - The learning rate in front of the weight decay term being the square of the learning rate scaling the gradient ($\\xi^2 / \\hat{v}_t$ vs $\\xi/\\sqrt{\\hat{v}_t}$)\n    - The multiplier $M_2(g_t)$ in front of the weight decay term.\n    - The decay scheme for the global step size ($d_t$)\n    - The additional decay scheme for the weight decay term ($c_t$)\n    - Computing $\\hat{v}_t$ across model parameters instead of using running averages.\n\n2. The derivation of Amos is a series of approximations (some very crude) and heuristics/intuition. I could put some caveats on almost all the steps of the derivation. While the authors clearly state that this is a heuristic derivation, at some point we have to ask ourselves whether such a derivation is helpful or just obfuscates. Some steps that I found particularly problematic:\n    - Equation (6) suggests a particular _ratio_ of $\\alpha_t^2$ to $\\rho_t$. It is completely unclear to me how that should motivate $\\rho_t \\propto M_2(g_t)^2 / \\mathbf{E}[M_2(g_t)^2]$ and $\\alpha_t \\propto 1/\\sqrt{\\mathbf{E}[M_2[g_t]^2]]}$. This choice satisfies Eq. (6), but so does an infinite number of other choices.\n    - Assumption 1: This assumes $\\mathbf{E}[\\Vert g_t\\Vert^2] \\leq C \\cdot \\Vert \\mathbf{E}[g_t]\\Vert^2$, i.e., the variance of a stochastic gradient needs to go to zero as the true (expected) gradient goes to zero. That is the so-called interpolation regime: every data point is fit perfectly. This seems unlikely to be fulfilled in LLM pretraining tasks.\n    - Interpretation of $\\xi$. Sorry, but this is almost absurd. First, if we assume the per-example gradients to come from a zero-mean distribution this would imply $\\mathbf{E}[g_t] = 0$, in direct contradiction to the Equation below. Second, why should  $$\\left(\\frac{1}{N} \\sum_{i=1}^N x_i \\right)^2 = \\frac{1}{N^2}\\sum_{i=1}^N x_i^2$$ hold? That is simply not true and is not a meaningful approximation in any way. Third, the law of large numbers is completely irrelevant here.\n\n3. The experiments focus entirely on Transformer architectures. While this is certainly a model class of great practical importance, I would find it highly desirable to check the extent to which these findings transfer to other families of architectures and data modalities. Given the resources that went into the experiments involving Transformers, it would be \"cheap\" to throw in a ResNet on CIFAR-10/CIFAR-100/ImageNet. If Amos performs amicably there - great. If not, this would alert us of the fact that some of the proposed heuristics are specific to Transformers (which would be perfectly fine).",
+            "clarity,_quality,_novelty_and_reproducibility": "**Quality:** While the method achieves very convincing experimental results, the _scientific_ quality of the paper is subpar in my opinion. The heuristic derivation involves so many approximations, heuristics, and \"intuitive arguments\" that I found it more confusing and obfuscating than helpful. Some of my specific concerns are listed above (weakness 2). Even more importantly, the method combines various, largely independent, innovations and it is entirely unclear to me, which of these actually contribute to the experimental success (weakness 1). In terms of experiments, the investigation on Transformers is extensive, but I would have expected to see experiments involving, e.g., ResNets on some vision data, for breadth (weakness 3)\n\n**Clarity:** The paper is generally well-written. Some of the steps in the derivation are not well-motivated in my opinion (weakness 2).\n\n**Originality:** The method proposes several innovations compared to Adam that are definitely novel. I think the general direction of using structural knowledge about the model (here: expected scales of the optimal weights) is a very promising yet under-explored.",
+            "summary_of_the_review": "I list several scientific shortcomings above, which are think are pretty fundamental. In light of that, the good experimental results for the proposed method on their own do not warrant acceptance in my opinion.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_f9Uo"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_f9Uo"
+        ]
+    },
+    {
+        "id": "846anjxQl3E",
+        "original": null,
+        "number": 3,
+        "cdate": 1667343108438,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667343108438,
+        "tmdate": 1667343108438,
+        "tddate": null,
+        "forum": "zfodIZGVWW",
+        "replyto": "zfodIZGVWW",
+        "invitation": "ICLR.cc/2023/Conference/Paper3198/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper introduces Amos, a first-order DL optimizer with adaptive learning rate and decay. The proposed contributions are:\n\n* Outperforming AdamW for pre-training language models\n* Providing guidance for hyperparameter tuning\n* Reducing memory usage\n* Allowing continuous training and resuming from checkpoints\n\nThe proposed optimizer leverages model-specific information, by partitioning the model parameters and adding a per-partition norm constraint. This norm constraint, together with the gradients, is used to adapt the learning rate and weight decay.\nThe parameter update involves a series of newly introduced hyperparameters with different functions, and the paper provides a series of heuristic derivations and experiments to set their values.\n\nIn experiments pre-training current architectures for NLP tasks, Amos is shown to outperform AdamW with 2019 settings in terms of speed, performance and memory usage.",
+            "strength_and_weaknesses": "The idea of using model information to replace the hyperparameters is great, we have good examples of similar strategies from the weight initialization literature (Xavier, He) and extending this to adaptive optimizers sounds exciting. Furthermore, this combines also very nicely with the interplay between learning rate and decoupled weight decay, which has been recently proven useful to solve issues with first-order adaptive DL optimizers like Adam. Finally, it also brings better performance using less parameters in a block-wise regularized fashion.\nCombining these ideas is a very promising and well-grounded line of work.\n\nStill, the question of why specifically this model, is not fully clear to me, for the following reasons:\n* Compared to its counterparts, the model introduces increased complexity, but the motivation (section 1) lists reducing complexity as a goal. This is expected to be achieved through the \"guidance for hyperparameter tuning\", but I'm not convinced of such guidance (see next points).\n* There is a clear effort to justify the choice for heuristics and hyperparametrizations, but the efforts lack clarity both in substance and presentation (see notes on clarity) and the claim that they are \"theoretically supported\" is in many cases not true: many crucial aspects are resolved through trial-and-error (see e.g. end of page 6 and Appendix 7). In many cases, I feel like an ablation study showing the contribution of the added components in an empirical way would be clearer and more compelling.\n* Even the more analytical hyperparameters don't give the impression of being \"easier\" to find. E.g. for \"eta\", Appendix A.3 shows that many factors must be taken into account in a non-automated way, and new architectures may require careful tuning. What if we e.g. have batchnorm instead of layernorm? How is the concept of \"range\" characterized? Will it hold under non-stationary, noisy and/or sparse gradients?\n* Regarding stability: While very promising, the experiments aren't comprehensive enough to convince that the proposed settings (theoretical or empirical) are not highly specific to the results reported, due to the amount of hyperparameters and tuning involved. One thing that could help with this is to analyze the loss landscape stability (see AdamW paper), and/or extend experiments to other tasks and architectures.\n* Regarding experiments, it is unclear how many settings were tried before finding the reported Amos hyperparametrizations. This makes difficult to compare the different optimizers in terms of their hyperparametrization budgets. Furthermore, error bars are not provided: they would be welcome (together with a more publication-friendly plotting mechanism), although the differences between Amos and the rest are very significant.\n\nA couple of thoughts regarding weight decay:\n* Please correct footnote in page 2: Loschilov&Hutter precisely mentions that L2 and weight decay are not equivalent for adaptive optimizers (beyond empirical success), the footnote seems to operate on the opposite idea.\n* We saw that decoupled weight decay helps overcoming convergence issues with Adam. Would re-introducing adaptive weight decay also re-introduce some of those issues?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "* Regarding novelty (see my notes from before): I think this is a really nice and promising idea, and it is well embedded in recent and relevant literature.\n\n* Regarding quality (see my notes from before): I think the execution of the idea is heuristic-heavy, and contains a substantial degree of arbitrariness and complexity that is not justified in a compelling way. Experiments are very promising, but in my opinion do not make up for this.\n\n* I had several clarity issues reading the paper, related to notation, formulation, experiments, paper structure and general model clarity:\n  * The explanation for obtaining eta is unclear to me (\"match input/output range\", \"not dominate\"). Concept of \"range\" and its importance is not introduced. It seems that it would depend on weight distribution as well?\n  * Model-oriented scale: overloading of variable W is confusing.\n  * Notation: the lack of distinction between scalar+global variables (eta, c) and per-partition scalars hinders clarity. Indexing partitions would help\n  * Gamma: It is unclear how this component \"makes trained weights empirically converge to eta_tilde\". If eta_tilde is the norm for the full model, how does gamma achieve this without using that global information?\n  * weight decay: Could be expressed in a clearer way. Why is it affected by the decay multiplier \"d\", while it also has its own decay factor \"c\"? The explanation in 4.2 introducing L2 doesn't seem to address this\n  * Section 4.2 aims to provide a \"heuristic derivation\", but it is very difficult to follow since it is not lemma-oriented. At many points, it is not clear what are we expecting to see, and how exactly the discussed equations are related to Amos. E.g. after equation 5: \"now recall that we are given eta such that...\": this was claimed, but I don't see in the paper where this is satisfied. In general, I found the section very confusing as presented. My suggestion would be to resort to a lemma-oriented structure, and whenever the derivations aren't possible or don't lead to watertight conclusions (e.g.  inequalities, broad assumptions), provide experiments that support the ideas presented (e.g. tight bounds), as done in Appendix A.5.\n  * Experimental benchmarks: What is the difference between pre-training and regular training when comparing the observed results? If we are expected to train afterwards, wouldn't the final result (including the training after pre-training) be the actual target to compare? Note that recent results on \"critical learning periods\" (e.g. Achille et al 19). show that issues with pre-training can affect final performance.\n\n* Regarding reproducibility: The paper contains a clear description of the steps to be computed. The experiments are based on well-known, public architectures and benchmarks. Quantitative results are provided, although without error bars. Resources required are high but not unreachable. For the missing details, the authors pledge to provide an open-source (JAX) implementation, upon publication. If that is the case and assuming no lucky seeds, reproducibility issues are expected to be minimal.",
+            "summary_of_the_review": "My opinion is that this contribution clearly deserves attention from the community, but it needs more work: It presents an optimizer of increased complexity, involving a substantial amount (potentially arbitrary) heuristics. Experiments are very promising, but there are methodological concerns.\nThe paper would greatly benefit from improvements in clarity, both in formulation and presentation, especially given the increased amount of details needed to understand and tune this optimizer.\n\nFor those reasons I'm inclined to marginally reject, but I thank the authors for their contribution and encourage them to address/answer some of my points above in order to reconsider my evaluation. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_Ebn1"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3198/Reviewer_Ebn1"
+        ]
+    }
+]

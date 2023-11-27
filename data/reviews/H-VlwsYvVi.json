@@ -1,0 +1,158 @@
+[
+    {
+        "id": "kn8FcGMZpAa",
+        "original": null,
+        "number": 1,
+        "cdate": 1666353672402,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666353672402,
+        "tmdate": 1668860152098,
+        "tddate": null,
+        "forum": "H-VlwsYvVi",
+        "replyto": "H-VlwsYvVi",
+        "invitation": "ICLR.cc/2023/Conference/Paper2122/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes speculative decoding, a decoding scheme for conditional NLG that aims to achieve the quality of traditional autoregressive approaches while retaining the speedup improvements of non-autoregressive approaches. The proposed framework combines a non-autoregressive transformer (NAT) to generate \"draft\" sequences of $k$ tokens and a standard autoregressive transformer (AT) to verify the proposed drafts. Since verification is parallelizable, this approach performs faster than usual autoregressive decoding. The experimental results reported by the authors show that this approach performs on par with greedy decoding and achieves a considerable inference speedup.",
+            "strength_and_weaknesses": "Strengths:\n- The motivation of the paper is strong.\n- The paper is very clear and pleasant to read.\n- The experimental results are promising. In particular, achieving a 3x or more speedup while performing on par with greedy decoding and beam search in both MT and summarization is a significant achievement.\n- The fact that, in addition to MT, the paper also presents results for abstractive summarization is a plus.\n\nWeaknesses:\n1. The major weakness of the paper is its very high similarity with Blockwise Parallel Decoding (Stern et al., 2018). The decoding algorithm is essentially the same, with the only significant difference relying on the fact that the proposed method uses two separate models to generate drafts and verify them. The NAT model employed in this work is more advanced, but those advancements were also brought from prior work.\n2. The proposed approach works as a faster alternative to autoregressive mode-seeking algorithms (greedy decoding or beam search). Extending its principles to sampling-based approaches (top-k, nucleus, typical decoding, etc) would be an interesting contribution that is missing.\n3. The claim that SpecDec offers a \"3\u00d7 *lossless* speedup for abstractive summarization\" is an overstatement, since SpecDec performs slightly worse than the teacher model.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is very clear and the presentation quality is high. The technical novelty is limited, given the similarity with Blockwise Parallel Decoding. Empirically, the results are very promising, assuming that they can be reproduced. The authors do not disclose whether they are willing to release their code and models publicly, which would be an important contribution to reproducibility.",
+            "summary_of_the_review": "Although the experimental results are convincing, the technical contribution is quite limited, as the proposed method is essentially Blockwise Parallel Decoding enhanced with other techniques from prior work. Thus, I am not convinced that the work has enough novelty to be presented in a top venue like ICLR. However, the authors' rebuttal and/or the discussion with the remaining reviewers may persuade me.\n\n**Update after rebuttal:**\nThe authors\u2019 response has reinforced my positive opinion about the empirical relevance of their work. Nonetheless, I still think this work consists of a well-engineered refinement of prior work, with limited scientific contribution. Hence, my opinion is that this work is a better fit for an NLP-specific venue and, for this reason, I decided to keep my score. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_KQwP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_KQwP"
+        ]
+    },
+    {
+        "id": "XB3pQf5hcz",
+        "original": null,
+        "number": 2,
+        "cdate": 1666576735007,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666576735007,
+        "tmdate": 1666576735007,
+        "tddate": null,
+        "forum": "H-VlwsYvVi",
+        "replyto": "H-VlwsYvVi",
+        "invitation": "ICLR.cc/2023/Conference/Paper2122/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper introduces a faster decoding algorithm for autoregressive translation (AT) called Speculative Decoding (SpecDec), which achieves lossless speedup. Specifically, they combine the strengths of AT and non-autoregressive translation (NAT) and adopt a *draft* and *verify* strategy. For each step:\n- The NAT first generates a fixed-length sequence of draft tokens in parallel.\n- Then the AT verifies the longest acceptable prefix, reserves it, and proceeds to the next step. \n\nSpecDec's speedup comes from a high degree of parallelism: NAT is parallel, and the AT verification process uses teacher-forcing, which is also parallel. SpecDec is lossless because the verification step uses a strict strategy to determine the longest acceptable prefix, i.e., each token in the prefix must be the top-1 choice for the AT model. As a result, SpecDec produces the identical sequence as the greedy search of the AT. They also relax the criteria for the acceptable prefix and form the variant SpecDec++, which achieves more speedup and potential improvement of translation quality. They perform empirical experiments to demonstrate the superior performance of SpecDec and detail analyses of the key components and hyper-parameters. ",
+            "strength_and_weaknesses": "Pros:\n+ The most important contribution of this paper is that the proposed accelerated decoding algorithm is lossless. Unlike other acceleration methods for AT, such as half-precision inference, SpecDec produces the same results as greedy search. For online commercial translation systems, it is important to maintain the stability of the translation results.\n+ The design of SpecDec is clever. The authors have done a good job combining the advantages of NAT and AT. AT is serial, but it is parallel when using teacher-forcing. The authors take this to verify the NAT results, which greatly improves the overall parallelism.\n+ The SpecDec++ variant further speeds up the decoding by relaxing the acceptance criteria and potentially gives better results than the original.\n+ The authors provide an exhaustive analysis of the proposed algorithm, including the impact of hyper-parameters, the number of tokens accepted, etc. \n\nCons:\n- The major weakness is that SpecDec can not apply to beam search (beam size > 1). At least, it is not straightforward and not discussed by the authors. This makes \"lossless\" a bit overclaimed since AT model with beam search usually produces better results than greedy search.\n- The NAT model causes additional memory cost, which decreases the max batch size. From this point of view, SpecDec reduces parallelism to a certain extent.\n\nMinor:\n- It would be better to complete the conditions for the probabilities in Eq 6-7 to avoid misunderstanding whether the probabilities are AT or NAT models.\n- Table 1: What is the batch size?",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is well-written and easy to follow without too much effort. The authors provide clear examples to help the reader understand the proposed algorithm. The theoretical formalization and empirical experiment are rigorous and support the main claim. Experimental setups and hyper-parameters are clearly given and should have good reproducibility. SpecDec is inspired by speculative execution in computer architecture, but no previous work applies it for sequence generation, which is not straightforward.\n",
+            "summary_of_the_review": "This paper proposes a lossless acceleration algorithm for AT that cleverly combines the features of AT and NAT. The experimental results show that the proposed method performs well in terms of efficiency and performance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_cfnL"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_cfnL"
+        ]
+    },
+    {
+        "id": "oIh82I2SeHK",
+        "original": null,
+        "number": 3,
+        "cdate": 1666605169692,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666605169692,
+        "tmdate": 1666605169692,
+        "tddate": null,
+        "forum": "H-VlwsYvVi",
+        "replyto": "H-VlwsYvVi",
+        "invitation": "ICLR.cc/2023/Conference/Paper2122/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The decoding method called SpecDec(++) that is proposed in this paper is a combination of auto-regressive and non-autoregressive machine translation (AT & NAT). The token-by-token decoding in vanilla AT is replaced by a drafting step in which the NAT model predicts k tokens in advance, and a verification step in which the k tokens are checked against the AT decoder output. NAT predictions are discarded as soon as they are not in the top-\\beta AT results. The authors demonstrate speed-ups over beam search of 4.5x without significant BLEU loss.",
+            "strength_and_weaknesses": "The idea is motivated well, makes intuitive sense, and is described carefully. Speed-ups without loss in quality - what's not to like?\n\nThere are, of course, caveats, and it would have been good if the paper was more explicit about its limitations.  Perhaps the most obvious one is that SpecDec can only guarantee to match AT greedy output, and it is not clear how to use AT beam search as a base. The entire architecture is significantly more complex: Training a teacher model, distilling an AT and NAT model from it, and then combine both models in this decoding scheme is more cumbersome to maintain than running simple beam search. But I think that there are also non-obvious caveats when interpreting the results in Table 1 - both in terms of translation quality and speed up.\n\nTranslation quality: AT verifier b=5 and b=1 are *very* close together in terms of BLEU. It is known that KD moves beam search and greedy search closer together, but this is closer than I would expect. I also find it odd that the \"AT verifier (b=1)\" - besides on En-De - consistently outperforms the \"Teacher\" even though the teacher has the same or bigger model size and uses beam search instead of greedy search. So to get a better sense of how to read this I would suggest to\n(a) report SpecDec results with the Teacher as the AT verifier\n(b) report BLEURT/COMET instead / in addition to BLEU scores\nAnother thing to keep in mind is that (unlike SpecDec) SpecDec++ is a model combination for which an AT+NAT ensemble would be the right baseline to compare BLEU scores with.\n\nSpeed ups: The total number of compute operations is higher for SpecDec than for vanilla greedy AT decoding, so speed-ups are due to parallelization. But better parallelization can also be achieved by simple (sentence-level) batching, which (I believe) is not used in this work. The greedy AT runtime with sentence-level batching would be a valuable baseline. Furthermore, in practice, the decoder in Transformer encoder-decoders are often replaced by recurrent models due to the time complexity of self-attention.\n\nThe paper sometimes tends to oversell the contributions. For example: \"demonstrating its potential to become a de facto decoding standard in the future\nfor efficient and lossless seq2seq generation\" is a bit much. Perhaps unintentionally, calling SpecDec \"lossless\" suggests the absence of search errors which is misleading.",
+            "clarity,_quality,_novelty_and_reproducibility": "The experimental setup is described clearly. To the best of my knowledge, combining NAT and AT in this way is novel.",
+            "summary_of_the_review": "A reasonable idea, but the reported translation quality and speed-ups would need some work to make me trust them more. Tendency to oversell.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_GbVT"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_GbVT"
+        ]
+    },
+    {
+        "id": "v4XSvNWvo-",
+        "original": null,
+        "number": 4,
+        "cdate": 1666657167581,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666657167581,
+        "tmdate": 1666657167581,
+        "tddate": null,
+        "forum": "H-VlwsYvVi",
+        "replyto": "H-VlwsYvVi",
+        "invitation": "ICLR.cc/2023/Conference/Paper2122/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper aims at accelerating translation inference without quality degeneration. The authors extend the idea of \"Predict-Verify\" to \"Draft-Verify\" and propose SpecDec which leverages a non-autoregressive model to produce the next k tokens followed by an autoregressive model verifying these predictions in parallel. Only accepted tokens are used as outputs. The authors also propose relaxed strategies for the verification which allows more drafted tokens accepted, further gaining efficiency. Results on WMT14 En-De, WMT16 En-Ro, and CNN/Daily Mail show improved inference speed with comparable and even better generation quality.\n",
+            "strength_and_weaknesses": "**Strengths:**\n\n* The proposed idea is intuitive and easy to follow;\n* The generation performance looks promising, with good quality and inference speedup;  \n* SpecDec generalizes to different sequence generation tasks, including translation and summarization;\n\n**Weaknesses:**\n\n* The idea of speculative decoding has been explored before in the form of \"Predict-Verify\" [1]. This work is somehow incremental. While using a separate non-autoregressive model improves translation performance, it comes at the cost of increased memory usage.\n* Considering recent progress on NAT which obtains comparable and even better quality than its AT counterpart, the value of this paper becomes somehow questionable. \n* Comparison and experiments should be further improved to fully convince the readers.\n\n[1] Stern et al. 2018. Blockwise Parallel Decoding for Deep Autoregressive Models",
+            "clarity,_quality,_novelty_and_reproducibility": "1. Comparison and evaluation are confusing. How did you evaluate BLEU? [1] showed that inconsistencies in the use of tokenized BLEU lead to deviations of up to 1.7 BLEU. Besides, directly comparing BLEU scores with previous studies is meaningless as you used a Transformer-big model as the teacher while most previous studies used the Transformer-base model. \n\n2. While comparing speedup numbers across papers is also meaningless [2], it's good that the authors offered the speed numbers for previous studies using their own devices. If we could trust the previous numbers, then F-VAE is significantly faster than SpecDec (16.5x vs. 4.5x) and delivers comparable results to its teacher model [3]. Also, recent progress on NAT [4] showed very promising results. What would be the advantage of SpecDec compared to these improved NAT models?\n\n3. Based on [1, 2, 3], please include distant language pairs (En-Zh, En-Ja) for experiments to demonstrate SpecDec, and also report speedups on the CPU. Apart from BLEU, please also provide COMET.\n\n4. Your NAT model is actually a semi-autoregressive model, rather than a full NAT. \n\n5. As far as I know, semi-autoregressive models already achieve >3x speedups on CNN/Daily Mail with little quality loss [5]. \n\n[1] Schmidt et al., 2022. Non-Autoregressive Neural Machine Translation: A Call for Clarity\n[2] Helcl et al., 2022. Non-Autoregressive Machine Translation: It\u2019s Not as Fast as it Seems\n[3] Gu et al., 2020. Fully Non-autoregressive Neural Machine Translation: Tricks of the Trade\n[4] Huang et al., 2022. Directed Acyclic Transformer for Non-Autoregressive Machine Translation\n[5] Zhang et al., 2020. Fast Interleaved Bidirectional Sequence Generation ",
+            "summary_of_the_review": "While the paper presents some interesting results, the model is incremental to the \"Predict-Verify\" work and its comparison is often unfair as a large teacher model is employed. Besides, it's unclear whether the proposed SpecDec can achieve better quality-speed trade-off than recent advanced NAT models and highly optimized AT models.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_RP8T"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2122/Reviewer_RP8T"
+        ]
+    }
+]

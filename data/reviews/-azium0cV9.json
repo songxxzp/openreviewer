@@ -1,0 +1,237 @@
+[
+    {
+        "id": "Yb2ikQuadh",
+        "original": null,
+        "number": 1,
+        "cdate": 1666690831165,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666690831165,
+        "tmdate": 1666704279090,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies the efficient training of large language models on heterogeneous and preemptive instances.\nIt proposes SWARM parallelism and finds that training can be made communication-efficient with SWAM parallelism.\nEvaluation of a 13B model shows that the system achieves good training throughput and convergence.\n",
+            "strength_and_weaknesses": "Strength:\n- This paper studies an important and unsolved problem: training LLM outside HPC clusters with heterogeneous and preemptive instances.\n- The paper proposes a novel and interesting solution: SWARM parallelism, which is decentralized and highly adaptive.\n- Solid experiments with throughput and convergence analysis\n\nWeaknesses:\n- This paper uses too many approximate/lossy/asynchronous methods, which can harm the accuracy.\n- Stochastic wiring and adaptive rebalancing are local greedy adjustment approaches. However, I think if we know the computing speed and memory capacity of all devices, an optimal placement/routing can be computed. [1][2]\n- Section 4.2 's comparison is a little bit unfair. In a typical HPC cluster, there are typically multiple GPUs on a single node connected by high-speed NVLink. Under this more realistic setting, ZeRO Offload will perform better. If you look at the results in [3], they can achieve linear scaling on HPC clusters. The authors should compare against SOTA performance on the HPC cluster when they talk about \"ideal condition\".\n\n[1] Alpa: Automating Inter- and Intra-Operator Parallelism for Distributed Deep Learning, OSDI 2022  \n[2] Piper: Multidimensional Planner for DNN Parallelization, NeurIPS 2021  \n[3] Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM\n\nMinor:\nMissing a discussion of a recent and highly related paper: Decentralized Training of Foundation Models in Heterogeneous Environments (https://arxiv.org/abs/2206.01288)\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written with enough background information.\nThe proposed methods are novel.\nI believe most experiments can be reproduced. The code is available.\n",
+            "summary_of_the_review": "This paper proposes an interesting solution to an important problem. I am leaning toward acceptance.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_8Ywq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_8Ywq"
+        ]
+    },
+    {
+        "id": "ABLfTUUtVL3",
+        "original": null,
+        "number": 2,
+        "cdate": 1666822627543,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666822627543,
+        "tmdate": 1666822627543,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes SWARM, a system for training large language models (LLM) on alternative environments to HPC clusters that comprise of consumer-grade, preemptible, unreliable, and geographically distributed devices. SWARM employs pipeline parallelism to partition the model layers into pipeline stages on the distributed devices and coordinates the exchange of activations. SWARM uses randomized pipelines and rebalancing to handle node failures. Also, SWARM relies on the compute-bound nature of LLMs and low communication of pipeline parallelism for performance. ",
+            "strength_and_weaknesses": "The paper addresses an important problem of making AI innovations more affordable and thus more broadly accessible. The approach of pooling together many consumer-grade, heterogeneous, and preemptible resources is a promising one. Also, using pipeline parallelism to support LLM training is a reasonable solution. \n\nThe main issue is that the paper does not provide much new insight beyond prior work. Moreover, I feel the evaluation did not effectively address important functionality and performance questions: \n 1) I suspect that some form of redundancy is required to enable recovery. I did not notice any discussion of such redundancy. \n 2) How does recovery mechanism handle the loss of intermediate training state such as accumulated gradients, activations (including checkpointing state), model checkpoints, data loading iterator, etc.\n3)  I observe some issues in the performance results: \n     (1) It is unclear whether Figure 3 is measuring forward or/and backward pass of the layer(s)\n     (2) Reporting FLOP/GPU in Figure 3 would be more helpful to understand the baseline strength and claims of peak efficiency \n     (3) It is unclear whether 8-bit quantization is appropriate for GPT3 training, since it is part of performance claims\n     (4) The performance comparison in 4.2 is quite confusing because the size of GPT3-style model is unspecified. Also, GPipe needed \n           ZeRO-Offload to fit the model even though it uses pipeline parallelism. Is SWARM more memory efficient than GPipe? It is also \n          unclear whether the V100 is 16GB or 32GB because as that is important to understand why ZeRO-Offload cannot fit 4 GPT3 layers.  \n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "I feel the work could be improved on clarity, novelty, and reproducibility. As expressed earlier, more evaluation details could be provided to help understand the results.  ",
+            "summary_of_the_review": "The central claims that (1) model scaling results in computation scaling faster than communication, and (2) pipeline parallelism communication volume is the lowest of the training parallelism techniques are both previously known. This undercuts the main contribution of the paper. Also, I feel that the functionality and performance questions above concerning whether SWARM could replace HPC clusters for LLM training were unanswered. Although, I think the paper is going in the right direction on an important problem, I feel that it is incomplete. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_A2NV"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_A2NV"
+        ]
+    },
+    {
+        "id": "_gJYfC0iEo4",
+        "original": null,
+        "number": 3,
+        "cdate": 1667052384539,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667052384539,
+        "tmdate": 1667052384539,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies efficient large-scale neural network training. The authors observe that the larger the hidden dimension of models the less communication intensive. Based on such observation, the authors propose a heuristic-driven large model training method, namely SWARM.",
+            "strength_and_weaknesses": "Pros:\n\n1. The problem is well-motivated. Indeed, training large models is important but could also be computationally expensive and time-consuming. Existing model parallelism methods propose to assign each computation device with several layers and forward/backward sequentially (the input of one device is the output of another device).\nHowever, these methods are limited by the device memory issue and could be less efficient when the subset of layers assigned to each device requires different computation costs. Besides, each device could disconnect abruptly due to failure or preemption, which makes model parallelism more challenging.\n\n2. The proposed method is intuitive and easy to implement. I would always encourage more on a simpler method than some complicated algorithms with massive engineering efforts and sensitivity to hyper-parameters.\n\n3. Ablation study on training efficiency in experiment sections and appendix are quite sufficient. \n\nCons:\n\n1. Although this paper is more on the empirical side of distributed learning, I am still looking forward to seeing some discussion/results on its convergence properties on the theoretical side. For example, the authors could check existing async distributed learning papers and see how they show such kind of convergence properties.\n\n2. The main argument that the authors made on \"increasing the hidden dimension will reduce the computation load per device per unit of time ...\" in Section 3.1 is kind of ambiguous. According to my understanding, increasing the hidden dimension should increase both the computation cost and communication cost, we cannot conclude that ``reduce the computation load'' given the communication cost $O(n^2)$ grows slower than the computation cost $O(n^3)$.\n\n3. The experiment sections mainly focused on time efficiency. However, I am more interested in the trade-off between efficiency and model performance. Using async randomized temporary routing for large model training is expected to degenerate the model performance and I am interested in seeing how much it will affect the model performance.\n\n4. The presentation could be improved. For example, an experiment setup introduced could be given at the beginning of Section 4. Besides, Section 2 could be better organized to give readers a better overview of the pros and cons of the existing method. Moreover, the authors could use one paragraph to give a high-level introduction to their method in Section 1 instead of just saying \"replacing traditional pipelines with randomized temporary routing between swarms of peers\".",
+            "clarity,_quality,_novelty_and_reproducibility": "The presentation could be improved. \n\nThe method proposed in this paper sounds novel to me, however, I am not an expert in the applied side of async distributed learning.\n\nCode to reproduce the experiments is provided. The ablation study sounds solid to me, however, I would also expect to see a trade-off between accuracy and efficiency. ",
+            "summary_of_the_review": "This paper studies an important problem. The method is well-motivated and easy to implement/reproduce according to the descriptions in the paper. The ablation studies are efficient but I would also expect to see a trade-off between accuracy and efficiency. Meanwhile, for some theoretical results on convergence (similar to most distributed learning, e.g., FedAvg), the presentation could be improved and some arguments are ambiguous. Please refer to \"Strength And Weaknesses\" for details.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_r1H3"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_r1H3"
+        ]
+    },
+    {
+        "id": "OPW5hbKef6",
+        "original": null,
+        "number": 4,
+        "cdate": 1667169236572,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667169236572,
+        "tmdate": 1667169236572,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper studies the problem of training a huge deep neural network on a cluster with low interconnect bandwidth, unstable network, and preemptible nodes. The paper first shows that the computation-to-communication ratio goes up with larger models, indicating that using low-bandwidth clusters to train a huge model-parallelized model makes practical sense. Then, the paper proposes a new training algorithm named SWARM parallelism. It uses multiple devices to serve a single pipeline stage and schedules with a randomized algorithm for load-balancing and fault-tolerance. The system in addition move devices across pipeline stages to minimize the time spent on the slowest pipeline stage.",
+            "strength_and_weaknesses": "**Strengths**\n\n1. In general, I think the authors are working on an important and interesting new direction of distributed training. The randomized scheduling and load-balancing algorithm is novel and is insightful for the broader research community.\n2. I find most experiments of the paper can show the effectiveness of the proposed SWARM parallelism method.\n\n**Weakness**\n\n1. The square-cube law shows that the total size of tensors to be communicated is grows at slower quadratic rate compare to the total amount of compute (flops), which grows at a faster cubic rate. However, given a fixed per-GPU memory constraint, larger models require more GPUs, which will in turn makes the total communication cost higher (because the communication cost is related to the total number of devices involved). How does the square-cube law apply to this case?\n2. It would be great to include an experiment that applies SWARM parallelism to a plain Transformer model without any layer sharing/compression to purely evaluate the performance of SWARM parallelism.\n3. For pipeline parallelism, how do you schedule the forward and backward passes? Do you use the GPipe schedule or the 1F1B schedule? Please elaborate.",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is well-written and easy-to-understand. This is not the first time I\u2019m reviewing this paper, but I found the current version much clearer than the old version. The paper should be able to be reproduced with the open-sourced code by any researchers and engineers with access to a typical GPU hardware. I find this paper novel, and the detailed comment can be found in the discussion in the strength above.\n\nIn terms of paper writing, I would suggest move more related works into the appendix and move more experimental results to the main paper.",
+            "summary_of_the_review": "I found the paper novel and well-written. I vote for accepting the paper.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_rTpG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_rTpG"
+        ]
+    },
+    {
+        "id": "eo_gJWmnddx",
+        "original": null,
+        "number": 5,
+        "cdate": 1667179307369,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667179307369,
+        "tmdate": 1667179307369,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper introduces SWARM Parallelism, a new framework for large-scale distributed training of large ML models. The framework is designed based on the generic square-cube law, and includes several designs to further handle nonrobust devices and network communications. Large-scale experiments with GPT-3 and xxlarge in comparison with state-of-the-art baselines show the efficiency advantages of the proposed framework.",
+            "strength_and_weaknesses": "S1: The problem of large-scale distributed model training is important and relatively less studied.\nS2: The proposed framework is based on sound observations. The technical designs are well-motivated and straightforward, with clear reasoning, explanations, and illustrations.\nS3: Experimental evaluations are comprehensive and strong.\n\nW1: Analysis and discussions on convergence are lacking.\nW2: Ablation evaluations regarding the stochastic wiring and adaptive swarm rebalancing techniques seem to be missing (at least in the main content).\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: The paper is well written and the problems/techniques are well illustrated.\nQuality: The technical designs are well motivated and sound. The experiments are strong and convincing.\nNovelty: The formulated square-cube law seems to be novel and so are the design considerations. Distinctions to existing related works are clearly discussed.\nReproducibility: This might be a problem because the experimental environments are relatively complicated and implementations are not provided (would imagine the results to be hard to exactly reproduce even with implementations). But this is also understandable.\n\n",
+            "summary_of_the_review": "Overall an interesting effort and read for the community, but direct applications are still concerning.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_fehi"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_fehi"
+        ]
+    },
+    {
+        "id": "phQTRhlFhA",
+        "original": null,
+        "number": 6,
+        "cdate": 1667371853067,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667371853067,
+        "tmdate": 1667425240235,
+        "tddate": null,
+        "forum": "-azium0cV9",
+        "replyto": "-azium0cV9",
+        "invitation": "ICLR.cc/2023/Conference/Paper2619/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper proposes a method called \u201cSWARM parallelism\u201d to allow model-parallel training of large models on heterogeneous clusters (e.g., a mix of weak and strong GPUs, unreliable compute nodes or networks with uneven bandwidth). ",
+            "strength_and_weaknesses": "Strength:\n\n- The problem this paper is trying to address is important.\n- Overall the paper is easy to follow\n- The proposed technique looks sensible.\n\n\nWeakness:\n- In writing, the paper seems to spend too much effort explaining the background or something obvious, instead of giving an in-depth study, empirical or theoretical, about the proposed methods.\n\n- Some contributions claimed by this paper are questionable. For example, I doubt the so-called \u201csquare-cube\u201d law is a contribution of this paper, because It has been studied quite intensively in several large LM system papers, and has been used in many papers published before this paper. This paper seems to just re-brand this common wisdom. Accordingly, I feel the writing in section 3.1 and the experiments in 4.1 are unnecessary and does not reveal any new insight to this area.\n\n- What remains novel in this paper is the SWARM parallelism, which is indeed interesting and trying to address a very important problem. However, I feel the authors\u2019 execution (such as in section 3.2 and in experiments) in explaining the proposed method and proving the method is practical could have been done better. I have some detailed comments provided next.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The \u201csquare-cube\u201d law proposed in this paper is nice but quite obvious to me; it has been discussed and revealed in many papers such as scaling language models [1]. Also, pipeline parallelism having lower communication (in this paper\u2019s phrasing \u2013 \u201cpipeline parallelism naturally grows more communication-efficient with model size\u201d) had also been revealed in many previous papers such as [2][3][4][5].\nGiven that the \u201csquare-cube\u201d laws seem to be just a summarization/re-branding of several obvious facts (which have been leveraged in many papers), I don\u2019t think the contents in section 3.1 are novel or interesting. I am not sure if this can be counted as a contribution to this paper.\n\n[1] Scaling Laws for Neural Language Models\n\n[2] Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM\n\n[3] Alpa: Automating Inter- and Intra-Operator Parallelism for Distributed Deep Learning\n\n[4] Piper: Multidimensional Planner for DNN Parallelization\n\nWriting and clarity:\n\nThe writing of section 3.2 is rather ad-hoc. Is it possible to formalize a few symbols for each stage of the model and each device of the cluster, and develop an algorithm (and if possible, equations) to illustrate how exactly the stochastic wiring and rebalancing work?\n\n\nExperiments:\n\nIn sec 4.2, the choices of baselines are very tricky. If the goal is to compare the performance in ideal conditions, why don\u2019t you compare it to stronger and more practical baselines? Here are my concerns:\n- Gpipe faces a peak memory issue, which limits the largest possible number of micro-batches it can use, which in turn limits its throughput because a smaller number of micro-batch causes bubbles. I think you should choose the 1F1B schedule as a baseline, which addresses this problem.\n- For Zero, why don\u2019t you choose Zero-2 or Zero-3 but Zero-offload? If the goal is to compare the performance in ideal condition, I guess Zero-2 and Zero-3 can almost always give better performance than Zero-offload (since zero-offload has offloading which would be a penalty on performance). This is also related to the cluster you choose to perform the experiments in sec 4.2 --- because I do notice that you have 7x nodes with 8 A100 each. I suppose the experiment in 4.2 should be performed on the A100 cluster (which has more GPU memory and make Zero-Offload unnecessary).\n\n\n- In sec 4.3, could you elaborate on this sentence:  \u201cwith 1.01 billion parameters in total: because of layer sharing, it is equivalent to a 13B model from (Brown et al., 2020) in terms of computing requirements.\u201d ?\nI am wondering if this means the layer sharing you introduced makes your method more advantageous because it increases the compute-to-communication ratio (because this layer sharding seems to increase the flops needed per parameter). Could you perform experiments on a standard, smaller GPT-3 model without layer sharing and report the results?\n\n- The results in Table 3 look good. But these results seem to be achieved by a combination of many techniques, including the proposed ones in this paper, and some compression techniques which can reduce communication. Is it possible to isolate these factors with an ablation study to show how much improvement your approaches exactly bring?\n\n- Overall, I feel the experiments section should focus on how SWARM can handle heterogeneous devices, handle failures, and handle uneven bandwidth. The results presented in 4.1 is not interesting; the results presented in 4.2 is less relevant and do not contribute to many of the claims you have made earlier in the paper about SWARM. \n",
+            "summary_of_the_review": "The paper has proposed a nice and sensible idea to address the model-parallel training in a very heterogeneous cluster environment, but the paper does not provide enough evidence to prove the method is indeed practical and verify the author's many claims.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_uZBm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2619/Reviewer_uZBm"
+        ]
+    }
+]

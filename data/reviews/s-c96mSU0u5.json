@@ -1,0 +1,158 @@
+[
+    {
+        "id": "pTMdTZYY-X",
+        "original": null,
+        "number": 1,
+        "cdate": 1666376696454,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666376696454,
+        "tmdate": 1669045214570,
+        "tddate": null,
+        "forum": "s-c96mSU0u5",
+        "replyto": "s-c96mSU0u5",
+        "invitation": "ICLR.cc/2023/Conference/Paper901/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a new MoE architecture (and its implementation) that is faster than traditional MoE models. MoE's usually involve sending tokens from one device (where the token is routed) to others (where the selected experts are hosted). This is usually very expensive and one of the main reasons why MoEs are not more popular yet (otherwise the gap in performance vs time wrt dense models would be even larger). This paper proposes a way to partially overcome this issue.\n\nThe main idea is to send more tokens to nearby devices. Of course, one needs to be able to choose the right tokens as otherwise the actual extra capacity of having many experts will fade away. There are three types of device communication involved: intra-accelerator, intra-node, and inter-node (from cheaper to more expensive). Assume that every accelerator device contains only one expert. The proposed routing algorithm splits tokens into three groups, those that will be assigned to experts requiring intra-accelerator, intra-node, and inter-node communication, respectively. Note that sending tokens only within a node implies that not all experts will be available to that token (only those in their node!) -- and this will vary depending on where the tokens happen to be. So, if we enforce sending more tokens locally, as in principle those tokens come from a random subset of images, the quality of routing and expert specialization may suffer. The paper acknowledges and confirms this intuition.\n\nThe paper proposes two ways to select which tokens are provided with each type of \"communication-based\" routing. The first one (\"sequence-based\") aggregates the standard routing weights across experts groups. Depending on the local device for the token, there's experts that require intra-accelerator, intra-node, and inter-node communication, respectively. The router first looks at the sum of weights per token across all the intra-accelerator experts. It ranks the tokens based on this sum, and takes the top-K (where K is a hparam here, a % of the local batch) and applies routing and dispatching to these tokens only, across the intra-accelerator experts. Once those tokens and experts are removed, the same idea is applied to the intra-node experts, and so on. To account for \"removed\" experts, the missing logits are replaced with -inf before normalizing.\n\nThe second routing type, feature-based, projects each token into three representations of different dimensions (corresponding to intra-accelerator, intra-node, and inter-node) summing up to the original dimension. Every expert is also \"split\" into three smaller subexperts, one that can handle tokens from each of the three dimensions. It's not fully clear to me how the \"partitioned tokens\" are then routed. Are there three routers (one per communication dimension), and the same logic as for \"sequence-based\" is applied? If so, different \"parts\" of a token may end up --not only on different experts-- but on different communication levels?\n\nIn order to maximize the chances of having good local routing, the paper proposes to pre-cluster tokens, dispatch similar tokens to the same devices, and then apply the ideas described above. Accordingly, the paper must change the attention-mlp structure to do token clustering only once (so that tokens from the same image can end up in different devices). Figure 2 (left) shows the proposed way to do this. I think this is a cool contribution.\n\nThe paper contains a number of experiments for language models where performance and speed are compared between SCoMoE and gShard (a well-known sparse model for language). My takeaway was that SCoMoE can match gShard performance while saving 20-30% of the *overall* time (or is it just all-to-all communication time?), which is quite a nice achievement! They also study what fraction of tokens should be assigned to each of the three groups depending on the routing method.",
+            "strength_and_weaknesses": "I have a couple of questions or comments.\n\nFirst, I think the work would benefit from indeed having cases where both \\alpha, \\beta and \\gamma are *simultaneously* non-zero. Most of the paper describes this case, but I think it's not covered in any of the experiments.\n\nSecond, is the speed-up multiplier computed with respect to the total step time? or just the all-to-all communication? Obviously, we care the most about the former. MoE models only have a few sparse layers in general. Thus, saving a 10% wrt to a total of 5% ends up being a very small saving to justify severe engineering extra complexity.\n\nThird (and related to second), if a model saves X% time with respect to another, a nice way to get a sense of how they compare is to run both for the same amount of total time, and look at the final performances. In other words, figure out if the cheap model can re-use the time to improve performance too (or if, unfortunately, the cheap model also has a lower ceiling). A truly informative plot in these cases is performance vs total training time. I'd love to see SCoMoE vs gShard in that type of plot to see how meaningful the gains are.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear, and the work is certainly novel and potentially impactful.\n",
+            "summary_of_the_review": "The paper proposes a new MoE architecture that tries to send most tokens to nearby devices/experts, and applies a couple of tricks to improve the required routing. First, tokens are clustered so that each device gets similar tokens. To make this possible, attention and MLPs are re-arranged so that attention layers aren't applied once MoEs start being used. Two routing techniques are presented, both of which try to identify the tokens that will be better served locally.\n\nIt's a nice paper that I really enjoyed. There's a couple of questions regarding the experimental setup and the results whose answer could make the case and my score for the paper stronger.\n\n----------------------------------------------------------------------------------------------\nAfter reading the authors' reply, I've decided to increase my score from 6 to 8. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_UrrU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_UrrU"
+        ]
+    },
+    {
+        "id": "7IHgjV29P00",
+        "original": null,
+        "number": 2,
+        "cdate": 1666539281932,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666539281932,
+        "tmdate": 1669991332057,
+        "tddate": null,
+        "forum": "s-c96mSU0u5",
+        "replyto": "s-c96mSU0u5",
+        "invitation": "ICLR.cc/2023/Conference/Paper901/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes SCoMoE in order to reduce the all-to-all communication in mixture-of-experts model training. The core technique design is based on projecting the feature dimension (SCoMoE-Feat) into low-dimensional representations and using token clustering to compensate for the potential performance drop. ",
+            "strength_and_weaknesses": "Strength:\n\n+ The idea of using feature project and token clustering is a reasonable relaxation of the original all-to-all communication in the MoE parallel training paradigms. \n\n+ The experiments suggest the good statistical efficiency of the proposed method (in terms of no drop in model quality). \n\n\nWeakness\n\n+ Some technique presentation is unclear and hard to track.\n\n+ Lack of comparison with some more advanced state-of-the-arts. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Some technique presentation is unclear; what is N referring to in Figure 2? I am also a little confused here, is the left side the whole model or a building block of the complete model. \n\nAs the author discussed in Section 2, there are some more advanced approaches attempting to optimize the all-to-all communication, there is a lack of corresponding comparison. I think it reasonable to compare the proposed method with some of them, e.g., deepspeed MoE.   \n\nThere is a lack of code release for reproducibility or a plan to do so.  ",
+            "summary_of_the_review": "I think the idea in SCoMoE is interesting and suggests good statistical efficiency; however, the presentation of the paper should be improved and some comparison with some more advanced state-of-the-arts should be included to show the hardware efficiency. \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_5Gem"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_5Gem"
+        ]
+    },
+    {
+        "id": "wRb90xhesOR",
+        "original": null,
+        "number": 3,
+        "cdate": 1666689906023,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666689906023,
+        "tmdate": 1666689906023,
+        "tddate": null,
+        "forum": "s-c96mSU0u5",
+        "replyto": "s-c96mSU0u5",
+        "invitation": "ICLR.cc/2023/Conference/Paper901/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper has the main motivation to improve the \u201csharded\u201d distributed MoE by improving its all-to-all communication by not treating them agnostically and equally, but instead characterizing them hierarchically based on their locality relationships, namely accelerator, node and global levels. The motivated application is bi-/multi-lingual machine translation. Experiments show better performance than the baseline Gshard. ",
+            "strength_and_weaknesses": "Strength: Having a good motivation and direction in ML since many of us work on higher abstraction levels, and will benefit from it in saving time and resources. \n\n\nSome Weaknesses\n1/ The main motivation is not enough without the help from token clustering and the softmax gating + differential sorting in place of sigmoid routing. As a result, it would be helpful to study how each of those 3 contributes to the main results. \n\n2/ Experiments show improvements, but directly compared to Gshard, it seems not so much given how far the solution goes with a combination of methods. \n\nThe all-to-all time is very helpful. However, compared to Gshard in terms of practicality of being simplistic, what is the overhead of this solution given the hierarchy and added interfaces? Likewise, it would be also helpful to see the training time, inference time which a typical user would also like to see. \n\n\n3/ The paper mentions the balancing to some good extent, yet there is no space of analysis to this. Probably it needs a section for regularization of balancing, for clustering might not work perfectly in terms of balancing, and so many tokens must be dropped as some expert reaches its max capacity (assuming the balancing regime is similar to Gshard \u2013 please correct if I am wrong). \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written, yet as mentioned in the Weaknesses section, my humble opinion is that at least more ablation studies are needed to make the paper more convincing. \n\nNovelty: the motivation is not entirely novel, e.g. compared to TA-MOE: https://openreview.net/pdf?id=FRDiimH26Tr that is similar in the motivation and some other perspectives. \n\nNo code is provided so it\u2019s hard to judge the reproducibility. Given the hardware-related nature of the work, and the added methods, I personally doubt the implementation is not complicated, and easy to reproduce. \n\nIn addition, by the end of section 2, claiming the two methods can be \u201ceasily\u201d combined is probably too strong, esp. without certain evidence. \n\nThe chosen track could also be more \u201cML Systems\u201d rather than NLP applications. \n",
+            "summary_of_the_review": "The paper has good motivation and direction, as well as their implementation. However, I think it needs improvement to be well convincing. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_2udu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_2udu"
+        ]
+    },
+    {
+        "id": "TBrGQAEfC8L",
+        "original": null,
+        "number": 4,
+        "cdate": 1667193158373,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667193158373,
+        "tmdate": 1667193158373,
+        "tddate": null,
+        "forum": "s-c96mSU0u5",
+        "replyto": "s-c96mSU0u5",
+        "invitation": "ICLR.cc/2023/Conference/Paper901/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposed a novel routing algorithm for mixture of experts that took the network bandwidths among the accelerators into consideration, which allows efficient communication for token shuffling especially on the GPUs.\n",
+            "strength_and_weaknesses": "Strengths:\n1) The authors took practical device constraints into consideration when designing the neural network architecture, and reported real benchmarks instead of just bio-O analyses. \n\n2) As the emergence of ultra-expensive large language models, how to enable affordable large models using more efficient algorithms becomes an important research area. \n\n3) The authors demonstrated the effectiveness of SCoMoE with well designed experiments and evaluations. Real world metrics like BLEU scores and step time are reported. The paper also reported the analysis of capacity factor during inference, which is a critical hyper-parameter for MoE performance.\n\n4) I want to point out that the reported speedup against GShard might seem small (less than 1.5x), however, it's due to the relative smaller number of experts used in the experiments (I guess bounded by compute budget). The speedup achieved by SCoMOE would become more significant when the number of experts is even larger. In the original GShard paper, thousands of experts were used where the communication cost would dominate the total compute cost. \n\n\nThis paper can be even better if the author can address the following concerns:\n\n1) What's the efficiency improvement of this algorithm during autoregressive decoding, where the model decode one token after another sequentially? \n\n2) It's better to estimate how large a dense model needs to be in order to achieve similar translation quality as SCoMoE. This would demonstrate the cost saving from SCoMoE comparing to a dense model with similar quality.\n\n3) Need to discuss the pros and cons of this proposed algorithm comparing to related routing algorithms also aiming to reduce communication costs, such as:\nBeyond Distillation: Task-level Mixture-of-Experts for Efficient Inference (https://arxiv.org/pdf/2110.03742.pdf)\nMixture-of-Experts with Expert Choice Routing (https://arxiv.org/pdf/2202.09368.pdf)",
+            "clarity,_quality,_novelty_and_reproducibility": "The proposed algorithm is described with crystal clarity.  The text, the experimental result tables, and the figure illustrations are all well prepared. \n\nThe novelty of this paper comes from taking practical device constraints into the neural architecture design. The authors first identified the bottleneck from an existing architecture, found the root cause, and proposed a novel working solution that addressed the bottleneck.  \n\nIn addition, I want to call out that the content in the appendix is quite informative as well.\n",
+            "summary_of_the_review": "Novel routing algorithm for mixture of experts whose effectiveness were demonstrated by solid experimental results.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_NyCC"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper901/Reviewer_NyCC"
+        ]
+    }
+]

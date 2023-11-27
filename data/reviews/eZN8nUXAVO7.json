@@ -1,0 +1,119 @@
+[
+    {
+        "id": "8aFnTTbSq9w",
+        "original": null,
+        "number": 1,
+        "cdate": 1666565508728,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666565508728,
+        "tmdate": 1666677847201,
+        "tddate": null,
+        "forum": "eZN8nUXAVO7",
+        "replyto": "eZN8nUXAVO7",
+        "invitation": "ICLR.cc/2023/Conference/Paper6322/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": " This paper proposes a set of new methods to deal with the \"catastrophic forgetting\" issue for federated learning over heterogeneous data.  The main idea of this method is to project the newly sampled gradients into the set with acute angle with previous gradients which is kind of like efficient regularization that has an efficient QP solution. The boost in performance is significant in that both the reported test accuracy and communication cost required to reach certain accuracy demonstrate superiority in contrast to existing methods. ",
+            "strength_and_weaknesses": "Strength: \n1. The proposed methods are intuitive, easy to understand and implement with the aid of QP solver. \n2. The proposed methods are very effective in experiments. \n\nWeakness: \n1. There are no explanations on the development of these methods, maybe some examples in image classification tasks can be given, or give some explanations to persuade people that these methods may also work in NLP tasks that are not experimented in this paper. \n2. There is no theoretical support for the proposed methods. \n3. The QP constrained optimization orientated gradient projection idea is not new in the literature (such as https://arxiv.org/pdf/2101.11296.pdf), some more comparisons may be needed in terms of novelty of the proposed methods.",
+            "clarity,_quality,_novelty_and_reproducibility": "1. I don't quite follow the issue of \"catastrophic forgetting\", may be more illustrations are needed in the introduction, the current explanations to this issue seems to me too short and too simple, may be the authors can give an example to showcase that the forgetting issue is important and what aspects of this issue motivate the proposed methods. \n2. This paper is clearly written and comparisons with SOTA are well presented. \n3. No code is provided for reproducing the results. \n4. In section \"Step 1\", it seems to me $E\\overline{g}_k^t = \\tilde{g}_k^t$, so they should be on the same line in Figure 1, can you explain this a little bit? ",
+            "summary_of_the_review": "This paper crafts a set of methods that demonstrates great improvement in experiments to deal with the \"catastrophic forgetting\" issue in federated learning over heterogeneous datasets. Given that other methods are also well tuned, the test accuracy of the proposed methods have some edges towards existing methods and the reported communication cost and training time savings are significant. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_yV7y"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_yV7y"
+        ]
+    },
+    {
+        "id": "QwFOSfgG1uY",
+        "original": null,
+        "number": 2,
+        "cdate": 1666634868305,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666634868305,
+        "tmdate": 1668793076632,
+        "tddate": null,
+        "forum": "eZN8nUXAVO7",
+        "replyto": "eZN8nUXAVO7",
+        "invitation": "ICLR.cc/2023/Conference/Paper6322/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose modifications to the FedAvg algorithm: CGC & SGC. The CGC gradient projection empirically improves convergence by aligning each client's update with the server-side update. SGC attempts to improve upon the weighted clients' average by projecting it to the individual clients' updates. The paper has some open remaining questions in the empirical section and some corrections required for 'PDG' imo. \n",
+            "strength_and_weaknesses": "The paper's strength lies in the contribution through CGC and SGC. These modified update schemes are well motivated and show good empirical results. \nThe paper's weakness lies in some of the algorithmic details & discussion:\nThe discussion around 'Step 1 (PDG)' seems ad-hoc and not well-founded. Traditionally, FedAvg doesn't consider Mini-batch SGD since generally speaking FL tries to capitalize on the multiple local update steps in order to save on communication and decrease overall algorithm run-time. As such, this point doesn't seem worthwhile to explicitly make. The definition of $\\bar{g}_k^t$ for the 'mean gradient' of Mini-batch SGD seems to suggest an average of gradients, each of which is computed on a different models through intermediate application of the individual gradient steps. My understanding of Mini-batch SGD is that a client's gradient is computed on the same model and the final update corresponds to the gradient of a very large mini-batch. The update that the authors propose for $\\tilde{g}_k^t$ seems to be the standard (adaptive) FedAvg update that a client sends to the server (here scaled by $\\eta$). See e.g. Algorithm 1 in 'Reddi, Sashank, et al. \"Adaptive federated optimization.\" arXiv preprint arXiv:2003.00295 (2020).'\n\nI would need some clarification on the details in Algorithm 2 `ClientLocalUpdate`:\nThe server-side code suggests that you explicitly consider client sub-sampling (which is great!). As a consequence, you need to explicitly send the previous server-side model $\\theta_k^{t-1}$ along with the gradient $g^{t-1}$ to reconstruct the current server-side model $\\theta_{k,0}^t=\\theta_{k}^t$. In principle, this prevents you from using server-side adaptive optimizers that rely on momenta (such as FedAdam in above Reddi et al. paper). Ideally, you communicate $\\theta_{k}^t$ directly to the client. Your algorithm explicitly states that you are communicating both, $g^{t-1}$ and  $\\theta_k^{t-1}$  to the client, however you mention \"Moreover, our FedGC only transmits the gradients between the server and clients.\" (also in the discussion: \" Moreover, FedGC enables low communication cost due to fast convergence rate and only transmissions of gradients between server and clients\"). Furthermore, you critique SCAFFOLD for doubling communication cost from server to client). In Section 4.4 you deduce that \"the average gradient in the previous communication round is less useful in current round\". This is curious to me, since your method also communicates the previous (projected) gradient - and uses it in a different way than Scaffold. Can you make a more precise statement here on why you believe your method is less susceptible to the use of previous-round gradient? \nFurther in section 4.4 you are critiquing \"SCAFFOLD also requires more time to calculate and transmit the control variate between clients and server.\" Again, your method requires computing and sending the projected gradient to clients, in addition to model parameters. \nBased on your somewhat contradicting discussion and lack of explicit statement about the communication-costs of FedGC, I have low confidence in your experimental evaluation as regards the communication costs (Table 2 & Section 4.5). I believe your method communicates $2.0 |\\theta\\$ from server to client (same as scaffold). Can you confirm that? And did you account for that in Table 2 correctly? I would like to see a learning curve similar to Figure 3, where the x-axis is scaled by communication-budget (i.e in multiples of $|\\theta\\$) instead of communication rounds to substantiate your claims. \n\nWhy did you choose to apply gradient projection layer-wise and not align the whole concatenated gradient? I am not sure I understand the argument that different layers have different dimension? How would that influence the flatten, then concatenate alternative?\n\nExperiments:\nrelated to above discussion: Are you using client-subsampling? How many clients are selected per-round? \nWhy are you using $E=50$ for FedGC and not the base-line? Please show an ablation study for these different settings. If using $E=50$ is required for FedGC, the computational cost is increased many times and claiming FedGC is well-suited because of low computation costs (as in the discussion) is misleading. \n\nAnother ablation I think would be very insightful to disentangle CGC & SGC further is to run without CGC and only have server-side projection. Such a method would come 'for free' in the sense that there is no communication overhead server->client. \n\n\nNit-picking: \nYour last sentence in the main-body states \"In a nutshell, FedGC has great potential for many real-world applications that concerns performance, real-time, communication & computational costs, and privacy preservation.\" I would like to see claims about 'real-time' made more concrete and substantiated, as well as how FedGC is privacy-preserving, since e.g. is it amenable to classical Differential privacy techniques (I believe it should be) and arguably reveals to clients the average update of previous-round clients, which is more privacy-revealing than standard FedAvg. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity is high, quality needs some improvement, the proposed methods are original. \nReproducibility seems alright, I am confident I could replicate these results given the presented hyperparameters, algorithms and explanation. I would encourage the authors to provide python-code in the appendix detailing the application of quadprog within their projection schemes. ",
+            "summary_of_the_review": "Interesting algorithm with some weakness in the discussion (c.f. PDG), details (communication, subsampling) and the experimental evaluation. \nShould the authors improve their discussion around PDG, and provide the missing information about communication budget and client subsampling, I will raise my score. Should the authors also provide additional experiments, I will raise my score again. \n\n\n---- post-rebuttal ----\nI have read the rebuttal and other reviewer's comments and as a consequence have reduced my score to 3",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_NKr4"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_NKr4"
+        ]
+    },
+    {
+        "id": "ofBb4b1YBl",
+        "original": null,
+        "number": 3,
+        "cdate": 1666658871160,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666658871160,
+        "tmdate": 1666658871160,
+        "tddate": null,
+        "forum": "eZN8nUXAVO7",
+        "replyto": "eZN8nUXAVO7",
+        "invitation": "ICLR.cc/2023/Conference/Paper6322/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies the problem of alleviating convergence issues in FL in the face of non-iid data. In particular, the authors propose methods which align the gradient and the direction of update with the past update at the server, and align the server update with the aggregated client model update. The alignment is done through a projection operation. Finally, empirical results on public datasets illustrate the efficacy of the approach.",
+            "strength_and_weaknesses": "Strengths:\n+ The paper is well written and easy to follow. The problem being considered is relevant and of sufficient interest to the FL community in general.\n+ The method proposed utilizes inequality constrained optimization to enforce alignment between local and global update directions. The alignment is done at both the level of the client and server which alleviates non-iidness to a certain extent. Technically speaking, the approach is quite general and original in its form.\n+ The experimental results show that the proposed algorithm outperforms other well known baselines.\n\nWeakenesses:\n- The alignment at the client level requires the server sending the aggregated model update from the past round to each client, which undermines the privacy-preserving aspect of FL quite a bit. Moreover, the optimization problem to be solved at hand is a constrained optimization with additional computational overhead on the clients, with no guarantees of existence of a feasible space.  It's also not clear how C is chosen and how it affects convergence.\n- The discussion in Step 1 in page 4 is erroneous. Unlike what the authors discuss, mini-batch SGD evaluates gradients at the same model iterate for multiple batches and then averages them. It doesn't take update steps after each gradient evaluation as suggested by the authors. Overall, step 1 of the algorithm is no different than standard local mini-batch SGD, where the client takes multiple local steps.\n- The question of feasibility of the constrained optimization becomes even more acute in case of the server, as it combines $k$ different constraints. It's not clear to me especially as to what is done, if the intersection of such constraints leads to an empty set, i.e., there's no feasible solution. In sufficiently non-iid data, how does one go about such scenarios.\n- The algorithm is devoid of any theoretical guarantees in terms of convergence. It's not clear if the aligned update directions thus obtained lead to a direction of sufficient descent.\n- Finally the experimental results leave a lot wanting. Number of local epochs is chosen to be $5$ for the proposed algorithm, while it is taken to be $1$ arbitrarily for all other baselines for the Handwritten digits dataset. Similarly, while learning rate tuning is done for the proposed algorithm, all other baselines are assigned a fixed learning rate without any tuning. Hence, the experimental comparisons are not fair and no claims regarding the superiority of the proposed approach can be made.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and easy to follow. The algorithm and the solution is original, but lacks any sort of theoretical guarantees and the empirical comparisons are not fair.",
+            "summary_of_the_review": "The paper considers a relevant problem of interest in FL to tackle non-iidness and proposes to tackle it with gradient alignment via projections. There are a lot of questions concerning the algorithm both in terms of feasibility and convergence, which is not covered in the paper. Finally, experimental results are weak in terms of fairness of comparing with other baselines.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_ESza"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6322/Reviewer_ESza"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "WggOH8zI03",
+        "original": null,
+        "number": 1,
+        "cdate": 1666538698335,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666538698335,
+        "tmdate": 1669992724045,
+        "tddate": null,
+        "forum": "rB3zRN0lBYr",
+        "replyto": "rB3zRN0lBYr",
+        "invitation": "ICLR.cc/2023/Conference/Paper5734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies the memorization capacity of conditional ReLU networks. By a conditional network we mean a network that allows \"branching\" of the flow of computation by conditional expressions (i.e., if-else statements). \n\n- The paper develops a general recipe that converts a general fully-connected unconditional neural network to a conditional network that only utilizes \"active neurons\" used for computing the output of a given input (Theorem 1).\n\n- Based on that, the paper then constructs an unconditional ReLU network $f$ which memorizes $n$ arbitrary input-output pairs $(x_i, d_i)$ where each pair requires the use of only $O(\\log n)$ \"active neurons\" to compute the correct output $d_i = f(x_i)$ (Theorem 2).\n\n- Theorems 1 and 2 together yield Corollary 1, which establishes the existence of a conditional ReLU network which memorizes $n$ input-output pairs and computes the output $d_i = f(x_i)$ in $O(\\log n)$ operations.\n\n- Theorem 3 shows that $\\Omega(\\log n)$ operations are in fact necessary for memorizing and recalling $n$ points.",
+            "strength_and_weaknesses": "I have not seen any theoretical results on conditional neural networks and I believe this paper is one of the first to tackle theoretical problems for conditional networks; this is a plus. However (perhaps because I'm a theory person), I am not sure if this class of architecture involving explicit if-else branching is really widely used in practice.\n\nThe paper constructs a conditional ReLU network that recalls a memorized output in $O(\\log n)$ operations, and shows that these many operations are actually necessary. Hence, this paper develops a tight characterization of the \"operation complexity\" for memorizing datasets with conditional networks.\n\nHowever, my honest opinion is that both the sufficiency and necessity results are not significant enough to merit acceptance. For sufficiency results, one can easily prove the same statement by constructing a conditional network in the following way:\n1) Since the $x_i$'s are all distinct, we can choose a vector $w$ such that the $n$ scalars $w^T x_1, \\dots, w^T x_n$ are all distinct. This is a standard first step in many results on memorization.\n2) Next, we can construct the \"binary decision tree\" that divides the $n$ data points to $n$ different leaves, which can be implemented with the if-else clauses of a conditional network. The tree can be constructed in a way that each data point $x_i$ goes through $\\lceil \\log_2 n \\rceil$ conditioning operations.\n3) At each leaf corresponding to $w^T x_i$, we choose appropriate network parameters to map $w^T x_i$ to $y_i$.\n\nOf course, the paper does it in a different way, by proving a conversion theorem from unconditional to conditional (Theorem 1) and then proving a construction of an unconditional ReLU network (Theorem 2). However, the main idea is the same; to construct a binary decision tree that we can deal with each example separately. To me, Theorems 1 and 2 look like a detour to prove a simple thing in an unnecessarily more complicated way.\n\nAlso, for Theorem 3, the tightness of the construction is proven only in terms of $n$; rather counterintuitively, the lower bound $\\Omega(\\log \\frac{n}{p})$ obtained in Theorem 3 decays with increasing input dimension $p$. This suggests that the theorem could be further improved to capture the right dependence on input/output dimension, as also noted by the authors.\n\nAnother weakness is that the paper is not cleanly written, especially the proof part. I have read all the proofs and got the main idea, but there are several clarity issues that make them confusing to read. More on that in the \"Clarity\" part below.\n\nIn terms of the literature review part, it looks to me that the paper cites most of the noteworthy papers on memorization capacity of neural networks, but I spotted two papers are missing.\n- \"Optimization landscape and expressivity of deep CNNs\" establishes memorization results for CNNs.\n- \"Small ReLU networks are powerful memorizers: a tight analysis of memorization capacity\" shows sufficiency of $O(\\sqrt{n})$ neurons and $O(n)$ weights for ReLU networks.\n\nMinor comments:\n- When defining unconditional feedforward networks, the authors say that skip connections are \"allowed for generality,\" and from Eq (1) we can see that the model is allowing skip connections of arbitrary length (i.e., denseNet-style jump connections). However, for expressive power results, I do not think that allowing/exploiting skip connections necessarily improves the generality of the theorem, because skip connections are usually quite useful for reducing the number of weights/neurons required to construct a certain network. I have checked Theorem 2 and it seems the results can actually hold without using skip connections, at the cost of slightly increased number of operations.\n\n- The proof of Theorem 1 left me with three questions. First, why should all the $2^{\\alpha_{i\\ell}}$ output edges be drawn even if many of the arrows are left unused (i.e., does not make it all the way to the output layer/leaf node)? When you construct the conditional network, what do you do to the unused edges that do not extend all the way to the output layer? Lastly, although the theorem allows arbitrary skip connections, the construction of the configuration tree seems to only take into account the connections between adjacent layers. How do you deal with faraway skip connections?\n\n- Lemma 1 seems to use $2q+2$ neurons instead of $q+2$? Also, the statement says \"two-layer network\" which is a synonym to \"one-hidden-layer\" to many authors, whereas the actual construction involves two hidden layers.\n\nP2: A very useful too -> tool\n\nP6: In Step-2, what is $d$? If you meant the input dimension it should be $p$.\n\nThm 2: every neuron in network $f$ has at most $q$ weights\u2014add \"incoming\" before weights?\n\nP7: $n_w$ and $n_e$ are both defined to be \"the number of weights of the network,\" the difference is not at all clear\n",
+            "clarity,_quality,_novelty_and_reproducibility": "In Def 1, it seems that the authors defined \"input\" to a neuron to be each of the incoming directed edges. However, this confused me quite a bit because I thought the input to a neuron is just a single scalar, a weighted combination of the output of the previous layer. This made it difficult for me to understand \"at least one non-zero input\" because in my view there is only one input to a neuron if we have a fixed network input. Please consider trying to clarify the definition of \"input\" to a neuron.\n\nWhile I got the main idea after quite a bit of time, the proof of Theorem 1 is very confusing to read. First of all, the definition of depth $\\ell$ relative to layer $\\ell$ is confusing. At the top of page 5 it is said \"the nodes at depth $\\ell$ correspond to all input configurations by \u2026 Layer $\\ell$\" but in Example 1, \"the node 110 at Depth 1\" and \"an input configuration of 11 at Depth 2 (Layer 3)\" makes me think that this may not be the case. \n\nAlso, the definition of root node is also confusing; again, the top of page 5 says \"there is only one input configuration at depth 0, corresponding to the input layer\" and this becomes the root node of the tree. So I thought the root node corresponds to the input layer. Then, two paragraphs later it is said \"Each of the $2^{\u03b1_{11}}$ edges originating from the root node represents the $2^{\u03b1_{11}}$ possible output configurations at Layer 1\", suggesting that the first hidden layer (Layer 1) actually is the root node.\n\nAll in all, while the proof delivers the main idea, I thought it might be helpful to provide concrete \"algorithms\" that construct a configuration tree from an unconditional network and then construct a conditional network from the configuration tree. The paper could use some polishing passes to clean up the confusing definitions too.\n",
+            "summary_of_the_review": "This paper studies memorization capacity of conditional neural networks. It develops a conditional ReLU network that can memorize a given dataset and compute the output of each data point in $O(\\log n)$ operations, and this number of operations is tight in terms of $n$. While a tight characterization in $n$ is valuable, I honestly think that the results are not significant enough to merit acceptance. Also, the paper has several clarity issues which makes it difficult to read and understand the paper. Therefore, I recommend rejection.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_4ix4"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_4ix4"
+        ]
+    },
+    {
+        "id": "GjBD_uxqhX",
+        "original": null,
+        "number": 2,
+        "cdate": 1666766314128,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666766314128,
+        "tmdate": 1666766367370,
+        "tddate": null,
+        "forum": "rB3zRN0lBYr",
+        "replyto": "rB3zRN0lBYr",
+        "invitation": "ICLR.cc/2023/Conference/Paper5734/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper, the authors focus on neural networks with conditional computation and study the memorization capacity of these networks. The authors show that conditional ReLU networks can memorize n input-output relations in just $O(\\log n)$ operations, which is also shown to be the best rate possible.",
+            "strength_and_weaknesses": "## Strengths:\n\n- The paper is well written and clear\n- The result seems significant, especially since conditional neural networks are becoming more mainstream.\n\n## Weaknesses\n\n- The authors don't include the mixture of experts model (Fedus et al. 2021) in their discussion of conditional computation.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written and novel to my knowledge.\nAll the proofs have detailed steps and look reproducible to me.\n",
+            "summary_of_the_review": "Overall, the paper is interesting, and very timely and relevant for the community. The results also seem significant. So I vote for accept.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_snry"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_snry"
+        ]
+    },
+    {
+        "id": "3xgBX4pOVRd",
+        "original": null,
+        "number": 3,
+        "cdate": 1666918669070,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666918669070,
+        "tmdate": 1670011869997,
+        "tddate": null,
+        "forum": "rB3zRN0lBYr",
+        "replyto": "rB3zRN0lBYr",
+        "invitation": "ICLR.cc/2023/Conference/Paper5734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper considers the well studied problem of memorization using deep neural networks from the perspective of the minimum number of computations required per input specifically in the conditional computation framework. They show that $\\mathcal{O}(\\log{n})$ operations are sufficient to memorize $n$ arbitrary (input, output) pairs using a conditional ReLU network.",
+            "strength_and_weaknesses": "**Strenghts:**\n1. The problem of memorization is well studied and this bound represents an exponential improvement in the minimum number of computations required to memorize a given dataset.\n2. The literature survey is thorough and well written, giving proper credit to past work. Since this is a problem with a rich history, it is good to see that it has been given the right treatment.\n3. The paper is fairly well written, but the proofs could be better explained.\n\n**Weaknesses:**\n1. The previous tight bounds (Rajput et al. for threshold networks, Vardi et al. for ReLU networks) considered the problem of minimizing the number of parameters required for memorization and considered traditional neural networks. The framework of conditional computation, while interesting is not particularly prevalent. So this bound leverages an architecture which may not be practical.\n2. The proofs and descriptions in the paper rely a little too much on exmaples. I would encourage the authors to try to find a more formal way of describing ideas such as Conditional Networks in Section 2.3.\n3. If I understand correctly, the final architecture is essentially a binary decision tree for every input. This network is quite large ($\\mathcal{O}(n \\log n)$) parameters and the bit complexity of each weight in it can be arbitrarily large.\n    - The prior bounds all need to make some assumption on separation of the data points. Usually something like $||x_i - x_j|| \\geq \\delta\\; \\forall i\\neq j$. This result requires no such assumption and I suspect this is because the notion of separation is implicitly absorbed in the biases which have infinite precision.\n4. The notion of conditional computation breaks down for any kind of batch operation. Most neural networks rely heavily on batch computations because matrix multiplications have been heavily optimized. Such an architecture will not be able to leverage such optimizations and will have to resort to going over the samples serially.\n5. Minor:\n    - Page 6 has a typo - \"configurationtree\"\n    - Please replicate Figure 4 in the appendix as well to make it easier to go through the proof. I would also encourage you to rewrite Step 3 of the proof to make it easier to parse.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity, Quality, Novelty:**\n- The idea and the bound is novel. I think it is a good contribution to a well studied problem.\n- The treatment to past literature is excellent although I feel that the proofs could be explained a little better.",
+            "summary_of_the_review": "I feel there are some minor flaws in the paper and I have a few clarifying questions. If those are handled satisfactorily, I will recommend acceptance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_DoNR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_DoNR"
+        ]
+    },
+    {
+        "id": "0n7WZ06Vlv",
+        "original": null,
+        "number": 4,
+        "cdate": 1666930496619,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666930496619,
+        "tmdate": 1666932133002,
+        "tddate": null,
+        "forum": "rB3zRN0lBYr",
+        "replyto": "rB3zRN0lBYr",
+        "invitation": "ICLR.cc/2023/Conference/Paper5734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proves that conditional ReLU networks can memorize any dataset of size n, in such a way that performing inference with this network requires only $O(\\log{n})$ operations per input. It also proves that this is the best possible result, assuming mild conditions on the dataset. The best known results for unconditional ReLU networks, on the other hand, are that datasets of size n can be memorized with $O(\\sqrt{n})$ weights and $O(\\sqrt{n})$ neurons, with the best possible result being $O(\\sqrt{n})$ weights and $O(n^{1/4})$ neurons. Thus, the results in this paper prove the almost exponential improvement in inference efficiency that can be attained by using conditional computation.\n\nThe constructions in this paper define conditional ReLU networks with $O(n)$ neurons and $O(n)$ weights. Thus, the paper identifies an important open question for future work: can the $O(\\log{n})$ inference time result can be attained with asymptotically fewer neurons/weights (e.g., $O(\\sqrt{n})$)?\n",
+            "strength_and_weaknesses": "Strengths\n- In my opinion, the fact that conditional ReLU networks can attain asymptotically better efficiency than unconditional ReLU networks (when memorizing a dataset of size n) is an important theoretical result, with significant practical implications for the design of neural networks. In particular, these results provide strong justification for designing neural networks with conditional branches (e.g., mixtures of experts), in cases where one cares more about inference computation time/energy than about the size of the model.\n- The theoretical results/proofs are quite general and elegant.\n- Although I found the details in certain sections hard to follow (more comments below), overall I found the main ideas of the paper quite clear, and the results compelling.\n\nWeaknesses:\n- The clarity of the paper could be improved. For example:\n  1. I found the construction in the proof of theorem 1 hard to follow (I had to read it many times); care should be given to making this a lot clearer, and explaining the \u201cwhy\u201d in addition to the \u201chow\u201d better. I think this is the most important section to make clearer.\n  2. It would be helpful to comment on the constant C > 0 from Theorem 1 (what is its value, and why?).\n  3. I think the section connecting VC dimension to memorization capacity in section 4 could be made clearer (it also has a typo: In the last sentence of that paragraph, n_e is twice described as the number of weights instead of as the number of neurons).\nThere are currently no empirical results in this paper.\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Clarity: Overall, the paper was pretty clear, though some important sections could be improved (see weaknesses section above).\n- Quality: I believe the work is high-quality and correct. I read the proofs in the main text in detail and did not find errors.\n- Novelty: I believe the results are novel, though I\u2019m not very familiar with the related work in this area.\n- Reproducibility: The results in this paper are theoretical, and detailed proofs are provided (Theorem 2 is proven in more detail in appendix).\n",
+            "summary_of_the_review": "This paper proves important theoretical results about the efficiency with which conditional ReLU networks can memorize datasets compared with unconditional ReLU networks. These results have important practical implications for the design of neural networks. As a result, I recommend acceptance for this paper (although my review is only medium confidence, given that I am not super familiar with the related work).",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_6Yt2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5734/Reviewer_6Yt2"
+        ]
+    }
+]

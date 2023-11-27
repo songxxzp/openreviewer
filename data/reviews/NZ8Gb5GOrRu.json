@@ -1,0 +1,158 @@
+[
+    {
+        "id": "z9zF2Qz0pE",
+        "original": null,
+        "number": 1,
+        "cdate": 1665980655008,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665980655008,
+        "tmdate": 1669173896684,
+        "tddate": null,
+        "forum": "NZ8Gb5GOrRu",
+        "replyto": "NZ8Gb5GOrRu",
+        "invitation": "ICLR.cc/2023/Conference/Paper668/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors address the very important topic of hyperparameter selection, by marrying scaling laws and the Bayesian optimization hyperparameter search --- under the assumption of learning curves taking a powelaw form. \n\nThe central assumption in the paper is that training curves, and in particular validation error as function of number of epochs, are well approximated by powerlaws, with the coefficients dependent on the hyperparameter selection.\n\nBased on this assumption the authors propose a bayesian optimization method for hyperparameter search which uses a neural network (NN) estimator of the expected coefficients value of unseen hyperparameters.\nThe NN is trained on a batch of hyperparameters pre-trained configurations (learning curves), multiple times, with seed and sample order permutations, to form an ensemble from which mean and variance are predicted.\n\nThe authors showcase a preliminary demonstration on a CIFAR10 task of predicting the performance while scanning dropout level and show consistent uncertainty behavior with respect to the distance (in dropout level, and in number of epochs) between measured and predicted points.\n\nThe authors then continue to assess the validity of the framework and its performance on 3 benchmarks, relative to several alternative hyperparameter optimization baselines.\n\nFirst, the agreement of the powerlaw-base learning curve is assessed relative to other learning curve prediction methods. Superior relative correlation is demonstrated.\n\nSecond, the authors examine the averaged regret of the proposed method relative to the baselines. And finally the authors examine the exploration / exploitation of the method.\n",
+            "strength_and_weaknesses": "$\\bf{Strengths: }$\n\nScaling laws and specifically their power law characteristics have emerged as a powerful tool for both practical and theoretical investigation. Attempting to apply this very strong prior for improving in a principled baysian framework for the gains in the efficiency of hyperparameter search is an important and potentially very useful direction.\n\nThe preliminary results in the paper are encouraging relative to current methods examined in some of the cases presented in terms of performance (though not convincingly in all \u2014 e.g. no statistically significant difference between the random baseline and DPL as shown in figures 4).\nSimilarly, the claimed efficiency (and demonstrated relative to waltime \u2014 figure 5) is of paramount importance, as at the large scale hyperparameter tuning becomes practically prohibitive.\n\n$\\bf{Weaknesses: }$\n\nHowever, there are several methodological improvements which merit attention:\n\n1. The core assumption of power-law learning curves, is poorly qualified.\n\nIt is still very often the case, in practice, that multiple schedules are involved in the training configuration. These, in particular, are subject of (hyperparameter) tuning and materially violate the powerlaw assumption. To name several such very common schedules one may consider warmup and learning rate scheduling (stepped or otherwise as in this paper where cosine scheduling with no repetition is applied at least in part). \n\nThe proof of concept provided on CIFAR10 suffers from several limitations, not contributing to the further the confidence in the power-law assumption:\nThe uncertainty of the estimation diverges very quickly outside the interpolation area (area within the range of measurements) \u2014 figure 1 left. Further, the learning curve itself *does not* agree with the prediction, even on the measured area, further indicating that it is probably not actually a powerlaw in this case (as, by construction, the prediction is a powerlaw).\n\n2. The analysis conducted in figure 2, does show the relative superiority of the correlation, however correlation may be too blunt an instrument for the purposes of interest. High correlation may be present with significant (perhaps even rank non-conservation) deviations at the accuracies of interest (where small absolute error differences are large relative differences, in the low error regime).\n\nThese limitations are not merely of aesthetics, qualifying when the results of this method may be trusted is very important in order to substantiate it as a good hyperparameter optimization method. \n\nFor example \u2014 from what point in the learning curve is the approximation reliable? (and consequently, what is the expected computational/budget gain?) . and what limitations of applicability does this method impose with respect to the optimization protocol? \n\nAt the least a relative deviation (e.g. error in log scale correlation) should be added, and with a measure not only of the average over all datasets, but rather a breakdown per dataset and with both average (over learning curve agreement with different hyperparameters) and deviations.\nAs well as a discussion and examples of where this prior actually does not agree with the learning curves and fails.\n\n3. Evaluation of performance:\n\nThe authors use existing benchmarks, but show average regret or average normalized regret over a multitude of datasets. It is not clear from such an analysis what is the individual dataset performance or whether the standard deviation is very large as to hide phenomena which may adversely affect the performance of the proposed method in different scenarios. For example, a behavior which makes one wonder as to its origin is figure 3, PD1 average normalized regret which is worse than the random baseline up until >0.5 of iterations. \n\nThis same concern is mirrored in the rank statistical parity of the random baseline even at full budget (figure 4, right).\n\nCan it be explained in these cases why the method does so poorly (even if others are as poor).\n\nAgain, this is of practical importance --- hyper parameter optimization is an exercise which one engages in the context of a specific, single task. A method should be shown superior separately on all, or called out for its failure modes when not universally applicable.\n\n4. Finally, it is unclear to this reviewer if this method has strong predictive power in the sense that it can be effectively used with a low budget in order to reliably precede large scale (prohibitively expensive) experiments. The benchmarks used may answer this question, but it remains opaque in the body of the work.\nSpecifically, since the DPL requires training on multiple degrees of freedom (hyperparameter dimensions) in order to form a reliable prediction along these degrees of freedom, to what extent is this done at small fidelity? What is the expected computational gain relative to current methods which involve e.g. grid search at the small scale and then hyperparameter scaling?\n\nIt is crucial (especially if this work remains in the purely empirical domain, as is currently governed by the NN at the heart of the hyperparameters-loss estimation), that the computational gain be fleshed out for this venue to offer a path towards superior hyperparameter optimization.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear, although leaves more than desired for the reader to devine in terms of the experimental results (this reader found himself referring to the code for clarifications on the implementation of the EI, which is not ideal \u2014 as the paper should be self contained). \n\nFor quality, as mentioned above, the experimental design and analysis need to be improved.\n\nIf improved such that a robust and practical significant gain in hyperparameter optimization may be demonstrated, this would be a sufficiently significant novel contribution.\n\nReproducibility given the code is adequately addressed by the code, and I commend the authors for providing it \u2014 while some more documentation (starting with a non-empty readme) and cleanliness would be warmly advised to improve clarity, even orthogonal to this review\u2026  \n\nCode bits like hamper clarity:\n(excerpt from surrogate_models/power_law_surrogate.py:  )\n{\nif self.iterations_counter == 200:\n            b = 6\n}\n\n\nFinally, the paper would do well to engage more deeply with prior work.\n\nPertinent to the assumption of powerlaw training curves the work of Pretrum et. al [1] comes to mind.\n\nFurther, optimization hyper-parameter scaling with model and data scale (a very important canonic tool in practice), should be mentioned \u2014 i.e. batch size scaling, Kaplan et. al. [2]\n\n[1] https://arxiv.org/pdf/2010.08127.pdf\n\n[2] https://arxiv.org/pdf/2001.08361.pdf\n",
+            "summary_of_the_review": "Hyperparameter efficient optimization remains one of the practical/economical thorns in the field. The paper offers an interesting direction of capitalizing on predictable phenomena in the form of scaling laws for the leveraging in the context of bayesian inference for hyperparameter search.\n\nWhile preliminary results are encouraging, there are numerous weaknesses pertaining to the robustness of the underlying assumptions, performance and practical (namely compute) expected utility.\n\nSignificant work is required for addressing these above mentioned issues, and I will be happy to upgrade my review and score if they are adequately resolved.\n\n%%%%%% updated score following rebuttal clarifications %%%%%%\nsee reply for details --- core issue is concern with respect to actual applicability due to mixed results. Strongly encourage to resubmit with demonstration of the utilization of method claimed superiority to improve performance in the wild",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_vKZP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_vKZP"
+        ]
+    },
+    {
+        "id": "NTg4TPuOa3m",
+        "original": null,
+        "number": 2,
+        "cdate": 1666753933473,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666753933473,
+        "tmdate": 1666753933473,
+        "tddate": null,
+        "forum": "NZ8Gb5GOrRu",
+        "replyto": "NZ8Gb5GOrRu",
+        "invitation": "ICLR.cc/2023/Conference/Paper668/-/Official_Review",
+        "content": {
+            "confidence": "1: You are unable to assess this paper and have alerted the ACs to seek an opinion from different reviewers.",
+            "summary_of_the_paper": "This work propose a Deep Power Law (DPL) which uses the scaling law property of learning curves for hyperparameter optimization, by improving fidelity of HOP for deep learning. DPL ensembles predicts the performance of hyperparameter configurations in low-budget regimes as a probabilistic surrogator for Bayesian optimization (BO). This work demonstrated the effectiveness of the proposed method by conducting extensive experiments on 62 datasets under various domain such as image, tabular, and NLP domains.",
+            "strength_and_weaknesses": "- Strengths\n  - The writing is clear and easy to follow.\n  - Applying scaling law property of learning curves for HPO is novel.\n  - This work demonstrated their method on extensive experiments under various domain such as image, tabular, and NLP domains.\n\n- Weaknesses\n  - In the experimental section, I think that the title 'Hypothesis' is not appropriate. For example, even if this work demonstrated the performance of their work empirically not theoretically, they regarded Hypothesis 'Our method DPL achieves state-of-the-art results in HPO' is achieved.\n  - With the most experiments, this work focus on 'regret' metric. Could the authors show the experiments with the metric 'accuracy'? For example, by applying the proposed method and multiple HPO methods on ResNet and cifar10/imagenet, we can see the model performance. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The motivation is clear and the proposed method using scaling law property looks novel. They provided the code and implementational details.",
+            "summary_of_the_review": "They uses scaling law property for improving the fidelity of HPO and demonstrated the proposed method on multiple HPO benchmarks.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_KEEA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_KEEA"
+        ]
+    },
+    {
+        "id": "dUhEiYOHz7b",
+        "original": null,
+        "number": 3,
+        "cdate": 1666904561803,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666904561803,
+        "tmdate": 1666904620103,
+        "tddate": null,
+        "forum": "NZ8Gb5GOrRu",
+        "replyto": "NZ8Gb5GOrRu",
+        "invitation": "ICLR.cc/2023/Conference/Paper668/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a multi-fidelity Bayesian optimization approach to hyperparameter optimization called Deep Power Law (DPL) that exploits the power law assumption of learning curves to quickly identify strong hyperparameter settings.  Results on 3 benchmarks with tabular, image, and NLP datasets show DPL to outperform 7 state-of-the-art competitors.  ",
+            "strength_and_weaknesses": "Pros:\n- The empirical results are strong on the 3 benchmarks studied.\n- Paper is well written and easy to understand.\n\nCons:\n- Empirical analysis limited to pretrained benchmarks with a finite number of trained configurations.  In truly continuous search spaces, it is unclear how often DPL will repeat the same hyperparameter setting to be trained for more batches without additional discretization.  \n- From what I could tell, experiments do not contain search spaces with step wise learning rate schedules where learning rates decrease drastically at fixed intervals.  These types of LR schedules often result in learning curves that do now follow the power law and are used frequently in practice.  \n- DPL is limited in novelty since power law based performance prediction methods have been studied before and the multi-fidelity aspect just allocates a small unit of work per decision step.",
+            "clarity,_quality,_novelty_and_reproducibility": "## Clarity\nThe paper is clearly written for the most part but some of the details I was looking for was in the appendix or in referenced papers (e.g. description of the surrogate models and search spaces studied in each of the benchmarks).  I suggest the authors include the missing search space specifications in the appendix so the paper is more self contained.\n## Quality\nThe quality is sufficient overall.  I found the multi-fidelity aspect of the DPL algorithm very simple and straightforward, which is okay but this aspect of the algorithm was oversold in the abstract and introduction.\n## Reproducibility\nI believe sufficient information is provided to reproduce the results for DPL shown in the experiments.",
+            "summary_of_the_review": "While DPL outperforms many leading HPO methods on the 3 studied benchmarks, the experiments do not sufficiently establish DPL as a viable general HPO method due to missing experiments on non-lookup based benchmarks and lack of search spaces with step LR schedules.  Additionally, the novelty of DPL is limited since it is similar to prior power law performance prediction methods and has a very simple fixed allocation multi-fidelity component.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_KFvH"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_KFvH"
+        ]
+    },
+    {
+        "id": "c2CzQy9mBf3",
+        "original": null,
+        "number": 4,
+        "cdate": 1667210022521,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667210022521,
+        "tmdate": 1667210022521,
+        "tddate": null,
+        "forum": "NZ8Gb5GOrRu",
+        "replyto": "NZ8Gb5GOrRu",
+        "invitation": "ICLR.cc/2023/Conference/Paper668/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a hyperparameter optimization algorithm that leverages the power law phenomenon of the learning curves. In particular, the proposed method DPL assumes the surrogate $\\hat f(\\lambda)$  of the true learning curve $f(\\lambda)$ obeys a power law function, which can be parameterized by a neural network. The ensemble of K diverse learned surrogates can be used to determine the next hyperparameter. Empirical studies show that 1) the power law assumption improves the quality of the learning curve prediction; 2) DPL achieves state-of-the-art results in HPO; 3) DPL explores the search space more efficiently than baselines.",
+            "strength_and_weaknesses": "Strength:\n\n1. Adopting the observation that the performance of machine learning methods as a function of budgets usually follows a power law to hyperparameter optimization is quite novel.\n2. The performance of DPL seems to be better than most of the competitors in terms of average normalized regret in several benchmarks, e.g. LCBench. \n\nWeaknesses:\n\n1. The paper is not very well written that some parts of it is hard to read.\n\n    1.1. Notation issues: 1) It should be $\\alpha_\\lambda, \\beta_\\lambda, \\gamma_\\lambda\\in \\mathbb{R}$ in eqn (3); 2) Why is $b$ bolded in eqn (4)(5)(6)(7)(8) but not bolded before and after?\n\n    1.2. The paper is not self-contained that several techniques are used without introduction. For example, what is deep ensemble strategy? What is expected improvement? They seem to play an important role in the algorithm, but readers do not know what they are without referring to literature.\n\n2. The empirical studies are puzzling.\n\n    2.1. What is average normalized regret? Why is it an indicator of the efficacy of the HPO algorithms?\n\n    2.2. I think a more convincing setting would be the following: 1) Choose a task with randomly initialized hyperparameter; 2) Apply DPL and other HPO methods; 3) Compare the final results (e.g. accuracy) of different methods; 4) Repeat these experiments to many tasks (NLP, CV etc.). After all, what we really care is the ultimate performance on the tasks. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The clarity and quality of the paper is not good, as explained in the weakness section. \n\nThe proposed method sounds pretty novel though, as it is the first to leverage the power law in learning curves.\n\nSince quite a few important parts are missing, such as deep ensemble and expected improvement, it is hard to reproduce the results based on the description in the paper.",
+            "summary_of_the_review": "The proposed method is novel in leveraging the power law in learning curves, but the clarity of the paper is a main concern. Besides, the evaluation is not convincing enough to show the efficacy of the proposed method.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_3aYj"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper668/Reviewer_3aYj"
+        ]
+    }
+]

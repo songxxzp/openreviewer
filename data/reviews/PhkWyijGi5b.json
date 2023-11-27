@@ -1,0 +1,158 @@
+[
+    {
+        "id": "eHWu6lZKVT",
+        "original": null,
+        "number": 1,
+        "cdate": 1666327697824,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666327697824,
+        "tmdate": 1668827887244,
+        "tddate": null,
+        "forum": "PhkWyijGi5b",
+        "replyto": "PhkWyijGi5b",
+        "invitation": "ICLR.cc/2023/Conference/Paper4622/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes an unsupervised skill discovery algorithm based on state clustering in a latent space. Specifically, assuming that exploratory data are given (either by an offline dataset or by a separate exploratory policy), their proposed method learns a latent world model and clusters the latent states into $N$ discrete components using VQ-VAE. It then learns skill policies to reach the clustered states by minimizing the $\\ell_2$ distance in the latent space. The paper demonstrates that their method combined with a hierarchical controller outperforms existing skill discovery methods on DM Control and MetaWorld environments.",
+            "strength_and_weaknesses": "Strengths\n- The paper successfully demonstrates that the idea of decoupling exploration and skill discovery can be scaled to pixel-based environments.\n- The proposed code resampling technique for VQ-VAE seems sensible and effective for preventing code collapse.\n- The paper is well-written and easy to follow.\n- The authors include some failed experiments with helpful insights in the Appendix.\n\nWeaknesses\n- One of the main weaknesses of this paper is its novelty. Their proposed method is essentially running EDL (Campos et al., 2020) on top of a discrete latent world model (Hafner et al., 2021). The notion of decoupling exploration and skill discovery is also previously suggested by Campos et al. (with the same clustering method of VQ-VAE). While their code resampling technique for preventing code collapse in VQ-VAE seems to some degree novel and sensible, it does not appear to be the primary contribution of the paper, and the degree to which it affects the final performance on downstream tasks is not discussed.\n- The comparisons in the main results (Fig. 3, Table 2, and (possibly) Fig. 4 as well) seem to be not fair. They directly take the reported results from the CIC paper for baselines. However, the other skill discovery methods in the CIC paper are fine-tuned without a hierarchical controller, unlike Choreographer. How well does Choreographer perform with the same fine-tuning configuration without a controller (or the other way around)?\n- In the pixel-based URLB result (Fig. 4), some of the baselines (e.g., CIC) are missing compared to Fig. 3. Also, if the numerical results are directly taken from Rajeswar et al., these comparisons could also be unfair due to the absence of hierarchical controllers for the other methods.\n- It would be better if the authors can provide additional comparisons between Choreographer and LEXA (Mendonca et al., 2021), a similar skill discovery method that also uses a world model with separated exploration.\n- The code is not publicly available.\n\nMinor questions and suggestions\n- How many training epochs (and environment steps) are used for the pre-training/fine-tuning of Choreographer, respectively?\n- Appendix: $3e^{-4} \\to 3 \\cdot 10^{-4}$, etc.",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity/Quality: The paper is well-written and easy to follow.\n\nNovelty: The novelty of the paper is somewhat limited (please see above).\n\nReproducibility: The authors have not released their code.\n\n",
+            "summary_of_the_review": "The paper demonstrates that Choreographer can learn skills from data in pixel domains and they can be effectively adapted to downstream tasks. However, given its limited novelty and insufficient empirical comparisons with other methods, I cannot recommend acceptance at this point.\n\n**[Post-rebuttal update]** I thank the authors for the detailed response. As my initial concerns regarding the experimental results are mostly addressed, I raised my score to 6.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_2p4W"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_2p4W"
+        ]
+    },
+    {
+        "id": "kTC-Z9luSe",
+        "original": null,
+        "number": 2,
+        "cdate": 1666626180487,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666626180487,
+        "tmdate": 1666626180487,
+        "tddate": null,
+        "forum": "PhkWyijGi5b",
+        "replyto": "PhkWyijGi5b",
+        "invitation": "ICLR.cc/2023/Conference/Paper4622/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Use unsupervised skill learning with mutual information latent space skills, but derive the skill latent space from the latent space of a world model. The world model is represented with a recurrent neural network (GRU), where the internal state of the world model is the recurrent state of the GRU, and trained to match the input data. The skills are encoded and then quantized into a fixed codebook, and unused quantizations (based on the frequency that a code is assigned) are reassigned according to an embedding from the training batch based on the distance from the closest code. The skills are trained with a reward function that combines an entropy term with a likelihood code, and the meta critic and actor chooses skill-latents as actions to optimize task reward. ",
+            "strength_and_weaknesses": "Latent codes based on a world model could be especially sensitive to domains where the world model struggles to generate a consistent state. Is there a way of adding information back for skill learning if it is not captured in the world model? \n\nThe experiments are somewhat weak because the experimental domains have relatively achievable modeling, and the baselines do not really make use of model-based learning. Since Choreographer makes use of imagination in the model, it will have an advantage in sample efficiency without utilizing the latent space innovation. Furthermore, the goal-reaching tasks probably should have utilized some form of hindsight, which would have much improved the baseline.\n\nOne important check would be to ensure that the latent space learned by the choreographer is giving the benefit since it appears to be the key innovation of this work. As it is, it seems like the latent code could be learned from the base state instead of the latent space of the model to get the same results, as long as the additional code resampling and learning in imagined states were implemented.",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall, this work is a clear and effective usage of mutual information skills with a world model, with interesting experiments and success when using a world model. This intuitive combination does not appear to have been experimented with before, and the necessary features to make it work are well explained. While the ablatives leave some gaps in terms of how the performance is gained, the results are promising.\n\nCan the skills be equally as effectively learned without a clustering step and a discretized space?\n\nWhile the results suggest that Choreographer can exploit data, from the introduction it seemed as though the algorithm was supposed to be exploring for its own data, which is common among mutual-information unsupervised skill learning algorithms. Choreographer can use exploration policies but does not actually introduce a novel exploration strategy on its own. However, because a world model can be sensitive to the data used to train it, it is plausible that Choreographer is actually more sensitive to the exploration strategy. \n",
+            "summary_of_the_review": "I recommend acceptance as long as this method of using latent codes from aw world model has not been done in prior work, which appears to be the case. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_LVu4"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_LVu4"
+        ]
+    },
+    {
+        "id": "XTo2fhWK-d",
+        "original": null,
+        "number": 3,
+        "cdate": 1666682198337,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666682198337,
+        "tmdate": 1666682198337,
+        "tddate": null,
+        "forum": "PhkWyijGi5b",
+        "replyto": "PhkWyijGi5b",
+        "invitation": "ICLR.cc/2023/Conference/Paper4622/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper presents Choreographer, a method for learning skills in the imagination of a world model.  The method uses mutual-information maximization between skill codes and latent states in a Dreamer-V2 world model.  Since the skills are learned in imagination, the data collected from the environment needs only be used for training the world model, and so Choreographer can be applied to offline RL datasets.  Once the world model and skills have been learned, Choreographer next learns a controller that uses the skills as an action space to adapt to downstream tasks.  Empirical results show that Choreographer compares favorably to other unsupervised RL methods on the URL Benchmark.  ",
+            "strength_and_weaknesses": "Choreographer is an interesting extension and combination of skill-learning algorithms and world modeling imagination approaches.  Although the combination of two existing approaches is not completely surprising, it is a novel combination as far as I am aware.  And, the method performs well against some strong baselines.  Additionally, there were some non-obvious contributions regarding code resampling in the VQ-VAE component of the world model.  Overall the paper is good.  My main concern with the paper is comparison to other methods for offline skill discovery.  For example, [Ajay et al. OPAL: Offline Primitive Discovery for Accelerating Offline Reinforcement Learning, ICLR 2021] uses a VAE to encode offline trajectories and learns skills from that data as well.  Although there are methodological differences, it would be nice to see a comparison to similar offline skill learning approaches.  ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written, and provides a clear discussion of how the results were obtained.",
+            "summary_of_the_review": "This is a strong paper that presents an interesting extension of skill learning and model-based approaches.  Although the contribution is mostly a combination of other existing work, the combination is interesting and non-trivial, and the results are strong.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_eUdn"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_eUdn"
+        ]
+    },
+    {
+        "id": "dD6yVsPwjwk",
+        "original": null,
+        "number": 4,
+        "cdate": 1666697610833,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666697610833,
+        "tmdate": 1666697610833,
+        "tddate": null,
+        "forum": "PhkWyijGi5b",
+        "replyto": "PhkWyijGi5b",
+        "invitation": "ICLR.cc/2023/Conference/Paper4622/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose a model-based unsupervised skill discovery method that discovers and learns skills in the latent space using a trained world model rather than in the environment using raw observations. During the training, they keep a skill codebook equipped with a VQ-VAE for the skill encoding and propose the code resampling technique to prevent the index from collapsing. They learn skills using the mutual information maximization objective where the entropy is estimated using the particle-based estimator. They show the empirical results that the proposed method performs competitively with existing skill discovery methods.",
+            "strength_and_weaknesses": "Strengths\n\n- The proposed method is well-defined and quite general (e.g., the applicability to both state and visual observation environments, the VQ-VAE with the code resampling, etc.).\n- The empirical evaluation and analyses, including the performance plots and tables, and qualitative results are extensive and informative.\n- The high-quality presentation, including the writing and the intuitive figures (e.g., Fig.1 and Fig.2).\n\nWeaknesses\n\n- The work is novel to some degree, but algorithmic novelty of the work is not very strong.\n- The proposed code resampling introduces an additional hyperparameter $M$, and the robustness of the method to the choice of $M$ is not examined.\n- The increased burden in the size of the models (and thus the memory) and the computation in comparison with prior skill discovery methods is not discussed.",
+            "clarity,_quality,_novelty_and_reproducibility": "- The paper is clear, well-structured, and easy to follow.\n- The overall quality of the work is good.\n- The algorithmic novelty of this work is somewhat limited, but the empirical findings are still worthwhile.",
+            "summary_of_the_review": "The proposed method is somewhat limited in terms of the algorithmic novelty, but it is generally applicable, which is also supported by their empirical results. The overall quality of the work, including the experimental results and the presentation, is good. There are some weaknesses, including the lack of analysis of the method's robustness to the new hyperparameter and discussion regarding the training cost compared to prior skill discovery methods.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_g6c7"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4622/Reviewer_g6c7"
+        ]
+    }
+]

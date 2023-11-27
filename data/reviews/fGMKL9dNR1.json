@@ -1,0 +1,159 @@
+[
+    {
+        "id": "8bMWpRLhit",
+        "original": null,
+        "number": 1,
+        "cdate": 1666596241829,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666596241829,
+        "tmdate": 1668844810548,
+        "tddate": null,
+        "forum": "fGMKL9dNR1",
+        "replyto": "fGMKL9dNR1",
+        "invitation": "ICLR.cc/2023/Conference/Paper4823/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a simple error-feedback mechanism called EF21-P, and some variants such as EF21-P + DCGD and EF21-P + DIANA. This paper focuses on the theoretical analysis of EF21-P. The empirical shows good performance.",
+            "strength_and_weaknesses": "Strength:\n1. This paper focuses on the theoretical analysis of EF21-P, which provides thorough theories for both convex and non-convex cases.\n2. The empirical shows good performance.\n\nWeakness:\n1. For the empirical analysis, the model (logistic regression) and the datasets (libsvm datasets and cifar-10) are both too small and simple for distributed training. Typically, for such simple and small tasks, a single computer is enough for fast training.\n2. I believe that the main algorithm proposed in this paper, EF21-P, is actually not novel and is equivalent to the original error feedback. See my discussion below for more details. However, I'm not 100% sure about this. So please make clarification and correct me if I'm wrong about this.",
+            "clarity,_quality,_novelty_and_reproducibility": "I believe that the main algorithm proposed in this paper, EF21-P, is actually not novel and is equivalent to the original error feedback (or EF, or error compensation).\nHere is some simple derivation:\n\nFirst, recall that the formula in Equation (3) for EF21-P is (I ignore the step \"t\" for the compressor):\n\n$x^{t+1} = x^t - \\gamma \\nabla f(w^t)$ \n\n$w^{t+1} = w^t + C(x^{t+1} - w^t)$\n\n$w^0 = x^0$\n\nNow, we add an auxiliary variable $a^t$, which is actually the message before compression, defined as follows:\n\n$a^t $\n$= x^{t+1} - w^t $\n$= x^{t+1} - x^t + x^t - w^t $\n$ = - \\gamma \\nabla f(w^t) + x^t - w^t $\n$= - \\gamma \\nabla f(w^t) + x^t - w^{t-1} + w^{t-1} - w^t $\n$= - \\gamma \\nabla f(w^t) + a^{t-1} + w^{t-1} - w^t $\n$= - \\gamma \\nabla f(w^t) + a^{t-1} - C(x^t - w^{t-1}) $\n$= - \\gamma \\nabla f(w^t) + a^{t-1} - C(a^{t-1}) $\n\n$a^0 = x^{1} - w^0 = x^{1} - x^0 =  - \\gamma \\nabla f(w^0) = - \\gamma \\nabla f(x^0)$\n\nBy using $a^t$, we can totally get rid of $x^t$ and re-write the algorithm as follows:\n\n$w^{t+1} = w^t + C(a^t)$\n\n$a^t = - \\gamma \\nabla f(w^t) + a^{t-1} - C(a^{t-1}) $\n\nNow, if you are familiar with error feedback, you would find that the algorithm above is exactly the original error feedback, and the term $a^{t-1} - C(a^{t-1})$ is exactly the \"residual error\" in error feedback (please refer to the EF-SignSGD paper: http://proceedings.mlr.press/v97/karimireddy19a/karimireddy19a.pdf).\n\nGiven that my derivations above are correct, i.e., EF21-P is equivalent to EF, then we would have even more issues in this paper:\n1. EF21-P + DCGD is just EF-SGD using quantization as the compressor, which is not novel\n2. EF21-P + DIANA is just EF + DIANA. There is already an algorithm called EC-SGD-DIANA (error compensation + DIANA, and error compensation is the same as error feedback) proposed in the following paper:\nGorbunov, Eduard, Dmitry Kovalev, Dmitry Makarenko, and Peter Richt\u00e1rik. \"Linearly converging error compensated SGD.\" NeurIPS 2020. (https://proceedings.neurips.cc//paper/2020/file/ef9280fbc5317f17d480e4d4f61b3751-Paper.pdf)\nI'm not exactly sure whether EF + DIANA is equivalent to EC-SGD-DIANA, or maybe EF + DIANA is just another variant of DIANA that combines error feedback with DIANA. So I would recommend the authors to make a comparison and give some clarification.\n3. The experiment results actually show that EF-SGD ( or EF21-P + DCGD) works better than DIANA and EC-SGD-DIANA (maybe EF21-P + DIANA), while DIANA and its variants are supposed to be newer algorithms with state-of-the-art performance in practice. So, the experiment results in this paper seem to contradict the results from the previous works. Now I wonder whether DIANA is really better than simple EF-SGD.",
+            "summary_of_the_review": "Although this paper may provide some new insights in the theoretical analysis of distributed SGD with error feedback, the experiments are too simple, and more importantly there are some issues in the novelty of EF21-P.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+            ],
+            "details_of_ethics_concerns": "During the discussion stage, the authors have: 1) realized that EF21-P = EF which is not novel (\"very shortly after we submitted our paper\" as stated by the authors), but done nothing to fix this \"minor blunder\", not even during the 2 weeks of discussion period where revisions are allowed; 2) exaggerated the novelty of EF21-P + DCGD and EF21-P + DIANA without citing the previous works that proposed EF on server, while the authors clearly stated that \"We do know of a very small number of papers where EF is applied on the server side\". During the discussion period, the authors have every chance to fix the issue of EF21-P = EF, and add a citation of dist-EF-SGD. However, the authors made every effort to claim the novelty of EF21-P + DCGD and EF21-P + DIANA, and intentionally used the word \"virtually\" when referring to the previous works using EF on server, in order to minimize the credits given to the most related works. The very fact that the authors haven't made any revision shows that they either can not or will not fix the \"minor blunder\" as they claimed. Furthermore, exaggerating the novelty of the proposed algorithms without the citations of the essential previous works is clearly plagiarism, which raises serious concerns in ethics. ",
+            "recommendation": "1: strong reject"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_m3XR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_m3XR"
+        ]
+    },
+    {
+        "id": "gO6MAOHb1vL",
+        "original": null,
+        "number": 2,
+        "cdate": 1666662563003,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666662563003,
+        "tmdate": 1668272049793,
+        "tddate": null,
+        "forum": "fGMKL9dNR1",
+        "replyto": "fGMKL9dNR1",
+        "invitation": "ICLR.cc/2023/Conference/Paper4823/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors propose EF21-P in eq(3), which is an interesting and novel variant of error feedback. Theoretical analysis is comprehensive and solid. Empirical results on logistic regression task show the benefits of EF21-P.",
+            "strength_and_weaknesses": "Strength:\n1. The proposed EF21-P is an interesting way to look at error feedback. The compression error seem to be modeled as the difference between $x$ and $w$, so the optimization objective seem to be make $x$ and $w$ more coherent, which is novel.\n2. The theoretical results are comprehensive, including both the convex and non-convex cases, and the combination with DIANA/DCGD to achieve the best results.\n\nWeaknesses:\n1. The experimental settings are small-scale. #features is 20k and #samples is 72k. A single worker should be sufficient to train logistic regression on this dataset.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and well-organized, and the method is new.\nCodes are provided, so it should not be difficult to reproduce the experimental results.\n\n[update] during discussion, reviewers find that EF=EF21-P, which is also acknowledged by the authors and severely damages the novelty. Therefore I decided to lower all my scores.",
+            "summary_of_the_review": "The author proposes a novel variant of error feedback, and it seems very interesting compared with most of the existing error feedback variants. The theoretical analysis looks comprehensive and solid. The only concern is how this method works in practice with larger-scale datasets and more complicated models.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "1: strong reject"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_HQee"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_HQee"
+        ]
+    },
+    {
+        "id": "gDDwNC3nmb",
+        "original": null,
+        "number": 3,
+        "cdate": 1666790639983,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666790639983,
+        "tmdate": 1666790639983,
+        "tddate": null,
+        "forum": "fGMKL9dNR1",
+        "replyto": "fGMKL9dNR1",
+        "invitation": "ICLR.cc/2023/Conference/Paper4823/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper suggests a new compression method based on the recent EF21 scheme and then used this compression method in the bidirectional distributed SGD method. Authors provide convergence rates for strongly convex, convex, and non-convex objectives. The theory is verified using logistic regression experiments.\n",
+            "strength_and_weaknesses": "Strength:\n\nI think the most interesting part of this paper is the proposed compression technique and the section \u201cUnified SGD analysis framework with EF21-P mechanism\u201d which is placed in appendix. \n\nWeakness:\n\nWhile there is theoretical value in bidirectional distributed SGD, I  do not think there is much practical gain in using bidirectional compression as there is a number of references that claim that Broadcasting one message to n users is much cheaper than n poin-to-point communication. Therefore, my main criticism is the motivation for bidirectional compression.\n\nAnother question is how do you compare the additional storage cost of distributed algorithm?\n\nAdditionally, I do not think the Assumption on $\\hat{L}$ is standard. Can author provide any justification for that?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Paper is easy to follow.\n",
+            "summary_of_the_review": "Please see the comments above! \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_7QTA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_7QTA"
+        ]
+    },
+    {
+        "id": "tqY0M3DQiw",
+        "original": null,
+        "number": 4,
+        "cdate": 1667198638588,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667198638588,
+        "tmdate": 1667198638588,
+        "tddate": null,
+        "forum": "fGMKL9dNR1",
+        "replyto": "fGMKL9dNR1",
+        "invitation": "ICLR.cc/2023/Conference/Paper4823/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a new error-feedback based gradient compression algorithm for distributed machine learning. The key difference with prior work is that the compression is bidirectional i.e. data sent by both the workers and the server is compressed unlike most prior works which only focus on compressing data sent by the workers. The authors show that a novel application of error feedback at both the server and the workers enables them to improve over the communication complexity of several prior methods and converge at the same rate as gradient descent despite sending significantly lesser data in each direction at each communication round.",
+            "strength_and_weaknesses": "Strengths:\n\n1. To the best of my understanding, this is a novel application of error feedback for server-to-worker compression in distributed machine learning. The fact that it can be used to augment any unbiased worker-to-server compression method also broadens its scope.\n\n2. The theoretical and empirical results presented show improvements over prior work.\n\nWeaknesses:\n\n1. My main concern with the paper is that the overall gain with this approach is not entirely clear. As the authors themselves acknowledge, the received wisdom in this space is that downloading data is faster/cheaper than uploading it which reduces the need for compressing data being sent by the server. Moreover, the proposed approach appears to require the workers to a) maintain local state/memory and b) use an unbiased compressor. While the requirement of maintaining local state is a bit restrictive, that is not a big issue since there are scenarios where such state can be maintained. However, as far as I know, if a worker maintains state, it can use a biased compressor with error feedback to improve significantly over unbiased compressors. As the authors don't compare against any such method, it is unclear if their approach leads to any significant improvement over these approaches, especially when the need for server-side compression may not be that acute to begin with.\n\n2. A second minor concern is the limited empirical evaluation. The authors only consider logistic regression on a few datasets. I would like to see evaluation on some other machine learning models to see if the gains are as apparent in other models as well. Also please clarify why results with the baseline approaches (DIANA, MCM, DASHA) are not presented for all datasets (some have DIANA as the baseline, some have DASHA, some have MCM).",
+            "clarity,_quality,_novelty_and_reproducibility": "The overall idea is novel and clearly presented but the writing is very heavy on notation. I would suggest adding a table of symbols and their meanings in the appendix to help readers keep track. It might also be beneficial to provide a brief primer on gradient compression with error-feedback to enable to paper to reach a broader audience. Specifically, the steps in Algorithm 1 may not be self-explantaory to readers unfamiliar with the intuition behind error feedback.",
+            "summary_of_the_review": "The paper proposes a new application of error feedback to bidirectional gradient compression. The application is novel and the theoretical results show improvement over prior work. However the evaluation is somewhat limited and the overall gains of the approach for different machine learning models and as compared to methods using error feedback and biased gradient compression at workers aren't clear yet.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_Vk1R"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4823/Reviewer_Vk1R"
+        ]
+    }
+]

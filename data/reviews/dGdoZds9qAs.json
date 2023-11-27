@@ -1,0 +1,158 @@
+[
+    {
+        "id": "78UlpKKPjY2",
+        "original": null,
+        "number": 1,
+        "cdate": 1666598811310,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666598811310,
+        "tmdate": 1670805372189,
+        "tddate": null,
+        "forum": "dGdoZds9qAs",
+        "replyto": "dGdoZds9qAs",
+        "invitation": "ICLR.cc/2023/Conference/Paper4942/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a new scenario called \"data feedback\". This scenario assumes a multi-round annotation process, where at each round, the new annotations are annotated by both humans and models. This paper provides a quantity of how the new annotated datasets and a trained model by the dataset will be biased to the model annotations, named \"consistently calibration\". This paper also proposes the \"consistently calibrated learning algorithm\" defined by Theorem 1. The experiments are conducted in image classification, visual role labeling and language models.",
+            "strength_and_weaknesses": "## Strength\n\n- The proposed scenario is practical and could be useful for many practitioners working in the industry. I think the proposed scenario is specifically useful for a recommender system because recommender systems in the real world suffer from the self-feedback problem (or feedback loop). \n- The proposed intervention strategy seems to reduce toxicity of a language model.\n\n## Weakness\n\n### Clarity (overused and misused notations for $P$)\n\nThis paper is difficult to follow due to inconsistent notations. For example, $P$ was initially defined as a joint probability of data instance $x$ and its corresponding label $y$ (Section 3), but it is often misused as a marginal probability of data instance $x$ only (4.2 Setup and goals), or distribution of dataset $S$ (where $S$ seems the set of the sampled data points). $P$ is also used for the \"model-annotated\" dataset (P(f)), and $P_\\phi$ is used for the expectation. It is very confusing whiling reading the paper, and it should be corrected as the correct notations. For example,\n\n- P is overused. For example, `P: (X, Y) -> R`, `P(x): X -> R`, `P(f): (X, new Y) -> R`, and even $P_\\phi$ is used for exepection. I would like to recommend using a different notation for the marginal distribution P(X) or using P(X,Y) for the joint probability. Similarly, P(f) seems very confusing. I would like to recommend using $P^f$ instead.\n- I cannot understand why $n_t$ is required to define $P_t^{n_t}$. If P is a distribution, the number of samples is not related to defining the distribution. It is maybe used for defining $S_t$.\n- $S_t \\sim P_t^{n_t}$ seems wrong. It would be $S_t = [ (x_1, y_1) , \\ldots, (x_i, y_i), (x_N, y_N) | (x_i, y_i) \\sim P_t^{n_t} ]$ (please replace [ to {. The embedded latex of OpenReview does not show \\{ correctly)\n- $P_\\phi$ seems a not good shorthand for expectation. Please use a different notation for this.\n\nI am still confused about the difference between $Q$ and $P$ in Definition 1. If this paper wants to represent a joint distribution of x and y as Q, please keep using Q.\n\n### Practicalness of the scenario ($m \\rightarrow 0$ makes a trivial upper bound for Theorem 1)\n\nAs my comment in Strength, the proposed scenario is specifically useful for practical recommender systems. However, in this case, the bound becomes very loose because $k >> m$. Recommender systems notably outperform a randomized item suggestion (e.g., showing much better RMSE for movie rating estimation than a random guess), hence, many industrial applications deploy $m \\rightarrow 0$ and $k \\rightarrow n_t$ in Theorem 1. This makes the bound becomes trivial (the RHS becomes infinity). \n\nConsidering that a machine learning algorithm is usually deployed for automation (as well as performances), it is natural to assume that $m \\rightarrow 0$ eventually.\n\n### Experimental results?\n\nI am a bit confused by the experimental results. As far as the reviewer understood, the results may imply that there is no specific amplification by model feedback. For example, in Figure 3 and 4, the blue lines, the empirical one, look very consistent, whereas the orange lines, the theoretical one, are increasing. Figure 5 also shows similar results, but it also provides additional information for the proposed intervention.\n\nIf models are not biased by the feedback rounds (but just show better performances), why do we need to consider the proposed scenario? It may show that the proved upper bound is a trivial bound so that it does not align with the empirical results. \n\n### Correctness ($\\mathbb E_{f_t}$, and $f_t \\sim A (S_t)$)\n\nIt could be a minor comment. The quantity of bias amplification (and all its related measures) are defined by the expectation over the function $f_t$ where $f_t$ is drawn from a random distribution. However, first, it is usually impossible to get the correct function space (e.g., how can we get the function space of ResNet-18?). I presume that the expectation notation means that the quantity is measured by the average of different SGD runs\n\n> Here A: (X,Y) -> F refers to a potentially stochastic learning algorithm, which we take to be a neural network trained on the cross entropy loss with SGD\n\nIn this case, I recommend avoiding using $\\mathbb E_{f_t}$, and $f_t \\sim A (S_t)$, because not all learning algorithms are stochastic unless the stochasticity of the algorithm is crucial to the theorem proof. For example, KNN is not stochastic (unless we consider a tie-breaking). Instead, it could be better to treat $f$ can be obtained in a deterministic way, and clarify that the experiments report the average of XX different SGD runs to reduce the randomness.\n\n### Practicalness of the scenario (\"clean human annotation\" assumption)\n\nIt could be a minor concern, but I am concerned about the basic assumption that human annotations are clean (\"clean human-annotated samples are available on the internet\" Section 3). In practice, (especially in recommender systems) human annotations and human activities are very noisy. It makes the existing recommender systems use implicit feedback instead of explicit feedback [R1]. Because this paper focuses on a theoretical foundation of the data feedback problem, it could be treated as a \"strong assumption\" that does not match real-world situations. However, I think it should be carefully discussed in this paper, even if this paper does not have to show an additional bound for the noisy human annotation scenario.\n\n[R1] Hu, Yifan, Yehuda Koren, and Chris Volinsky. \"Collaborative filtering for implicit feedback datasets.\" 2008 Eighth IEEE international conference on data mining. Ieee, 2008.",
+            "clarity,_quality,_novelty_and_reproducibility": "I think this paper has a large room for improvement. For example, the notations could be improved, and many `\\vspace{-XX}` could be removed for better readability. During reading this paper, I felt this paper was hard to follow, and I was in trouble understanding the main message of this paper. I strongly recommend revising the paper for better understanding and clarity.\n\nBased on my limited understanding due to the clarity, I think the contribution of this paper is limited because (1) the proposed scenario cannot cover practical settings, such as when $m \\rightarrow 0$ and noisy human annotations (2) the experimental results show that the existing algorithms do not suffer from feedback bias. Please correct me if I am wrong.",
+            "summary_of_the_review": "I think this paper needs a heavy revision for improvement. Especially, I think this paper should be polished in terms of clarity and presentation. If the reviewer understood the paper correctly, this paper has a limited novelty. Overall, I recommend \"reject\".\n\n---\n\nPost-rebuttal comment: As my last comment, the message of the proposed theorem and experiments are still confusing to me. I would like to suggest polishing the main message in the next revision. I think this paper could be valuable in some sense, but I think this paper has a large gap for improvement in terms of clarity, presentation, and writing. I encourage the authors to revise the paper to make the overall message clearer.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_8wPf"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_8wPf"
+        ]
+    },
+    {
+        "id": "yYoR6v2QVd",
+        "original": null,
+        "number": 2,
+        "cdate": 1666693529382,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666693529382,
+        "tmdate": 1666693529382,
+        "tddate": null,
+        "forum": "dGdoZds9qAs",
+        "replyto": "dGdoZds9qAs",
+        "invitation": "ICLR.cc/2023/Conference/Paper4942/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper investigates a very interesting problem, how artificial labels affect later model performance if the predicted labels are recorded as training data. The authors analyzed the stability and gave sufficient conditions to control the bias amplification. Numerical experiments are conducted to corrobarate the theoretical analysis.",
+            "strength_and_weaknesses": "Strength: The targeted problem is very interesting and perhaps has been overlooked for practical AI applications. For this under-studied problem (to the best of my knowledge), the formulation/definition and the numerical experiments setup are very helpful and may inspire more investigations along this line.  \n\nWeakness: \n1. Though the motivation of the problem is new to me, the technical problem itself is not completely new in literature. \nSome related works are missing, e.g., self-distillation, self-training, classification calibration, etc. \nI believe a lot of existing results can be cross-referenced. \n\n\n2. Though the formulation is clear to me, the analysis does not provide enough insight in my opinion. \nThe consistent calibratin (df 1) and distinguishability definition seemed artificial and does not go deep enough to properties of the data or training algorithm themself. For example, in the simplest case where t=1 (similar to the typical teacher-student learning setting), when will the teacher be bad for the student? In comparison, derivation from t=1 to infinity is more straightforward.  \n\nSome questions:\nThe authors recommend the classifier to overfit the training labels, e.g., running more iterations to get the training error to be smaller. However, predictions for unseen data x to be labeled may not be well-calibrated, due to the tradeoff between bias and variance. Do we want the Bayes optimal classifier in this case? When classes are not separable, the Bayes classifier does not interpolate. \nHow would typical classification calibration method work in the case of bias amplification?\n \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The clarity is good and the writing is easy to follow.\nThe novelty is good, mainly the formulation of the problem. The theoretical analysis has a lot of room for improvement.",
+            "summary_of_the_review": "Overall, I think this work is inspiring and original. The bias amplification due to model-labeling is an important problem. This paper analyzed under what conditions the amplification effect can be controlled and conducted various experiments for verification. Connections to related work and the theorectical analysis have a lot of room for improvement.  \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_Dg6m"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_Dg6m"
+        ]
+    },
+    {
+        "id": "djgh31bwDj8",
+        "original": null,
+        "number": 3,
+        "cdate": 1666710620838,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666710620838,
+        "tmdate": 1666710908991,
+        "tddate": null,
+        "forum": "dGdoZds9qAs",
+        "replyto": "dGdoZds9qAs",
+        "invitation": "ICLR.cc/2023/Conference/Paper4942/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper analyses the effect of dataset bias amplification when training a model it's own outputs (with it's biases at that time), which seems like likely scenario given direction of machine generated content. The paper provides bound in a simplistic scenario of data feedback loop and analyses this in a number of modalities and in the context of a number of biases.",
+            "strength_and_weaknesses": "Strengths\n- Interesting problem on a likely an increasingly common scenario going forward.\n- Tested on biases in both computer vision (label bias, gender bias) and language (toxicity and repetition)\n- Takeaways in figures is a nice addition\n\nWeaknesses\n- paper is quite short in content-- exposition on experiments could be moved to appendix and more results and analysis presented in the main paper.\n- While the bound is helpful and this experiment seems like it would yield an obvious result, nonetheless it would be nice to see an ablation of how this problem is exacerbated by different data fraction sizes.\n- While I appreciate that Distributional Generalisation does catastrophically fail as Bayes-optimial classifier would in the scenario-- it doesn't mitigate against bias initially present; and seems like this shouldn't be presented as a solution. Would be interested to hear some exposition around this.\n\nMinor comments\n- Colours chosen in figures make it hard to tell what is what at time.\n- Notation is somewhat confusing to follow in section 4 (e.g. use of shorthand and consistency). I will add more detailed feedback here, but believe this could be easily fixed.",
+            "clarity,_quality,_novelty_and_reproducibility": "While not the clearest paper, it is readable and the analysis novel. Should be reproducible with the details provided.",
+            "summary_of_the_review": "Good analysis, if somewhat short, on an interesting and increasingly prevalent problem. While not a great paper yet, I see no reason to reject if the weaknesses mentioned are addressed.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_vb9Z"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_vb9Z"
+        ]
+    },
+    {
+        "id": "ah61B-_RXyS",
+        "original": null,
+        "number": 4,
+        "cdate": 1666744773559,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666744773559,
+        "tmdate": 1666744773559,
+        "tddate": null,
+        "forum": "dGdoZds9qAs",
+        "replyto": "dGdoZds9qAs",
+        "invitation": "ICLR.cc/2023/Conference/Paper4942/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper formalizes and studies the problem of \u201cdata feedback loop\u201d where model-labeled data is added into the training dataset iteratively. Specifically, the paper focuses on investigating whether dataset biases would be amplified with the data feedback loop. A theoretical framework was proposed to study the problem, which characterizes the conditions where the bias amplification is likely to occur. The theoretical insights are justified by both synthetic and real-world datasets. Finally, a method is proposed to help mitigate the bias amplification.",
+            "strength_and_weaknesses": "Strengths:\n- I believe the general idea of data feedback loop is a pretty timely topic to study, where bias amplification is one important angle to look into. The paper does a good job in formalizing a clean framework for this to allow further theoretical analysis.\n- The paper organization is easy to read, and I appreciate the authors include an illustrative example to motivate the analysis.\n\nWeaknesses:\n- While the theoretical framework is clean and the results make sense. The main takeaways from the theoretical analysis appear to be less surprising. Intuitively, it is quite straightforward that one can mitigate bias amplification by either (1) adding more human-annotated examples or (2) calibrating model\u2019s prediction w.r.t. the original data training distribution. Could the author provide more insights and/or contributions here?\n- I appreciate that the proposed framework enables a way to measure bias amplification in the data feedback loop. However, I think intervention (how to avoid the amplication) is one key that readers would be interested in. However, it is only touched on in the very last section of the paper, and not discussed deeply. For example, by simply overfitting the model, does it also affect the model\u2019s generalization ability, i.e., accuracy?\n- Similar to the above, if sampling-based models are less prone to amplify bias, how does these models compare to argmax models on performance metrics? Is there a trade-off between the two metrics? This is not currently discussed, validated in the experiments.\n- Sec 5.2 confuses me a bit about the usefulness of the proposed theoretical framework. Does it mean that the proposed bound cannot provide useful insights on real-world datasets where the calibration error can frequently be high?\n- In Sec 5.3, isn\u2019t the lower toxicity level the better? If so, why should we care about mitigating the amplification in the cost of resulting in a more toxic model?\n\nMinor Questions:\n- Experiments are shown in the settings with 80% and 50% of new samples are model-labeled. How about the settings where <50% are model-labeled?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Clarity: The paper is overall clearly written and easy to follow\n\n- Quality and Novelty: The paper studies a novel problem setting with decent theoretical framework/analysis. Empirical results are less strong, which mainly focuses on validating the theoretical findings.\n\n- Reproducibility: The authors provide implementation details in the paper as well as their code to reproduce the experimental results",
+            "summary_of_the_review": "Overall, I like the problem setting and how the authors approach the problem with a clean framework. However, I hope to see more takeaways/insights to be provided from the theoretical analysis and more experimental results outside of only validating the theoretical findings. Specifically, how one can leverage the findings to design better methods to solve real-world bias amplification problem.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_GiPd"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4942/Reviewer_GiPd"
+        ]
+    }
+]

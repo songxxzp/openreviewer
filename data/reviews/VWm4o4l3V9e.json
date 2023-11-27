@@ -1,0 +1,159 @@
+[
+    {
+        "id": "4dmDeP3wnB",
+        "original": null,
+        "number": 1,
+        "cdate": 1666564725663,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666564725663,
+        "tmdate": 1666564725663,
+        "tddate": null,
+        "forum": "VWm4o4l3V9e",
+        "replyto": "VWm4o4l3V9e",
+        "invitation": "ICLR.cc/2023/Conference/Paper759/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper introduces a new floating point format for non-uniform quantization of weights (BSFP). The main idea is to split the input vectors (words) into subwords (usually 2) to which separate scaling factors are assigned. All possible combinations of scaling factors are evaluated and one is chosen according to a given criterion (e.g., MSE). The focus of the paper is on post training quantization (PTQ) but quantization aware training (QAT) results are also included. Results are reported on various network for image classification. A hardware implementation for BSFP is proposed and simulated. ",
+            "strength_and_weaknesses": "Strengths:\n- the idea is conceptually simple and well-described: implementing non-uniform weight coverage by combining two (or potentially more) scales for weight quantization\n- comparison against MSFP competing format is favorable, showing improved accuracy at given model size across a range of networks for image classification\n- practical implementation is supported by a proposed HW design and process flow for the processing engine / architecture\n\nWeaknesses and other comments:\n- there are several empirical choices across the paper: scaling factor format (1-4-3, 1-3-3), biases (-3,-8), MSE. For the most part, it is not clear what considerations drove these selection, what other options were investigated, and what was their impact. As far as MSE is concerned, alternative criterions are shown in Fig. 5(c) but the authors don't even attempt to explain why MSE may perform better than L1 or cosine similarity\n- this technique explores all possible scaling factors combinatorially in search of the optimal one. This seems feasible for a small network but less practical for larger ones. Can the authors mention the search time required for the other networks they investigated? In addition, the number of possibilities is upper bounded to $2^7 * 2^7$. Is this value compounded by the number of subword configurations to explore (therefore larger for larger bit widths)?\n- no details on HW simulation makes any sort of verification of throughput and energy efficiency impossible. These may warrant their own section in the appendix\n- accuracy improvement at given model size or FLOPs can be modest in some cases (Table 1), although it is general more apparent when quantization is more aggressive\n- section 5.4 presents skewness analysis to support the claim that distributions of grouped weights can be skewed. I assume Fig.7 was done for vector length of 16. Is the skewness arising from the grouping of weights into blocks or from the actual skewness of the weight distribution of each layer? What would be the proportion of skewed vectors taken from a normally distribution? May want to present this as \"baseline\" skewness\n\nOther comments:\n- clarification on Table 1: when reporting weight bit precision for BSFP (for example: 7 [5 + 2]) does this mean the input vectors were split into 2 subwords in 2s complements format and respective size 5 and 2? Are the scaling factors fixed to 1-4-3  and 1-3-3 format?\n- regarding QAT in the appendix, how does the process work? Are the optimal scaling factors recomputed at every iterations (or every 10, 100 iterations in the case of low cost QAT)? This seems to be adding an enormous overhead to the training\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and for the most part easy to follow. \nAs far as I am aware, the technique is novel insofar the split of input vectors into subwords is concerned.\nIt describes the proposed format and process flow in detail, allowing for reproducibility at SW level. The HW simulation part severely lacks information though.",
+            "summary_of_the_review": "The paper presents a novel format for weight quantization and related HW implementation. The proposed format generally outperforms direct competitors in terms of accuracy at a given model size and/or FLOPs, as tested over a range of models for image classification. Some empirical choices may benefit for clearer motivation and/or explanation. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_h3B6"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_h3B6"
+        ]
+    },
+    {
+        "id": "Mlbz2p9sy-",
+        "original": null,
+        "number": 2,
+        "cdate": 1666909624049,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666909624049,
+        "tmdate": 1666909624049,
+        "tddate": null,
+        "forum": "VWm4o4l3V9e",
+        "replyto": "VWm4o4l3V9e",
+        "invitation": "ICLR.cc/2023/Conference/Paper759/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose a form of low-precision additive quantization in order to represent weights/parameters in NN inference as a sum of a small number (here, 2) of floating point values scaled by very low precision signed integers that represent each individual scalar value in the weights. This scheme goes by the name of BSFP and provides what appears to be an effective means of quantization of weights. \n\nIn order to reduce computation overheads in hardware with this additive quantization representation, it is also necessary to represent activations in such a manner so as to reduce the number of full floating-point additions and multiplications. They chose the pre-existing MSFP representation (a chunk of signed integers plus a shared scaling exponent) in order to represent activations. Together, the two representations work with each other to drastically reduce the number of floating-point type operations (significand adders / shifters for multiplication, etc) which provides a direct advantage to hardware PPA. This basic building block to represent an inner product between BSFP and MSFP (called the S2PE) is combined in a systolic array for generalized inner product evaluation.\n\nThe work requires some number of parameters to be fixed for HW purposes (e.g., quantization scheme and loss function, precision of the two BSFP components, chunk size, etc), but the scheme appears to provide even more significant compression of the weights over MSFP and improved accuracy on a variety of networks (ShuffleNet-v2, MobileNet-v2, VIT, etc).\n",
+            "strength_and_weaknesses": "The main strength is in showing the empirical applicability of the BSFP technique to a variety of computer vision NNs, and while I am not super up on the universe of inference quantization techniques that have been proposed in recent years, I feel like I am fairly up on the computer arithmetic in silicon design space and this quantization method does provide significant advantages in accelerating computation.\n\nThe in-silicon hardware advantages of this design seem quite obvious to me and I don't doubt the PPA advantages at all, but a little more detail on the comparison baselines would be useful. In \"Hardware Evaluations\", it seems that synthesis was run on a 16-wide S2PE (guessing this is what is mean by \"parallelism to be 16 for all number systems), but what exactly was the synthesized design for a 16-wide bf16, int4, int8 design? Does the 16-wide int8 inner product tree produce a 32-bit output or a 8 * 2 + log2(16) = 20 bit output? Where did the bf16 blocks come from (DesignWare or elsewhere)? Any information on the slack in the various designs were produced? How was power estimated, using average switching activity or by using realistic test vector SAIFs from real networks?\n\nTable 1 is a little confusing to look at. The bolded numbers are for all top-1 results of BSFP, though some of the bolded numbers are under the neighboring MSFP numbers. However I would agree that the two techniques are not directly comparable (as BSFP does offer big HW efficiencies). The Pareto frontier charts are simply easier to understand. Regarding \"FLOPs / FixOPs (8b)\", how is this computed for BSFP as many of the adders / multipliers in the S2PE are sub-8b? ",
+            "clarity,_quality,_novelty_and_reproducibility": "The most direct antecedent to this work appears to be prior additive quantization works (e.g., Additive Quantization for Extreme Vector Compression, Babenko and Lempitsky, CVPR2014 comes to mind). The operating space here is quite different, being around both data compression and hardware efficiency of performing computation on the data, whereas the Babenko work was around compression of high dimensional vectors in CV, similarity search and the like. The additive quantization here differs being not whole vector quantization using a codebook of VQ centroids but a combination of per-scalar values with shared scaling factors. So on the quantization front I think this is not super novel but the existence proof of showing that this works in the extreme compression regime is very useful, not to mention that the design space of \"additive quantization\" is itself fairly huge.\n\nAlso, I think adapting it in this extreme compression case for HW NN inference is new and interesting, and offers another design axis to the existing NN compression literature. Just as product quantization offers efficiencies in computation with respect to inner product or L2 distance between compressed vectors (no need to perform the full arithmetic, just use a bunch of lookup tables), here the BSFP additive compression work drastically reduces the size/number of full-on FP adders/multipliers required.\n\nThe one thing that I would be interested in seeing would be a wider variety of experiments on non-vision networks (language models, recommendation MLPs, etc) as the application in industry for this technique I think would be limited unless there was greater confidence that the design was not overfitting on specifics of this small subset of NNs considered.\n\nI might not understand all of the details presented (and if one were to implement it there might be some fine details missing from the paper) but I do feel like I understand the scheme and could likely implement something like it myself both in software simulation and in RTL using the idea as a starting point.\n",
+            "summary_of_the_review": "Overall, I am borderline accept to full accept, this does add something new to the literature (first time I've seen additive quantization used in this space for one) and as an existence proof with concrete results it is super interesting, but the BSFP technique itself (including the discussion about using signed integers instead of wasted +/-0 representation space with sign/significand for MSFP) do have antecedents. A little more evidence on broader applicability I think would be useful in order for HW people to consider it in their inference designs, but I think that will likely have to wait for others (or the authors themselves) to expand the work in subsequent papers.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "none",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_KfxR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_KfxR"
+        ]
+    },
+    {
+        "id": "nkypRWcONf3",
+        "original": null,
+        "number": 3,
+        "cdate": 1667079151920,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667079151920,
+        "tmdate": 1667079151920,
+        "tddate": null,
+        "forum": "VWm4o4l3V9e",
+        "replyto": "VWm4o4l3V9e",
+        "invitation": "ICLR.cc/2023/Conference/Paper759/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposed a new number representation format for efficient post-training quantization of deep neural networks. The proposed format consists of a vector of words each of which is linearly decomposed by two subwords with reduced precision floating point scales. The authors claim that the proposed format is more suitable for representing asymmetric weight distribution. The authors evaluate the proposed method with several ImageNet classification models, and they also presented the hardware implementation for it.",
+            "strength_and_weaknesses": "(Strengths)\n- A new data format (potentially) more representative of asymmetric distributions.\n\n- Evaluation of quantization accuracy on various ImageNet classification tasks.\n\n(Weaknesses) \n- The proposed methods incur more arithmetic operations (e.g., multiplication per subword and addition of psums from the sub-words). The authors claim that these additional computations can be efficiently handled by custom hardware. However, it is very difficult to properly evaluate their claims on hardware benefits without enough evidence and fair comparisons. \n\n- The authors claim several algorithmic advantages of the proposed format, such as adaptation to skewed/non-uniform distributions. However, these claims are not theoretically or analytically supported in the paper; E.g., there is no guarantee that asymmetric number representations of two's complement format are helpful for capturing asymmetric weight distributions. Note that the two's complement is significantly skewed to the negative regions. This fixed skew might be harmful if the weights are positively skewed or not skewed much. There is no analysis in the paper that provides theoretical reasonings about it. \n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The proposed method seems to be a new approach to reducing bit-precision for post-training quantization. However, the hardware advantages claimed by the authors are hard to verify, and there is no careful comparison with other hardware implementation scenarios, such as other precision scalable MAC architectures (divide & conquer, sub-word parallel, etc.). In particular, bit-serial architecture is known to be slow due to its multi-cycle arithmetic computation. How does it affect the overall performance? \n ",
+            "summary_of_the_review": "This paper proposed an interesting reduced-precision data representation, but the proposed method incurs hardware overhead. The authors tried to justify their choices with their hardware implementation, but the corresponding discussions are not thoroughly evaluating all the hardware options. Unfortunately, there is little theoretical analysis that justifies the algorithmic advantages of the proposed method, which the readers of ICLR would most appreciate. In this regard, it seems to the reviewer that this paper might fit better for the hardware architecture conferences such as DAC and ISCA.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_guHP"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_guHP"
+        ]
+    },
+    {
+        "id": "WMNqhybd4VD",
+        "original": null,
+        "number": 4,
+        "cdate": 1667272171638,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667272171638,
+        "tmdate": 1667272171638,
+        "tddate": null,
+        "forum": "VWm4o4l3V9e",
+        "replyto": "VWm4o4l3V9e",
+        "invitation": "ICLR.cc/2023/Conference/Paper759/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The authors Block and Subword-Scaling Floating-Point (BSFP), a variant of block-floating point (BFP). BFP represents a vector of real numbers using a single shared exponent and a per-element signed mantissa. BSFP is a variant with the following key differences:\n 1. BSFP represents a vector of real numbers as the sum of *multiple* such BFP vectors. The paper only experiments with 2 vectors.\n 2. BSFP uses shared low-bit float scaling factors (which can be an arbitrary number) as opposed to a shared exponent (which must be a power of 2)\n\nBSFP is designed for post-training inference. BSFP is only used for the weights, while activations are left in BFP. This is because the weights are known ahead of time, so the authors can use a brute-force exhaustive algorithm to finding the best scaling factors. The dot products between weight and activation will be between BSFP and BFP, which is actually a positive as such a dot product is efficient and does not require floating-point multiplies:\n 1. Individual mantissas can be multiplied in fixed-point\n 2. The float BSFP scale factor(s) and the power-of-two BFP scale factor can be multiplied by an exponent summation.\n 3. The scale factor product can be multiplied onto the dot product sum with a fixed-point mantissa multiply.\n\nThe authors propose to use a custom bit-serial architecture to support BSFP. There's a architectural diagram given but not much detail in the text. The architecture is based on a bit-serial processing engine from another paper. Using bit-serial means the subwords in BSFP can be different bitwidths.\n\nThe authors compare against MSFP, Microsoft's BFP implementation which seems like a fairly strong baseline. This is a great improvement from many quantization papers which compare only against FP32. Experiments are done over a suite of CNNs and VIT on ImageNet. Convincing results show that BSFP achieves better accuracy-per-model-size compared to MSFP. However, the throughput comparison is done with both MSFP and BSFP on the custom bit-serial architecture - this feels weak to me since bit-serial is not widely used in practice and the MSFP paper uses a conventional accelerator. Still the experiment section as a whole is quite convincing.",
+            "strength_and_weaknesses": "Strength:\n - BSFP is a novel data type which combines multi-level quantization with BFP.\n - BSFP is clearly algorithmically better than BFP since it uses float scale factors. Despite this BSFP does not require float multiplies during computations when multiplied with BFP.\n - Paper is well written. The results surrounding accuracy and model size is convincing. The comparison is made to a strong quantization baseline in MSFP.\n\nWeaknesses:\n - The process of converting floating-point weights to BSFP is not fully clear. The exhaustive algorithm to find the scale factors makes sense, but how to compute both sub-word mantissas? The paper mentions \"iterative rounding\" but this needs to be made clearer. If the two mantissas are of uneven widths (as is the case in many of the experiments) which mantissa is computed first?\n - Most of the BSFP configurations tested in Table 1 use uneven subword mantissa widths. These configurations may not be efficient outside of bit-serial architectures. This is unlike BFP which is relatively easy to implement even on CPU and GPU.\n - BSFP trades away flexibility for efficiency. Vanilla BFP can be used easily for training and fine-tuning, but BSFP due to the complex quantization procedure can only be used for inference.\n - The throughput comparison between BSFP and MSFP was made on a custom bit-serial processor, which seems like it was designed specifically for BSFP. For example, MSFP uses a wider shared exponent which incurs a greater shift overhead in their design. But I think this is specific to bit-serial and would not be an issue for a conventional adder tree. This makes the throughput comparison somewhat unconvincing. I honestly think the authors should scale back the amount of the paper devoted to the hardware throughput comparison. ICLR is not the venue for this. Focus the paper on the model size and accuracy results instead.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is fairly novel, the proposed quantization format is inspired by multi-level quantization and BFP, but it is a major departure from existing work.\n\nThe paper is generally clear, but the process of converting from float to BSFP is not sufficiently detailed. The paper can and should be fixed to include such details so a reader can reproduce the model size and accuracy results.\n\nThe hardware throughput results are somewhat unconvincing since it using a hardware architecture that is clearly favoring BSFP. There is also not enough detail to reproduce the hardware results (although there is no way to fix this, we're at ICLR not a architecture conference) I think the paper stands well on the other results and the authors should scale back the hardware claims to better fit the venue/readers.",
+            "summary_of_the_review": "The paper proposes BSFP, a novel data format similar to block-floating point (BFP). BSFP uses multiple BFP vectors to represent a single vector of real numbers. BSFP uses floating point scale factors but can efficient multiple with a BFP vector with only fixed-point operations. BSFP has a complex quantization procedure and is only suitable for pre-quantized weights during inference. BSFP was designed for an unconventional bit-serial architecture and may not be efficient on commercial devices. Nevertheless, BSFP is quite novel and achieves improved accuracy per model size when benchmarked against a strong BFP baseline. This makes it an interesting paper for the quantization community.\n\nThe biggest change I advise is to focus the paper on the quantization algorithm and data format and away from the hardware architecture.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_A7Vh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper759/Reviewer_A7Vh"
+        ]
+    }
+]

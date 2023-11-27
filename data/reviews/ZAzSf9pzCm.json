@@ -1,0 +1,159 @@
+[
+    {
+        "id": "HDESbPIdIU",
+        "original": null,
+        "number": 1,
+        "cdate": 1666571405448,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666571405448,
+        "tmdate": 1666641058654,
+        "tddate": null,
+        "forum": "ZAzSf9pzCm",
+        "replyto": "ZAzSf9pzCm",
+        "invitation": "ICLR.cc/2023/Conference/Paper3172/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors are interested in studying the impact of the packing strategy on BERT\u2019s training and performance.\n\nThe authors first observe that the variation in sequence lengths in nlp datasets used for pre-training (such as Wikipedia) can yield a very large amount of padding tokens (50% reported) which means a lot of compute is wasted on padding tokens.\n\nThey propose two heuristics for creating packed sequences taking inspiration from the operational research literature which can scale to very large datasets.\n\nBy adjusting the positional embeddings, the attention masks, and losses, the authors show that the packed sequence training is equivalent to the original non-packed BERT training both in terms of downstream performance and training convergence.\n",
+            "strength_and_weaknesses": "Strengths:\n- The problem is well-posed and relatively well-motivated. This is an important problem that has consequences on a large class of current training schemes and models in NLP but also consequences in training practices outside of NLP.\n- Experiments are relatively straightforward and well constructed, and results are convincing.\n\nWeaknesses:\n- Usage of BERT as a baseline is not well motivated (does it have to do with MLPerf benchmark?). More specifically, several choices in BERT training have been questioned in the RoBERTa reproduction such as the need for 2 phase training (first on short sequences and then longer sequences), the very big batches, the NSP auxiliary loss\u2026 I think the experimental setup could be considerably simplified (and more actual).\n- Downstream evaluation performance is somehow weak and not exhaustive enough (only squad performance is reported). I think a minimum of 3 qualitatively different tasks would be enough to convince the reader that the trainings are equivalent. Matching training curves (Figure 3 and 4) seems like only a \u201csanity check\u201d.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Questions:\n- Why use BERT as a baseline experimental setup compared to other alternatives such as T5 or roberta?\n- Could you explain or justify what you mean:\n    - Page 1: \u201cIts effect is enhanced by the offline dataset generation process which, in BERT, attempts to pack together sentences so as to fill the sequence length as completely as possible\u201d.\n    - Page 5: \u201cHowever, this approach might not be desirable as it might imply under-utilizing the memory/compute, especially if the micro batch size needs to be reduced.\u201d -> I did not understand the under-utilization argument.\n    - Page 8: \u201cPacking slight violates the i.i.d. Assumption of the data\u201d. \n- Terms I had difficulty in understanding:\n    - Figure 1: how is the theoretical speedup computed?\n    - Figure 3: What is `beta`?\n    - Figure 4: what is the training accuracy?\n- Presentation suggestion: While wall time is a very useful metric to track, a lot of the engineering challenges when training very large llms could be summarized as \u201coptimizing flops/second throughput\u201d. Presenting that along with iteration count and time would give a more accurate picture of the problem.\n",
+            "summary_of_the_review": "Overall, this a solid study of well-posed problem, with limited technical and empirical novelty,",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_1zai"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_1zai"
+        ]
+    },
+    {
+        "id": "MlHH8HTJMZ-",
+        "original": null,
+        "number": 2,
+        "cdate": 1666651766082,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666651766082,
+        "tmdate": 1666651766082,
+        "tddate": null,
+        "forum": "ZAzSf9pzCm",
+        "replyto": "ZAzSf9pzCm",
+        "invitation": "ICLR.cc/2023/Conference/Paper3172/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes two algorithms for packing multiple token sequences into batches so as to minimize the amount of padding required. It also describes Transformer-specific techniques for ensuring that sequences within a packed batch are handled completely independently (no information leaks across batches). Experiments with BERT show speedups of almost 2x compared to unpacked batches, with no degradation in model performance.\n",
+            "strength_and_weaknesses": "Strengths:\n\n1. The proposed techniques are straightforward to implement, and they work well.\n\n2. The experiments are solid, with particular attention to details such as the effect of breaking the iid assumption when packing.\n\nWeaknesses:\n\n1. The contribution seems a bit thin. Although two algorithms are proposed, the simpler of the two (sort sequences by length, allocate by decreasing length to batches with the most space remaining) basically works as well as the more complex matrix formulation, and doesn\u2019t come with the additional restriction of max 3 sequences / batch due to computational constraints. That algorithm is quite obvious, as are the techniques to modify position embeddings and attention to ensure sequence independence.\n\n2. The work is mostly relevant to models such as BERT, which use sentence inputs. More recent models such as GPT-3 and PaLM use much longer sequences, and avoid padding by just concatenating and truncating documents. Larger capacity models also mean that special masks aren\u2019t necessary to distinguish examples, as they can learn to split on just a separator token.\n\n3. Although the paper was quite clear for the most part, it would benefit from a distinct problem definition at the beginning of section 3 that defines terms and gives the inputs and outputs from the algorithm. Some of the descriptions were a bit unclear, e.g. in 4.1 it would be good to have a better definition of sorted batching in the main paper, and also an explanation of how greedy is different from packed BERT.",
+            "clarity,_quality,_novelty_and_reproducibility": "See strengths and weaknesses.",
+            "summary_of_the_review": "I am leaning slightly against acceptance because this seems to be mostly an engineering contribution, and one that is more relevant to older, smaller models. Although such models are still in common use, the training costs of more recent large LMs are so much bigger that they make gains on smaller models seem less important.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_PH3R"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_PH3R"
+        ]
+    },
+    {
+        "id": "JMYxNQi0fFp",
+        "original": null,
+        "number": 3,
+        "cdate": 1666692829200,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666692829200,
+        "tmdate": 1666692829200,
+        "tddate": null,
+        "forum": "ZAzSf9pzCm",
+        "replyto": "ZAzSf9pzCm",
+        "invitation": "ICLR.cc/2023/Conference/Paper3172/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper explores efficient packing methods for training sequences of BERT,  which avoids the padding tokens to speed up the training.\nThe authors introduce shortest-pack-first histogram-packing (SPFHP) and non-negative least-squares histogram-packing (NNLSHP) algorithms, which are shown to be straightforward to implement and have little impact on model performance.  Experiments on the Wikipedia dataset show that the proposed method can achieve 2x speedup while achieving similar training loss.\n\n",
+            "strength_and_weaknesses": "Strengths:\n- This paper designs shortest-pack-first histogram-packing (SPFHP) and non-negative least-squares histogram-packing (NNLSHP) algorithms to avoid the padding tokens and speed up the model training.\n\nWeaknesses:\n- The technical contribution of this paper is limited. Packing is a common technique and has been widely adopted in the official deep learning frameworks, including tensor2tensor and Fairseq. This seems to be a system paper and the contribution might be not significant enough to publish at ICLR. \n- A simple packing technique is to sort sequences by length and merge near-length sequences into one mini-batch. Then it further leverages dynamic batch size to maintain a similar token number for each mini-batch, which significantly speeds up the model training. This paper lacks detailed comparisons with this simple baseline.\n- Currently, dynamic sequence length is supported in CUDA libraries, which may limit the application of the proposed algorithms. \n\nDetailed Comments:\n\nOverall, this paper is easy to follow and this idea is straightforward. But the technical contribution of this paper is limited. This work seems to be a system paper and the contribution might be not significant enough to publish at ICLR. \n\nPacking is a common technique and has been widely adopted in the official deep learning frameworks, including tensor2tensor and Fairseq. For example, a widely used packing technique is to merge near-length sequences into one mini-batch and then adopt dynamic batch size to maintain a similar token number for each mini-batch. It could achieve significant speedup during model training and there is no detailed comparison with this baseline. In addition, the dynamic sequence length of RNN or Transformer is supported in CUDA libraries, in which the CUDA libraries avoid the computation of padding tokens when given sequence length. This way limits the application of the proposed algorithms and this paper lacks correspondent comparisons between the proposed method and dynamic sequence length.\n\n\nQuestions for the Author(s):\n- I would like to know the details of the sorted method in the paper. Does it adopt dynamic batch size to maintain a similar token number for each mini-batch?\n- Currently, dynamic sequence length is supported in CUDA libraries. How about the differences between the proposed method and dynamic sequence length?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Please refer to Detailed Comments.",
+            "summary_of_the_review": "This paper designs shortest-pack-first histogram-packing (SPFHP) and non-negative least-squares histogram-packing (NNLSHP) algorithms to avoid the padding tokens and speed up the model training. But the technical contribution of this paper is limited. This work seems to be a system paper and the contribution might be not significant enough to publish at ICLR. Some strong baselines should be considered.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "n/a",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_tpoA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_tpoA"
+        ]
+    },
+    {
+        "id": "buYVzn3HBd4",
+        "original": null,
+        "number": 4,
+        "cdate": 1666730363301,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666730363301,
+        "tmdate": 1667074820102,
+        "tddate": null,
+        "forum": "ZAzSf9pzCm",
+        "replyto": "ZAzSf9pzCm",
+        "invitation": "ICLR.cc/2023/Conference/Paper3172/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper tackles batching and padding, a core procedure in training machine learning models. It argues that conventional solutions (padding to the max sequence length in a minibatch) may result in 50% of the training data being paddings, substantially wasting the compute. It proposes several techniques to address this problem: better packing of the training sequences, modifications to the transformer architectures, and adjustments to the established hyperparameters. Experiments of training the BERT model show that substantial speedup can be achieved with the proposed technique.\n",
+            "strength_and_weaknesses": "Strength:\n- The paper is fairly clear and well-motivated. \n- The proposed technique can be useful for most practitioners. \n- General guidelines for adjusting existing hyperparamters.\n\nWeaknesses:\n- As a machine learning research paper, the technical contrition is thin. Some venus on MLM systems might be a better fit.\n- I\u2019m not an expert on this, but I feel that existing work must have tried to address this issue, but the paper does not compare to any baseline.\n- The claim is not well supported by the evidence: (1) the paper claims \u201cwithout impacting performance,\u201d but the only evaluation on accuracy seems to be MLM training accuracy (in terms of word prediction?); (2) the paper fails to acknowledge that the proposed method may not work for neural models other than transformers (e.g., I cannot figure out how to make this work for RNNs)\n- The results are based on IPU, a kind of accelerator that most practitioners probably don\u2019t have access to. This casts some shadow on the paper\u2019s reproducibility, and limits its impact.\n- It is not entirely clear how the \u201ctheoretical speedup\u201d is determined. Is it simply 1 divided by the ratio of the real tokens? I don\u2019t think this is correct: transformers have quadratic-complexity components. As an illustrating example, I do not think the time of processing a 512-length sequence is twice that of a 256-length one. \n\nDetails and further comments:\n- End of section 2: please 2.2$\\times$, instead of 2.2$x$.\n- 4.2.1: what is the task? Is it word prediction on the training data (that no one cares about)? I would strongly encourage evaluate on downstream tasks.\n - I would appreciate it if the authors can try (1) other tasks such as text generation, and (2) other pretrained LMs. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "- The paper is clearly written.\n- The novelty and execution are below average for top ML venues.\n- The authors provide enough experimental details. But since the experiments are done on special hardware that most researchers don't have access to, I'm concerned about its reproducibility.",
+            "summary_of_the_review": "\nSummary:\n- While the proposed method can be useful, further evaluation is needed to validate its effectiveness. I encourage the authors to consider submitting to some ML system venues, which can be a better fit than ICLR.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_cSJD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3172/Reviewer_cSJD"
+        ]
+    }
+]

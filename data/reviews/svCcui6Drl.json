@@ -1,0 +1,119 @@
+[
+    {
+        "id": "e5n7iuuR-lO",
+        "original": null,
+        "number": 1,
+        "cdate": 1666636911788,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666636911788,
+        "tmdate": 1670385893467,
+        "tddate": null,
+        "forum": "svCcui6Drl",
+        "replyto": "svCcui6Drl",
+        "invitation": "ICLR.cc/2023/Conference/Paper5077/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "**Note**: Throughout the review, I will make a distinction between dense mini-batch SGD, i.e., mini-batch SGD with batch size $B$ and large mini-batch SGD with batch size $B\\cdot H$, where $H$ is the number of local steps, for the local-SGD algorithm with the exact computation and communication cost, and $B$ is the baseline batch-size used in this paper. Thus, dense mini-batch SGD is the same as parallel SGD in this paper's nomenclature.\n\n**Summary**: The paper studies the generalization behavior of Local SGD and its variant Post-local SGD ([Lin et al.](https://arxiv.org/pdf/1808.07217.pdf)). Specifically, it tries to understand and justify the better generalization performance of post-local SGD over dense mini-batch SGD. This problem is interesting, and while previous work explored this question, there is no satisfying, empirical, or theoretical explanation. \n\nAuthors first reproduce some experiments from previous works ([Lin et al.](https://arxiv.org/pdf/1808.07217.pdf), [Ortiz et al.](https://arxiv.org/abs/2110.08133?context=cs.CV)) showing that Post-local SGD, indeed has a generalization benefit over dense mini-batch SGD on CIFAR-10 and ImageNet. Then it compares local-SGD runs with different local steps but the same constant learning rate and shows that both local SGD and post-local SGD have a generalization benefit over dense mini-batch SGD if the learning rate is small enough. Further, the authors show that the optimal learning rate for local SGD depends on the number of local steps $H$. This observation is not surprising, given the optimization literature on local SGD in both convex and non-convex settings. Finally, the paper presents some theoretical results using the stochastic differential approximation of local SGD to justify the empirical behavior. \n",
+            "strength_and_weaknesses": "#### **Unfair hyper-parameter tuning**\nThe paper almost treats the step size as a part of the problem and not a part of the algorithm/optimizer. This is why the authors make unfair comparisons and come up with questionable conclusions. For instance, why should one consider the same step size while changing the number of local steps in figure 1? It is well understood that at least in the convex setting, the optimal step size for local SGD inversely depends on the number of local steps $H$ (see the [optimal rate for local SGD]((https://arxiv.org/abs/2111.03741)) in the homogeneous setting in [this paper](https://arxiv.org/abs/2002.07839)). \n\nThe relationship might be different in the non-convex setting (as hinted by figure 2(e)-(f)). Thus the correct thing to do is to tune the step size separately for each $H$. Most of the experiments in [Lin et al.](https://arxiv.org/pdf/1808.07217.pdf) use the step-size schedule of dense/large mini-batch SGD for local SGD, thus giving mini-batch SGD the benefit of the doubt. The authors seem to be doing the opposite here, and I conjecture that dense/large mini-batch SGD will be better than the local SGD baselines in figure 2(a) if it uses the correct hyper-parameters. I also expect that $H=1$ might be optimal for larger step sizes in figures 2(e)-(f). \n\nIdeally, the authors must first fix a training budget and tune the step size to obtain the best validation loss/accuracy for the \"final model\" of each optimizer **separately**. This would make the optimal step size a function of $H$ and the training budget. Finally, it is important to clarify the stopping criterion for optimization; I couldn't find it in the appendix. \n\n\n#### **Missing comparison to Large Mini-batch SGD**\nThere is a lot of work trying to understand the optimization/generalization properties of local SGD in the convex setting. But the theory has been disappointing in showing the benefit of local SGD over large mini-batch SGD and single-machine SGD ([Woodworth et al.](https://arxiv.org/abs/2102.01583)). In fact, in the heterogeneous convex setting, which is the setting of the experiments, large mini-batch SGD is almost always better than local SGD [Woodworth et al.](https://arxiv.org/abs/2006.04735). Thus it is important to include large mini-batch SGD in all the experiments and use the correct step size for it (usual [scaling rules often fail](https://arxiv.org/abs/1811.03600)). The relevant setting, then, is the one where post-local SGD is better than both variants of mini-batch SGD. I expect that for small $H$, large-mini-batch SGD would be the correct algorithm to use, but for very large $H$ post-local SGD would be better. It is also important to compare against the SDE approximation of large mini-batch SGD in section 3. However, it might be challenging because the larger optimal step size might hurt the approximation error and make the comparison with the slow-SDE inconclusive. In particular, note that when $\\eta$ is very small local SGD is expected to behave as large mini-batch SGD. Can the authors comment on this theoretically from the SDE perspective?  \n\n\n#### **Inconsistent optimization setup**\nThe optimization setup introduced in section 1 and used throughout section 3 is that of stochastic optimization. However, all the experiments are performed using SGD with multiple passes, i.e., sampling without replacement, along with hyper-parameter tuning on the validation data set. Furthermore, the data is split between the machines for parallel training. While this is fine for the mini-batch algorithms, it introduces heterogeneity in client updates for local SGD; check [this](https://arxiv.org/abs/2006.04735) and [this](https://arxiv.org/abs/2206.04723). For a large number of local steps, this could cause a [client drift](http://proceedings.mlr.press/v130/charles21a.html) and have a regularization effect for local SGD. Several conflating factors make it hard to reconcile the experiments with each other and the theoretical guarantees. To make things worse, the writing doesn't acknowledge these nuances in optimization.    \n\n> Given a sufficiently small learning rate and a sufficiently long training time, Local SGD exhibits better generalization than SGD if the number of local steps H per round is tuned correctly according to the learning rate. This holds for both training from random initialization and from pre-trained models.\n\nIn light of the above comments, the above finding, which seems to be the paper's main contribution, is a bit vague. It is **not interesting** to identify which hyper-parameters make local SGD look good. Ideally, different optimizers should be compared after \"convergence,\" as the main goal is generalization here. Even if the training budget is fixed apriori and the authors want to consider the effect of different training budgets, they must change the step sizes accordingly. The interesting question is why post-local SGD generalizes better than mini-batch SGD, even if it potentially uses a non-optimal step size ([Lin et al.](https://arxiv.org/pdf/1808.07217.pdf)). The paper does not answer this question.\n\n#### **Highlight connections to the optimization literature**\nAs mentioned above, several connections to the optimization literature about local SGD must be mentioned in the main paper. This includes observations in figure 2(e)-(f), the client drift in the heterogeneous setting, min-max optimal algorithms in the homogeneous setting, etc. Note that many of these papers are generalization guarantees as they directly optimize on distribution $\\tilde{\\mathcal{D}}$, using stochastic first-order oracles and thus offer similar insights as in section 3. \n\n#### **Theoretical results**\nThe theoretical results and some of the developed techniques are novel. But the authors should improve the writing in section three, as the main result of the section doesn't come off clearly.\n\nI have already mentioned the missing comparison to large mini-batch SGD. I expect that for very small $\\eta = O(1/H)$, local-SGD and large mini-batch SGD should behave similarly, as the local gradients are all computed at very similar points (for context see [this paper](https://arxiv.org/pdf/1910.06378.pdf)). Thus, the interesting regime is where local SGD (or its approximation) can be shown to improve over both variants of mini-batch SGD. Can the current theoretical results even highlight such a regime because $\\eta = \\theta(1/H)$ in theorem 3.2? Also, what can the authors conclude about large mini-batch SGD, assuming hypothesis 3.1? \n\nThere are two levels of approximation in section 3.2, one more approximation leading up to (9), and these might not hold very well for the optimal step size for local SGD, which can be larger than $1/H$ (at least in the convex setting). Even If the optimal step size is smaller than $1/H$, then large mini-batch SGD might have comparable performance. On top of this, the generalization benefit would only hold in the regime where hypothesis 3.1 is correct. Thus it is a bit hard to make sense of the theoretical result here. The writing will benefit from a discussion of these different regimes. \n\nFinally, I'm not too fond of using the section to explain finding 2.1 (due to the above reasons). The theoretical results would be more interesting as a standalone contribution after more polishing.\n\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper's writing is fine except for some unsupported or confusing statements:\n\n>The local batches on different workers are independent with each other as there is no communication. \n\n1. They would have been independent even if there was communication, i.e., $H=1$. The independence comes from sampling in the model described in section 1, not from lack of communication. \n\n>All the above papers agree that local SGD* generalizes better than SGD to some extent. \n\n2. *Post-local SGD, not local SGD. One explicit take-away from [Lin et al.](https://arxiv.org/pdf/1808.07217.pdf) is that Post-local SGD is better than both Local SGD and mini-batch SGD. Perhaps this confusion arises because the authors switch between the perspectives of pre-training and switching optimizers. Both are reasonable perspectives, but the writing should be consistent. I understand that some of the experiments in this paper (figure 2) claim that pre-training is not essential to show the benefit of local SGD. Thus the difference between local and post-local SGD is not significant. But as I mention above, there are issues with how hyper-parameters are tuned, making this conclusion questionable. \n\n>Simultaneously requiring a small learning rate and sufficient training time poses a trade-off when learning rate decay is used with a limited training budget: switching to Local SGD earlier may lead to a large learning rate, while switching later may result in insufficient training time.\n\n3. This sentence is confusing. Perhaps replacing the phrase \"insufficient training time\" with something like \"local-SGD makes fewer steps making the generalization-improvement less noticeable\" should make it clearer. \n\n\nThe experiments appear reproducible, as the setup is similar to the cited papers. Some of the theoretical techniques are novel and could be of independent interest. I encourage the authors to highlight this further. ",
+            "summary_of_the_review": "The paper tries to answer an interesting question using new empirical and theoretical insights. However, I believe the comparisons between different optimizers are unfair due to incorrect hyperparameter tuning. As a result, the paper doesn't study what it claims to study. Some important baselines are also missing from the experiments. The theoretical result is not a standalone contribution but is used to explain the empirical findings. Since the finding seems less valuable, it is also unclear if the developed theory helps understand local SGD any better. More importantly, there is a mismatch between the settings of the experiments and the theory. The theoretical techniques might be of independent interest, but they don't constitute the paper's main contribution, the way it is written currently. Thus, I don't recommend accepting the work in its current form.  ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_QgEL"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_QgEL"
+        ]
+    },
+    {
+        "id": "iGQyqZrxky9",
+        "original": null,
+        "number": 2,
+        "cdate": 1666756766142,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666756766142,
+        "tmdate": 1666756766142,
+        "tddate": null,
+        "forum": "svCcui6Drl",
+        "replyto": "svCcui6Drl",
+        "invitation": "ICLR.cc/2023/Conference/Paper5077/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Local SGD (LSGD) is a communication-efficient variant of SGD for large-scale training, where multiple GPUs perform SGD independently and average the model parameters periodically. It has been shown previously that LSGD generalizes better when with a small enough learning rate and sufficient training time. To analyze this observation theoretically,  this paper introduces a new SDE that approximates LSGD in continuous time and compares it with the SDE of SGD. This comparison shows that LSGD has a stronger drift term which results in a stronger effect of regularizer and that leads to a faster reduction of sharpness. ",
+            "strength_and_weaknesses": "They provide novel and simpler ways to analyze the proposed SDE compared to existing theoretical results by adding a mild assumption. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The claims are clear and also there is a clear relation between the claim and the provided theoretical analysis. They provide novel and simpler ways to analyze the proposed SDE compared to existing theoretical results by adding a mild assumption. \n",
+            "summary_of_the_review": "comments \n1- Although remark 3.1 says that the analysis holds when SGDL starts out of zero loss manifold, however in the thm 3.2 it is needed that \\zeta(0) should be in the manifold. Where does this discrepancy come from? \n\n2- Since thm 3.2 needs that \\zeta(0) should be in the manifold, isn\u2019t true that the presented analysis is more related to the Post LSGD? \n\n3- It would be more justified if you add some empirical results to the main body of the paper about your hypothesis 3.1. \n\nMinor comments: \nFor Fig 2, what is \\eta_1 and shouldn\u2019t that be 0.32? Also, plots (e) and (f) don\u2019t have proper legend i.e. not clear what are the values corresponding to each color. \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_KHJA"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_KHJA"
+        ]
+    },
+    {
+        "id": "TrBuHfgGW90",
+        "original": null,
+        "number": 3,
+        "cdate": 1666904618504,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666904618504,
+        "tmdate": 1666904618504,
+        "tddate": null,
+        "forum": "svCcui6Drl",
+        "replyto": "svCcui6Drl",
+        "invitation": "ICLR.cc/2023/Conference/Paper5077/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper uses the derivation of an SDE to explain why and under what condition local SGD generalizes better than SGD. Empirical results are also provided to show that small learning rate + long enough training time + carefully tuned $H$ results in generalization improvement over SGD.",
+            "strength_and_weaknesses": "Strength:\n1. This paper uses the derivation of an SDE to explain why and under what condition local SGD generalizes better than SGD. \n2. Empirical results are also provided to show that small learning rate + long enough training time + carefully tuned $H$ results in generalization improvement over SGD.\n3. The theoretical and empirical results provides some general guidelines and intuition of using post-local SGD, which is easy to follow.\n\nWeakness (concerns and questions):\n1. I recommend to show the detailed algorithms of SGD, local SGD, and post-local SGD in the paper, appendix is also fine, so that it will be easier for the readers to refer to these algorithms, especially for those who are not familiar with local SGD and post-local SGD. I believe post-local SGD is much less well-known to the general readers.\n2. The theoretical and empirical analysis focuses on learning rate, total number of steps, and $H$. I wonder if the SDE analysis could also show how the global batch sizes affects the generalization of local SGD.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper provides novel theoretical and empirical results, which are clear and easy to follow.",
+            "summary_of_the_review": "This paper uses the derivation of an SDE to explain why and under what condition local SGD generalizes better than SGD. Empirical results are also provided to show that small learning rate + long enough training time + carefully tuned $H$ results in generalization improvement over SGD. I wonder if the batch size also plays an important role in the SDE analysis.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_ELvh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5077/Reviewer_ELvh"
+        ]
+    }
+]

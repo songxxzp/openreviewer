@@ -1,0 +1,119 @@
+[
+    {
+        "id": "sFoy_ojRH0a",
+        "original": null,
+        "number": 1,
+        "cdate": 1666623872706,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666623872706,
+        "tmdate": 1666623872706,
+        "tddate": null,
+        "forum": "ukWZS73ccwk",
+        "replyto": "ukWZS73ccwk",
+        "invitation": "ICLR.cc/2023/Conference/Paper5970/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents an extension of S4 layers [Gu et al. 2021] with latent variables, which are used to define a generative model. \nTo this end, the authors define an auto-regressive prior distribution over latent variables leveraging the S4 parametrisation. Furthermore, the approximate posterior is defined as a product of marginals, and also leverages S4 parametrisation. \n",
+            "strength_and_weaknesses": "While the paper is generally well written, clarification is needed for several details:\n\nFor instance, the model and posterior before Eq. (5) makes assumptions that need explanation: \n- The emission model is both auto-regressive in all observations x and all latent variables z. Can you motivate why you consider the dependence structure on x additionally to z? And why use auto-regressive instead Markovian models which are more common in SSM literature?\n- The inference model assumes that the (approximate) posterior factorises as a product of marginals, which is very restrictive. Why is this choice made as a starting point?\n- Eq. (5) appears to be in conflict with the equation for the approximate posterior above. Whereas above, you assume that the approximate posterior factorises as a product, here you use a factorisation into conditionals (which is not restrictive). Which factorisation did you actually consider? And is Eq. (5) the objective you use in the end? It's not obvious as that is in the background section.\n- In Eq (5), the posterior is conditioned on observation only until some intermediate x_ti, but it should be the full trajectory of observations, otherwise you have an additional gap in the ELBO. This has been discussed e.g. in [1]. (Unless you would do a filtering-based approximation for all the conditionals p(y_t | y_<t), but that seems also not the case.)\n\nAnother thing that confused me is that in the beginning x is used as inputs and y as target observations. And later, x are the observations of the generative model. I think it would be good to either use a different symbol for one, or clarify this better.\n\nI don\u2019t understand Eq. (8). x_tk and z_tk are scalars, and h_tk is the feature vector at time-step t. How does the convolution operation apply here? Maybe you want to write the convolution for the sequence, similar to Eq. (3)?\n\nWhat is H_\\beta? In the inline text above its mentioned that it is the function mapping x, z to h. What is that function? Only dh/dt has been specified, but not h itself, or how it is approximated. Bilinear transformation?\nLater, there is H_\\beta_1 and other subscripts. This is undefined. What is the index?\n\nIn 4.1, before starting the paragraph \"LS4 prior block\", I am missing a connecting sentence. It took me a while to understand that the block parametrises the conditional distribution. Because the next equation has \"y\" as output and there is no other equation for z or mu_z and sigma_z, this paragraph read as unconnected to that equation. This can be streamlined better for the reader.  \n\nI am also a bit worried and uncertain in my understanding about how a latent trajectory is generated. For the posterior, as far as I understand, you can compute the approximate posterior marginals in parallel, because you factorise it as a product of marginals? If so, this should be noted. For the prior, can you only compute the hiddens h and y in parallel, and then have to sample auto-regressively? Is this the reason why there are no forecasting experiments? If this is a limitation, it would be great to state this explicitly. \n\nWhy is the prior on z discrete-time, whereas h is continuous-time? I think this is never mentioned. \n\nEq (11), what is G_yz?  suppose its just an additional matrix. Why this additional transformation here?\n\n\u201cIn turn, state\u2013space models do not suffer from stiffness of dynamics as the numerical methods are sidestepped in favor of an exact evaluation of the convolution operator.\u201d\nI would like to learn a bit more about this. As far as I understand, the convolution operator is applied to the *discretized* system. How does this sidestep numerical problems? \n\nHow do you deal with initialisation? From what I understand from the previous work, the Hippo initialisation is one of the key things for the empirical performance. I think this was not discussed, despite its importance. And there is also no theory regarding how to adjust this for the additional latent variables z. \n\nRelated work.\nI think the paper is missing a quite large literature of related work on deep state-space models that are not of the S4 type. Among the vast literature on deep variational state space models, several methods even use conditional linear or linearised state space models, for instance [2,3,4,5].\n\n\nExperimental evaluation.\nThe performed experiments show that the model is able to generate realistic samples even for quite challenging data distributions. This seems quite promising. However, I find the choice of experiments and baselines not ideal. In particular, \n- why not compare to the obvious baseline S4? Both in terms of speed and performance.\n- since the model uses latent variables to express uncertainty, I would have expected to see some experiments and evaluation metrics that would benefit from this, e.g. probabilistic forecasting evaluated with the CRPS score.\nThe current set of experiments leave me somewhat undecided. On the one hand, the model seems to be able to generate realistic data very well. I am not sure if this implies that the latent transition model is also learned properly, or whether there is potentially a short-cut, e.g. using only the initial latent state and ignoring the dynamics. This speculation would be easily debunked through a forecasting experiment. In the experiments in 5.3, the worse performance on Physionet is explained as if the randomness in the latent space was a limitation, but that should be actually the selling point of this model, as certain data just is not perfectly predictable. \n\n\n[1] Bayer et al. 2021, Mind the Gap when Conditioning Amortised Inference in Sequential Latent-Variable Models\n[2] Rangapuram et al. 2018, Deep State Space Models for Time Series Forecasting\n[3] Fraccaro et al., 2017, A Disentangled Recognition and Nonlinear Dynamics Model for Unsupervised Learning\n[4] Kurle et al. 2020, Deep Rao-Blackwellised Particle Filters for Time Series Forecasting\n[5] Klushyn et al. 2021, Latent Matters: Learning Deep State-Space Models",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written in terms of language. But I think there are several gaps that need to be filled. Reading the paper now a few times still leaves me confused about several details. Examples are given in Strengths and Weaknesses. I think these need to be improved, but many of them can be addressed easily.\n\nI think the paper is not particularly novel, as it is a direct extension of previous work (S4), combining it with variational inference. \nThis combination did not require novel technical contributions. On the other hand, this is the first paper proposing a probabilistic extension of S4. \n\nIn the current form, I would not be able to reproduce the paper, but I hope to gain more clarity from the rebuttal/revision.",
+            "summary_of_the_review": "I think this paper has great potential and it is overall good work. However, in the current version, I find several things unclear, and would therefore vote for rejection. Many questions and clarification could be addressed in the rebuttal though.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_PiDm"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_PiDm"
+        ]
+    },
+    {
+        "id": "6292B0RiFY",
+        "original": null,
+        "number": 2,
+        "cdate": 1666627864185,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666627864185,
+        "tmdate": 1666627864185,
+        "tddate": null,
+        "forum": "ukWZS73ccwk",
+        "replyto": "ukWZS73ccwk",
+        "invitation": "ICLR.cc/2023/Conference/Paper5970/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes LS4 which is a generative model for sequences inspired by the deep state space model (SSM) S4. LS4 performs latent space evolution following a state space ODE and is trained via sequence VAE objectives. State-of-the-art results on selected datasets for continuous-time latent generative models are reported.",
+            "strength_and_weaknesses": "\n - [+] The paper is well written and easy to follow. All necessary theoretical and conceptual background information is concisely introduced.\n - [+] The reviewer also appreciates that comprehensive source code is added in the supplementary materials.\n - [-] In several passages of the text \u201csignificant\u201d performance gains are claimed although no statistical tests are performed. Furthermore, there is no indication that several replicates per method were\n       performed and there are no error bars in the respective result tables.\n - [-] The authors do not explain how the hyperparameters for the respective methods were selected. In section D only one specific hyperparameter setting of LS4 is explained: how was this selected and what\n       is the exact hyperparameter search space of LS4 and the baseline methods?\n - [-] It is not explained how 4 of 30 datasets were selected in section 5.2. Why weren\u2019t datasets from baseline methods like SaShiMi or SDEGAN selected?\n - [-] Since SaShiMi is specifically designed for modeling raw audio waveforms, wouldn\u2019t S4 or a variant thereof have been a more suitable baseline? This is also briefly discussed by the authors in the last\n       paragraph of D.1.\n - [-] The information in Figure 1 is not clearly illustrated, and the main caption is missing. The plot in (a) is quite overloaded and the y-axis label should be more specific (e.g. \u201cvalue of x\u201d). It is not\n       clear how well LS4 approximates the ground truth. Is it possible to plot the mean trajectories with standard deviations for a fixed p? Some more information on the FLAME problem would be helpful. How\n       do different trajectories arise given a fixed p, does the variation come from varying initial conditions?\n\n### Questions\n\n - What are the runtimes of SaShiMi and other VAE-based methods in Table 1? Can the authors explain why the runtimes of the baseline methods experience exponential growth, shouldn\u2019t this be on scale\n   O(N^2 L)? Why do the runtimes of Latent ODE drop by increasing the sequence length from 80 to 320? It would also be interesting to compare memory consumption in an experiment since shorter runtime can\n   come at the cost of more overhead and the practical implementation does not necessarily have to follow the theoretical result in Proposition 4.2.",
+            "clarity,_quality,_novelty_and_reproducibility": "The theoretical part of the paper is clearly written but the experimental section needs clarification in order to evaluate the quality of the results.\nThe paper is novel in a way that it combines the S4 approach for SSM with the VAE framework for data generation.",
+            "summary_of_the_review": "The paper is well written and easy to follow. Nevertheless, important information needs to be added in the description of the experimental process to be able to correctly assess the presented results.\n\n### Minor Questions\n\n - Why wasn\u2019t the FID used for comparing the generated with the real distribution in section 5.2? It is a well-established metric for generative models and e.g. the bottleneck layer of an Autoencoder could\n   have been used to compute the Frechet Distance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_rvUd"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_rvUd"
+        ]
+    },
+    {
+        "id": "jSsN0vXvrlH",
+        "original": null,
+        "number": 3,
+        "cdate": 1666653601752,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666653601752,
+        "tmdate": 1666653601752,
+        "tddate": null,
+        "forum": "ukWZS73ccwk",
+        "replyto": "ukWZS73ccwk",
+        "invitation": "ICLR.cc/2023/Conference/Paper5970/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposed LS4 a sequential latent state space model with the latent state evolving according to a discretized approximation of ODE. The structure of the latent state dynamics induces an efficient convolutional implementation. The model is trained in a VAE framework. Experiment results on challenge datasets including data from stiff systems show strong performance of the model",
+            "strength_and_weaknesses": "Strength:\n\n1. The motivation of introducing a latent variable for S4 model is strong. The model leverages the strong representation power of latent variables and efficient convolutional implementation of S4 Model.\n2. The work compares against a broad set of baseline models. The experiment results show strong performance and efficiency of the proposed model.\n\n\nWeakness:\n1. Some important baselines are missing from the comparison including VRNN[1] and latent SDE[2].\n2. For efficient convolutional implementation, the dynamics of the latent variable are limited to linear dynamics. It\u2019s not clear if such transition dynamics are going to limit the representation power of the latent state. That\u2019s also why I think models with more flexible transition dynamics like VRNN and latent SDE should be compared.\n3. The work reports ELBO in experiments but it is not a tight bound of log-likelihood. IWAE as well as its particle filtering version for sequential latent variable model FIVO are tighter than ELBO and can better reflect how well the generative model fits the data.\n4. The technical novelty of the proposed model is incremental. The model can be viewed as a special case of the existing sequential latent variable model or latent extension of the S4 model. This is a minor concern as the efficiency improvement based on convolution could compensate for the lack of novelty.\n\n\n[1] Chung, Junyoung, et al. \"A recurrent latent variable model for sequential data.\" Advances in neural information processing systems 28 (2015).\n\n[2] Li, Xuechen, et al. \"Scalable gradients for stochastic differential equations.\" International Conference on Artificial Intelligence and Statistics. PMLR, 2020.",
+            "clarity,_quality,_novelty_and_reproducibility": "I have no big concerns about the clarity or writing quality of the paper. I do have concerns about the work\u2019s novelty. Please refer to Strength and Weakeness for more details.",
+            "summary_of_the_review": "I appreciate the extension of S4 models to its latent variant which leverages both the representation power of sequential latent variable models and the efficiency of S4 models. But I'm especially concerned about the lack of comparison against models with more flexible latent variable models like VRNN and the recently proposed latent SDE.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_5ELF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5970/Reviewer_5ELF"
+        ]
+    }
+]

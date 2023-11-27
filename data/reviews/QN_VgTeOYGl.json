@@ -1,0 +1,120 @@
+[
+    {
+        "id": "5rzp6h0mQG",
+        "original": null,
+        "number": 1,
+        "cdate": 1666514289503,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666514289503,
+        "tmdate": 1666514599523,
+        "tddate": null,
+        "forum": "QN_VgTeOYGl",
+        "replyto": "QN_VgTeOYGl",
+        "invitation": "ICLR.cc/2023/Conference/Paper6558/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper investigates the problem of data reconstruction from gradients in federated learning in the case of tabular data. Two main issues arise with this modality: some features are categorical, and it is much harder for a na\u00efve human to guess whether the samples are correctly reconstructed.\n\nBuilding on the previous work of Geiping (for images), the paper introduces a softmax parametrization and the resulting method optimizes on the resulting latent variables. Further, by using multiple independent reconstruction and subsequent pooling, reconstruction results are improved. The authors propose to leverage these independent reconstructions to measure the entropy of reconstructed features as a proxy for quality of reconstruction.\n\nMany experiments on 4 tabular datasets (1 in main body, the remaining three in appendix) investigate in detail the proposed method. The authors first perform an ablation study to show the effect of each proposed improvement (softmax and pooling) in the case of FedSGD, for varying batch size, demonstrating a significant improvement over the baseline. The authors observe that discrete features are easier to retrieve than continuous ones. For FedAvg-style updates, experiments also demonstrate an improvement over baseline. The authors show empirically that the heuristic based on entropy is associated with a larger retrieval success for categorical variables.",
+            "strength_and_weaknesses": "# Main strengths\n\n- Simple method, easy to plug over existing approaches (Geiping et al.)\n- Proposes a working entropy-based heuristic to assess the quality of reconstruction\n- Compelling experimental demonstration for the effectiveness of the proposed method. I have several comments to improve it further, but I already find it very convincing\n\n# Main weaknesses\n\n- Some claims regarding the specificity of problem are a bit strong (see novelty below).\n  - The related works on NLP are not completely fairly represented (see below);\n  - The authors list as a challenge specific to tabular data that \"the mix of categorical and continuous features causes high variance in the final reconstructions\", but there is no empirical proof of it. However, there is no denying it brings improvements, and it also enables the entropy heuristic; it is mostly a wording issue. (see detailed comments)\n- The justification and study of pooling could be improved (see below)",
+            "clarity,_quality,_novelty_and_reproducibility": "# Clarity\n\n- The paper is well written and easy to follow.\n\n## Minor typos and comments\n\n- I would recommend to standardize notations across the paper: the symbols $\\mathcal{D}_i$ is used to denote private datasets at the beginning of section 2, and discrete sets of features at the end of the same section. Similarly, $\\sigma$ denotes the softmax function in the main paper and the variance of the Gaussian Differential privacy noise in Appendix C.1. Also, index $i$ is used for different purposes\n- In the introduction of \"mixed type tabular data\" (section 2), I think there is some confusion in the sentence introducing \"the one-hot encoding of the $i$-th discrete...\". I suspect it should read \"The one-hot encoding of the $i$-th discrete feature $x_i$ is a vector $c_i^D(x)$\n- Page 4, notations for $c(x)$ are not the same at the top (continuous features marked $x_i^C$) and at the bottom (continuous marked $z_i^C$)\n- Sec 3.3, paragraph \"categorical features\", one should have $\\hat{x}_{ij}^D$ and not C in the exponent\n- sec 3.3, end of first line, \"to asses\" -> \"to assess\"\n- In table 2, the first column is entitled #batches but not entirely clear to me. Is it the batch size or the number of batches per epoch?\n\n# Quality\n\n- I find the experimental demonstration of very good quality overall. I have several comments, though.\n- One claim of the paper is that the mix of continuous and discrete features creates a harder optimization problem (with higher variance), thereby justifying the softmax+pooling approaches.\n  - With the current results, I do not see exactly where one sees that it is the very /mixture/ of discrete and continuous features that makes the problem difficult. I would be more convinced e.g. if there was a link between the prevalence of continuous and discrete variables among total variables and the final accuracy of the baseline method. In the datasets, what is the % of discrete vs continuous variables?\n  - Further, I do not see evidence that the same mix leads to a higher variance than fully continuous problems, as there is no such comparison.\n  - However, I agree that the softmax approach makes sense for this problem, and pooling indeed \n- Regarding the discrete features, similarly to NLP, one have tried to leverage the discrete nature of data by looking at non-zero entries in the gradients or updates to know which categorical features are represented, and maybe constraining the optimization problem this way. Have the authors tested such an approach?\n- Regarding pooling:\n  - The problem it is supposed to tackle is not entirely justified, see above\n  - What is the effect of $N$ (number of replicas) on the results?\n  - What is the justification for a median pooling? In particular, there is no guarantee that a median pooling leads to features summing up to 1 (while a mean pooling would guarantee it) - how would mean pooling perform?\n- The authors assume a gaussian distribution for continuous variables to compute the entropy, but it does not hold in practice, witness the variations of the random baselines for continuous variables in Tables 18-21: while the buckets of the accuracy metric are supposed to contain 25% of the probability mass under a gaussian hypothesis, the performance of the random (gaussian) baseline varies between 44.4% to 19.1%. How would you propose to extend the measure of the entropy in non-gaussian cases?\n- In sec 4, baselines, the paper states\n> the random baseline monotonously approach perfect accuracy with increasing batch size\n\n  I don't understand how this can be possible with the definition of the random baseline, unless the data generating distribution corresponds to an independent product of marginals?\n- Regarding the effect of the size of the neural network,\n  - it would be more useful to compare the absolute numbers provided (e.g. 50 vs 100 hidden units...) to the number of features in the dataset, to understand the regime in which one is (underparametrized vs overparametrized).\n  - a usually strong baseline for tabular data is a linear model (no hidden layer), which is not tackled here\n\n# Novelty\n\n- The application of gradient attacks to tabular data is novel to the best of my knowledge\n- The use of pooling and softmax is novel, as well as the heuristic of the entropy\n- For key challenge (i) mentioned by the authors in the introduction, the authors contrast the mixed discrete-continuous problem to the fully continuous optimization for pixels and embeddings for text. While I agree for pixels, I don't think it is fair to judge embeddings for texts as continuous. In practice, the embeddings are fixed for fixed network weights (which is the setting of the attack for FedSGD). In (Gupta et al., Recovering private text in federated learning of language models) cited by the authors, the attack precisely leverage the discrete nature of embeddings by looking at non-zero entries on the vector to find a bag of words present in the original data.\n\n# Reproducibility\n\n- I want to thank the authors for providing most experimental details.\n- One important aspect that I could not find is the computation of the accuracy over batches: how do the authors align the reconstructed batch with the original one? e.g. do they follow the same matching algorithm as in Sec 3.2?\n- In the experimental setup, 50 different batches are attacked for a given initialization of a network. Are there repetitions over the particular initializations of this network as well?\n- For the cosine baseline on the discrete labels, did you add any constraints of discrete features summing up to 1?\n",
+            "summary_of_the_review": "The authors propose a novel approach to make gradient attacks work successfully on tabular data. The thorough experiments are enough to convince me of the viability of the approach. However, I have small concerns regarding the claims on the specificity of the problems tackled for tabular data. If the authors address them, I will raise my score accordingly.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No ethical concern",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_Gtmh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_Gtmh"
+        ]
+    },
+    {
+        "id": "0_MqRseeE4",
+        "original": null,
+        "number": 2,
+        "cdate": 1666555247197,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666555247197,
+        "tmdate": 1666555247197,
+        "tddate": null,
+        "forum": "QN_VgTeOYGl",
+        "replyto": "QN_VgTeOYGl",
+        "invitation": "ICLR.cc/2023/Conference/Paper6558/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "While reconstructing data in FL from gradients leads to a continuous optimization problem, tabular data with categorical variables yields a mixed integer programming optimization problem. The authors propose a softmax based continuous relaxation and an ensemble strategy that makes the underlying solution algorithm more robust. They show 10% improvement over baselines. ",
+            "strength_and_weaknesses": "Strengths: \nThe identification of the unique aspect of data reconstruction in the tabular setting\n\nWeaknesses:\nThe underlying new ideas are not innovative. Softmax relaxations are well known and ensemble techniques are also ubiquitous. \nThe benchmark models are fairly weak (random selection and a technique transferred from the continuous case)\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written. Perhaps the background section is too long and should be shortened. \nThe source code is available and the experiments can be reproduced. ",
+            "summary_of_the_review": "Both technical contributions are weak. In terms of softmax, there are more sophisticated and often efficient relaxations of discrete random variables (for example, the Gumble trick). \nIt is also possible to tackle directly the mixed integer formulation. There is a slew of algorithms in the optimization community (for example, branch-and-bound, GA) that are applicable in this case (many of them don't require convexity and can handle general optimization problems). \nRobustness can also be improved by not simply taking ensemble. There is work in distributed computing on how to effectively explore parallelization. \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_x5xg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_x5xg"
+        ]
+    },
+    {
+        "id": "koWJoRcGCA",
+        "original": null,
+        "number": 3,
+        "cdate": 1667548368657,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667548368657,
+        "tmdate": 1667548368657,
+        "tddate": null,
+        "forum": "QN_VgTeOYGl",
+        "replyto": "QN_VgTeOYGl",
+        "invitation": "ICLR.cc/2023/Conference/Paper6558/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper considers the data leakage attack in federated learning and focuses on the tabular data. A new method called TabLeak is proposed, which consists of three ingradients: (Section 3.1) softmax structural prios; (Section 3.2) pooled ensembling; and (Section 3.3) entropy-based uncertainty estimation. The combined attack is given in Section 3.4. Numerical experiments is presented in Section 4 and conclusions are drawn in Section 5.",
+            "strength_and_weaknesses": "Strength:\nThis paper considers a very interesting topic. \n\nWeakness: \n\nFirst, the solutions to tackle the challenge brought by tabular data are quite standard. \n\nSecond, this paper is not well written. Certain sentences are very obscure and it is hard to understand what the authors are trying to say. \nAlso, the grammars are not correct in certain sentences. One example is the sentence following Equation (2).\nMoreover, in this paragraph, the tense should be consistent. The present tense is used in the beginning of the paragraph, however is switched to past tense for unknown reasons. Although this might be correct in grammar, it is very annoying to the readers. ",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is not well written and it is hard to understand its content. Also, the methods in this paper are quite standard and do not show much novelty. ",
+            "summary_of_the_review": "Please see my comments above. Although this paper may contain some intellectual merit, the poor presentation makes it hard for readers to appreciate it. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_oUHx"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6558/Reviewer_oUHx"
+        ]
+    }
+]

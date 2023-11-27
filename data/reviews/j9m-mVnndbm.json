@@ -1,0 +1,197 @@
+[
+    {
+        "id": "LSuHKZ0UxH-",
+        "original": null,
+        "number": 1,
+        "cdate": 1665888591885,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665888591885,
+        "tmdate": 1668972065965,
+        "tddate": null,
+        "forum": "j9m-mVnndbm",
+        "replyto": "j9m-mVnndbm",
+        "invitation": "ICLR.cc/2023/Conference/Paper2124/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes MIMT which is a transformer-based model that can predict the PMFs of tokens in arbitrary order, not necessarily in raster-scanning order (e.g. line-by-line). After training the MIMT model, they propose an \u201citerative decoding scheduler\u201d which decodes tokens from the current frame from smallest entropy to largest. ",
+            "strength_and_weaknesses": "Strengths:\n- The authors have relatively comprehensive evaluations over UVG/MCL/HEVC-B and show that their work is state of the art.\n- The authors provide runtime comparisons, which I appreciate \n- The intuition of decoding the image in an \u201ceasy-to-hard\u201d process is interesting, I appreciate the diagram shown in Fig. 6.\n\n\nWeaknesses:\n- I think the iterative decoding scheduler is interesting but I\u2019d like more theoretical and/or empirical analysis as to why it makes sense to 1) go from low entropy to high-entropy, and 2) using a sine function. Did the authors try out other functions / decoding orders? Why was this function and ordering the one that the authors decided to settle on? \n- The recurrent prior + Optical flow predictor isn\u2019t really explained. It doesn\u2019t seem to be a main contribution (the main contribution seems to be MIMT), but it also seems to provide a fairly significant ~10% bitrate savings to all datasets. And this goes into a broader framing of the paper itself. Are the authors proposing the entire e2e system as the novel idea? Or the entropy model as the novel idea? To me, the entropy model seems to be the main idea, and I would love to see an experimental setup that helps me understand what the benefits of that are. \n- I don\u2019t entirely get the purpose of section 5.4 (Ablation Studies), since none of these items are central to the author\u2019s core contributions, which is using MIMT as the entropy model. The paper is also missing ablation studies that would help validate the claims that the authors make regarding MIMT. For instance, the benefits of decoding token by token instead of decoding the current frame all in one step. Or the benefits of going low entropy to high entropy vs. say a raster ordering. Or the decision to use a sine function. \n- I don\u2019t think this is never explicitly stated in the paper but conceptually you would need to use the decoding scheduler when first encoding each frame into tokens, as well as during decoding time right? Because you would need to determine the order in which to encode the tokens for each frame in order to decode the tokens using the same sequence. It\u2019s not clear from the paper itself, and I was initially confused as to how the decoding scheduler would work.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is easy to read, and from what I can tell the idea of using masked transformers for entropy coding is novel. ",
+            "summary_of_the_review": "In summary, I think MIMT is a promising direction and a cool idea - I like the intuition of decoding tokens in non-raster order. But it needs more fleshing out from an experimental and potentially a theoretical perspective. The authors provide relative comprehensive experimental results on overall bitrate/distortion curves, but I would want to see more results that highlight the benefit of MIMT itself. It is also unclear to me how much stuff like the hyperprior, last frame, recurrent prior (none of which are novel ideas) are contributing to the boost of results vs. this entropy model. And a bonus would be to see a larger mathematical justification. \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_DWzw"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_DWzw"
+        ]
+    },
+    {
+        "id": "K9JD2I3SuX",
+        "original": null,
+        "number": 2,
+        "cdate": 1666584817610,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666584817610,
+        "tmdate": 1669712445063,
+        "tddate": null,
+        "forum": "j9m-mVnndbm",
+        "replyto": "j9m-mVnndbm",
+        "invitation": "ICLR.cc/2023/Conference/Paper2124/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper extends the notion of conditional coding in DMC and Sheng et al., 2021 by additionally introducing a masked image transformer-based entropy model (MIMT) for learned video compression. The MIMT appears to be inspired by VCT and improves on VCT by a scheduling-based transmission. The gain of the proposed method looks very promising.   ",
+            "strength_and_weaknesses": "Strengths:\n(1) This work introduces a transformer-based, bi-directional entropy model with a masked and incremental coding order. This idea is interesting and novel. \n(2) The gain presented looks very promising. \n\nWeaknesses:\n(1) In my opinion, MIMT presents a different approach to the group-based auto-regressive model, e.g. Checkerboard Context Model for Efficient Learned Image Compression, CVPR 2021. Similar to the group-based model, MIMT encodes the tokens in an incremental manner. However, the tokens to be encoded in each iteration are identified based on their predicted entropy rates, instead of using a fixed pattern as with the group-based auto-regressive model. The dynamic determination of tokens to be encoded comes at the cost of additional compute for sorting. Moreover, the number of tokens to be coded in each iteration crucially determines the final coding performance. Currently, this is done in a heuristic manner by choosing the scheduling scheme r(i) as sin (i * pi/2). The choice of this scheduling scheme needs justification. I believe a different choice of r(i) would lead to different coding performance. Also, the gain of this dynamic approach over the fixed-pattern approach, e.g. checkerboard context model, needs to be clarified.\n(2) The impact of the number of iterations, e.g. the value of n, together with the scheduling scheme r(i) on the final coding result should be studied in an ablation experiment. Moreover, this study should look into how these design choices may affect the complexity in terms of MAC and encoding/decoding runtimes on both CPU and GPU.  \n(3) The entropy model proposed in [1] uses TWO previously reconstructed latents as inputs to estimate the probability distributions of the latents in the current frame. The proposed method replaces one of the previously reconstructed latents with the Recurrent Prior. It is unclear how much additional gain the Recurrent Prior can bring. Note that the Recurrent Prior may cause error propagation in the error-prone transmission.  \n(4) While the proposed scheme shows very promising coding gain, its MAC (4.4T) is very high. It also inherits the disadvantage of DMC of high memory requirements due to the need to buffer contextual information. I wonder how the coding result would look like if contextual encoding and decoding is disabled. Note that without contextual encoding, the proposed method would reduce to a scheme similar to [1], which will not suffer from temporal cascading errors.   \n\n [1] Mentzer et. al.  \u201cVct: A video compression transformer,\u201c arXiv 2206.07307, 2022.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is easy to follow and is a serious work. MIMT is new and novel. I believe the results should be reproducible. ",
+            "summary_of_the_review": "This work combines the conditional coding scheme in DMC and an extended version of VCT. The MIMT is inspired by VCT and is novel. While the idea of MIMT is interesting, how it compares with the group-based auto-regressive model needs further clarification. Also, more ablation experiments are needed to understand the complexity-performance trade-off of MIMT. The proposed scheme shows good coding results at the cost of high MAC. It is to be noted that DMC (the existing work) contribute partly (likely considerably) to the overall gain presented in this paper. It is unclear how the coding results may look like if contextual encoding and decoding is disabled and how such a stripped scheme compares to VCT.   ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_1F8U"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_1F8U"
+        ]
+    },
+    {
+        "id": "SOFZctXGP3",
+        "original": null,
+        "number": 3,
+        "cdate": 1666622382752,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666622382752,
+        "tmdate": 1668761939256,
+        "tddate": null,
+        "forum": "j9m-mVnndbm",
+        "replyto": "j9m-mVnndbm",
+        "invitation": "ICLR.cc/2023/Conference/Paper2124/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a neural video compression method which leverages masked image modeling for entropy coding. The advantage of masked image modeling in the context of image generation, where it was previously used, is that it provides better quality-complexity trade offs than fully autoregressive modeling. When combined with other techniques such as motion compensation, hyper-prior modeling, and a recurrent prior the proposed method achieves state-of-the-art BD-rate performance compared to recent engineered and neural video compression algorithms, on UVG, MCL-JCV, and HEVC-B, in PSNR and SSIM.",
+            "strength_and_weaknesses": "*Strengths:*\n\nThe proposed method obtains state-of-the-art results, outperforming several recent engineered and neural codecs across a variety of established benchmark data sets and metrics. Moreover, the proposed method seems to be the first one to use masked image modeling in the context of entropy coding for neural compression. This intuitively makes sense as masked image modeling was recently successfully deployed for likelihood-based generative image modeling (Chang et al. 2022) and where it allows for good quality-speed tradeoffs.\n\n*Weaknesses:*\n\nBesides masked image modeling, the method employs a large set of known modules/tricks (optical flow with multi-scale motion, hyper-prior, recurrent prior, windowed self-attention,...) some of which are ablated and shown to be effective. However, the paper\u2019s main technical novelty - masked image modeling - is not ablated. How does this compare to (potentially structured) autoregressive modeling? By performing autoregression e.g. over spatial blocks or channels, similar rate/compute tradeoffs might be attainable similar to those realized by masked image modeling. Indeed, Table 4 shows that some of the modules/tricks lead to BD rate increases of 10-15%, so they might be to a large part be responsible for the superiority of the proposed method.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "*Clarity:*\n\nI believe that paper could benefit from some more polishing of the text. For example, I would not call masked image modeling a \u201cbi-directional\u201d method as I feel this could be confused with temporally bi-directional modeling in the compression context.\n\n*Quality and novelty:* \n\nThe method is state of the art. Masked image modeling is the main novel contribution, the other components have been used previously in the context of neural compression. However, the benefits of masked image modeling are not properly evaluated and quantified (see weaknesses above).\n\n*Reproducibility:*\n\nThe most important architecture and training details are documented in the paper. However, given the many modules used, the proposed method will likely be hard to implement. For example what is the number of attention heads and MLP hidden dimension used by the transformer and Swin transformer layers? What are the architectural details of the ConvLSTM? I could only find the shape of ConvLSTM outputs in the paper.\n",
+            "summary_of_the_review": "The paper proposes to use masked image modeling for entropy coding in the context of neural video compression and presents a corresponding system which outperforms recent state-of-the-art engineered and neural codecs. While this is a strong result, the paper lacks an in-depth evaluation of the masked image modeling component - its main technical contribution.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_Gx3J"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_Gx3J"
+        ]
+    },
+    {
+        "id": "AktOMSOAc0-",
+        "original": null,
+        "number": 4,
+        "cdate": 1666691729585,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666691729585,
+        "tmdate": 1666691729585,
+        "tddate": null,
+        "forum": "j9m-mVnndbm",
+        "replyto": "j9m-mVnndbm",
+        "invitation": "ICLR.cc/2023/Conference/Paper2124/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes to use an iterative decoding scheme for entropy model based on masked image modeling to improve video compression. This scheme has the advantage that a fixed autoregressive order is not used and thus leading to a better modeling of the latents. Further, SWIN transformer based model is used to improve the efficiency of the method.",
+            "strength_and_weaknesses": "Strengths\n- The paper is clearly written and easy to understand.\n- Improved performance over previous strong baselines.\n- A good set of ablation experiments that study some of the method choices and provide insights into them (e.g. visualization and effect of prior information).\n\nWeaknesses\n- Novelty: Incremental. Two main contributions are use of SWIN transformer inspired architecture for efficiency and Masked autoencoding based entropy model. Individually both are incremental. However, the improvements resulting from this combination make up for the incremental novelty in my view.\n- Missing ablation of decoding schedule: Paper uses a sine based schedule to decide patches to decode. It would be useful to understand how critical this choice is to the method's performance. For example, a simple comparison would be simple linear schedule.\n- Training details are missing, leading to poor reproducibility. Model details of how prior information is generated is missing too. Please clarify in appendix at the very least.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Clarity: Paper is clearly written and easy to understand\n- Quality: Paper pushes SOTA on video compression.\n- Novelty: Incremental at best, but to effective improvement in compression performance.\n- Reproducibility: Training details are missing. Further, model details of how prior information is generated is missing too. \n",
+            "summary_of_the_review": "Overall, despite the marginal novelty, I am positive about this paper. Existing techniques are used effectively to improve compression performance. I think these improvements are substantial enough to warrant acceptance.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_33TR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_33TR"
+        ]
+    },
+    {
+        "id": "PEsN_NVF0c",
+        "original": null,
+        "number": 5,
+        "cdate": 1666876756685,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666876756685,
+        "tmdate": 1668781970643,
+        "tddate": null,
+        "forum": "j9m-mVnndbm",
+        "replyto": "j9m-mVnndbm",
+        "invitation": "ICLR.cc/2023/Conference/Paper2124/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposes to use masked transformers in the representation space of a compressive autoencoder to do video coding. The masked transformer predicts the distribution of the representation auto-regressively, where more and more tokens are uncovered, similar to MaskGIT (Chang et al 2022). In contrast to other recent transformer work for video compression (VCT, Mentzer et al 2022), the transformer   does not just see see the last two representations (y_t-1, y_t-2), but also a hyper latent z_t, as well as the output of a ConvLSTM. Furthermore, the encoder and decoder transforms are conditioned on motion between adjacent frames, introducing again a predictive coding mode (in contrast to VCT): the frame at time step t depends on all reconstructions since the last I-frame.",
+            "strength_and_weaknesses": "## Strengths\n\n- Great PSNR performance on common benchmark datasets, outperforming VTM in PSNR/RGB.\n- Using Masked transformers makes sense from a compute perspective and is an interesting direction.\n- Paper reports runtime numbers, important for this growing field.\n\n## Weaknesses\n\nAblation Study and Clarity of Results. While the results are very convincing, I left the paper wondering what we actually learned. Which of the introduced components is how cruicial? In contrast to VCT, we have a) hyperprior, b) recurrenct prior, c) flow conditioning on E/D. While Table 4 answers some questions, in light of VCT I would have really like a row that is just \"last two frames\":\n\na) I am unconvinced that the ConvLSTM provides any benefit over just feeding the last two representations (i.e., why not feed y_{t-1}, y_{t-2} instead of y_{t-1}, r_{t-1}). The authors present no evidence that the (complicated and annoying to train) ConvLSTM provides any benefit.\n\nb) Furthermore, and *more cruicially*, no ablation on c) flow conditioning is performed. I would be really interested in seeing how that affects PSNR.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Idea is relatively clear, usage of the ConvLSTM was surprising in light of using a Transformer (another sequence to sequence model). Approach seems novel, but the many components might make it hard to reproduce.",
+            "summary_of_the_review": "I am intrigued by the rate distortion performance and using masking is elegant, but for acceptance we need more ablation studies to actually learn something from this paper besides \"many components lead to good performance\".\n\nI am happy to change my rating if we get an ablation on the flow in the Encoder/Decoder (_b_ above), my concern about the ConvLSTM is less important (_a_ above) but that ablation would be nice to have.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_gTZB"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2124/Reviewer_gTZB"
+        ]
+    }
+]

@@ -1,0 +1,159 @@
+[
+    {
+        "id": "tbJ3F1LBOfe",
+        "original": null,
+        "number": 1,
+        "cdate": 1666324745175,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666324745175,
+        "tmdate": 1666324745175,
+        "tddate": null,
+        "forum": "rnFOPhTMB0Y",
+        "replyto": "rnFOPhTMB0Y",
+        "invitation": "ICLR.cc/2023/Conference/Paper6051/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose to simply freeze the embedding layer (0.7% of the parameters) of the large neural networks in computer vision, then apply the standard SGD optimizer to finetune the parameters on the out-of-distribution datasets. It is shown that such a simple setting contributes to competitive performance with the popular AdamW. The experimental results on five benchmark datasets further support the effectiveness of the proposed method.",
+            "strength_and_weaknesses": "# Strength:\n- The technique part of this submission is quite simple and easy to follow, which may help to reproduce the results reported in the paper.\n- The motivation for freezing the first (\u201cembedding\u201d) layer has been clearly illustrated in Figure 2. It is interesting to see that ResNets are completely opposite to Vision Transformers and ConvNeXt. \n- The authors conduct thorough ablation studies on several datasets to verify the effectiveness of SGD Freeze-Embed, which should be encouraged.\n\n# Weaknesses:\n- ### Major Concerns:\n  - According to the **ABSTRACT**, \"when the two methods perform the same, SGD is preferable because it uses less memory and is more efficient than AdamW\", however, I failed to find any comparisons on the training cost or the memory footprint between SGD Freeze-Embed and AdamW. Since activations commonly consume far more memory resources than weights, I doubt that the real memory saving could be very limited. The authors are encouraged to include more quantitative analyses of the efficiency of the proposed methods.\n  - It would be better to evaluate SGD Freeze-Embed on more downstream tasks. The current manuscript mainly focuses on the out-of-distribution (OOD) setting, which seems to weaken the importance of this discovery. I am curious to know whether the phenomenon illustrated in Figure 2 widely exists in different tasks. If it is true, any theoretical or empirical analysis may shed some light on the further understanding of why vision transformer is more difficult to train and the design of Transformer-specific optimizers.\n  - Though the authors present extensive experiments on OOD tasks, the reason why large gradients damage performance remains unsolved. One may easily clamp the gradients of the first layer with `clip_grad_norm_` to fix the outlier. Hence, I am not fully convinced that SGD Freeze-Embed should be the best choice.\n- ### Minor Issues:\n  - In the original ConvNeXt paper, they \"replace the ResNet-style stem cell with a patchify layer implemented using a 4\u00d74, stride 4 convolutional layer\". I am not sure whether the \"patchify layer\" refers to the embedding layer. Could the authors further explain the architecture of the first layer in ConvNeXt?\n  - What is the difference between SGD and SGD (Freeze-embed) when applied to ResNets, listed in Tables 1-2?  \n  - In **Freezing layers**: I politely disagree that \"The embedding layer only consists of a small fraction of the model parameters (e.g., 0.7% in a base-vision transformer), so a priori freezing the embedding layer is a very tiny tweak\u2014and we would not expect a large change in accuracy.\" Note that a group of \"Visual Prompt Tuning\" methods aim at introducing/fine-tuning only a small amount (less than 1% of model parameters) of trainable parameters in the input space while keeping the other model backbone frozen [1,2,3].\n  - Did SGD Freeze-Embed still apply weight decay to the first layers?\n\n# Reference:\n- [1] Visual Prompt Tuning. ECCV2022\n- [2] Prompt-Matched Semantic Segmentation. arXiv2022\n- [3] LPT: Long-tailed Prompt Tuning for Image Classification. arXiv2022",
+            "clarity,_quality,_novelty_and_reproducibility": "Since the proposed methods are rather simple, the clarity and reproducibility seem ok. However, the quality and novelty are my major concerns. Given the current manuscript, it is hard to verify that SGD Freeze-embed can be generally effective on downstream tasks except for OOD. Besides, simple baseline methods such as gradient clipping may serve as a counterpart of this approach. Last but not the least, this paper seems to lack drive and motivation. Please refer to the *Major Concerns*.",
+            "summary_of_the_review": "This paper contains some interesting observations, however, the novelty may not meet the standard of the main track.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_Q4kq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_Q4kq"
+        ]
+    },
+    {
+        "id": "CNlteHhx7aV",
+        "original": null,
+        "number": 2,
+        "cdate": 1666620867987,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666620867987,
+        "tmdate": 1666620867987,
+        "tddate": null,
+        "forum": "rnFOPhTMB0Y",
+        "replyto": "rnFOPhTMB0Y",
+        "invitation": "ICLR.cc/2023/Conference/Paper6051/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a method to narrow the performance gap between SGD with momentum and AdamW when evaluating on the downstream tasks. The authors find that for the models where AdamW outperforms SGD, the gradients of the first layer are much larger than the gradients of the other layers. Therefore, they try to freeze embedding layer and propose a novel training technique to improve the performance of SGD with momentum and narrow the gap. They also conduct various experiments to verify the performance of the proposed method.",
+            "strength_and_weaknesses": "Strength:\n\nThis paper focus on an important research topic. If we can narrow the performance gap between SGD and AdamW, the memory cost will be reduced during the process.\nThis paper also provides an interesting experimental finding: First-layer gradient is an outlier.\nThis paper is easy to follow. \n\nWeakness:\n\nThe novelty is limited. The first layer shows a different pattern and freezing embedding layer is not novel and has been proposed in some related work. [1] [2] \nThe research area about fine-tuning vision models (in your title) is very large. The experiments in this paper mainly focus on data shift datasets. Maybe you can report the experiment results on more general datasets. (such ImageNet pretrain and CIFAR fine-tune).\nI think the large memory cost of Adam is a very important motivation of your work, maybe you should also provide some results about that. \nThe resolution of Figure 2 is too low for me. \n\n[1] Mingsheng Long, Yue Cao, Jianmin Wang, and Michael I. Jordan. Learning Transferable\nFeatures with Deep Adaptation Networks. ICML 2015\n[2] Jeremy Howard, Sebastian Ruder. Universal Language Model Fine-tuning for Text Classification. ",
+            "clarity,_quality,_novelty_and_reproducibility": "NA",
+            "summary_of_the_review": "NA",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "NA",
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_iVCF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_iVCF"
+        ]
+    },
+    {
+        "id": "NA7v8AQD3R",
+        "original": null,
+        "number": 3,
+        "cdate": 1666676683082,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666676683082,
+        "tmdate": 1666676683082,
+        "tddate": null,
+        "forum": "rnFOPhTMB0Y",
+        "replyto": "rnFOPhTMB0Y",
+        "invitation": "ICLR.cc/2023/Conference/Paper6051/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper argues that SGD with freezing the first embedding layer can perform competitively with the AdamW for modern vision models, by empirically tests the method on 5 finetuning benchmarks.\n",
+            "strength_and_weaknesses": "### Strengths\n1. The SGD (freeze-embed) is simple but effective on all the models shown in the experiments.\n2. The method performs well on both OOD and ID datasets.\n3. The paper achieves SOTA results on multiple benchmarks.\n\n\n### Weaknesses\n1. The paper claims the first layer is an outlier of many existing models with embedding layer, by comparing the L2 norm of the gradient for each layer. It is pretty straightforward as the embedding layer has much more parameters than the others. It would be great if some analysis can be made for whether the average gradient per parameter has a difference for the first layer.\n2. A deeper analysis of why the gradient norm affects the finetuning would be more interesting. For example,  it may be helpful to understand how the freezing part of the embedding layer will affect the performance.\n3. It would be interesting to see if it will achieve better results for SGD using a smaller learning rate for the first layer instead of freezing it for non-ResNet models.\n4. The paper claims the existing gradual unfreezing can perform better than the SGD (freeze-embed) proposed in the paper. It is unclear, why should people consider SGD (freeze-embed), instead of directly using gradual unfreezing.\n5. The paper implies that SGD is more efficient during the training than AdamW. It would be great if the memory consumption for the experiments can be shown in the tables to empirically show the evidence.",
+            "clarity,_quality,_novelty_and_reproducibility": "The experiments are well presented, but a detailed analysis would be appreciated.",
+            "summary_of_the_review": "The paper shows interesting empirical results of improving SGD for fine-tuning vision models, but more analysis would be appreciated.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_YMfd"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_YMfd"
+        ]
+    },
+    {
+        "id": "SfVGTbK5qtF",
+        "original": null,
+        "number": 4,
+        "cdate": 1666857295688,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666857295688,
+        "tmdate": 1670406784282,
+        "tddate": null,
+        "forum": "rnFOPhTMB0Y",
+        "replyto": "rnFOPhTMB0Y",
+        "invitation": "ICLR.cc/2023/Conference/Paper6051/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper investigates how to fine-tune pre-trained vision models with SGD. It particularly focuses on out-of-distribution (OOD) tasks. It is shown that the original SGD leads to poor OOD performance compared with AdamW on ViT architectures. Authors explain the reason as the large gradients on embedding layers, and propose to fine-tune with freeze-embed SGD. A further improvement is to gradually unfreezing parameters. ",
+            "strength_and_weaknesses": "Strength\n1. This paper is clearly written. \n2. This paper investigates an important problem of fine-tuning vision models, with the goal of improving OOD accuracy. \n3. The proposed method is simple and effective. \n\nWeaknesses\n1. As authors mentioned in Section 6, there are other transfer learning approaches also suggest freezing a part of parameters. But the differences and advantages with this work are not fully discussed. There is also not any experimental comparison.\n2. Some questions need to be clarified. (1) What\u2019s the embedding layer in ResNet? Is it the first convolutional layer or fist block? To my knowledge, the terminology \u201cembedding\u201d is particularly used in Transformer architectures. (2) Why are some numbers (Waterbirds:89.8, DomainNet:98.8) in Table 5 inconsistent with those in Table 1?",
+            "clarity,_quality,_novelty_and_reproducibility": "Good clarity, quality and novelty. \nCodes are not provided for reproducing. ",
+            "summary_of_the_review": "The key finding of this paper is informative and useful.\nThe major drawback is the lack of comparative studies. \n\n=== after rebuttal ===\nI have read the authors' response and other reviewers' insightful comments. Though I still appreciate authors' explorations on the OOD problem, I agree with other reviewers that the paper lacks convincing analyses regarding the empirical observations. Authors' response solved some of my concerns, but the discussion with other similar approaches (i.e., freezing a part of the network) is still not comprehensive. Taking ResNet as an example, it is common in practice to freeze the lowest one of two blocks for efficient or robust fine-tuning. It is not clear whether the performance gain of the proposed method can be attributed to the particular role of the embedding/stem layer, or just generally freezing lower layers? It would be better if the analyses in Appendix F can be confirmed by solid evidences. Overall, I agree with other reviewers that this paper needs further improvements for publication, and I decrease my score to 5. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_HQNh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper6051/Reviewer_HQNh"
+        ]
+    }
+]

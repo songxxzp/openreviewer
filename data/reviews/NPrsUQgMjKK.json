@@ -1,0 +1,158 @@
+[
+    {
+        "id": "KDtO8i6bdxW",
+        "original": null,
+        "number": 1,
+        "cdate": 1666573296155,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666573296155,
+        "tmdate": 1670336133899,
+        "tddate": null,
+        "forum": "NPrsUQgMjKK",
+        "replyto": "NPrsUQgMjKK",
+        "invitation": "ICLR.cc/2023/Conference/Paper2786/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Paper tries to answer: what do skip connections and normalisation layers do? Can we train without them?\n\nThe authors attempt to analyze how our dependency on normalization and skip connections can be removed in deep NNs (specifically, in the self-attention operation of transformers). They do this by porting the \u201cDeep Kernel Shaping\u201d (DKS) technique to Transformer attention, with a few modifications that result in 3 proposed methods: *Value-SkipInit*, Uniform SPA,  and *Exponential SPA*. All of these help train more vanilla Transformers to varying degrees of effectiveness.",
+            "strength_and_weaknesses": "**Strengths**\n\n- (+ +) The proposed solutions truly do enable transformers without skip connections to train at larger depths\n- (+) The paper is clearly laid out and explained, though I did not leave understanding all the math.\n\n**Weaknesses**\n\n- (- -) From a practical point of view, there is little incentive to use the proposed methods. They cannot handle duplicate tokens in input without hacks. It is not evident that the proposed methods offer any real advantages over training with skip connections either from the computational efficiency or interpretability standpoint.\n- (-) The authors only consider causal masked attention which ensures a lower-triangular Attention matrix, a requisite for their analysis, which does not cover the broad spectrum of data on which Transformers are applied.\n- (-) Doubling and tripling the number of learnable parameters (in depth by adding more blocks) of a skipless Transformer does not bring noticeable increase in performance at even 1000k training steps.\n- (-) No code is mentioned to be released with this submission, though the implementation details in Appendix G are thorough.\n\nHaving stated these weaknesses, the authors are not trying to create a practical alternative but instead to provide theoretical proof and empirical justification that it is at least possible to train Transformers without skip connections. To this end the authors succeed, though the paper does not improve our understanding of the roles that normalization and skip connections play.\n\nQuestions\n\n- Pg 4: The notation $(\\mathbf{A}_l)_l$ is not described when it is introduced. Why the double index?\n- Why does Figure 2 come after Figure 3 in the text?\n- Are Fig 1 and 7 created from a Transformer *******trained******* on a task, or a randomly initialized Transformer?",
+            "clarity,_quality,_novelty_and_reproducibility": "For the most part, the paper and the experiments communicate that it is at least possible to train Transformers without skip connections + normalization layers. The justification that this works in Transformers is novel.",
+            "summary_of_the_review": "The authors show that you can theoretically train the Transformer (attention + MLP) without skip connections. However, their methods and assumptions are difficult to apply in the multitude of domains that Transformers are used, and there is no evidence that skip-less or normalization free Transformers are more meaningful than the original Transformer. I recommend this paper as a borderline accept.\n\nI did not read the appendices in depth, nor am I particularly familiar with the literature surrounding DKS methods in Transformers.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_QFbf"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_QFbf"
+        ]
+    },
+    {
+        "id": "PDUpAIGvfF",
+        "original": null,
+        "number": 2,
+        "cdate": 1666659809986,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666659809986,
+        "tmdate": 1666659809986,
+        "tddate": null,
+        "forum": "NPrsUQgMjKK",
+        "replyto": "NPrsUQgMjKK",
+        "invitation": "ICLR.cc/2023/Conference/Paper2786/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors show that with a careful initialization of parameters, we can train skipless attention-only models without skip connections or normalization layers when trained longer. The major idea is to maintain the signal propagation at initialization in an attention-only model. The authors corroborate their claims with an experimental study on WikiText-103 and C4.",
+            "strength_and_weaknesses": "The major strength of the paper is the extensive set of experimentations to showcase that transformers can indeed be trained without skip connections and normalization layers. Such a study is important for the community to understand the necessity of each component inside the transformer. Overall, this paper shows that we simply need a good initialization to train a transformer.\n\n\nHowever, I have the following questions:\n\na) How do the trained transformer (on C4) with E-SPA perform on simple downstream task like SQUAD or SuperGLUE tasks? Does achieving the same pre-training loss with E-SPA also lead to similar performance as a default transformer in downstream tasks? \n\n\nb) During the training of vanilla transformer with E-SPA, how do the attention matrices behave?  Do the position biases stay dominant term for most of the attention matrices in the transformer? If so, then it might explain why the vanilla transformer continues to train well during training, without the usage of skip connections.\n\nc) How fragile is the performance of vanilla transformer with E-SPA ? Is a small learning rate necessary for the transformer to train? For all figures, do you plot the best performing model across the different hyperparameters? How do you select the best performing model across different hyperparameters?\n\nd) What does \"In\" denote in the legend of Figure 3? Moreover, how should I read the plot? Is it that at $\\alpha=0.99$ E-SPA has the same train loss as the default transformer after $100K$ steps? Also, why did the authors decide to compare the train loss at $100K$ step?\n\n\nFurthermore, what is the motivation to measure the performance of a standard transformer with normalized skip connections? Can the authors comment on the necessity of normalization for normalized skip connection in the standard transformer?\n\ne) Does the standard transformer (transformer with skip connections and layer normalization) work with E-SPA initialization? Is there a change in the rate of decrease of the training loss? \n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written. The attention initialization introduced in this work is novel and the underlying idea behind the initialization is simple and easy to read. ",
+            "summary_of_the_review": "Overall, my score is on the positive side. The experiments show that the model can achieve similar training loss as the default transformer, even without skip connections and layer normalization but with longer training. However, the question remains on whether good pretraining performance transfers to downstream tasks.  Hence, I would ask the authors to think about the questions I have posted above during the rebuttal.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_sotB"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_sotB"
+        ]
+    },
+    {
+        "id": "SZifYR6y8o",
+        "original": null,
+        "number": 3,
+        "cdate": 1666678198560,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666678198560,
+        "tmdate": 1668813133463,
+        "tddate": null,
+        "forum": "NPrsUQgMjKK",
+        "replyto": "NPrsUQgMjKK",
+        "invitation": "ICLR.cc/2023/Conference/Paper2786/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "**Note: Score updated from 5 to 8 after author response**\n\nThe authors develop methods to train deep transformers that lack skip connections and/or normalization layers. They achieve this through the following theoretically-motivated interventions: modified initialization, bias matrices, and location-dependent scaling. They are able to train skip connection, normalization-free networks to the same quality as standard transformers (though requiring 5x the number of steps), to within 0.3 perplexity of a standard transformer in the same amount of time, and to depths of 108 layers without divergence.",
+            "strength_and_weaknesses": "**Strengths**\n\nExtensive theoretical groundwork to justify design choices\n\nPromising incremental advance for understanding and improving transformer stability\n\nAble to train deep skipless transformers!\n\n**Weaknesses**\n\nNo downstream evaluation\n\nThe motivation for skip and normalization-free transformers could be better justified\n\nNo immediate practical use\n\nLight on related work\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The models (and baselines) need to be evaluated on downstream tasks such as SuperGLUE. Eval perplexity is insufficient to make claims about model utility.\n\nI think the authors could do a better job justifying the case for why skip- and normalization-free transformers are important.\n\nThe authors mention\n> As second order optimisers for transformers are not well established\u2026\n\nThis does not to me seem like a reason to avoid using second order optimizers. On the contrary, it seems like a very good reason to try them here. It would be a meaningful result if they substantially reduced training time!\n\nThere\u2019s a large body of literature on interventions to improve the training stability of vanilla (norm + skip) transformers that is not discussed. Is none of this work relevant at all? Examples include: Davis et al., 2021, Catformer; Liu et al., 2020, Understanding the Difficulty of Training Transformers; Xu et al., 2020, Lipschitz Constrained Parameter Initialization for Deep Transformers; Touvron et al., 2021, Going Deeper with Image Transformers; Zhang et al., 2019, Improving Deep Transformer with Depth-Scaled Initialization; Huang et al., 2020, Improving Transformer Optimization through Better Initialization\n\nI assume the quantity displayed in Table 1 is WT103 train loss, but that should be explicit.\n",
+            "summary_of_the_review": "Meaningful progress towards stable training of normalization- and skip-free transformers, but not well-justified why we want normalization- and skip-free transformers. No downstream evaluation, and related work section feels light.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_2AHB"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_2AHB"
+        ]
+    },
+    {
+        "id": "gSuc4HR5lg",
+        "original": null,
+        "number": 4,
+        "cdate": 1667307651615,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667307651615,
+        "tmdate": 1667307651615,
+        "tddate": null,
+        "forum": "NPrsUQgMjKK",
+        "replyto": "NPrsUQgMjKK",
+        "invitation": "ICLR.cc/2023/Conference/Paper2786/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper tried to train the deep transformer without skip connection and/or normalisation layers.\nThis paper tried to train the deep transformer directly by combining parameter initialisation, bias matrices, and location-dependent rescaling in the signal propagation view.\nThe performance indicates that though the proposed methods converge slowly compared to the previous method of using skip connection and normalisation layers, it could potentially reach the matching performance with enough training cost.",
+            "strength_and_weaknesses": "Strength:\nThis paper challenged the well-known skip connection and normalisation layers and tried to provide a new way of training deep transformers.\n\nWeakness:\nConverge slow, 5 times more iterations in fact huge in practice.\nThe proposed training framework is more complex compared with skip connection and normalisation layers, means more inductive bias may be introduced to reach the same performance.",
+            "clarity,_quality,_novelty_and_reproducibility": "As the skip connection and normalisation layers have been demonstrated by dozens of theories and applications, the application value of this paper is still not clear. For example, the performance of the proposed method in 'shallow' transformers? How many hyper-parameters should be tuned to reach a good performance? Is it also the case for images?",
+            "summary_of_the_review": "This submission provides an interesting way of training deep transformers without skip connection and normalisation layers. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_HAdV"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2786/Reviewer_HAdV"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "uEB_Ckond7h",
+        "original": null,
+        "number": 1,
+        "cdate": 1666280794616,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666280794616,
+        "tmdate": 1666616258574,
+        "tddate": null,
+        "forum": "A7v2DqLjZdq",
+        "replyto": "A7v2DqLjZdq",
+        "invitation": "ICLR.cc/2023/Conference/Paper2021/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper studies Neural Process (NP)-based meta regression. The work is motived by the well-known observation that the exact ELBO of NPs is intractable, which requires an approximation that destroys the guarantee that the resulting NP-objective is a lower bound to the log marginal predictive likelihood. The paper proposes a novel objective function for NPs, inspired by an Expectation Maximization (EM)-like approach, which is shown to offer an improvement guarantee. The approach is validated on several synthetic and image-completion experiments.\n",
+            "strength_and_weaknesses": "The paper tackles an important question in NP research, namely the validity of approximating what the paper calls the \"functional prior\" with the set encoder distribution. Unfortunately, the presentation of the approach lacks clarity, which makes it hard to judge its validity. Also, the experimental results are inconclusive. Please cf. my comments below.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The question of the validity of standard NP's variational approach studied by the paper is a well-known issue in NP research and definitely requires further investigation. Thus, I was happy to see a contribution tackling this. Unfortunately, the submission lacks clarity, so I find it hard to judge the validity of the proposed objective function:\n\nSec. 3:\n\n- I'm not fully convinced by Remark 1. I agree that, following Eq. (19), $L_{\\mathrm{NP}}$ is no lower bound to the log marginal predictive likelihood, and that this can decrease the quality of the solutions of the variational optimization problem. However, also optimizing the (intractable) $\\mathcal L_{\\mathrm{ELBO}}$ does not \"guarantee finding optimal or locally optimal solutions\", unless the posterior approximation is perfect. Thus, I would not regard \"the consistent regularizer [as] the source of the inference suboptimality of vanilla NPs\", or at least not as the only source. I encourage the authors to clarify this.\n- Figure 1: I know that this figure is the same as in the original paper by Garnelo et al. Nevertheless, I think it does not exactly fit the descriptions in the paper, which can lead to confusion. Indeed, the central issue studied by the paper is that $p(z|D^C; \\vartheta)$ \"[is] unknown\", which is technically not correct if we start from Fig. 1, where $p(z|D^C; \\vartheta)$ is defined to be part of the model definition (the arrow points from the context set to the latent variable). I think it makes more sense to invert this arrow (cf., e.g., [1,2]), as (i) this fits the data generating process better (context and target data come from the same distribution), and (ii) this fits the setting in the paper better, as it discusses intractability of $p(z|D^C; \\vartheta)$. Then, the discussions in Sec. 3 should be valid. However, I have doubts about the validity of Sec. 4, cf. below.\n \nSec. 4: my main concern with this submission is that the main Sec. 4 is quite hard to follow which makes it hard to judge the validity of the approach:\n  \n- While the paper motivates in Sec. 3 why NP's objective requires further investigation, it does not provide enough intuition for the proposed EM-like approach, i.p., because central parts are moved to App. E. I would propose to restructure this section and merge parts of App. E into the main part of the paper. Also, I encourage the authors to improve formulations like \"In Eq. (6), we take the step by replacing the approximate posterior with the last time updated $p(z | \\mathcal D_\\tau^T; \\vartheta_k)$ in Algorithm (1)\" (cf. text above Eq. (10)), which are barely understandable. \n- From a technical point of view, it is unclear to me why Eq. (12), i.e., the novel objective the paper proposes, should be tractable. Indeed, in Sec. 3, the it is explained that standard NPs have to introduce the \"consistent regularizer\" (Eq. (7)) because \"the functional prior is unknown\". In Eq. (12), this functional prior also appears, why should it be tractable here? Furthermore, it is used as the proposal distribution, why can we now assume to be able to sample from the functional prior?\n- Furthermore, I encourage the authors to provide a more extensive discussion of the differences and commonalities of (i) the standard NP objective, (ii) the MC-based NP objective, (iii) the proposed objective, and why one should be superior compared to the other. I.p., the MC-based objective does not suffer from standard NP's intractability issues of the exact ELBO -- why should the proposed method work better?\n\n\nUnfortunately, also the empirical evaluation does not convince me that the proposed approach is interesting enough to be published in its current form. The proposed method does not improve upon the state of the art on most of the presented experiments. Indeed, the only statistically significant improvements are observed on image completion tasks, where the deterministic CNP approach performs second best. This shows that the image completion tasks are not suitable to properly judge epistemic uncertainty estimation (as *deterministic* methods can solve it well), and, thus, these tasks are not really relevant for judging the effectiveness of the proposed method, which aims to improve upon the training objective of *latent variable* NP models. I also encourage the authors to elaborate on the following concerns w.r.t. the experimental evaluation: \n\n- Did you optimize hyperparameters? It seems like you just fixed all hyperparameters without tuning? This is definitely not a fair approach, as NP architecture's performance heavily depends on hyperparameters. Please provide results after tuning at least the learning rate and the latent dimension (at least on the synthetic data sets), cf., e.g., [2].\n- Could you provide the exact formulae you used to compute the metrics given in the tables and asymptotic performance plots? What are the context sizes you used in the tables?\n- $B=32$ samples to evaluate the marginal predictive likelihood could be too little to obtain reasonable performance estimates, cf., e.g., [3]. Could you provide results showing that $B=32$ is enough, i.e., that the performance estimates do not improve anymore with more samples?\n- Please report confidence intervals instead of standard deviations.\n- Could you add confidence intervals in Fig. 5?\n\nMinor comments/typos:\n\n- I find the notation w.r.t. the approximate distributions $q_\\phi$ confusing. Sometimes it is denoted as $q_\\phi(z|D^T)$ and sometimes the abbreviation $q_\\phi(z)$ is used. One could think about not using the abbreviation at all, which would also make the distinction between $q_\\phi(z|D^T)$ and $q_\\phi(z|D^C)$ more explicit.\n- p.1/3rd paragraph: $[x_*.y_*]$ -> $[x_*,y_*]$.\n- Eq. (18c): The approximate posterior should not have a dependence on $\\vartheta$.\n- Eq. (19): The distribution $q_\\phi(z)$ in the subscript of the expectation should be conditioned on $D^T$.\n- Above Eq. (7): What do the authors mean with \"the posterior in the exact ELBO [is] unknown\"? As far as I understand, the only intractable term in the ELBO is the functional prior?\n- The objective Eq. (9) was actually already introduced in [1].\n\n[1] Gordon et al., \"Meta-Learning Probabilistic Inference for Prediction\", ICLR 2019\n\n[2] Volpp et al., \"Bayesian Context Aggregation for Neural Processes\", ICLR 2020\n\n[3] Grosse et al., \"Sandwiching the marginal likelihood using bidirectional Monte Carlo\", Arxiv 2015\n",
+            "summary_of_the_review": "The paper tackles an important question in NP-based research. Unfortunately, the presentation lacks clarity and the experimental results are inconclusive. In it's current form, I judge this paper not ready for publication, but encourage the authors to provide an improved version, incorporating my suggestions above.\n",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_BUNX"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_BUNX"
+        ]
+    },
+    {
+        "id": "PjHaBzupno6",
+        "original": null,
+        "number": 2,
+        "cdate": 1666528488125,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666528488125,
+        "tmdate": 1666528488125,
+        "tddate": null,
+        "forum": "A7v2DqLjZdq",
+        "replyto": "A7v2DqLjZdq",
+        "invitation": "ICLR.cc/2023/Conference/Paper2021/-/Official_Review",
+        "content": {
+            "confidence": "1: You are unable to assess this paper and have alerted the ACs to seek an opinion from different reviewers.",
+            "summary_of_the_paper": "This paper investigates a new technique for inference in neural processes (NPs) based on expectation maximisation. The technique is related to what was proposed by Foong et al. (2020)\u2014convolutional NPs\u2014where multiple samples from the latent given task context are sampled to construct the likelihood objective. Unlike Foong et al., the authors here propose to use importance weighting to approximate expectation with respect to the true posterior. This is motivated by author's theoretical derivations which show that the consistency regulariser used in previous work on NPs causes suboptimal inference.",
+            "strength_and_weaknesses": "### strengths \n* sensible theoretical motivation\n* better empirical results than baselines \n\n### weaknesses\n* the empirical improvement is somewhat marginal compared to the oracle (see Table 1)\n* increased computational complexity",
+            "clarity,_quality,_novelty_and_reproducibility": "I am only superficially aware of NPs, so won't try to judge the novelty, quality, and reproducibility. The paper seems clearly written.\n\nAs a minor point, I wish the authors have discussed whether there is any trade-off between using more samples from $q_\\eta$ (better estimate of the integral), and loosing gradient signal for update of the $\\eta$ parameters. An issue of this kind appeared in the IWAE literature, but perhaps is not a problem here?",
+            "summary_of_the_review": "I am not an expert on NPs. AFAICT, the paper is well written, and presents an advancement to the state of knowledge about NPs. If that is correct, I believe it justifies acceptance, even if some of the empirical gains are marginal, and the computational cost is somewhat high.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_ki6V"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_ki6V"
+        ]
+    },
+    {
+        "id": "ghva-dz7nB",
+        "original": null,
+        "number": 3,
+        "cdate": 1667452551610,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667452551610,
+        "tmdate": 1667452551610,
+        "tddate": null,
+        "forum": "A7v2DqLjZdq",
+        "replyto": "A7v2DqLjZdq",
+        "invitation": "ICLR.cc/2023/Conference/Paper2021/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors study neural processes from an inference perspective, drilling into questions about how well the NP family really works as a function of the objective. In the course of this analysis, they propose a self normalized impottance sampling scheme to estimate the expectation over the posterior over the data latent variable z in p(z|D_t) and use that to obtain a  tighter estimate of the training objective. \nThey link this procedure to variational expectation maximization and show how iterative optimization of this objective leads to better NP models.\n\nAs an aside, the authors study the resulting \"prior collapse\" in their function prior p(z|D_c) as a function of training objective and link it to performance and diversity in function space.",
+            "strength_and_weaknesses": "Strengths:\n- studying the NP objective thoroughly and sidestepping some of the previous simplifying assumptions previously made is interesting and relevant here\n- the authors propose an interesting strategy using importance sampling to estimate expectations over p(z|D_t) and utilize that in a variational EM scheme\n- the results show quantitative evidence that this strategy outperforms the more commonly used training strategies\n\nWeakness:\n- While the authors bring up uncertainty at some point, the results shown here do not suggest that the ucnertainty estimates are dramatically improved\n- the function prior still basically collapses to a delta function, which feels like a pathological issue in the setup and is not quite prevented here merely by the inference scheme\n- inside the variational EM scheme there are still dramatically simplified assumptions present such as setting variational families to the prior etc., this is still relatively dissatisfactory when considering that this prior tends to collapse\n- in the GP example, the NP models proposed here outperform the baseline models, but are still dramatically far off from the GP.  This suggests that the NP model class does not really appear to be a suitable model as suggested here for this modeling task and surprises me. I would expect that a suitably large neural model with enough data should at least get predictive means similarly right as a GP, it is not clear to me this is the case here for the entire model class irrespective of inference strategy. If so, how useful is it to compare to GPs , really?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is nicely written and provides an easy to follow introduction into the relevant neural process literature and backgrounds.\n\nSection 4 could benefit from a little reorganization by potentially first discussing what strategy will be used and then introducing that step by step instead of starting with an algorithm box and introducing the relevant theory one page down.\n\nIn terms of quality and content I enjoyed the paper and think it has a lot of value for the community since it focuses on the narrow idea that the inference strategy for a popular model class matters and digs into that empirically and theoretically, while proposing a relevant and principled avenue towards improvement.",
+            "summary_of_the_review": "This work focuses on providing more depth into our understanding of neural processes from an inference point of view and suggest a modification which improves upon the commonly used strategies in a principled way.\nWhile a lot of issues remain with the model class, the clean approach used here and modest empirical gains suggest that this work should be interesting to the community working on neural processes and adds useful knowledge.\n\nGiven those I would lean towards recommending this paper for acceptance, even though I remain interested in unsolved topics surrounding modeling aspects of NPs which remain unadressed here but may also affect uncertainty and similar aspects the authors touch upon.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_HNS9"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_HNS9"
+        ]
+    },
+    {
+        "id": "hD3YLRkfoXm",
+        "original": null,
+        "number": 4,
+        "cdate": 1667455548194,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667455548194,
+        "tmdate": 1667455548194,
+        "tddate": null,
+        "forum": "A7v2DqLjZdq",
+        "replyto": "A7v2DqLjZdq",
+        "invitation": "ICLR.cc/2023/Conference/Paper2021/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper addresses the inference sub-optimality issue of neural processes. To achieve competitive performance of NPs, the paper proposes a surrogate objective of the target log-likelihood in a meta learning setup, and introduces a tractable way to optimize the surrogate objective through variational expectation maximisation. The author(s) further validates the method with image completion tasks on MNIST, FashionMNIST, SVHN and CIFAR10.",
+            "strength_and_weaknesses": "Strength:\n\nThe paper did thorough analysis on an important issue of inference sub-optimality of NPs, and introduced the novel self-normalized importance weighted neural processes model to address the issue. The paper is well written with comprehensive derivation in the appendix. \n\nWeaknesses:\n\nThis is a great paper, but the reviewer has some minor questions hoping that the author(s) could help to explain or address:\n\n1. Is there any proof of Proposition 2? It is unclear to the reviewer why it leads to an improvement *guarantee* w.r.t. the log-likelihood. \n\n2. In 4.2, it mentions that \"skip E-step #2 to avoid unstable optimisation in empirical results.\" Does it mean that using a learnable functional prior as the proposal is the key to avoid unstable optimisation? Is there any case that the author(s) would suggest to do E-step #2 to update proposal distribution in wake phase update? \n\n3. In 5.1 Table 1, for the functions sampled from GP with Matern - 5/2 kernel, the performances of SI-NP and ML-NP are of no statistically significant difference, but for ones with RBF or periodic kernels, SI-NP is much better than ML-NP. Is there any intuition or insights on this? \n\n4. In 5.2 Table 2, it seems that the improvements of SI-NP vs CNP or ML-NP is marginal on image complementation tasks. Would you expect a larger improvement with higher number of MC samples?\n\n5. The Sim2Real experiments in the appendix seems very interesting. It would be nice to have it in the main text and with some insightful discussion.",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is neatly written, theoretically sound and novel in terms of both providing insightful analysis of the problem and proposing novel framework. \n\nThe experiments are well documented, and should be reproducible given the enough hyper-parameter details are covered in the paper. It would be great if the code could be shared along with camera ready version. \n\n",
+            "summary_of_the_review": "This paper is solid for publication in ICLR. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_sw5r"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2021/Reviewer_sw5r"
+        ]
+    }
+]

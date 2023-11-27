@@ -1,0 +1,159 @@
+[
+    {
+        "id": "tdbpO0eB9FG",
+        "original": null,
+        "number": 1,
+        "cdate": 1666452298653,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666452298653,
+        "tmdate": 1666723426072,
+        "tddate": null,
+        "forum": "-5EWhW_4qWP",
+        "replyto": "-5EWhW_4qWP",
+        "invitation": "ICLR.cc/2023/Conference/Paper727/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In this paper the authors proposed a foresight pruning method for the pruning of neural networks by maintaining the spectrum of the neural tangent kernel (NTK) of the network during the pruning. The quantity that the proposed method, named NTK-SAP, tries to keep is the trace of the NTK matrix. To save computational cost, a finite difference is used to approximate the Jacobi matrix of the network. To obtain good estimate of the trace of the analytic NTK, multiple weights are sampled from the initialization distribution to compute an average of fixed-weight-NTK. A \"new-input-new-weight\" approach is used to lower computational cost. Finally, by replacing the input data by random Gaussian, the method is made data agnostic. Numerical experiments are conducted, showing that the NTK-SAP method has better performance compared with existing methods, especially when the pruning rate is large. ",
+            "strength_and_weaknesses": "Strength: \n1. The authors proposed a pruning method that can be applied before training and without training data. The method shows better performance compared with existing methods in some cases.\n2. Several tricks are proposed to alleviate the computational cost of the method, such as finite difference and new-input-new-weight trick.\n\nWeaknesses:\nAs the source of intuition, whether preserving the NTK spectrum is really the reason that NTK-SAP works is not discussed. I tend to be skeptical because \n1. The NTK dynamics approximates neural network dynamics only when the network is very large. Usually used networks are not large enough to enter the kernel regime, especially for those after pruning.\n2. For practical neural networks, the NTK can change significantly during training, thus keeping the spectrum of initial NTK may not be important. \n3. Since the Jacobi is a very large matrix, approximating it using finite difference can introduce large error. Also, error may appear in the weight sampling step.\nTo address these concerns, I suggest the authors do more investigation on the NTKs and NTK dynamics of the networks before and after pruning. For example, discussion can be made on:\n1.Does the NTK spectrum change a lot over training?\n2.How close is the approximated spectrum to the real one? How large is the variance?\n3.Does the pruned network still have similar NTK spectrum with the dense network after some training?\n\nOf course, even if the NTK cannot explain why the proposed method works, the method can still be useful, and there may be more interesting mechanism behind the performance of the method. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear and easy to follow. The method is novel. I did not check the reproducibility of the experiments. ",
+            "summary_of_the_review": "This paper proposes a new method to prune neural networks without training. The method can be made data-agnostic. Experiments in the paper show that the method can provide better pruned model than existing methods, especially when the pruning rate is high. The application part is interesting. It will be more interesting if the real mechanism behind the good performance of the proposed method can be further explored. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_8ZBV"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_8ZBV"
+        ]
+    },
+    {
+        "id": "V6Y4QDUPOc",
+        "original": null,
+        "number": 2,
+        "cdate": 1666695217722,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666695217722,
+        "tmdate": 1671111772241,
+        "tddate": null,
+        "forum": "-5EWhW_4qWP",
+        "replyto": "-5EWhW_4qWP",
+        "invitation": "ICLR.cc/2023/Conference/Paper727/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "A new pruning method for deep networks is proposed. The method is motivated as computing weight saliencies so that after pruning, the spectrum of the NTK remains as close as possible to the original NTK. In practice, a series of tricks are used to make computing saliencies more efficient. At the end of the day, saliencies are computed using eq. 10 that is claimed to approximately ensure that the spectrum of the NTK is kept close to the original one. The claimed equivalence between eq. 10 and the intuition using the NTK is made through a series of steps, which I tentatively summarize here:\n\n 1. estimate the spectrum of the infinite width NTK using an average of finite-width NTKs\n 2. summarize the spectrum of the NTK using the trace norm of the NTK or equivalently the frobenius norm of the weight-output jacobian\n3. estimate the trace norm of the jacobian by computing its product with normally distributed parameter space vectors $\\Delta \\theta$\n4. estimate the jacobian using finite difference\n5. estimate saliencies of randomly drawn input vectors from a normal distribution\n6. NINW trick where all random quantities are re-sampled at every mini-batch in order to improve efficiency\n\nThe method is tested on several datasets and architectures, demonstrating improved test accuracy compared to other benchmarks. A sensitivity analysis to hyperparameters is provided.",
+            "strength_and_weaknesses": "It looks to me that you could have written the same paper with no mention of the NTK since eq. 10 suffices by itself to motivate your method: saliencies are computed so that on average, the pruned function is similar to the original one, as measured by the l2 norm, even after training in directions $\\Delta \\theta$.\n\nIf you posit that the reason for your method to give good empirical results is linked to the theory around NTK, I think that the series of steps that you follow to link your saliency scores (eq. 10) to the intuition using the NTK should be carefully checked, either:\n - theoretically by providing closed-form expressions for the variance of the estimator on simpler models\n - empirically on models for which you are able to actually compute NTKs\n\nThe fact that your method is weight-agnostic is also in my opinion not explored as much as it should: did you check which parameters are actually pruned, corresponding to what layers? Given the symmetry invariance of deep nets if e.g. you swap neurons A and B of the same layer (and swap accordingly the corresponding parameters of the previous and next layers), why should neuron A be pruned rather than neuron B ? At high sparsity ratio, how do you ensure that not all parameters of a layer are pruned?",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity and quality: as mentioned above, I feel that these could be improved by checking that the claimed equivalence between the proposed saliency score and the motivation using the NTK.\n\nNovelty: the method is AFAIK novel, previous pruning methods using the NTK are appropriately discussed.\n\nReproducibility: the algorithm is well explained and the used hyperparameters are provided, so I assume that the empirical results are reproducible.",
+            "summary_of_the_review": "A sound new method for computing saliency scores for pruning deep nets but I am not entirely buying the link between the method and the proposed intuition using the NTK framework.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_w2XF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_w2XF"
+        ]
+    },
+    {
+        "id": "SzRSk2CMwhT",
+        "original": null,
+        "number": 3,
+        "cdate": 1666723321655,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666723321655,
+        "tmdate": 1666723440121,
+        "tddate": null,
+        "forum": "-5EWhW_4qWP",
+        "replyto": "-5EWhW_4qWP",
+        "invitation": "ICLR.cc/2023/Conference/Paper727/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposed a new foresight pruning metric, which prunes the connections that have the least influence on the trace norm of the NTK. The motivation is to align the training dynamics of the sparse and dense model by maintaining the spectrum of NTK. To alleviate the burden of estimating the expectation of the fixed-weight-NTKs, the authors propose to sample a weight configuration for each mini-batch and compute the averages of their fixed-weight-NTKs. ",
+            "strength_and_weaknesses": "Strength:\n\n1. Foresight pruning is an important research direction, as well as the explorations on weight-agnostic and data-agnostic pruning. \n2. NTK-SAP is a simple and novel pruning metric. Choosing the average value of all eigenvalues of NTK as saliency metric should be able to capture some valid spectrum information while providing computational benefits. \n3. The experiments and analysis show NTK-SAP can preserve the NTK spectrum and leads to better accuracy.\n\nWeakness:\n\n1. Since the approximation requires two forward passes, the method still induces larger computational cost.",
+            "clarity,_quality,_novelty_and_reproducibility": "1. The paper is clearly written. \n2. The proposed method is novel, the design seems to be well-justified.\n3. The experiments seem to be comprehensive and can demonstrate the effectiveness of the method. ",
+            "summary_of_the_review": "NTK-SAP explores an important pruning topic, foresight pruning. The method is novel by considering preserving the spectrum of NTK. The experiment results demonstrate its effectiveness over existing baselines, though at the expense of some computational efficiency.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No ethics concerns. ",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_B3ZS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_B3ZS"
+        ]
+    },
+    {
+        "id": "8kPD1A88u9",
+        "original": null,
+        "number": 4,
+        "cdate": 1667239255431,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667239255431,
+        "tmdate": 1667239255431,
+        "tddate": null,
+        "forum": "-5EWhW_4qWP",
+        "replyto": "-5EWhW_4qWP",
+        "invitation": "ICLR.cc/2023/Conference/Paper727/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors consider the problem of improving the training efficiency of neural networks by pruning them at initialization. Unlike prior literature work, which often considers weight-dependent metrics to find \"dead units\" and remove them, the authors provide a spectrum-aware metric for identifying removable units. In particular, the critical insight of this work relies on how well the NTK approximates the training dynamics of neural networks beyond the infinitely-wide setting. The authors show that by removing connections that least impact the NTK spectrum during training, they achieve competitive (and often better) performance when compared to solid baselines (e.g., SNIP). To provide a computationally efficient pruning algorithm, the authors identify some challenges in estimating the NTK spectrum at convergence and show that when averaged appropriately, multiple random initializations of the NN provide a good approximation for the spectrum. ",
+            "strength_and_weaknesses": "### **Strengths**\n+ The problem is well-motivated; pruning neural networks by aligning the dynamics could be a good diagnostic tool for dynamics-aware pruning (and potentially improve the generalization of the sparse models).\n+ Authors provide exhaustive comparisons to strong baselines, outperforming most approaches across multiple datasets. \n\n\n### **Weaknesses**\n- The iterative pruning algorithm poses significant computational overhead as compared to baselines. Therefore, comparing the runtime/time complexity of NTK-SAP with baselines would help evaluate the approaches head-to-head.\n- The plots don't present a linear x-axis for the sparsity ratios. Is it logarithmic along the x-axis? Discussion on the choice of the evaluation checkpoints and quality of performance degradation with a reduction in parameters would be helpful.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity**: The paper is well-written and easy to follow.\n**Quality**: The approach combines ideas from analyzing training dynamics and NN-pruning to suggest NTK-SAP outperforms strong baselines across datasets.\n**Novelty**: The algorithm is novel, to my knowledge.\n**Reproducibility**: The authors provide sufficient information for reproducing critical results from the paper. ",
+            "summary_of_the_review": "The authors consider alternative metrics for searching connections for pruning while maintaining training performance and improving learning efficiency. Unlike weight-dependent metrics, the authors consider the NTK-spectrum as a proxy for evaluating the 'goodness' of connections and propose removing connections that don't perturb the NTK-spectrum post-pruning. Finally, the authors assess some computational bottlenecks in the efficient computation of the spectrum and offer well-motivated approximations that significantly reduce the overhead. With extensive experiments on CIFAR10/100, Tiny-Imagenet, and across model families (ResNet/VGG), NTK-SAP performs quite well compared to alternative approaches in the literature. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_2M9f"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper727/Reviewer_2M9f"
+        ]
+    }
+]

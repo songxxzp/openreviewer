@@ -1,0 +1,160 @@
+[
+    {
+        "id": "fRmp_C4KT3",
+        "original": null,
+        "number": 1,
+        "cdate": 1666327734266,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666327734266,
+        "tmdate": 1669185795951,
+        "tddate": null,
+        "forum": "jCdoLxMZxf",
+        "replyto": "jCdoLxMZxf",
+        "invitation": "ICLR.cc/2023/Conference/Paper3361/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a novel conformal prediction method for time-series data, called Copula Conformal Prediction for multi-step time series forecasting (CopulaCPTS), for uncertainty quantification. In particular, the paper uses the concept of \u201ccopula\u201d from statistics; the copula is a joint CDF on data, which fully captures the dependency structure of the data, like in time-series data. The proposed CopulaCPTS theoretically justified its validity (in Proposition 1), and empirically evaluated seven synthetic datasets and two real datasets for its efficacy. The claimed contribution are (1) CopulaCPTS is a general UQ algorithm for any multivariate multi-step forecaster with statistical validity, (2) CopulaCPTS produces sharper uncertainty estimates compared with other approaches, and (3) CopulaCPTS produces valid confidence intervals for time-varying time-series prediction.",
+            "strength_and_weaknesses": "**Strengths**:\n\n* Highlight the concept on Copula for time-series data\n* Extensive experiments on both simulated and interesting real datasets.\n\n**Weaknesses**:\n* Proposition 1 is invalid (or clarification is required)\n* A simple but important baseline is missing\n\n(Weakness 1) First of all, the ICP validity definition on coverage (Definition 1)  is not correct (unless there are reasons, which are not described). The probability needs to be taken over X, Y, and also a calibration set (e.g., [R1]). Also, this coverage guarantee is not used consistently. In particular, the validity statement in Proposition 1 contains the expectation over y, but to my understanding, the probability here is also taken over y. I guess these misunderstandings might contribute to the incorrect proof of Proposition 1. In particular, (11) assumes u* is given, which needs to be found in Line 15 of Algorithm 1 based on a calibration set. As u* depends on a calibration set, it is a random vector. However, this randomness is not taken into account in the proof as the probability in the proof is also taken only over a new data point. Finally, it is unclear how the exchangeability assumption is used in the proof. \n\nTo my understanding, the proof needs to be corrected based on the right coverage definition, and the proposed approach is reevaluated based on the correction.\n\n[R1] https://arxiv.org/pdf/1904.06019.pdf\n\n\n(Weakness 2) I think the beauty of conformal prediction is that it provides a coverage guarantee for any score function, as also highlighted in the paper. Thus, one straightforward way to handle time-series data is using a score function that aggregates scores of future time steps and simply runs the standard ICP on the aggregated score. For example, based on the paper\u2019s notation, a RNN output and a label are $\\hat{\\mathbf{y}}, \\mathbf{y} \\in \\mathbb{R}^{k \\times d_y}$, respectively, then, a score function can be simply $|| \\hat{\\mathbf{y}} - \\mathbf{y} ||$, which is equivalent to the negative log likelihood of the Gaussian with the mean of $\\hat{\\mathbf{y}}$ and the identity covariance. This score function can be improved by estimating the diagonal of the covariance matrix (assuming zero correlation) by modifying RNN to estimate the standard deviations of $\\hat{\\mathbf{y}}$ (I believe this is a quite standard techniques to convert a point estimator to a uncertainty estimator, e.g.,[R2,R3]). Given any of these two score functions, we can run the standard ICP. \n\nI think the limitations of these two simple baselines need to be discussed and empirically evaluated to justify the efficacy of the proposed approach. Moreover, we can use more sophisticated forecasting model (e.g. Bayesian filtering with state evolution [R4,R5]) for a score function along with the standard ICP for the coverage guarantee. What\u2019s the limitation of having a sophisticated score function for time-series data with the standard ICP for the coverage guarantee compared with the proposing new conformal prediction dedicated to time-series data along with a naive score function? \n\n[R2] https://openaccess.thecvf.com/content_CVPR_2019/papers/He_Bounding_Box_Regression_With_Uncertainty_for_Accurate_Object_Detection_CVPR_2019_paper.pdf \n[R3] https://arxiv.org/pdf/2001.00106.pdf\n[R4] https://arxiv.org/pdf/1805.11122.pdf\n[R5] https://arxiv.org/pdf/1605.07148.pdf\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "(clarity) The paper is mostly okay, but some clarification is required. \n* Page 4: The citation (Gibbs & Candes, 2021) in the first paragraph is not appropriate; the cited paper attacks online learning, but the submitted paper does not consider the same setup, making readers confusing. \n* Page 5: why is (8) true? The Sklar\u2019s theorem only implies the first equality. \n* Page 5: epsilon_t below the (8) is not defined. \n* Page 7: in \u201cMetrics\u201d, the expectation in the definition of coverage does not make sense to me.  \n* For the Covid19 dataset, it consists of 380 sequences; how can it be collected in UK regions? It would be better if the paper is self-contained. Is there any chance that the exchangeability assumption can be violated for this dataset?\n\n(Quality) Based on the discussion on weaknesses, the paper can be improved. \n\n(Novelty) I think exploiting copula may be novel once discussed weaknesses are addressed. \n",
+            "summary_of_the_review": "The core contribution of the paper is the coverage guarantee of the proposed approach, but to my understanding, the proof is not valid; so I would vote for rejection. However, I\u2019m willing to adjust my understanding after discussion.\n\n========== after rebuttal\n\nThanks for the clarification and additional experiments. I believe that exploiting the concept of copula is interesting, but (1) the paper relies on a strong assumption (i.e., an accurate Copula is given, which is even not explicitly mentioned in the paper or written in a confusing way), (2) my main concerns were not addressed during the rebuttal, and (3) I think the paper is not ready to publish based on the current manuscript status; so, I maintain my score. \n\n\nThe following includes the remaining main concerns. \n\n* The probability in coverage is taken over a calibration set. Note that the probability in the full CP coverage is taken over a training set (aka a proper training set in CP), a calibration set (aka a training set in CP), and a new sample. The probability in inductive CP (ICP) coverage is taken over a calibration set and a new sample (where the training set is used for learning a score function). The probability in training-conditional ICP coverage is taken over a new sample. I\u2019d recommend checking the difference between ICP and training-conditional ICP in [1]. \n* The above definition is crucial in proving Proposition 1 if the accurate Copula is unknown. If Proposition 1 is proven without this strong assumption, I\u2019m wondering if the calibration set can be reused so Bonferroni correction needs to be used in this step. In the worst case, the rigorous Proposition 1 produces a more conservative algorithm such that a more rigorous proposed approach may not be clearly better than CF-RNN. In other words, by making an assumption that the accurate Copula is known, the proposed algorithm becomes heuristic, and it looks unfair to compare it with a more rigorous approach like CF-RNN \u2014 usually rigorous algorithms are more conservative (in achieving a desired coverage) than heuristic ones. In this sense, I think proving Proposition 1 by estimating a Copular from data is required as for the first step. \n",
+            "correctness": "1: The main claims of the paper are incorrect or not at all supported by theory or empirical results.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_FqUe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_FqUe"
+        ]
+    },
+    {
+        "id": "e-YaZkFGksZ",
+        "original": null,
+        "number": 2,
+        "cdate": 1666558667332,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666558667332,
+        "tmdate": 1667676031723,
+        "tddate": null,
+        "forum": "jCdoLxMZxf",
+        "replyto": "jCdoLxMZxf",
+        "invitation": "ICLR.cc/2023/Conference/Paper3361/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper describes a new conformal method to perform guaranteed prediction in multi-step multi-variate time series. In order to achieve better calibration and efficiency across dimensions, it proposes the use of copulas. ",
+            "strength_and_weaknesses": "+: a new method to solve a difficult problem, easily applicable, which appears sound from what I understood. \n\n+: experimental results seem to be good, and are accompanied with code (that I could not run on my laptop in due time, but in reason of my install and the lateness of my review... I will update if I manage to run it in the next days)\n\n-: many typos in the paper, suggesting a rushed in submission. Among others:\n* exchangability should be exchangeability (numerous times)\n* serires --> series\n* equation 1 is an $L_1$ norm, not a $L_2$. Also, if I am correct non-conformity scores in split conformal should be computed on $\\mathcal{D}_{cal}$\n* equation 4, $A(x_{n+1},\\hat{f})$ should be $A((x_{n+1},y),\\hat{f})$ to be consistent with earlier notations\n* time-step is written time-step, timestep, time step at different places\n* joined CDF --> joint CDF\n* P5, there is an $\\epsilon_t$, which should probably be $\\alpha_t$ or $1-\\alpha_t$\n* Citations are sometimes inconsistent. Format Name (year) should be when the name is supposed to be read, while (name, year) should be used when the name should not be read. P5, Ruschendorf should not be read, hence (name, year) (\\citep) should be used. This happens in other places. \n* P7: forgotten parenthesis in the definition of coverage$_{1-\\alpha}$\n\n-: in the case of auto-regressive, it is unclear how is treated the newly produced point in order to produce further predictions. In particular, since the newly predicted point is a conformal sets, do authors run conformal prediction using weak-labels/intervals (as in \"Cauchois, M., Gupta, S., Ali, A., & Duchi, J. (2022). Predictive Inference with Weak Supervision.\"), or do they simply use the new point-wise prediction? What guarantees that the previous validity guarantees with respect to the ground-truth will hold (as the prediction is not the true value)? Also, how does one obtain the cumulative distribution for the non-conformity scores of the k+1 prediction? Does one use the same cumulative distribution, and if this is the case, why do we need to re-run an optimisation? \n\n-: While the optimisation program introduced to find suitable time-step wise confidence degrees seems fine, it is unclear what we can/should expect from it? In particular, shall we in practice have very similar confidence degrees or very imbalanced ones? What justify to have different confidence degrees at each run? Why not optimizing to minimize the obtained volume? How does it compare to the constant time dichotomic search assuming all confidence degrees being equal? ",
+            "clarity,_quality,_novelty_and_reproducibility": "Except for the aspects mentioned above in strength and weaknesses, the paper is overall clear for people familiar with the field and the problem. It seems also accessible to a wider audience, although I may be biased on this aspect, being familiar with the topic.\n\nAs far as I can tell, the work is original and builds upon previous techniques and papers to present something new with convincing experiments.  ",
+            "summary_of_the_review": "The paper introduces a new method to perform multi-dimensional, multi-step ahead time series prediction. Experiments performed on various data sets are convincing, but remain limited in the number of dimensions predicted (at most 3 dimensions in the case of drone trajectory prediction). This is however fine, as the focus is on multi-step time series prediction. \n\nAuthors may be interested in knowing that the approach of Johnstone and Cox has been recently adapted to cope with normalized scores, hence providing adaptive ellipsoids (see \"Messoudi, S., Destercke, S., & Rousseau, S. Ellipsoidal conformal inference for Multi-Target Regression.\").\n\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "No concerns",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_oH8D"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_oH8D"
+        ]
+    },
+    {
+        "id": "xNcozyBB1X",
+        "original": null,
+        "number": 3,
+        "cdate": 1666774015568,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666774015568,
+        "tmdate": 1666774015568,
+        "tddate": null,
+        "forum": "jCdoLxMZxf",
+        "replyto": "jCdoLxMZxf",
+        "invitation": "ICLR.cc/2023/Conference/Paper3361/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Summary of the paper\nIn this paper, the authors present a calibrated and efficient conformal prediction algorithm for multi-step time series forecasting and utilize copulas to model the dependency between forecasted time steps. The results show the proposed method performed well on synthetic and real-world datasets both in calibration and efficiency.\n\nContributions\n\n(1) The proposed method is a general uncertainty quantification algorithm that has wide applications.\n\n(2) CopulaCPTS shows competitive performance over other baselines and the experiment is sufficient.\nStrength and weaknesses",
+            "strength_and_weaknesses": "Pros:\n\n(1) The proposed method is novel and the proof is solid.\n\n(2) The conducted experiments are comprehensive and show outstanding performance.\n\n(3) The concerned problem has practical applications in the prediction model.\n\nCons:\n\n(1) Some case studies can be added to interpret its detailed application better.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The derivation is readable and reasonable. The proposed uncertainty quantification algorithm is novel and achieves the expected performance. Besides, the given algorithm which summarizes the CoupulaCPTS procedure helps reproduce the method effectively.\n",
+            "summary_of_the_review": "In this paper, the authors present a method to quantify the uncertainty of the prediction model, which is novel and meaningful. The designed experiments are efficient and achieve the expected results. Hence, this is a good paper that could be accepted.\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_aA8r"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_aA8r"
+        ]
+    },
+    {
+        "id": "ei7X0IYDqv",
+        "original": null,
+        "number": 4,
+        "cdate": 1666983225591,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666983225591,
+        "tmdate": 1666983225591,
+        "tddate": null,
+        "forum": "jCdoLxMZxf",
+        "replyto": "jCdoLxMZxf",
+        "invitation": "ICLR.cc/2023/Conference/Paper3361/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes conformal prediction method for multivariate multistep TS forecasting.",
+            "strength_and_weaknesses": "## Strength\n- develop more efficient conformal prediction method with the simple yet effective idea of Coupla.\n- clear motivation and idea\n- extensive experiments are done\n\n\n\n## Weakness\n- multivariate parts that author claim to be new seems to not be really in the novel parts, but multi-step ones are main focus. Otherwise, kindly describe why existing methods by Stankevic\u02c7iu \u0304te \u0307 et al. (2021) cannot handle this setting (with small modifications).\n- enhance UQ literatures and discussion on other classes. For example there are several advances in forecasting based on quantile regresison methods for univariate and multivariate https://arxiv.org/abs/2202.11316,https://arxiv.org/abs/2111.06581, and even conformal prediction enhance quantile regression method itself https://arxiv.org/abs/1905.03222.\n- more deep dive on behvarious ${\\alpha_t\\}$. For example, is this related to the author claim the capability of capturing dependency\n- the experiment setting are poorly described and difficult to examine univatie/multivate cases and which various base forecasters are used and why.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The methodology and thoery is generally clear, but the settings are not well covered from the time series forecasting literatures.\n\n- in eq (7) , h is typo?\n- the data split of training and val is not clearly described, especially multivatie settings.",
+            "summary_of_the_review": "This work proposed simple and yet effective method for multi-step forecasitng,  even with several unclear descriptions like general forecasting settings and experiment settings.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_gQHv"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3361/Reviewer_gQHv"
+        ]
+    }
+]

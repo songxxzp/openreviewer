@@ -1,0 +1,119 @@
+[
+    {
+        "id": "20zt0JxWWM1",
+        "original": null,
+        "number": 1,
+        "cdate": 1666554361810,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666554361810,
+        "tmdate": 1668718754595,
+        "tddate": null,
+        "forum": "SmufNDN90G",
+        "replyto": "SmufNDN90G",
+        "invitation": "ICLR.cc/2023/Conference/Paper3971/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper describes a new \"policy-based self-competition\" approach for training policies for single-agent (planning) problems with Gumbel AlphaZero. It uses rollouts from a DNN policy (without search) to provide reference/baseline values, such that binary reward signals (without any need for normalisation) for the DNN+search agent can be provided depending on whether or not it outperforms the baseline.",
+            "strength_and_weaknesses": "**Strengths**:\n- Contributions look sound, interesting ideas, also novel\n- Promising/good empirical results\n\n**Weaknesses**:\n- Some of the core ideas behind the approach leave me wondering about a bunch of unaddressed questions. I think these need to be cleared up somehow. See detailed comments below.\n\n---\n\n**After discussion with authors**: The authors' comments and added content in the new revision have helped me a lot to clear up confusion.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Quality** / **Novelty** / **Originality**: looks good\n\n**Reproducibility**: probably sufficient detail provided, but no mention of source code (please correct me if I missed it)\n\n**Clarity**: my main concern is here. At least in some way. I do think the writing is good overall and the contributions and experiments etc. are clearly described. There are just some design decisions in the proposed approach, for which I'm missing any motivation (intuition or otherwise):\n\n## Why the 2-player game model?\n\nThis is the main question that I keep wondering about. On one hand, I do think the \"trick\" where the single-agent problem is rephrased as a kind of 2-player game is very interesting, and cool, and I understand how the general model works. On the other hand, I'm just not convinced that it's actually necessary, at least not in its entirety, and can't help but keep thinking that it's unnecessarily complicated (which may be a detriment to the efficiency of the algorithm itself, as well as the clarity of the paper).\n\nSo, first, here are the parts that I *do* understand and follow:\n- I understand the idea behind self-critical learning / self-competition, and that you want some baseline value to measure progress against, both to form a natural curriculum and to avoid the need for reward normalisation/scaling.\n- I understand that it may be better not to determine this baseline value by running a complete rollout and summarising it as a scalar, since this causes us to lose a bunch of information.\n\nNow, here is roughly where I suspect that my thoughts/intuition start to deviate from the authors':\n- I do not think it is necessary (or useful) to ever compare **states** that the \"main\" player is in, to **states** that the greedy/rollout/baseline actor is in. These two should never influence each other. For sure, the greedy actor never observes anything involving the main player. So, the entire rollout for the greedy actor could, in principle, be executed in its entirety first (and stored in memory, rather than summarised as a scalar). There is no need to run two trajectories for the two players simultaneously. As far as I can tell, the main player should also never look at the states that the greedy actor was in. According to the model as described in the paper, the main player is *allowed* to, but I do not see why it would ever be *useful*. \n- Rather than comparing pairs of **states**, I think all the involved functions (V, Q, A) should only be based on comparing states of the main player to **time steps** of the greedy actor. I.e.: is the main actor, in some state $s_t$ at some time step $t$, in a better or a worse state than the greedy actor is *in expectation* at the same time step $t$? A positive or a negative reward can be given accordingly. We should not care about whether we are in a better or worse state than the state the greedy actor happened to be in during a single trajectory that we happened to run simultaneously, because they should be completely independent. We should care much more about the value of our current state relative to the expected value of the greedy actor at the same point in time.\n- Following from the previous two points I think it is harmful to actually model the tree search as a 2-player game, with explicit nodes and branches for the greedy actor in its completely-independent-but-simultaneously-running other game. As far as I am able to understand, this just unnecessarily blows up (exponentially) the size of the search tree. There will be many many different nodes in the search tree, with identical sequences of move selections by the main player but different sequences of move selections by the greedy player, which really should all just be the same node with respect to the original single-player model, but are unnecessarily treated as distinct situations in the tree search.\n- For the main player, it would seem much more sensible to me to keep just a search tree for its own single-agent game. However, prior to running the episode for the search-based main player, I would generate a bunch (e.g., 100) of rollouts for the greedy (actually sampling) agent. The particular states it encounters are irrelevant, but the estimated values (as predicted by value function evaluations) can be stored per time step (averaged over the multiple rollouts) to get an estimate of how good the greedy agent would do at every time step. Then, these can be used, for every appropriate time step, as time-step-dependent baselines, relative to which rewards can be assigned to the main agent.\n- I think that what I just described is somewhat similar to **GAZ Greedy Scalar** as described on page 7, except it would (1) probably run multiple rollouts instead of just 1, to average over, (2) sample instead of playing greedily, as in your main approach, and (3) track per-timestep baselines from value function evaluations, instead of summarising everything into a single scalar.\n\n---\n\n## Minor comments\n- Bottom of p.2: Mentions AlphaZero, but provides reference for AlphaGo (which actually did still run full rollouts).\n- For the (Schadd et al.) reference, no year of publication and no title is provided",
+            "summary_of_the_review": "An interesting paper with a lot of potential, but there is a major point where I can't help but feel like the problem is modelled in a way that is, unnecessarily, hugely overcomplicated (even if it is a very interesting way to model it). If I am correct, I feel that this is an important issue, hence my current score. But I also do not rule out the possibility that I simply completely missed some key detail, in which case I hope the authors will be able to provide clarification.\n\n---\n\n**After discussion with authors**: The authors' comments and added content in the new revision have helped me a lot to clear up confusion.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_T4pL"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_T4pL"
+        ]
+    },
+    {
+        "id": "5CKRILkaao",
+        "original": null,
+        "number": 2,
+        "cdate": 1666598369997,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666598369997,
+        "tmdate": 1669479237487,
+        "tddate": null,
+        "forum": "SmufNDN90G",
+        "replyto": "SmufNDN90G",
+        "invitation": "ICLR.cc/2023/Conference/Paper3971/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper introduced Gumbel AlphaZero Play-to-Plan (GAZ PTP), a self-competitive method combining greedy rollouts as in self-critical training with the planning dynamics of two-player games.\nThe main idea is to compute a scalar baseline from the agent\u2019s historical performances and to reshape an episode\u2019s reward into a binary output, indicating whether the baseline has been exceeded or not. \nGAZ PTP leverages the idea of self-competition and directly incorporates a historical policy into the planning process instead of its scalar performance. Based on the Gumbel AlphaZero (GAZ), the agent learns to find strong trajectories by planning against possible strategies of its past self.\nThen, experiments on the Travel Salesman Problem (TSP) and Job-Shop Scheduling Problem (JSSP) confirm that the method learns strong policies in the original task with a low number of search simulations.\n",
+            "strength_and_weaknesses": "**Strength:**\n\n1. It is interesting to use self-competitive planning TSP or JSSP with binary episode reward (win or lose). This binary episode reward somehow handles the reward designing problem, which is an issue on RL problems. \n\n**Weakness:**\n\n1. This method trains from scratch for each problem size, compared to those GNN-DRL methods (cited in this paper) which are size-agnostic methods. This makes it inefficient since the problem size varies in such problems. \n\n2. The performances for TA benchmarks 15x15, 20x20, 30x20 (for JSSP) are all worse than those obtained in Schedulenet (Park et al., 2022). Namely 16.6%, 22%, 32.3% (even with MCTS), w.r.t. schedulenet\u2019s 15.3%, 17.2%, 18.7% respectively. Even, the bigger the problem sizes are, the worse the gap ratios are. The same for TSP. Thus, this makes this paper weaker or skeptical. \n\n3. This paper mentions that MCTS method must need more inference time than DRL method in testing. However, the time is not included in the experiments. \n\n4. The presentation is quite confusing. See the next section. \n\n\n\n\n\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- Notation is confusing. Can $V^{\\pi, \\mu}(s_t, s_l\u2019)$ be expressed as $V^{\\pi}(s_t) - V^{\\mu}(s_l\u2019)$?  The same for other $Q$ and $A$. Thus, the proof of Lemma 1 (in Appendix) becomes straightforward. \n- States $s$ are confused with $s(\\zeta_1, \\zeta_2)$. \n- Why do we need to align $s_t$ and $s_l\u2019$ in Figure 1? \n- Many formula need to be marked as \u201c(#)\u201d for easier discussion. \n",
+            "summary_of_the_review": "It is interesting to use self-competitive planning TSP or JSSP with binary episode reward (win or lose). However, when compared to other DRL methods, the performances of this paper are not so good. The trained model is not size-agnostic, and thus a big weakness of it. In summary, we tend to reject this paper.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_8mG6"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_8mG6"
+        ]
+    },
+    {
+        "id": "dnzOGQJARs",
+        "original": null,
+        "number": 3,
+        "cdate": 1666621752611,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666621752611,
+        "tmdate": 1666621752611,
+        "tddate": null,
+        "forum": "SmufNDN90G",
+        "replyto": "SmufNDN90G",
+        "invitation": "ICLR.cc/2023/Conference/Paper3971/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The paper proposes an MCTS/AlphaZero-type algorithm for single player task. There several crucial deviation from the standard variant: it is using the Gumbel variant of AlphaZero, and more crucially, instead of estimating the state-value function, it is biasing it (adversarily) with returns obtained in playouts using a historical version of the player. The algorithm is applied on TSP and JSSP instances obtaining strong performances. \n",
+            "strength_and_weaknesses": "The idea of competing against a playout of a historical variant is interesting, and it is inserted in the AlphaZero framework in an elegant way. \n\nThe approach proposed in the paper replaces the problem of state-value estimation with a pairwise estimation problem. Pairwise comparison were tested previously in two-player game frameworks as well (with moderate success), but it is unclear that pairwise approaches are less frequent because of the particular approaches or because they proved more difficult than the original estimation problem in the test domains. Nevertheless the approach proposed is interesting, and there will always be domains that are more suited to pairwise comparisons.\n\nAn apparent limitation, which does not seem to be highlighted sufficiently in the paper, is that length of the episodes need to be equal. This is not a problem in the test domains considered in the paper, but many single agent problems do have varying episode length. \n\nUsing combinatorial optimization problems as test domains is somewhat surprising choice, but maybe that was due to the necessity of equal episode length and the efficiency of the pairwise comparisons.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written. The proposed approach is novel and interesting. There are sufficient details provided for the  experiments, but the results might not be fully reproducible. \n",
+            "summary_of_the_review": "The paper proposes some interesting variation of state-of-the-art algorithms, which may be successful in some domain. The applicability is somewhat limited by the requirement of uniform length episodes, and by the suitability of pairwise comparisons in the domain, but there likely exist sufficient number of domains were the approach is relevant. \n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_vDBJ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3971/Reviewer_vDBJ"
+        ]
+    }
+]

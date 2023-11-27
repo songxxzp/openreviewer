@@ -1,0 +1,158 @@
+[
+    {
+        "id": "WvDjzrs2TV",
+        "original": null,
+        "number": 1,
+        "cdate": 1666591411492,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666591411492,
+        "tmdate": 1668544752469,
+        "tddate": null,
+        "forum": "5MkYIYCbva",
+        "replyto": "5MkYIYCbva",
+        "invitation": "ICLR.cc/2023/Conference/Paper4853/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposed to leverage the gating structure in gated attention unit (GAU) in state space models, named Gated State Space (GSS). By reducing the dimension of the state space module in GSS which requires FFT to compute the output, GSS is faster than the diagonal state space (DSS) model.\n\nExperiments were conducted on four language modeling benchmarks, and the authors demonstrated the effectiveness and efficiency of GSS comparing with DSS and other Transformer-based baselines.",
+            "strength_and_weaknesses": "Strengths:\nThe design of GSS is well-motivated and the paper writing is clear and easy to follow. The authors also clearly claimed their contributions.\n\nWeaknesses:\nThe main concerns are from experiments. I found that the experimental setup makes the comparisons unfair, which makes it difficult to position GSS among other neural models in language modeling. I elaborated my concerns in the following questions.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The experimental setup in this paper make it difficult to fairly compare GSS with previous models:\n\n1. As the authors created their own vocabularies, the results in Table 3 are not directly comparable.  \n\n2. Since in GSS the FFN module is omitted, the authors increases the number of layers to match the number of parameters with DSS. However, we know that deeper neural networks usually deliver better results than shallower ones with higher-hidden dimensions. Have you tried to increases the model dimension instead of increasing the number of layers? I believe it is a more fair comparison.\n\n3. As GSS is directly inspired from GAU and FLASH (Hua, et al, 2022), why the authors have not compared GSS directly with FLASH, but using other variants of Transformers as baselines? Since GSS has very different organization of parameters (more layers and no FFNs), the comparison with FLASH (with the same number of layers and similar model size) would make a more clear position of GSS among previous models, particularly attention-based models.\n\nOther questions about experiments:\n\n1. In GSS, the $N$ is set to 512, while in S4 and DSS, $N$ is usually much smaller, e.g. (64). In the experiments, what is the value of $N$ in DSS? Is it important to use larger $N$?\n\n2. GSS-Hybrid obtained better PPL than GSS, and the authors claimed that the self-attention is modeling local dependencies and the state space model is modeling long-term ones. However, there were no analysis or results to support this. Is it more reasonable that the self-attention is more using to model long-term dependencies (within a chunk of size 512) while the state space model is for local ones across successive chunks?",
+            "summary_of_the_review": "To sum up, I am worried that the paper needs more experiments and analysis before publication.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_Rso2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_Rso2"
+        ]
+    },
+    {
+        "id": "Kn_FIHF7scq",
+        "original": null,
+        "number": 2,
+        "cdate": 1666807201411,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666807201411,
+        "tmdate": 1666809257234,
+        "tddate": null,
+        "forum": "5MkYIYCbva",
+        "replyto": "5MkYIYCbva",
+        "invitation": "ICLR.cc/2023/Conference/Paper4853/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The attention mechanism in transformers scales quadratically with the input size that prohibits its application to long sequences. This work proposes a variant of S4 that can scale to long sequences. The key change is to apply S4 to a space of reduced dimensionality before projecting it back to the original space inspired by a recent work Gated Attention Units. This change reduces the time of fast Fourier transform operations which is a bottleneck on TPUs, resulting in a 3X speedup. In addition, this work also found that random initialization works as well as Hippo initialization.  Experiments on long-form text generation datasets found that while the proposed model slightly underperforms baselines such as block-recurrent transformer at the same parameter count, the proposed model is better at a fixed training cost, especially when interleaved with transformer layers. Besides, the model trained on shorter context window sizes is able to generalize to utilize more context at test time.",
+            "strength_and_weaknesses": "Strengths:\n1. Shows that a simple change that applies S4 to a space of reduced dimensionality improves throughput by a factor of two to three.\n2. It's interesting that a model trained on shorter context sizes can learn to utilize longer contexts at inference time.\n\nWeaknesses:\n1. The main argument is that while the proposed model underperforms the baseline block-recurrent transformer at similar number of parameters, it's better at the same training cost. However, it is not clear to me that the baseline is optimized for limited training cost scenarios: for example, does training the baseline for a shorter period of time significantly degrades its performance in terms of PPL? In this regard, I think showing a curve that plots validation PPL against training time might be more convincing. But even so, the comparison is still not fair if the baseline is not tuned to arrive at the Pareto frontier for the given compute (such as by changing model size, learning rate, and other hyperparameters)\n2. The model architecture seems to be optimized for a particular hardware architecture TPUs (which is not that widely accessible compared to GPUs). Does the increased throughput generalize to different hardware architectures such as GPUs?\n3. Recent works on training large LMs (such as OPT) show that the attention operation only takes negligible time for large models, and the dominating term is the feedforward operations. Is it still meaningful to address the quadratic attention complexity issue as hardware gets more and more powerful and we can run larger and larger models?\n4. Since Gated Attention Units (Hua et al 2022) motivated this work, why don't you compare to it as a baseline? Besides, in Table 1, can you compare to Transformers on other datasets as well (for the 512 setting) to get a sense of how much gain we can get by leveraging more context?\n\nTypos:\n1. Page 6 last paragraph: we present results for on a large range of sequence lengths",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is clear and provides details on hyperparameter settings. This work is original to my knowledge.",
+            "summary_of_the_review": "I think this paper is marginally below the acceptance threshold, due to a few concerns: first, at the same parameter count this work seems to underperform baselines; second, I have some concerns about the argument based on limiting the training cost as mentioned above; third, the final model is a hybrid between S4 and transformer layers, and I'm not sure if it will be actually used due to 1) the hybrid architecture is not as easy to implement and tune as pure S4 layers or pure transformer layers; 2) the speedups are only measured on TPUs which is less widely used than GPUs; 3) the recent lesson we learned in training large LMs that attention cost is negligible as we scale the model size. That being said, this paper has its merits in that it fixes a compute bottleneck and observes good empirical speedups. Therefore, I think this paper is marginally below the acceptance threshold.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_GxKh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_GxKh"
+        ]
+    },
+    {
+        "id": "TZpMYXBESc",
+        "original": null,
+        "number": 3,
+        "cdate": 1666861509033,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666861509033,
+        "tmdate": 1666861662722,
+        "tddate": null,
+        "forum": "5MkYIYCbva",
+        "replyto": "5MkYIYCbva",
+        "invitation": "ICLR.cc/2023/Conference/Paper4853/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a new layer named Gated State Space (GSS) that combines the gate design in Gated Attention Unit (GAU) with a simplified version of Diagonal State Space (DSS) layer. Authors further propose a hybrid model that combines GSS with sparingly interleaved Transformer blocks. The resulted model trains significantly faster than the original DSS and can extrapolate to longer sequences at test time. The proposed model is evaluated on 4 long range language modeling tasks, comparing with a series of strong baseline models.",
+            "strength_and_weaknesses": "**Strength:**\n1. The paper is very clearly written and easy to understand.\n2. Authors find that the main bottleneck of DSS comes from the high contextualized input dimension, as the FFT is performed independently on each dimensions of the sequence. With the GAU gating design, GSS enables a 4x reduction in this dimension and increases the throughput when trained on TPUs.\n3. GSS can extrapolate naturally to unseen sequence length at test time due to the recurrent nature of DSS layer, which also allows faster inference speed.\n\n\n**Weaknesses**:\n1. GSS is largely motivated by GAU, but GAU is not included as a baseline method in this paper. The hybrid model with interleaved Transformer layer is closely related to the SRU++ (When Attention Meets Fast Recurrence: Training Language Models with Reduced Compute) paper, but it is not considered as a baseline method either.\n\n**Questions**:\n1. GSS is only evaluated on the long range language modeling tasks, which is fair enough. But have you evaluated GSS on any other tasks or commonly used LM datasets, e.g. Wikitext-103 and LRA?\n2. Have you measured the training speed on GPUs?",
+            "clarity,_quality,_novelty_and_reproducibility": "Paper is clearly written and reproducible based on the presented experimental details. ",
+            "summary_of_the_review": "This paper is an established work that is based on some previous works, such as GAU and DSS, speeding up training compared to DSS. However, the empirical improvements seem not be very strong compared to the baseline methods. But it's a good paper that contributes to the state space models and connects with Transformer layers.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_Z4KM"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_Z4KM"
+        ]
+    },
+    {
+        "id": "q-VmVJKJh5",
+        "original": null,
+        "number": 4,
+        "cdate": 1666872637186,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666872637186,
+        "tmdate": 1666872637186,
+        "tddate": null,
+        "forum": "5MkYIYCbva",
+        "replyto": "5MkYIYCbva",
+        "invitation": "ICLR.cc/2023/Conference/Paper4853/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper introduces GSS, a general purpose sequence model which leverages gated units and trains significantly faster as shown on several language modeling benchmarks. This simple-to-implement alternative to S4 and DSS which trains 2-3 times faster, and is competitive with Transformer-based baselines on long-range language modeling benchmarks.",
+            "strength_and_weaknesses": "Strength:\n1. The motivation of modeling long range dependencies is clear.\n2. The paper is in a good shape and easy following.\n\nWeaknesses:\n1. The experimental part lacks of analysis on the proposed Gated State Spaces to show the insight. This part is not convincing.\n2. Some minor issue in paper. For instance, I found it is hard to find the alignment on figure and code in Figure 1.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The experimental part lacks of analysis on the proposed Gated State Spaces to show the insight. Without showing that, we are not convinced why Gated State Spaces helps by some intuitive proves.",
+            "summary_of_the_review": "The paper is well written and easy following but the experimental part lacks analysis. I think a minor revise is needed.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_LYuN"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4853/Reviewer_LYuN"
+        ]
+    }
+]

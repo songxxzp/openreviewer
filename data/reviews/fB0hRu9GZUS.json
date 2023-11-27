@@ -1,0 +1,161 @@
+[
+    {
+        "id": "9du6ndTFENJ",
+        "original": null,
+        "number": 1,
+        "cdate": 1666554362097,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666554362097,
+        "tmdate": 1666554362097,
+        "tddate": null,
+        "forum": "fB0hRu9GZUS",
+        "replyto": "fB0hRu9GZUS",
+        "invitation": "ICLR.cc/2023/Conference/Paper967/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a \u201cgenerate-then-read\u201d approach that contrasts the \u201cretrieve-then-read\u201d approach that has been dominant in open-domain QA. It is based on large language models that encode vast amounts of knowledge and can recall it through prompting. Specifically, the paper proposes two models, one for the zero-shot setting and the other for supervised setting. In the zero-shot setting, the model is simply prompted to generate a relevant document, feeds it back, and generates the answer. In the supervised setting, the model generates a document per training question, clusters them, constructs in-context examples using one question-document pair per cluster, and uses them to generate the document and then the answer as it does in a zero-shot setting. Experiments done on 7 datasets effectively show the model outperforms a range of competitive baselines, including InstructGPT (one of the most competitive large LMs) &  InstructGPT followed by SOTA retrieval systems/Google (in the zero-shot setting) and FiD Followed by DPR/Google (in supervised setting).\n",
+            "strength_and_weaknesses": "### Strengths\n* The proposed approach \u201cgenerate then answer\u201d is new, and is well-executed.\n* The paper convincingly shows that the proposed models outperform a range of baselines, and I think this result is quite surprising and new to the research community. The experiments are very solid and extensive, and every competitive baseline I can think of is included in their comparison.\n\n### Weakness\n* Given that the findings are very surprising, the key question I have is \u2013 why does generate-then-read outperforms retrieve-then-read? And I think this paper does not answer this question, nor tries to answer this question. And I think the paper will significantly be better and more insightful if more analysis that tries to answer this question is provided. For instance, moving some qualitative examples in the appendix to the main text will help. Here are more concrete questions I have (which I don\u2019t think authors should necessarily answer to all of them during rebuttals, but might help answering the question of \u201cwhy it is the case\u201d):\n     * Does it mean that we significantly underestimated LM\u2019s closed-book QA performance, e.g., the LM already has all the knowledge to answer the question but we just didn\u2019t prompt it in the right way, and this type of \u201celicit\u201d prompting enables the model to get the correct answer more often?\n     * Based on examples provided in Appendix (Table 14\u201317), it looks like the model knows relatively early on what the answer is. For instance in Table 16, all GPT-generated documents already answer the question in their first sentence. Then, why is it significantly better than direct prompting?\n     * In fact, based on Table 14\u201317, I think the generated document has a very different distribution from actual Wikipedia documents. They really look more like a rationale that explains how the answer is arrived, just like chain-of-thought. It would be very interesting to see qualitative/quantitative analysis on how generated documents and retrieved documents are different. For instance, one possible quantitative analysis is to see what happens if the reader trained with retrieved documents is given generated documents, and vice versa.\n     * If I aggregate reasonings over the main paper and the appendix, it looks like the paper says retrieve-and-read underperforms because (1) the retrieval accuracy is not good enough due to lacking cross attention, and (2) even if the retrieval was successful, its \u201creadability\u201d is not good since it is written without a question in mind and thus contains information that is not directly related to the question. It would be informative to analyze cases where the proposed model gets correct but retrieve-and-read doesn\u2019t, and see how many of them are (1) or (2).\n     * And if a lot of cases turn out to be (2), which the appendix seems to claim \u2013 why is finding answers from less readable documents difficult for huge LMs? In other words, how is \u201crecalling knowledge seen during pre-training\u201d easier than \u201cfinding the answer from a (less-readable but still answer-containing) document\u201d for a large LM?\n* For the clustering-based method, the paper is treating \u201cnucleus sampling\u201d and \u201cdiverse human prompts\u201d as a baseline, but isn\u2019t \u201crandomly choosing k question-document pairs\u201d a more obvious baseline and should be included in the main table (Table 2)? Asking because based on Table 10, it looks like a clustering-based method is not really better than random k question-document pairs (~1% difference in R@10 on all three datasets \u2013 and  I think the difference will be even less in final answer accuracy). If it is the case, then I am not convinced with the claim in the paper that the clustering-based method is effective, especially given that the clustering-based method is significantly more complicated and expensive (requiring generating documents for all training questions, getting embeddings from GPT-3, etc).\n* Writing comment\n     * I think the first paragraph of p2 is a bit misleading, because \u201crequiring the model to explain every token in the question and document\u201d is not really shown in the paper (and is even unclear what it means), and \u201cthe generated contextual documents tend to be more specific to the question than retrieved documents\u201d is also not really shown in the main paper (although partially shown with a few qualitative examples in the appendix). Also, \u201cSecond, large language models have been trained with considerably large amounts of data and parameters, allowing a type of \u201clook up\u201d of world knowledge stored in the model parameters\u201d \u2013 seems to be more of a \u201creason\u201d the method works, rather than the advantage of the method.\n     * It would be great to add limitations of the proposed models. For instance, the proposed models may not be able to answer questions about the knowledge LMs are not trained on (since there\u2019s no knowledge to \u201crecall\u201d), may suffer from rare and less popular information, and won\u2019t be able to update its knowledge when there\u2019s a temporal shift (which is the real-world scenario). \n\n\n\n\n\n#### Side notes\n* There is a concurrent paper https://arxiv.org/abs/2210.01296 with a very similar (if not identical) method with different underlying LMs, and shows that generate-then-read does not outperform retrieve-then-read. I am curious what leads to the difference in results, although the methods look very similar. Of course, the authors are not required to discuss this paper in detail given that it is a concurrent (slightly later) work, but I think many potential readers will be curious as well.\n* The core idea of the paper is related to the literature in generative retrieval, where a document retrieval is done in a generative manner instead of dense retrieval (Cao et al. \u201cAutoregressive entity retrieval\u201d ICLR, 2021 and a few more). It might be nice to add discussion.\n* Question on a zero-shot setting: multiple papers have reported that zero-shot QA accuracy is significantly poor with an Exact Match metric, because the model does not know it should generate a concise text span (e.g., \u201cOlympia\u201d) rather than a sentence (\u201cZeus was the patron god of the city of Olympia\u201d), and it tends to generate a sentence. This is mentioned in Liu et al. (https://arxiv.org/abs/2103.10385) and a few other papers. I wonder how much of this was the case in the zero-shot setting either in baselines and the proposed models? Was there a special prompt used to prevent this from happening? If \u201ccoverage EM\u201d instead of \u201cEM\u201d is used as a metric (counts whether the generated sentence contains the answer or not), is the ranking between models the same?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "* The paper is generally well-written and is easy to follow. I have a few questions as I wrote above, but they are relatively minor.\n* The quality and the novelty of the paper is above the ICLR standard.\n* The authors tried to ensure all experiments are reproducible, including adding results with publicly available LMs. The authors also promised to release the code.\n",
+            "summary_of_the_review": "* In summary, this is a high quality paper that is definitely above the ICLR standard. The method is new, evaluation is solid and extensive, and results (that the generate-and-read approach outperforms the retrieve-and-read approach) are surprising and teach something new to the research community. The paper is also well written, is easy to follow, and tries to ensure experiments are reproducible.\n* As I stated above, the paper does not explain well enough on why generate-and-read achieves such a significant gain (especially compared to retrieve-and-read), which I think is a more important question. It does not include any qualitative examples or analysis in the main text (although it has some in the appendix), which makes it more difficult to understand what is going on with these models.\n\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_jnAy"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_jnAy"
+        ]
+    },
+    {
+        "id": "MCAkCVWAm_",
+        "original": null,
+        "number": 2,
+        "cdate": 1666603719059,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666603719059,
+        "tmdate": 1666603719059,
+        "tddate": null,
+        "forum": "fB0hRu9GZUS",
+        "replyto": "fB0hRu9GZUS",
+        "invitation": "ICLR.cc/2023/Conference/Paper967/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper propose a new paradigm to solve the task of question answering.\nIn contrast of the standard paradigm retrieve and read, where first a set of documents are retrieved according to a question, and then they are \"read\" to answer the question, the proposed model first generates documents relevant to a question with a large language model, and then a reader answer the question based on the generated documents.\n\nThe authors propose a clustering approach to diversify the generated documents to increase recall.\n\nThe model is tested in two settings, where the reader is a large language model, and is a fine tuned QA system.\nResults on three tasks and six benchmarks show that the approach is very promising, outperforming standard retrieve and read sota models.\n",
+            "strength_and_weaknesses": "The experimental setting is clear and sound, there are many ablation study and experiments that give insights on the tradeoff input docs and model size.\nRelated work is well covered.\n\nI appreciate the study on the performance/model size tradeoff. Figuring out if emergent abilities can be pushed on smaller models (like has been done with PET for few shot learning), maybe using different prompting or light finetuning etc. it is an interesting research direction.\n\nIn the introduction the authors claim ther are 3 drawbacks of retrieval models, but apart for point 3 I don't see the proposed approach to directly address the first two points. Please, clarify this.\n\npage 5 bottom of the page Gppher -> Gopher\n",
+            "clarity,_quality,_novelty_and_reproducibility": "\nThe only downside of this study is that although all the used models are publicly available, API costs or amount of resources needed,  replicating the experiments or following up on this idea, is going to be a privilege of an handful of universities/companies.\n\n",
+            "summary_of_the_review": "The paper is sound and I don't see any major points for it to get rejected.\nIt is a novel idea, well executed and well presented.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO.",
+                "Yes, Discrimination / bias / fairness concerns"
+            ],
+            "details_of_ethics_concerns": "Mild concerns about racial/gender/... bias in large language models.",
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_a9DF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_a9DF"
+        ]
+    },
+    {
+        "id": "Pe04pT7ANB6",
+        "original": null,
+        "number": 3,
+        "cdate": 1666689988313,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666689988313,
+        "tmdate": 1666690397099,
+        "tddate": null,
+        "forum": "fB0hRu9GZUS",
+        "replyto": "fB0hRu9GZUS",
+        "invitation": "ICLR.cc/2023/Conference/Paper967/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes the generate-then-read (GENREAD) approach to solve knowledge-intensive tasks. Compared to the previous retrieve-then-read approach, the proposed method first generates the contextual documents by prompting a large language model. The authors provide two variants of reader, zero-shot and supervised setting, and prove the effectiveness of generation in both settings. ",
+            "strength_and_weaknesses": "Strength:\n1. The proposed method to generate whole contextual documents effectively utilize the internal knowledge stored in a large language model, without a retrieval process from external sources.\n2. Experiments on three knowledge-intesive tasks show the strong performance of GENREAD on both zero-shot and supervised settings.\n3. The authors further provide the reproducibility results with open-source large langue models which is beneficial for future research. \n\nWeakness:\n1. Although experiments show the effectiveness of generation, more analysis on the need of generation would be helpful.\n- In Table 2 and 3, merging the retrieved documents with generated documents further enhance the performance. Which kinds of knowledge can be additionally captured by internal knowledge (generation) that might be missed during retrieval?\n2. Generation with large language models can suffer from hallucination, while there is no discussion on this aspect. Qualitative analysis of the generated documents would be interesting.\n3. Generating whole documents might require more computational cost than retrieval during inference. However, there is no discussion on inference time or the cost in the paper. \n4. The zero-shot performance can be changed according to the choice of prompts, while the details on the choice and the performance variance with different prompts are not provided.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is easy to follow and the motivation is clear. There are some concerns about reproducibility, while this is not a major issue if the code is available.",
+            "summary_of_the_review": "In my opinion, this paper proposes a novel approach for knowledge-intesive tasks, replacing retrieval with generation. GNEREAD proves its effectiveness in both zero-shot and supervised settings. The experiment results are interesting while more discussions about the need of generation and generated documents would give more intuition. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_2jcY"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_2jcY"
+        ]
+    },
+    {
+        "id": "JZGkYtefnU",
+        "original": null,
+        "number": 4,
+        "cdate": 1666745203142,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666745203142,
+        "tmdate": 1670226806555,
+        "tddate": null,
+        "forum": "fB0hRu9GZUS",
+        "replyto": "fB0hRu9GZUS",
+        "invitation": "ICLR.cc/2023/Conference/Paper967/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper presents a generate-and-read approach for solving knowledge-intensive tasks. Different from the retrieve-and-read approach that first retrieves evidence (paragraphs) from a corpus before feeding it to reader models, the current approach uses large language models (LLMs) to generate contextually relevant evidence which is then fed to a reader model. \n\nTo generate multiple diverse contextual evidence, the paper proposes a clustering-based prompting technique where the prompt is synthesized from (question, evidence) pairs from diverse clusters. Specifically, for each query in the training set, the top-1 document is retrieved using a standard retriever such as BM-25 or by prompting an LLM to generate a document. Next, the query-doc pairs are encoded with an LLM (GPT-3) to obtain 12,288-dimensional vectors. These vectors are then clustered using k-means. Next, the \u201cn\u201d query-document pair from each of these clusters form an in-context example which is used to generate a paragraph. This step is repeated k-times for each cluster to generate \u201ck\u201d-diverse documents. In contrast, retrieve-and-read approaches often do not enjoy this type of control during the retrieval process and likely retrieve multiple redundant paragraphs sacrificing diversity. \n\nThe proposed approach was evaluated on several knowledge-intensive tasks such as open-domain QA, fact-retrieval, and on wizard-of-Wikipedia (open-domain dialogue) tasks. \n\nThe proposed method achieves marginal improvement over retrieve-and-read baselines and significant improvements when the evidence from both retrieval and generation are combined.",
+            "strength_and_weaknesses": "Strengths:\n\n- There is a growing body of recent work that is increasingly using LLMs to generate knowledge instead of retrieving it from external knowledge sources. This paper proposes a model in that line of work that is fairly interesting and obtains good experimental results.\n- The proposed model gets promising results on open-domain QA, fact-retrieval, and on wizard-of-Wikipedia (open-domain dialogue) tasks. The performance of just the model is comparably or modestly better than retrieve-and-read approaches, but combining evidence from retrieval and generation leads to nice gains on tasks, suggesting that the proposed approach is practical.\n- The paper is overall well-written and easy to understand\n\nWeakness:\n\n- A weakness of the proposed model is that the clustering and selecting of the prompts is *independent* of the given question. Essentially, if the same n (question, document) pairs are selected from each cluster, the prompts are exactly the same for each question. This might be suboptimal. For example, do you have a sense of how many prompts on average are useful for retrieval for a given question? It would also be interesting to devise question-dependent prompting.\n- Although I like the idea of the power of LLMs to generate highly contextual evidence for a given question, I believe the paper would be stronger if it included two more evaluation\n    - Since the paper focuses on the LLM's ability to do diverse retrieval, it would be good to test that on a benchmark that is explicitly designed to test that ability. For example, Qampari (Amouyal et al 2022) is a recent benchmark that tests for questions with multiple answers. It would be interesting to see the results on that.\n    - Multi-hop questions: I can imagine that LLMs might have the ability to generate contextual evidence that fuses information from two or more documents required to answer a multi-hop question. I think that might be a powerful way for answering multi-hop questions and it would be nice if the authors report some results on whether that is happening or not.\n- In Fig 2, the difference between clustering and sampling method doesn't seem to be too much. Could you report (in numbers) what is the exact difference in recall %? Also, just to clarify, does \u201csampling\u201d refers to using nucleus sampling to generate K different documents (and not using other query-doc pairs in the prompt)? Is that correct? If so, I am a little worried about the very less difference between a method that does not use different (q,d) pairs in prompts and a method that uses.\n- I am confused by Table 4. What is the metric used since the values seem to be between 0.84 and 2.17? My guess is it is the average number of answers found by the model. If so, couple of comments:\n    - The difference between DPR and the proposed method is not that high (1.9 v/s 2.17 in TriviaQA and 1.1 v/s 1.22 in WQ; in NQ, DPR actually outperforms)\n    - I believe the table would be more readable if % coverage is reported and that would also help us to understand how much is the difference in performance between DPR. This is important and I would like to see this in the author rebuttal.\n- In Table 5, do you have any more insights as to why is the performance of OPT so behind that of GPT3 (e.g. in TriviaQA)\n- I would like to have the authors add an additional section regarding the failure modes of the model. For example:\n    - What happens when the evidence generated by the LLMs consists of incorrect factual information? For example, in Table 17, the LLM generates \"The collection of the districts to the east of the Jordan River is known as the West Bank.\" - this I believe is factually incorrect. Since Westbank is actually west of the Jordan River. To the east of the Jordan river is Jordan, which is the gold answer. Did the reader model still read this and output the right answer?\n    - Can adding evidence also from the retriever (i.e. real documents) help in mitigating some of the possible drawbacks that might arise because of LLMs hallucinating incorrect information?\n- In sec 3.1 where the joint probability of p(a,d | q) is described, I believe a summation of d is missing (marginalization).\n- \u201cdue to the high coincidence of token distributions in the decoding process under a single prompt.\u201d - What does this exactly mean?\n- [Minor] - I think the related work section can be written better. Currently, it reads like a list of related work and there are no explicit points differentiating wrt current work. Currently, it only mentions that this work is the first work to apply it for knowledge-intensive tasks which, I believe is actually underselling this work.",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: The paper is clearly written overall. Its a simple idea and the paper communicates that well.\n\nQuality: There is a growing body of recent work that are increasingly using LLMs to generate knowledge instead of retrieving from external knowledge sources. This paper is a work in that line and I would say overall the positive results puts the paper as high quality. I am personally not sure about the diverse retrieval claim as it can be verified more with evaluation on bechmarks such as Qampari and on multi-hop questions. The current results in Table 4 regarding diversity does not fully convince me that the procedure leads to diverse results.\n\nOriginality: The technical novelty of the work is limited. However, I view the simplicity of the model combined with good empirical results as a positive contribution.\n\nReproducibility: GPT-3 API is behind a paywall, so reproducibility is not straightforward. I appreciate the author's experiments on the open-source OPT models, however, the performance seems to be lacking when OPT is used.",
+            "summary_of_the_review": "The paper proposes a simple and effective way of generating relevant contextual evidence for knowledge-intensive tasks. The proposed method achieves marginal improvement over retrieve-and-read baselines and significant improvements when the evidence from both retrieval and generation are combined. I am not fully convinced about the diverse retrieval (one of the primary motivations for the paper) and would like to see more experiments and clarification. Hence I am leaning toward weak acceptance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "Yes, Discrimination / bias / fairness concerns",
+                "Yes, Privacy, security and safety"
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_Vpy9"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper967/Reviewer_Vpy9"
+        ]
+    }
+]

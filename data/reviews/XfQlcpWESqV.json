@@ -1,0 +1,119 @@
+[
+    {
+        "id": "bH6TNLqaST",
+        "original": null,
+        "number": 1,
+        "cdate": 1666168110337,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666168110337,
+        "tmdate": 1666168110337,
+        "tddate": null,
+        "forum": "XfQlcpWESqV",
+        "replyto": "XfQlcpWESqV",
+        "invitation": "ICLR.cc/2023/Conference/Paper2734/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "the paper proposes a (pytorch-based)  implementation for summing clipped per-sample gradients in DP-SGD and demonstrates empirical gains in terms of compute time. ",
+            "strength_and_weaknesses": "strength: the authors show empirical gains for common setups of DP training in terms of wall-clock time compared to previous approaches. \n\nweakness: the paper has several weaknesses, some of which are technical and the others are related to presentation. \n\ntechnical weaknesses: \n\nwhile the idea for modifying FastGradClip may seem natural, it's worthwhile to note that the current presentation is heavily based on a particular framework -- PyTorch. for instance, Algorithm 1 explicitly states the procedure quoting PyTorch forward and backward hooks. i believe the high-level idea is applicable in other frameworks, but the current algorithmic sol'n is limiting and isn't designed based on shared primitives of automatic-differentiation framework. \n\nin the main text and appendix C, the authors argue that one major difference between BK and GhostClip is that BK doesn't compute non-private gradients. note that GhostClip need not compute non-private gradients at all, since this quantity is not used anywhere. in fact, computing the non-private gradient is likely an artifact of a particular implementation and is not a general drawback of the approach (of course, neither is this a drawback / limitation of FastGradClip). by not considering this point, the authors likely have \"inflated\" their computational advantages. \n\nthe authors make several factually incorrect claims. for instance on page 4, authors say \"For instance, Li et al. (2021) shows that, when training GPT2-large (774M parameters), Opacus Yousefpour et al. (2021) and JAX Subramani et al. (2021) cannot fit even one single sample into a 16GB GPU.\" \n  - note the original paper by Li et al. does not present profile results with GPUs which have 16GB video RAM. the selected GPU is TITAN RTX which has 24GB video RAM.",
+            "clarity,_quality,_novelty_and_reproducibility": "quality: the paper proposes an interesting modification for attaining speed ups, but there are several factually incorrect claims. \nclarity: the paper could improve on the writing and presentation. for instance, authors don't distinguish between \\cite and \\citep. \nnovelty: the minor trick proposed by the paper is new, to the best of my knowledge. \nreproducible: results are likely reproducible to the best of my knowledge. authors agree to release code, which facilitates reproducibility. ",
+            "summary_of_the_review": "the paper proposes a (pytorch-based)  implementation for summing clipped per-sample gradients in DP-SGD and demonstrates empirical gains in terms of compute time. the trick is new to the best of my knowledge, but the paper has several technical issues. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_cPLw"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_cPLw"
+        ]
+    },
+    {
+        "id": "vitGNGZpD-",
+        "original": null,
+        "number": 2,
+        "cdate": 1666493044705,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666493044705,
+        "tmdate": 1666493044705,
+        "tddate": null,
+        "forum": "XfQlcpWESqV",
+        "replyto": "XfQlcpWESqV",
+        "invitation": "ICLR.cc/2023/Conference/Paper2734/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a new trick to improve the runtime of DP training with GhostClip. One large cost in DP training is the computation of the per example gradient, which must be clipped before being averaged, so that no example can have an outsized influence on the model. The authors enhance a previously known trick to reduce this cost.\n\nGhostClip, proposed in 2015, allows the computation of the norms of the per example gradients efficiently (i.e. without storing the per-example gradient). Then GhostClip uses a second backpropagation pass to compute the gradients of the weighted loss --- the weighted loss is the sum of the loss for each example weighted by the norm of its gradient, thus achieving clipping.\n\nIn the current paper, the authors propose to store the per example gradients of the outputs in the first pass, while computing the norms of the per example gradients. These are used to recompute the gradient of the weighted loss, without needing to use a second backprop pass. Since only the per example gradients of the outputs are stored, and not per example gradients of the parameters, this memory is substantially less than the memory used in standard DP implementations.\n\nThe paper then points out that the GhostClip trick works well only when the number of features in a layer is small (each layer's input is of size batchsize * features * channels). For layers where the number of features is large (e.g. the initial layers of a ResNet for ImageNet), the authors do not use GhostClip, instead keeping per example gradients of the parameters. Thus they are able to reduce the huge memory requirement of GhostClip for these cases.",
+            "strength_and_weaknesses": "The paper explains the implementation very well, comparing nicely against various previous algorithms. It also describe the limitations and the resulting hybrid algorithm well.\n\nThe authors mention two tricks, but it was not easy to distinguish these.  Q: What is the purpose of Line 8 in Algorithm 2? The output is not used anywhere else in the code. This is mentioned as one of the two important tricks in the paper, and adds considerably to the time and memory requirements of GhostClip.\n\nThe main novelty is in the implementation of the tricks --- the trick itself is straightforward --- instead of recomputing the gradients, the authors store them from the previous pass.\n\nIn equation 2, you multiply 2 vectors --- should this be a dot product?",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is very clearly written and comprehensive. There are not a lot of experimental results in the paper, but they don't seem needed.\n",
+            "summary_of_the_review": "The paper seems to me to be very clear and useful. My only concern is with the question above, hopefully the authors can address it in the discussion.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_ac6D"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_ac6D"
+        ]
+    },
+    {
+        "id": "7nBfLZy69b",
+        "original": null,
+        "number": 3,
+        "cdate": 1666624318575,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666624318575,
+        "tmdate": 1666624318575,
+        "tddate": null,
+        "forum": "XfQlcpWESqV",
+        "replyto": "XfQlcpWESqV",
+        "invitation": "ICLR.cc/2023/Conference/Paper2734/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper implements existing DP optimizers with 1.24x training speed than the most efficient competitor. Previous methods accelerate the DP training speed by using two rounds of back-propagation or sacrificing memory. This paper uses one back-propagation and never instantiates per-sample gradients so that it reduces computational costs. ",
+            "strength_and_weaknesses": "Strength\n\n1. Table 2 provides a clear and comprehensive comparison of the existing methods.\n\n2. The paper provides a complete comparison of pseudo-codes for their algorithm and the competitors.\n\nWeaknesses\n\nW1. The paper combines some tricks from existing works to save computational costs of deep learning with DP. However, when comparing their code with SOTA, it seems that the proposed algorithm only replaces one summation step with matrix operations, which lacks novelty.\n\nW2. The paper repeatedly emphasizes that it can reduce the time and memory complexity of DP deep learning. However, the actual reduction is only a constant (\"1.24\u00d7 training speed in practice\").  Moreover, according to the experiments in Figures 2 and 5, when the input dimension is large, the proposed algorithm only shows minor improvement in time or memory compared to the state of the art.\n\nW3. Figure 3 is difficult to read.\n\nW4. The paper is not self-contained in the sense that it refers to a number of tables in the main text, without mentioning that those tables are only available in the supplementary material.",
+            "clarity,_quality,_novelty_and_reproducibility": "The organization of the paper has some problems. A few examples:\n\n1. Table 1 is shown in Section 1.1 but the first explanation of it lies in Section 2.3.\n\n2. Figure 3 is referred to before Figure 2, but it appears much later than Figure 2.",
+            "summary_of_the_review": "The novelty of the paper seems low, and the propose solution only achieves minor improvements against the state of the art.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_QN3z"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2734/Reviewer_QN3z"
+        ]
+    }
+]

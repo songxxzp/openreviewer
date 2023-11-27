@@ -1,0 +1,160 @@
+[
+    {
+        "id": "lNyJ17bIR2",
+        "original": null,
+        "number": 1,
+        "cdate": 1666617431168,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666617431168,
+        "tmdate": 1666672010459,
+        "tddate": null,
+        "forum": "t02FF6Fj5mH",
+        "replyto": "t02FF6Fj5mH",
+        "invitation": "ICLR.cc/2023/Conference/Paper3728/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper designs a new decentralized learning algorithm in cooperative multi-agent reinforcement learning where no communication or parameter sharing among agents is allowed. From each agent\u2019s point of view, the transition probability is non-stationary due to the other agents\u2019 changing policies. The proposed best possible operator considers the maximum target over the available transition probabilities and is claimed to produce the optimal policy assuming the optimal joint policy is unique. Next, a simplified best-possible operator is suggested by randomly selecting one possible transition probability followed by a monotonic update and is claimed to produce the optimal joint policy under the same assumption. The authors practically applied the operator to action-value function learning with neural networks, and numerical results showed promising results in some cooperative multi-agent environments.",
+            "strength_and_weaknesses": "Strength: This paper is overall well-written and easy to read. The authors tried to show theoretical support for the proposed algorithm under a specific assumption.\n\nWeaknesses: The authors lack experiments for fair comparisons with the considered baselines. In addition, there is a gap between the proposed simplified operator and its implementation regarding sampling data. Reproducibility could not be well verified. Investigation into the multiple optimal policies was not considered. Please see the following comments and questions.\n\n\n<Comments>\n\nC1. Regarding a fair comparison with MA2QL\n\n- The MA2QL paper states that \u201cfor a fair comparison, the total number of Q-function updates for each agent in MA2QL is set to be the same with that in IQL.\u201d Is this rule explicitly applied to the conducted experiments? Please clarify the (fine-tuned) training steps for updating an agent at each turn in every environment.\n- In Fig.4, there are three easy SMAC environments and one hard environment (2c_vs_64zg). In MA2QL paper, three other environments are considered(3s_vs_4z (easy), 5m_vs_6m (hard) and\ncorridor (super hard)). Among the three environments, MA2QL shows superiority over IQL in the latter two environments. For a fair comparison with MA2QL, SMAC experiments in those three environments should be performed.\n- In Multi-agent Mujoco, BQL only considered two-agent cases in the partially observable setting, which seems an empirical limitation of this paper. On the other hand, MA2QL conducted experiments on 2-agent HalfCheetah, 3-agent Hopper, and partially observable 3-agent Walker2d in multi-agent MuJoCo. For a fair comparison with MA2QL,  Multi-agent Mujoco experiments in those three environments are required.\n\nC2. Regarding a fair comparison with H-IQL\n\n- As far as I understand, the H-IQL method represents the equation in Appendix A. If yes, then the authors should report the (fine-tuned) value of $\\lambda (<1)$.\n\nC3. Regarding sampling from the replay buffer\n\n- In my opinion, the (hidden) key part of BQL is how to sample data as well as the formulation itself in Eqs. 9 and 10. There is a gap between Eq. 7 and Eq. 9 (with one replay buffer) regarding sampling data. The authors explicitly need any method to reduce the gap. For example, I think the minibatch should contain samples from \u201csimilar\u201d transitions. Partitioning one buffer into several parts in chronological order, and choosing one part of them for sampling can apply to Eq. 7. (Note that this partitioning is different from using buffer series in Appendix B since the former uses one buffer, but just changes the sampling method inside the same buffer.)\n- Can we guarantee that $\\mathcal{D}_i$ sufficiently goes through all possible transition probabilities? (page 6)\n- On page 5 and Appendix B, the authors claim the sample efficiency of Eq. 7 over Eq. 6. While Eq. 7 is practical since we ideally require samples from every $\\pi_{-i}$ to compute Eq. 6. However, other than that, the explanation in the second paragraph on page 13 is not clearly understood, especially the complexity of Eq.6. In my opinion, this additional explanation requires clarification.\n\n\nC4. Regarding multiple optimal policies & scalability\n\n- We can extend the matrix game on page 8 to observe what happens to BQL when there are multiple optimal policies. We can also check whether the proposed approach in Appendix D is practically applicable in this case. \n- Another promising experiment can be a scalability test on the SMAC environment (e.g., 10m vs 11m, 27m vs 30m, bane_bane) since there may be a relatively higher possibility of multiple optimal policies when the number of (homogeneous) agents increases. This SMAC test can also strengthen the scalability of BQL. (I checked Appendix C.2.)\n\nC5. Regarding reproducibility \n\n- I could not check the reproducibility of the experiments as the authors did not provide their implementation codes.\n- Why are the performance of IQL in 2c_vs_64zg and 1c3s5z much higher than those in *Samvelyan et al. (2019)? In the paper, the win rates are 7% and 21%, respectively, while in this paper, about 50% and 70%, respectively. Did the authors tune the IQL code? * Samvelyan et al., The StarCraft Multi-Agent Challenge, 2019.\n- For clarity, do the BQL, H-IQL, and IQL use synchronized sampling (i.e., each agent samples the same episodes) or not? \n\n\n<Questions>\n\n1. On page 3, does \u201c$Q_i^0$ is initialized to be the minimal return\u201d mean  $Q_i^0=-r_{min}$? Does this initialization is applied in Algorithms 1 and 2? (I could not find any explicit mention regarding this.)\n2. Are the proofs of Lemma 2, 3, and 4 available for stochastic $\\pi_{-i}$? For example, the first inequality in Lemma 2 may be valid for $P_i^*$ under stochastic $\\pi_{-i}$. If yes, is that a reason for considering only deterministic policies? \n3. On page 5, can the authors clarify how to select \u201ca subset of state $S_i^m$\u201d?\n4. Instead of Eq.10, can we directly apply the max operation as seen in Eq. 8?\n5. Could you explain \u201cthe positive random noise of $Q_i$\u201d? (page 6) The necessity of $\\lambda$ in Eq. 10 is empirically appealing, but less conceptually.\n6. Regarding independent SAC in Appendix C.3\n- How can BQL be applied to SAC as (i) SAC contains entropy term and (ii) the considered policy is stochastic, unlike deterministic in DDPG? This part should be clarified with the explicit formulation.\n- Does independent SAC use two Q functions for each agent? Two $\\bar{Q}_i^e$ functions for each agent? \n- What is the base code for implementing independent SAC?\n\n7. What is the target update period or coefficient in Line 8 of Algorithm 2?\n8. On page 8, it seems that \u201cthe narrow region $r>3$ is surrounded by the region with $r=0$\u201d is written in reverse order. \n9. Is there any explanation regarding the fine-tuned value of $\\lambda$ increasing as the environment becomes more complicated?\n\nMinor: $max_{P_i(s'|s,a)} \\rightarrow max_{P_i(\\cdot|s,a)}$ in Eq.6.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and easy to read. Arguing the theoretical background for the proposed method can support the novelty of the paper. However, more details including additional experiments should be significantly expanded, and detailed explanations should be provided for clarity and to reduce the logical gap. Finally, since the authors did not provide their source code, reproducibility verification was impossible.\n\n\n",
+            "summary_of_the_review": "The target of this paper is fully decentralized multi-agent reinforcement learning (MARL), an emerging area in the MARL community. However, the numerical study should be expanded and the proposed algorithm should be fairly compared with the baselines, guaranteeing reproducibility verification. In addition, the authors need to clarify unclear technical explanations to support the main claim. \n\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_oR8C"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_oR8C"
+        ]
+    },
+    {
+        "id": "8z4kcOTRiq",
+        "original": null,
+        "number": 2,
+        "cdate": 1666702707693,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666702707693,
+        "tmdate": 1666702707693,
+        "tddate": null,
+        "forum": "t02FF6Fj5mH",
+        "replyto": "t02FF6Fj5mH",
+        "invitation": "ICLR.cc/2023/Conference/Paper3728/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes _best possible Q-learning_, a multiagent reinforcement learning approach that - being decentralized - ensures convergence to optimality. The paper assumes full state observability, i.e., all agents have access to the full state of the environment. To ensure convergence to the optimal joint policy, the paper introduces the _best possible operator_, which at its core is similar to a Bellman operator for each agent $n$ in a multiagent MDP that considers that the other agents follow a greedy policy, i.e., agent $n$'s $Q$-function, $Q_n$, is updated as\n\n$$Q_n(s,a_n)\\leftarrow\\max_{a_{-n}}\\mathbb{E}[r+\\gamma\\max_{a'}Q_n(s',a')\\mid s'\\sim P(\\cdot\\mid s,a_n,a_{-n})],$$\n\nwith $a'\\in A_n$. The paper actually uses a more evolved formulation for $\\mathcal{T}$ using transition probabilities, but unless if I missed something, it seems to me that it is equivalent to the one above. The paper then proposes a _simplified best possible operator_, where the maximization over $a_{-n}$ is replaced by a (fixed) arbitrary choice of $a_{-n}$, leading to the computation of an intermediate Q-value, dubbed $Q^e_n$, such that\n\n$$Q^e_n(s,a_n)=\\mathbb{E}[r+\\gamma\\max_{a'}Q_n(s',a')\\mid s'\\sim P(\\cdot\\mid s,a_n,a_{-n})],$$\n\nleading to the update\n\n$$Q_n(s,a_n)\\leftarrow\\max(Q_n(s,a_n),Q^e_n(s,a_n)).$$\n\nThe above operator is then turned into a Q-learning algorithm, by allowing the different agents to interact in episodes where their policy is essentially held fixed. The experiences collected during different episodes provide an estimate for $Q^e_n$ above, and $Q_n$ is then updated accordingly.",
+            "strength_and_weaknesses": "**Strengths**\n\nThe paper addresses an interesting problem and provides an interesting approach, which is reminiscent of the distributed IQL of Lauer and Riedmiller mentioned in the paper. \n\n**Weaknesses**\n\nThe fact that the paper assumes full state observability is, in my view, an important setback, given current research in MARL mostly considers that agents have only access to local observations. Granted, the paper does evaluate its approach in a partially observable setting, but (i) the theoretical grounding of the algorithm does not hold for partially observable settings (at least not directly); (ii) from the portrayed experiments it is difficult (at least for me) to assess how robust the algorithm is to general partially observable settings. \n\nAnother important aspect that is not discussed significantly in the paper is related with _coordination_, since in scenarios where multiple policies exist it does not seem to me that the agents necessarily converge to a coordinated policy. The paper refers to Appendix D for a solution to the case where multiple optimal policies may exist (which I'm convinced is the most common scenario), but I believe that this is an important issue that should have its space in the main body of the paper. ",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity**\n\nThe paper is well organized and clearly written.\n\n**Quality**\n\nI did not check the derivations in detail, but the results portrayed strike me as reasonable.\n\n**Originality**\n\nI believe the proposed approach -- although reminiscent of previous approaches in the literature -- is novel.\n\n**Reproducibility**\n\nI am not completely sure that the provides sufficient information to reproduce the experiments (namely, details of the architectures used), but I believe that it is easily solvable by providing access to a code repository in the final version of the paper.",
+            "summary_of_the_review": "The problem addressed in the paper is relevant (although in a somewhat constricted setting) and the contribution novel and interesting. There are some aspects of the contribution that could be discussed in greater detail. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "N/A",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_o76z"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_o76z"
+        ]
+    },
+    {
+        "id": "JFzNhUnfYx5",
+        "original": null,
+        "number": 3,
+        "cdate": 1667355003728,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667355003728,
+        "tmdate": 1667440301245,
+        "tddate": null,
+        "forum": "t02FF6Fj5mH",
+        "replyto": "t02FF6Fj5mH",
+        "invitation": "ICLR.cc/2023/Conference/Paper3728/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes what they call \"the best possible operator\" for decentralized Q-learning when there are multiple agents. The operator updates the policies of each agent individually at each step and can be shown to converge to the optimal joint policy. However, the operator is too complex and impractical. What the paper really proposes is the \"simplified best possible operator\" which computes only one of the possible transition probabilities but still can be proved to converge to the best optimal policy. The algorithm is then called \"best possible Q-learning (BQL).  The algorithm can be implemented with a Q-table for each agent por with a neural network for each agent. The paper evaluates BQL on a variety of tasks (stochastic games, etc) and compares the performance with the performance of different algorithms.",
+            "strength_and_weaknesses": "Strengths: There is novelty in the algorithms proposed and the guarantee to converge to the joint optimal policy is important. The optimality of the joint policy found is proved formally. \nWeaknesses: Finding the optimal policy is guaranteed only when there is only one optimal policy.  This is reported in the Appendix, not in the paper. Many results are shown in the Appendix. There are many acronyms, but not all of them are defined.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written and the work is original to the best of my knowledge. The graphs of the experimental results are too small and hard to read.  ",
+            "summary_of_the_review": "A well-written paper that presents an algorithm, BQL, for multi-agent reinforcement learning that guarantees the learning process will converge to the optimal joint policy when the optimal policy is unique.  BQL is computationally more efficient than algorithms that explore all possible transition probabilities.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "None",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_hhze"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_hhze"
+        ]
+    },
+    {
+        "id": "qoksq7veEq",
+        "original": null,
+        "number": 4,
+        "cdate": 1667439816169,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667439816169,
+        "tmdate": 1667439816169,
+        "tddate": null,
+        "forum": "t02FF6Fj5mH",
+        "replyto": "t02FF6Fj5mH",
+        "invitation": "ICLR.cc/2023/Conference/Paper3728/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes the best possible operator for decentralized learning in cooperative multi-agent games. Since the best possible operator is almost impossible to implement in practice, the authors also propose a simplified best possible operator. Experiments are conducted on simple stochastic game, stage game, MPE, MuJoCo and SMAC.\n",
+            "strength_and_weaknesses": "Strength:\n\nThe experiments are evaluated on multiple types of tasks. The fully decentralized setting for cooperative MARL is appealing.\n\nWeaknesses:\n\nThe abstract is a bit misleading at the beginning. It does not clearly specify the scope of the research, only in the last sentence it tells that the experiments are conducted on cooperative multi-agent tasks.\n\nSec. 2.2,\u201dTo reduces the complexity, we can only consider the deterministic policies \u2026\u201d is not well justified.\n\nSec. 2.3 \u201cSimilar to the proof of Lemma 2, we can easily prove\u2026\u201d is less clear.\n\nFor the simplified best possible operator, it seems $\\tilde{P}_i$ is sampled from all possible transition probabilities, how could this effectively update $Q_i$? In practice it means to sample from all possible policies of the other agents. \n\nThe conditions and assumptions for all lemmas and theorems are not clearly specified. \n\nSeveral baseline methods are missed, like:\n\n1. Li, Hepeng, and Haibo He. \"Multi-agent trust region policy optimization.\" arXiv preprint arXiv:2010.07916 (2020).\n\n2. Kuba, Jakub Grudzien, et al. \"Trust region policy optimisation in multi-agent reinforcement learning.\" arXiv preprint arXiv:2109.11251 (2021).\n\nThe numerical results should also be provided in tables apart from just the learning curves.\n\nThere are lots of typos in the paper to be fixed.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The theoretical support of the proposed method is not clearly provided. \n\nThe quality of writing is bad and the results are not complete.\n\nThe idea of marginalizing over other agents in the joint Q-value is not novel enough.\n",
+            "summary_of_the_review": "The paper generally needs a major revision for improving its quality in terms of writing, technical contents, method description and result reports. More baseline methods should be compared. The theoretical justification needs to be provided with more details.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_NZDY"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3728/Reviewer_NZDY"
+        ]
+    }
+]

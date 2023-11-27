@@ -1,0 +1,158 @@
+[
+    {
+        "id": "BDNeLYCf7o",
+        "original": null,
+        "number": 1,
+        "cdate": 1666065250431,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666065250431,
+        "tmdate": 1666065250431,
+        "tddate": null,
+        "forum": "TSqRwmrRiOn",
+        "replyto": "TSqRwmrRiOn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3289/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper studies the problem of (in-distribution) subpopulation generalization when facing potential subgroups shift in the training data, without knowing the group annotations. The paper proposes a bias amplification scheme, which consists of two training stages. In the first stage, auxiliary variables are introduced for each input sample during model optimization, which are used to identify subgroups. Then the model is further trained using a re-weighting scheme based on the identified subpopulations of data points. It also proposes an early stopping method that does not need any subgroup annotations even in the validation set. Experiments on several datasets show that the method might be effective over several baselines on popular subpopulation shift datasets.",
+            "strength_and_weaknesses": "# Strengths\nOverall the strengths of the paper are pretty clear. They can be summarized into the following points.\n\n+ The idea of introducing learnable auxiliary variables with a bias amplification scheme for subgroup discovery and robustness seems to be novel and not explored before in this field.\n\n+ The paper also introduced a simple yet effective method - class accuracy difference - to avoid the need of a balanced validation set with group annotations.\n\n+ The author did a comprehensive experimental validation. They tested the BAM method on 4 popular subpopulation shift datasets, and explore the effects of the proposed 3 components via a thorough ablation study. The latter part is especially plausible as it makes the contribution of different components clearer.\n\n+ The writing is overall good and easy to follow. The paper is well structured.\n\n---\n\n# Weaknesses\nThere are, however, several major weaknesses exist in the current paper.\n\n## Method\n- The authors claimed that \"adding auxiliary variables amplifies the bias toward easy-to-learn examples\". This is however not supported in the experiments.\n1. What do the final learned variables look like after stage 1? It would be interesting and important to see the distribution of learned variables.\n2. Are there any differences between that of minority groups versus majority groups? Is the bias really amplified toward easy-to-learn examples?\n\n- The bias amplification scheme introduces an auxiliary variable for **each example** in the dataset. Moreover, by its definition, each variable has a size of $C$, which is the total number of classes. Therefore, the size of the auxiliary variables is propotional to the dataset size (total number of samples) as well as the total number of classes. It is doubtful that whether the method could scale to large-scale real-world datasets with large number of samples and fine-grained classification requirements (e.g., iNaturalist dataset has > 8,000 classes and tens of millions of images).\n\n- Related to the above point, the idea of introducing auxiliary variables is plausible, but it also introduces potentially high computational costs. For example, ERM does not need any tracking or storing intermediate variables. I would like to see the actual computational cost w.r.t. time and memory costs. Wall-clock training time comparison as well as memory consumption to other baseline methods (e.g., ERM, JTT) would be good.\n\n## Experiments\n- Using squared loss instead of CE loss is interesting. The main intuition (motivation) comes from Hu et al. (2020). However, in Hu et al. (2020), using squared loss is reasonable as it recovers kernel ridge regression formulation. When it comes to the subpopulation setup in this paper, it is unclear why using squared loss is a good choice in the first place.\n1. Can the authors explain, theoretically or hypothetically, that using squared loss is a good choice compared to CE loss in your setup?\n2. The main change from CE to squared loss is using a soft regression loss instead of a hard classification loss. What about other (regression) losses, e.g., L1 or Huber loss? Is it actually the **squared loss** that leads to the improvement, or any of the aforementioned **regression losses** can lead to improvements? More comparisons are needed to confirm the argument.\n\n- In Figure 2, regardless of whether One-M  or Two-M is used, the final performance of BAM degrades as $T$ gets large. This contrasts with the intuition, and also indicates that BAM training might not be stable and highly depends on the number of epochs used in stage 1.\n1. Can the authors explain why performance of BAM degrades as $T$ gets larger?\n2. Given its sensitivity to $T$, for a new dataset, how should one empirically choose the value of $T$? Does this indicate that BAM still needs a validation set to choose proper hyper-parameters?\n\n---\n\n# Additional questions\n\n- Re-weighting is used for balanced training in stage 2. I wonder why not use data re-sampling (i.e., upsample the identified minority group or downsample the majority group). Is there a specific reason using only re-weighting?\n\n- In Table 2, for the  CivilComments-WILDS dataset, the performances of BAM & JTT are exactly the same with or without annotations, but this does not hold for other datasets. I wonder is there a reason behind this? Intuitively with group annotations should improve the performance (at least for the worst group).\n\n- Intuitively, the learned \"bias\" would be more stable when the model training is converged, which is however not the case (Figure 2). What if in stage 1, the network is trained longer enough? What would be the overfitting pattern? Will the model overfit to all training samples?",
+            "clarity,_quality,_novelty_and_reproducibility": "## Clarity\nGood.\n\nThe paper is well written and structured and easy to read. The idea is simple and effective.\n\n## Quality\nFair.\n\nThe strengths are clear. There are however several major weaknesses in Methods and Experiments.\n\nPlease refer to the weaknesses part for a complete review.\n\n\n## Novelty \nGood.\n\nAlthough the idea of introducing auxiliary variable during model training is proposed in the literature (Hu et al. 2020), adapting it for subgroup discovery and robustness seems to be novel and not explored before in the subpopulation field. It also gives insights on how to remove the dependency on the well-annotated validation set via a simple class-accuracy-difference criterion.\n\nThe literature review is comprehensive, and the paper is well positioned w.r.t. the literature.\n\n\n## Reproducibility\nFair.\n\nNo code is provided along with the submission. The pseudo code is provided for the algorithm.",
+            "summary_of_the_review": "The paper studies an interesting yet important problem, model generalization when facing potential subgroups / subpopulations in the training data without knowing the group annotations.\n\nThe overall idea of leveraging a bias amplification scheme for subgroup discovery and robustness seems to be novel and not explored before in this field, which is plausible.\n\nHowever, currently there are several drawbacks and weaknesses in terms of Methods and Exepriments, making me less confident on its stability, scalability, and working rationale.\n\nIn summary, my rating is borderline for now. I'm willing to change my score if my concerns/questions are well addressed.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_bEzt"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_bEzt"
+        ]
+    },
+    {
+        "id": "jUqRQXleZH",
+        "original": null,
+        "number": 2,
+        "cdate": 1666544425788,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666544425788,
+        "tmdate": 1666615258758,
+        "tddate": null,
+        "forum": "TSqRwmrRiOn",
+        "replyto": "TSqRwmrRiOn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3289/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Several group robust optimization have achieved remarkable performance but they require group annotations, which limits the practicality. To alleviate this limitation, the authors focus on the scenario where group annotations are not or partially available on a validation set. The proposed method BAM consists of two stages; 1) model is trained using a bias amplification scheme with an auxiliary variable and 2) upweight the samples that are misclassified in 1).",
+            "strength_and_weaknesses": "### Strength\n- The paper provides performance improvement in most of datasets.\n- The authors also introduce early stopping strategy without group annotations to ensure the unsupervised setting.\n- The writing is easy to follow.\n\n### Weakness\n- The main idea is partially overlapped with LfF (stage 1) and JTT (stage 2), and the performance improvement is not significant compared to theirs. The auxiliary variable aims to make hard examples to be learnt harder, which has similar objective to generalized cross entropy of LfF. What is the advantage of auxiliary variable, compared to GCE of LfF?\n- Why the auxiliary variable is instance-wise, rather than the common one for all samples? If I correctly understand, this is not realistic if there are millions or billions of training images. Also, how does the auxiliary variable changes as training progresses?\n- There are some missing comparisons for unsupervised debiasing methods [LWBC, BPA, CVaR DRO]. Especially, [LWBC] also employs a biased committee to learn a final debiasing classifier.\n\n[LWBC] Learning Debiased Classifier with Biased Committee, NeurIPS 2022\n\n[CVaR DRO] Large-scale methods for distributionally robust optimization, NeurIPS 2020\n\n[BPA] Unsupervised learning of debiased representations with pseudo-attributes, CVPR 2022\n\n### Minor questions\n- Why One-M is better than two-M only after bias amplification? There is no explanation.\n- The results of BAM/BAM+class diff and JTT/JTT+class diff on CivilComments are the same. Is it correct?\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "- The overall writing is easy to read.\n- The main part of this work I think is about auxiliary variable, but there is no analysis on this, which weakens its novelty.\n- There is no source codes, but the pseudo-codes are clear and easy to follow.",
+            "summary_of_the_review": "- The authors proposed a two-stage methods for learning debiased representations, but however, I don\u2019t think this method is sufficiently novel compared to the existing approaches. For a stronger work, I think it needs to conduct more detailed and thorough analysis about auxiliary variable for debiasing.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_3fdp"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_3fdp"
+        ]
+    },
+    {
+        "id": "7h45ZIf2AW-",
+        "original": null,
+        "number": 3,
+        "cdate": 1666736198452,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666736198452,
+        "tmdate": 1666736838925,
+        "tddate": null,
+        "forum": "TSqRwmrRiOn",
+        "replyto": "TSqRwmrRiOn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3289/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a two-stage training approach for improving worst-group performance, BAM (Bias Amplication), where in the first stage a bias amplified model is trained (Hu et al. 2020) to replace that of JTT, and the second stage still follows JTT. The paper also proposes a validation metric that works well without any group annotation on the validation set. Empirical results are reported and abundant ablations are performed to support the model.",
+            "strength_and_weaknesses": "Strengths:\n\n1. The paper is one of the few that explicitly links the worst-group improvement literature with learning with label noise (LLN). A particular LLN model (Hu et al. 2020) is used to replace stage 1 of JTT. I think the idea can be quite interesting for many readers to further explore the links between the two research areas.\n2. The paper explores worst-group improvement without any group annotations at all which is an understudied problem in the literature.\n3. Abundant ablations are performed to support the proposed model. Some can be quite interesting to other readers, such as One-M vs Two-M (Fig 2).\n\nWeaknesses: The method is clearly presented, and I only have some comments/clarification questions.\n\n1. I find it a bit hard to understand the motivation for the ClassDiff validation metric for model selection. Why pairwise class perf diff should work? For example, is it  somehow related to worst-class accuracy (as opposed to worst-group that requires annotation)? How robust is it if one varies class imbalance or (group,class)-imbalance (as a tuple) in the val set? Some intuitions/ablations can help.\n2. Is lambda in Eq. 1 fixed to 0.5 instead of tuned as a hparam (as said in Sec 5.3, but not sure how it's done in Sec 5.1/2?)\n3. The paper discussed, and compared empirically through ablation, the choice of MSE vs CE as loss function in Stage 1. In fact, a relatively well known robust loss for LLN is simple MAE loss (https://arxiv.org/pdf/1712.09482.pdf). Given its implementation simplicity, it would be interesting to see how it compares to MSE/CE to suit this task.\n4. As a minor point, despite being the an interesting and well-motivated idea to use a noise-robust bias amplifying model to replace JTT's stage 1 model, I still think the contribution can be much stronger if more LLN models are tested (and of course significantly more amount of work needed). Or at least I think it'd be good to make the point clear from the beginning that in fact many other LLN models (e.g. curriculum learning, robust losses, label transition) can be candidates to identify possibly group-conflicting training samples. (Perhaps another LLN model may suit the task even better with better performance.)\n5. As common evaluation criteria of LLN models, one could also report the clean/noisy ratio (i.e. identified clean/noisy samples in the training set) to demonstrate how well the method works. A similar idea could be employed to show how well bias amplifying model compares to a simple early-stopped ERM-trained model (JTT) in terms of identifying group-conflicting training examples in another experiment/ablation.",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and clearly presented. Connections to related works are explained, motivating the proposed method well. The contribution is novel, as one of the few that explicitly links worst-group improvement literature with learning with label noise (LLN). The method should be easily reproducible as the algorithm is explained in detail.",
+            "summary_of_the_review": "The paper is one of the few that explicitly links the worst-group improvement literature with learning with label noise (LLN), and explores another understudied scenario where no group annotations are available at all. The paper can be improved if some comments above can be addressed.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_UsCc"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_UsCc"
+        ]
+    },
+    {
+        "id": "cHIuhs4GNV",
+        "original": null,
+        "number": 4,
+        "cdate": 1670809299281,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1670809299281,
+        "tmdate": 1670809497717,
+        "tddate": null,
+        "forum": "TSqRwmrRiOn",
+        "replyto": "TSqRwmrRiOn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3289/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "I am adding an additional review to aid AC in making a decision for the paper. \n\nThe paper proposes a method to improve the worst-off group accuracies in a dataset when the group annotations are only available during validation. Prior research either uses group annotations during training (such as GroupDRO) or trains in an unsupervised manner as a two-stage method (such as JTT). \n\nA two-stage method is proposed in the paper where an error set of hard-to-learn examples is identified in stage one. These examples are devoid of any spurious correlations and are identified via learnable auxiliary variables and a squared loss. In stage-two, the sample misclassified by stage-one are upweighted. \n\nFor tuning hyper-parameters, a metric called ClassDiff is introduced. This metric captures the pair-wise class difference between the accuracies. Experiments show it to be a good proxy for worst-off group accuracy. \n\nExperimental results show an improvement over the worst-off group accuracy in four benchmark datasets. \n",
+            "strength_and_weaknesses": "**Strengths**\n\nA strength in the paper is the introduction of the ClassDiff metric. The authors verify the efficacy of the metric in being used as a proxy for worst-off group accuracy in their experiments. Prior works like JTT and EIIL use group annotations for hyper-parameter tuning, however, obtaining group annotations is often an expensive task. For this reason, it is essential for a method to avoid any group annotations during training or validation. \n\nThe ClassDiff metric is analogous to a fairness measure called demographic parity. Additionally, Worst-off group accuracies is captured by the fairness measure called Rawlsian Criterion. The experiments demonstrate that on the datasets used in the paper demographic parity can be used in place of the Rawlsian Criterion for hyper-parameter tuning. \n\nThe auxiliary variable technique effectively identifies error sets and improves the worst-off group accuracy. This is demonstrated via experiments where the overall accuracy and worst-off group accuracy are comparable to the baselines. \n\nThe paper provides a good list of ablation experiments. The most helpful ones are the One-M / Two-M model comparisons and the experiments identifying inverse relationship between ClassDiff and Worst-off Group Accuracy. \n\n**Weaknesses**\n\nThere is an inherent trade-off between the average group accuracy and the worst-off group accuracy. The experiments demonstrate that the proposed method provides a small drop in the overall accuracy at the cost of improving the worst-off group accuracy. It maybe required to observe the pareto-frontier of the proposed method and the other baselines to asses if the proposed method provides better metrics for a wide range of hyper-parameters. At the moment, the experiments suggest that the proposed method is comparable (and not strictly better) than the baselines when evaluated for both average accuracy and worst-offf group accuracy. \n\nWhile the paper suggests that ClassDiff (or the demographic parity) measure can be used as a proxy for Worst-off group accuracy (or the Rawlsian Criterion), it is unclear if such a proxy would work always. A more thorough study, either through theoretical analysis or experimental evidence, is needed to identify scenarios in which ClassDiff is to be (and is NOT to be) used. \n\nThe method proposed in the paper, similar to JTT, is a two-stage approach. Any two-stage approach requires 2X training time relative to ERM. It is a weakness of the method that it requires 2X training time relative to ERM. ",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity and Quality**\nThe paper is very clear. All the related research is properly described.\n\n**Novelty**\nOn the technical side, the paper does not offer significant novel contributions. Similar to JTT, it is a two-stage approach that proceeds by first identifying the error set and later up weights the samples based on the error set. \n\n**Reproducibility**\nPseudo-code is provided, which can help in assessing reproducibility. \n",
+            "summary_of_the_review": "The paper proposes a two-stage approach for improving the worst-off group accuracies. The method bears similarities to JTT, as both the approaches first identify and error set and later upweight the samples based on the error set. On the experimental side, the method is comparable to the baselines when evaluated for both average group accuracy and worst-off group accuracy. While it is interesting to see an unsupervised metric, ClassDiff, being for hyper-parameter tuning, it is unclear when such a metric is applicable and when should one avoid using ClassDIff. Based on these reasons, I am leaning towards a reject. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_CiNy"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3289/Reviewer_CiNy"
+        ]
+    }
+]

@@ -1,0 +1,159 @@
+[
+    {
+        "id": "AG8ONROmyU",
+        "original": null,
+        "number": 1,
+        "cdate": 1666570376613,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666570376613,
+        "tmdate": 1669316822217,
+        "tddate": null,
+        "forum": "TDf-XFAwc79",
+        "replyto": "TDf-XFAwc79",
+        "invitation": "ICLR.cc/2023/Conference/Paper838/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a new approach for Federated learning. The idea is to first distill the private data of each client (with respect to the current initialization of their model weights) and send them to the server. On the server side, a global model will learn from these synthetic data and broadcast the learned weight back to the clients. The proposed method is demonstrated to outperform other FL benchmarks on several datasets.",
+            "strength_and_weaknesses": "Strength: Idea is clear and straight forward. The empirical result seems great. \nWeakness: The objective formulation seems problematic and I cannot make sense why it works in practice.\n\n-- The notation in Eq. (3) does not make sense to me. $D_c$ is a constant, not a variable. Why is it being optimized? I take it as this is some random variable $D'$ that has the same desired dimension as the condensed dataset. If so, how is the local dataset used?\n\n-- Another major concern is that Eq. (3) seems to have a trivial solution? First off, i think it is improper to have loopy dependency in an optimization objective ($\\widehat{D}_c$ depends on $w_\\ast$ and vice versa). Maybe it's better to write it as $\\widehat{D}_c, w_\\ast = \\underset{w_c, D_c}{\\mathrm{argmin}} \\dots $, i.e., the bilevel optimization is an approximate procedure to solve for this objective and should not be the objective itself. Regardless of the notation, I think the optimization will converge when $\\widehat{D}_c$  and $w_\\ast$ are obtained such that $\\mathcal{L}(\\widehat{D}_c, w_\\ast) = 0$. This is probably simple to achieve when there is no constrained on the meta dataset. For example, we can construct a dataset where all datapoints are labelled as class 1, and a model that always predicts class 1 with zero uncertainty (setting the bias of the prediction layer to $\\mathbf{e}_1$ and zeroing out all other weights would probably suffice). Thus, a trivial solution exists and theoretically this could result in very bad performance. This seems intriguing given the very good result observed in the empirical studies. My best explanation for this good performance is that the local models only perform their bilevel optimization for a few steps, which is likely not enough to find such an exploit. \n\n-- This objective does not seem to explicitly prevent the condensed dataset from being exactly the same as the local data. After all, they live in the same input space, so it could happen. I understand that the paper conducts an empirical study to verify this is not the case, but when you deal with privacy, that is simply not good enough. What will happen when the global model somehow has zero loss on the client data? Then, the outer loop doesn't need to do anything but returning a subset of its local data (since loss can't be improved further). This seems like a big privacy vulnerability to me --- Imagine a client with only 10 data points on a binary classification task, then a malicious server would only need to send $2^10$ specifically constructed weights to eventually hit the perfect loss and hence recover exactly the client data? I think the meta dataset somehow has to have a different dimension than the original dataset for this to work.\n\nSome other (minor) concerns:\n\n--  We run three trials and report the mean accuracy performance (MAP) -- is the MAP averaged over both trials and clients? I would recommend showing some standard deviations.\n\n-- How many update steps per round of local data distillation?\n\n-- How is evaluation done? Does each local model of FMKE fine-tune the global weights before testing on their own data, or do they directly use the global weights trained on synthetic data? Is it the same for other benchmarks?\n\n-- Can the authors show the MAP curve of FMKE beyond iteration 10 in Fig. 2? It's not just about achieving high performance, but also about demonstrating the stability of the method. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: Idea is generally clear. As mentioned, eq. (3) is confusing and I will need clarification from the authors.\nQuality: I currently think the approach is not sound. I hope the author can clarify if I have misunderstood anything. Despite my doubt, the empirical result seems great.\nNovelty: Most components are applications of previous work (as acknowledged by the authors), but the overall idea is quite novel.\nReproducibility: No code was provided in the supplementary material. No anonymous github page was provided. ",
+            "summary_of_the_review": "I recommend a rejection since I am not fully convinced about the distillation objective. I'm willing to change my score if the authors can clarify my concerns. I'm personally very curious about the exceptionally good results. I do hope that my assessment is wrong, because the method otherwise seems like a good contribution. I would suggest the authors to release the implementation on an anonymized github repo, so reviewers can properly investigate.\n\n-------\n\nUpon reading the authors' responses to my questions and revisions of the manuscript, I am convinced that the method is sound (Another minor comment: The revision is technically not a bilevel optimization anymore since both parameter updates happen simultaneously). As promised, I'm happy to change my scores accordingly.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_FoXU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_FoXU"
+        ]
+    },
+    {
+        "id": "V7xAoqQOKK",
+        "original": null,
+        "number": 2,
+        "cdate": 1666589376489,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666589376489,
+        "tmdate": 1666589376489,
+        "tddate": null,
+        "forum": "TDf-XFAwc79",
+        "replyto": "TDf-XFAwc79",
+        "invitation": "ICLR.cc/2023/Conference/Paper838/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a new meta-knowledge driven FL paradigm to optimize the FL training with limited communication rounds. Besides, two strategies namely Dynamic Weight Assignment and Meta Knowledge Sharing are proposed to improve the performance. ",
+            "strength_and_weaknesses": "Strength:\nS1: A new FL paradigm is proposed to deal with the limited communication budgets problem by leveraging condensate meta knowledge instead of the raw training data.\nS2: The proposed paradigm is significantly better than existing FL solutions when facing limited communication rounds.\nS3: Extensive experiments are conducted to show the effectiveness of the proposed method in terms of accuracy, communication efficiency (rounds) and also data leakage.\n\nWeaknesses:\nW1: I wonder if it is fair to evaluate the communication budgets using the metric of communication rounds, because unlike the competitors that the clients and the servers transmit the gradients or model weights, the FMKE framework proposed in this paper needs the clients to send the meta data, which have different amount of size.\nW2: It is unknown if the bi-level optimization is optimal for FMKE framework. It is expected to compare the bi-level optimization with other baselines, e.g., simultaneously optimizing the two objectives.\nW3: While dynamically adjusting the weights of the training samples has been widely studied, it lacks of comparisons between the proposed Dynamic Weight Assignment with the existing methods, such as AdaBoost.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: Overall, the main idea, methodology, and the key experimental results are present clearly, except for some issues that could be further improved as mentioned above.\n\nQuality: Goodness. The paper presents an effective solution to deal with an important problem.\n\nNovelty: The core idea of the paper is novel, while some of the techniques are based on or similar to existing solutions.\n\nReproducibility: The experimental settings are clarified in this paper, but it would be better if the source code is made publicly available.\n",
+            "summary_of_the_review": "Overall, the paper presents a new solution to tackle the FL training problem in case of limited communication rounds. The core performance is well evaluated. However, there still remains some issues that could be further improved. Thus, I recommend this paper a borderline accept score. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_StBv"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_StBv"
+        ]
+    },
+    {
+        "id": "1fOB5_dGsQ",
+        "original": null,
+        "number": 3,
+        "cdate": 1666659261631,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666659261631,
+        "tmdate": 1666659261631,
+        "tddate": null,
+        "forum": "TDf-XFAwc79",
+        "replyto": "TDf-XFAwc79",
+        "invitation": "ICLR.cc/2023/Conference/Paper838/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper develops a new FL solution. In the designed solution, the local clients distill meta knowledge based on local private data and shared knowledge from other clients, the distilled meta knowledge is uploaded to the server for global model training. As the global model training is based on meta knowledge from all active clients, the bias issue can be mitigated and the convergence can be accelerated experimentally. Additionally, the authors designed two novel mechanisms to improve the meta knowledge extraction on local clients, i.e., meta knowledge sharing and dynamic weight assignment. Both of the designed mechanisms are novel and technically correct. The authors conduct extensive experiments and ablation studies to demonstrate the efficacy and efficiency of their method.",
+            "strength_and_weaknesses": "Strength:\n \n-- The authors designed a new learning solution. Unlike prior FedAvg-based methods, the authors conduct meta knowledge extraction and upload the meta knowledge to a server. They use the meta knowledge from all active clients as normal training data for training a global model, mitigating the bias issue. The meta knowledge extraction and global model training are conducted alternatively.\n \n-- The designed mechanisms, i.e., meta knowledge sharing and dynamic weight assignment, are novel and technically correct.\n \n-- The authors conduct extensive experiments and ablation studies, and provide convincing experimental results to demonstrate the efficacy and efficiency of their method.\n \n-- The writing is clear and easy to understand. The whole work is organized well.\n \nWeakness:\nTwo minor issues:\n-- It would be better to place the Algorithm pseudo code in the draft rather than supplementary material.\n-- Why name the extracted knowledge as meta knowledge? Is there any specific reason? If yes, it would be better to provide the reason in the paper.\n \nClarity, quality, novelty and reproducibility\nClarity: The paper is well-written and easy-to-follow.\nQuality: The technical quality is good. The method proposed in this paper is extensively evaluated. Novelty: The idea of this paper is novel. I haven't seen the same idea in prior works. Reproducibility: This work is with good reproducibility.",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: The paper is well-written and easy-to-follow.\nQuality: The technical quality is good. The method proposed in this paper is extensively evaluated. \nNovelty: The idea of this paper is novel. I haven't seen the same idea in prior works. Reproducibility: This work is with good reproducibility.",
+            "summary_of_the_review": "This work is interesting and novel. The authors designed a new learning paradigm and designed two novel mechanisms in the learning. The motivation is explained well and the technical details are clear. They conduct extensive experiments to demonstrate the efficacy and efficiency of the designed solution.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "n/a",
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_QKpf"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_QKpf"
+        ]
+    },
+    {
+        "id": "XwqqD_Ezovk",
+        "original": null,
+        "number": 4,
+        "cdate": 1669835974010,
+        "mdate": 1669835974010,
+        "ddate": null,
+        "tcdate": 1669835974010,
+        "tmdate": 1669835974010,
+        "tddate": null,
+        "forum": "TDf-XFAwc79",
+        "replyto": "TDf-XFAwc79",
+        "invitation": "ICLR.cc/2023/Conference/Paper838/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposed a new learning scheme in Federated Learning that communicates knowledge between clients in the form of meta knowledge generated by dataset condensation. In this case, the global model aggregation in the cloud is replaced with a \"meta training\" process in the cloud using the combined meta knowledge from all participating clients in each communication round. The authors also proposed several modules that co-work with the main meta knowledge scheme, such as pseudo knowledge in the cloud using a generating model and dynamic weights.\n\nThe idea is clearly novel and the empirical effect of reducing communication rounds needed is impressive. The authors also show that other designed modules all contribute to the superiority of the overall framework.",
+            "strength_and_weaknesses": "Clearly the meta knowledge sharing in place of the classic model weight aggregation is the most important and strong contribution of this work. In so heterogeneous scenarios in federated systems, model weight aggregation is really the pain point and potentially very bad in terms of communication efficiency. However, this work pointed out an alternative with clear empirical evidences that support the superiority of  it.\n\nThe only weakness I found in this work is the lack of discussion about the influence of the proposed condensation mechanism on the privacy preserving property of FL. This is crucial because the local meta knowledge will finally be sent to the cloud. While the authors didn't include discussions on privacy in the draft, I highly encourage them to at least add some references to existing analysis work about dataset condensation, which is not new technically in non-FL scenarios.",
+            "clarity,_quality,_novelty_and_reproducibility": "The work is clearly written and easy to follow. The main technical contributions are novel.",
+            "summary_of_the_review": "This is an outstanding work with novel technical contributions and impressive empirical performances.\n\n=====================================\n\nNote for the late submission of this review. I am very sorry that I submitted my review this late. I think I wrote the review locally on my computer but forgot to post it to OpenReview.\n\nMy original evaluation on this work without referring to other reviews was very positive, with only  some minor issues on the math formulation and some statements, such as:\n\n1. In equations (4,5,7) of the original draft and the equations (3,5,6,8) of the updated draft as of 11/30/2022, the $\\nabla$ operator misses subscripts that indicate with respect to which the derivatives are taken. The subscripts are needed because the derivatives are taken w.r.t. different inputs to the loss function $\\mathcal{L}^c$.\n2. In equation (6) of the original draft, the trailing parenthesis is missing. It is still missing in the updated draft.\n3. The $\\mathcal{L}^c$ notation is abused in the equation (7) of the original draft. The authors should mention that the notation comes with a little abuse.\n4. The authors said above equation (7) in the original draft that \"Apparently, the weight of each sample is inversely proportional to its prediction loss\", which is contrary to the formulation. It seems to have been fixed in the updated draft.\n5. There has been some unclarity of the bilevel optimization formula, but it has been addressed in the discussions between the authors and other reviewers.\n\nI encourage the authors to address the above points, while they have not influenced my overall evaluation of this work so I hope it won't make the rebuttal process messy.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_ouFd"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper838/Reviewer_ouFd"
+        ]
+    }
+]

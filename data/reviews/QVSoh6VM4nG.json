@@ -1,0 +1,158 @@
+[
+    {
+        "id": "nfADmJESga",
+        "original": null,
+        "number": 1,
+        "cdate": 1665888923014,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665888923014,
+        "tmdate": 1665888923014,
+        "tddate": null,
+        "forum": "QVSoh6VM4nG",
+        "replyto": "QVSoh6VM4nG",
+        "invitation": "ICLR.cc/2023/Conference/Paper4294/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes two \u201corthogonal\u201d methods to improve existing deep-learning based image and video compression models. First, the authors swap out existing scalar quantization modules with a uniform vector quantization map - they show that this VQ map doesn\u2019t need to be learned but can be uniform (e.g. hexagonal or octahedral), and will still propose improvements over SQ. Second, the authors propose using the gradient of entropy on the decoder side; they use KKT conditions to show that at least for the main code, the gradient of entropy and gradient of reconstruction error are correlated, so even if reconstruction error can\u2019t be calculated we can still follow gradient along entropy for a limited number of steps. ",
+            "strength_and_weaknesses": "Strengths/questions: \n- Interesting and thorough theoretical treatment of VQ and how a uniform VQ map is sufficient over learned centroids. Though I have two questions there: 1) Does Theorem 1 extend to VQ? It seems primarily focused on scalar quantization. And 2) Following the intuition in Theorem 1 where a NN can transform a non-uniform quantization map into a uniform one, why can\u2019t a neural network also transform a VQ-map to an SQ one? Are there limitations there? \n- I like the analysis of how KKT conditions implies -> gradient of entropy is correlated with gradient of reconstruction error, it\u2019s a novel idea for squeezing out slightly better reconstruction quality (though I do have some concerns, described below). \n\n\nSome high-level concerns:\n- Why follow gradients on the decoder-side when we can also follow gradients for both the hyperprior and main code on the encoder side We have access to the ground truth $x$ and $y$ on the encoder side, and can optimize $\\hat{y}$ and $\\hat{z}$ directly for the rate-distortion tradeoff without proxies. Is one approach better than the other in terms of runtime (also see below for runtime concerns)? Are they complementary? \n- For the hyperprior especially, following the gradients on the decoder side only doesn\u2019t make sense. In fact the authors state at the bottom of section 4 that \u201cIt is noted that during the encoding, the main latents y\u02c6 are encoded wrt entropy model predicted by the shifted side latent\u201d - which means that this procedure for shifting the hyperprior code $\\hat{z}$ is already conducted on the encoder side. But at that point you have access to the ground truth $\\hat{y}$, so you can directly follow the gradient $\\nabla_{\\hat{z}}(-log(p_h(\\hat{y}; \\hat{z})))$ and you don\u2019t need to follow the proxy $\\nabla_{\\hat{z}}(-log(p_f(\\hat{z})))$ right? Am I misunderstanding something? \n- Intuitively, by having the main code follow the gradient of entropy (increase entropy) to \u201cimprove\u201d reconstruction error, this basically means that we\u2019re leveraging the inductive bias of the network itself to \u201cfill in\u201d information that is not provided by the original code right? Are there side effects/downsides to such an approach? One practical concern I\u2019m wondering is 1) if this approach only works when the train/test distributions are very similar (for a new image what if the network \u201cfills in\u201d the wrong info?)? 2) Also by following the gradient to \u201cincrease entropy\u201d is it possible that reconstruction error is better \u201con average\u201d but is worse for specific subsets of images? \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is generally easy to read and from what I can tell the ideas are novel. It does have some vague statements (e.g. \u201cMost of the time, this variation is in favor of the combination\u201d in Section 5) and spelling/grammar mistakes, but those are minor. ",
+            "summary_of_the_review": "The paper suggested some novel ideas that were not immediately intuitive to me, such as doing uniform vector quantization as well as following the gradients of entropy on the decoder side for the hyperprior/main code. There is a fairly thorough theoretical treatment of some of these ideas. However, I have concerns about the justification for decoder-side \u201clatent shift\u201d (why not just optimize codes on the encoder side), as well as some practical concerns around runtime. \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_7dNo"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_7dNo"
+        ]
+    },
+    {
+        "id": "xaLNXjI7eE",
+        "original": null,
+        "number": 2,
+        "cdate": 1666595176339,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666595176339,
+        "tmdate": 1670157333286,
+        "tddate": null,
+        "forum": "QVSoh6VM4nG",
+        "replyto": "QVSoh6VM4nG",
+        "invitation": "ICLR.cc/2023/Conference/Paper4294/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes to explore two latent properties (vector quantization and entropy gradient based latent shifting) in off-the-shelf neural codecs. The proposed method replaces uniform scalar quantization with uniform vector quantization to take advantage of space tessellation grid. Moreover, the authors show that the gradients of the reconstruction error are correlated to the gradients of entropy, and propose to update latent using the entropy gradients at decoder side. The proposed two contributions are plug-in-and-play and bring 2-4% rate savings at same quality.",
+            "strength_and_weaknesses": "The paper is well written and the theoretical analysis of vector quantization and latent shifting is clear and sufficient. \n\nHowever, I have several concerns about the novelty and complexity: \n1) what\u2019s the difference between the proposed uniform VQ and lattice VQ? It seems that they are the same thing; \n\n2) what\u2019s major difference between the proposed latent shifting and hybrid amortized-iterative inference [1]? In my understanding, [1] update latent using both entropy gradients and distortion gradients, and the proposed latent shifting update latent using entropy gradients only. The major difference is that [1] directly encodes the updated latent, but latent shifting encodes the best updated steps and then updates latent at decoder side. Is that right? If so, what\u2019s the advantages of the proposed method? The paper claims that [1] is a computationally heavy finetuning solution. Is there any complexity comparison? \n\n3) the gains of uniform VQ on the state-of-the-art backbone (chen2020-attn) are not significant ( <0.5% BD-rate saving in Table 1) and the complexity analysis is lacked. In appendix D.3, the frequency table in arithmetic coder is large (over 65536), which may result in slow entropy coding. \n\n[1] Yang, Y., Bamler, R., & Mandt, S. (2020). Improving inference for neural image compression. Advances in Neural Information Processing Systems, 33, 573-584.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The Clarity is good with fair quality, novelty and reproducibility.  ",
+            "summary_of_the_review": "Overall the paper is well written and easy to follow. The theoretical analysis of the two latent properties (vector quantization and latent shifting) is insightful. However, the novelty of the proposed method is limited and performance gains on the state-of-the-art backbone are not significant.  ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_k9t4"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_k9t4"
+        ]
+    },
+    {
+        "id": "6Yw4DS0SOcV",
+        "original": null,
+        "number": 3,
+        "cdate": 1666612331363,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666612331363,
+        "tmdate": 1666612331363,
+        "tddate": null,
+        "forum": "QVSoh6VM4nG",
+        "replyto": "QVSoh6VM4nG",
+        "invitation": "ICLR.cc/2023/Conference/Paper4294/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper exploit vector quantization and latent shifting to improve the performance of neural codec. For vector quantization, the author first explans why vector quantization is not often used in neural codec while being theoretically better than scalar quantization. The author then proposes proposed uniform vector quantization can be applied in the off-the-shelf neural codec without re-training and optimal VQ grids with theoretical proof. For latent shifting, the author explans how the gradients of the entropy in the receiver side is used to improve the reconstruction performance and gives theoretical proof.\n",
+            "strength_and_weaknesses": "Strengths: \n1. This paper uses uniform vector quantization and latent shifting to impove coding performance. Also, the author test this method on several image and video codecs and proves the proposed method works in many image/videos codecs.\n2. This paper gives detailed theoretical proof for the proposed method.\n\nWeaknesses: \n1. The proposed vector quantization and latent shifting method may increase encoding and decoding complexity while the coding improvement may not that great.\n2. This paper lacks analysis on the encoding/decoding complexity compared with baseline codecs.\n3. The author takes a lot of space to describe how scalar quantization based neural codec works, may be it is better to describe the training and testing process of vector quanization based neural codec more detailedly.\n\nQuestions\n1. In the last paragraph of page 3, the author describes the process of vector quantiation but uses symbols with no vector\u00a0notation. Should the symbols metioned in this paragraph vectors or scalars?\n2. The author decribes several methods to obtain  and  will using different method affect the coding performance and coding complexity? And what's the complexity and coding performance by using each method? \n3. The proposed method provides relatively small performance imprsovement using image codec cheng2020-atten. Is it because the analysis/synthesis transform is can better catch the spatial correlation of the picture? What will happen when using more complex analysis/synthesis transfoms as baselines?\n4. In Zhu, Xiaosu, et al. \"Unified Multivariate Gaussian Mixture for Efficient Neural Image Compression.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022. vector quantization is also used for image coding. How does the proposed method compare with the method in this article?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Quality: This paper provides new methods to improve the performance of neural image compression. However, the improvement is not that high and lacks some experiment and comparison.\nClarity: The article describes clearly and gives detailed theoretical proof.\nOriginality: Latent shifting is first used in image compression but vector quantization has been used before.",
+            "summary_of_the_review": "This paper uses vector quantization and latent shifting to improve the coding performance of the neural codec and provides theoretical proof. However, the performance gain is relatively small while the auther didn't explan how much complexity will be added using the proposed method. Also, vector quantization has been used in image compression before (like Zhu, Xiaosu, et al. \"Unified Multivariate Gaussian Mixture for Efficient Neural Image Compression.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.) and it lacks comparison with those works in this paper.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_tojV"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_tojV"
+        ]
+    },
+    {
+        "id": "yQS-15-Uco",
+        "original": null,
+        "number": 4,
+        "cdate": 1666815369404,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666815369404,
+        "tmdate": 1670594394485,
+        "tddate": null,
+        "forum": "QVSoh6VM4nG",
+        "replyto": "QVSoh6VM4nG",
+        "invitation": "ICLR.cc/2023/Conference/Paper4294/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes some theoretical insights about quantization and entropy gradient, and show that this can improve the performances of many off-the-shelf codecs. The proposed method is able to save 2-4% of the bit-rate for various pre-trained methods.",
+            "strength_and_weaknesses": "The proposed method is novel and technically sound. The experiments show that the proposed method is able to improve many learned image/video compression networks. However, the reviewer concerns about the codec used in experiments. The used codecs are all proposed on or before 2020, and the latest codecs are missing from the experiments. The authors should test it on some newer methods with open-sourced codes, e.g.,\n\nImage codec:\n\nXie et al., ACM MM 2021. Codes: https://github.com/xyq7/InvCompress\n\nVideo Codec:\n\nLi et al., NeuIPS 2021. Codes: https://github.com/microsoft/DCVC/tree/main/NeurIPS2021\n\nLi et al., ACM MM 2022. Codes: https://github.com/microsoft/DCVC/tree/main/ACMMM2022\n\n------ After response -------\n\nThe authors addressed my questions.\n\nAfter discussing with other reviews, I think the high complexity of encoding is a shortcoming of the method. I still prefer a positive comment, but slightly adjusted the rating from 8 to 6. ",
+            "clarity,_quality,_novelty_and_reproducibility": "Good novelty.",
+            "summary_of_the_review": "The proposed method is novel and technically sound. The experiments show that the proposed method is able to improve many learned image/video compression networks. However, the reviewer concerns about the codec used in experiments. The used codecs are all proposed on or before 2020, and the latest codecs are missing from the experiments. The authors should test it on some newer methods with open-sourced codes.\n\n------ After response -------\n\nThe authors addressed my questions.\n\nAfter discussing with other reviews, I think the high complexity of encoding is a shortcoming of the method. I still prefer a positive comment, but slightly adjusted the rating from 8 to 6. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_36qZ"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4294/Reviewer_36qZ"
+        ]
+    }
+]

@@ -1,0 +1,120 @@
+[
+    {
+        "id": "Ptadhk42Auq",
+        "original": null,
+        "number": 1,
+        "cdate": 1666599911289,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666599911289,
+        "tmdate": 1669193612444,
+        "tddate": null,
+        "forum": "oWjudQ3w2y",
+        "replyto": "oWjudQ3w2y",
+        "invitation": "ICLR.cc/2023/Conference/Paper2173/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper focuses on learning a better latent variable for sequence-to-sequence models. To achieve this goal, the authors design an EM-Network, which first equips an auxiliary network with the sequence model to learn a meaningful representation based on both source and target input, and then distils its knowledge to improve the prediction of the sequence model. This paper connects EM-Network and CTC/CE and provides a theoretical relationship with the standard EM algorithm. Experimental results on ASR/MT tasks show the effectiveness of the proposed method.\n",
+            "strength_and_weaknesses": "Strengths:\n- This paper designs a novel EM-Network to improve the performance of original sequence-to-sequence models.\n- The proposed method achieves new state-of-the-art translation performance on the WMT14 English-German benchmark.\n\nWeaknesses:\n- The proposed method is very similar to deep mutual learning. Some strong and similar baselines are missing, such as R-drop, and knowledge distillation from a larger model. \n- Actually, the theoretical analysis of the proposed method is the formula derivation of ELBO, which implicitly optimizes the conditional probability of sequence-to-sequence models. Compared with directly optimizing the conditional probabilities of sequence-to-sequence models, the performance gain in this way is unclear to me. I double that the performance gain comes from deep mutual learning.\n- The latent variable in this paper is very tricky, i.e., the prediction of the sequence model. It is not sure whether the definition of such latent variables is suitable. There are no detailed discussions with previous latent variable models.\n\n\nDetailed Comments:\n\nThis paper investigates learning a better latent variable for sequence-to-sequence models and achieves new state-of-the-art translation performance on the WMT14 English-German benchmark. Overall, the presentation of this paper should be refined. It is hard for me to understand the motivation of the proposed method for improving sequence learning. \n\nMy main concern is the experiment settings. I believe that the proposed knowledge distillation brings performance improvements, but performance gain comes from deep mutual learning. Thus, some strong and similar baselines should be considered, such as R-drop, and knowledge distillation from a larger model, and current experimental results are not convincing enough. In addition, the theoretical analysis in section 3 is the formula derivation of ELBO, which implicitly optimizes the conditional probability of sequence-to-sequence models. Compared with directly optimizing the conditional probabilities of sequence-to-sequence models, the motivation for optimizing ELBO is unclear to me. In my view, the designed latent variable is very tricky, i.e., the prediction of the sequence model. It is not sure whether the definition of such latent variables is suitable. There are no detailed discussions with previous latent variable models.\n\nQuestions for the Author(s):\n- Please explain the motivation for optimizing ELBO. \n- Have you tried other KD methods (e.g., distilling large model) or deep mutual learning (e.g., R-drop or bidirectional agreement on sequence learning)?\n- Is it necessary to share parameters between sequence and EM-Network models?\n- Have you tried other latent variables beyond the prediction of the sequence model?\n\nMissing References:\n- Previous papers on latent variable models, such as latent variable models for NMT.\n- Deep mutual learning and R-drop.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Please refer to Detailed Comments.",
+            "summary_of_the_review": "This paper investigates learning a better latent variable for sequence-to-sequence models and achieves new state-of-the-art translation performance on the WMT14 English-German benchmark. However, the proposed method is very similar to deep mutual learning, but correspondent comparisons are missing. Experimental results are not convincing enough. In addition, the motivation for optimizing ELBO is unclear to me and there are no detailed discussions with previous latent variable models.\n\n-----------\nThanks for the authors' response and clarification. I appreciate these experiments in Appendix D. However, the improvements over KD/R-drop methods seem marginal. It is better to add significant tests. I tend to keep my score.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "n/a",
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_AXAV"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_AXAV"
+        ]
+    },
+    {
+        "id": "TCbiGi39dJr",
+        "original": null,
+        "number": 2,
+        "cdate": 1666611765185,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666611765185,
+        "tmdate": 1666611765185,
+        "tddate": null,
+        "forum": "oWjudQ3w2y",
+        "replyto": "oWjudQ3w2y",
+        "invitation": "ICLR.cc/2023/Conference/Paper2173/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "Tasks: speech recognition, translation\n\nModels: CTC for speech, attention-based encoder-decoder (AED) for translation\n\nThe paper proposes a new training method to improve the quality of the latent variable and thus the overall quality of the model. Or in the case of AED, it acts as a sort of regularization.\n\nThe method is inspired from expectation-maximization (EM). Conventional EM computes p(z|x,y) given the model p_seq2seq(z|x). In the proposed method, the quantity p(z|x,y) is not calculated from the original model, but there is a separate model for it, p_separate(z|x,y). Then it uses distillation (KL or mean-squared-error) to train p_seq2seq based on this. This separate model for p(z|x,y) shares the same encoder (param sharing) but then has some additional cross-attention to y on top.\n\nEverything is jointly trained with the loss: L_org + L_em + alpha * L_kd\n\nL_org is the original loss: CTC loss or framewise CE for AED.\n\nL_kd is the distillation loss (KL or mean-squared-error). Mean-squared-error is taken when L_org is CTC.\n\nL_em is for training the separate posterior model for p(z|x,y). It's defined as - log p(y|x,y) = - log sum_{z:y} p(z|x,y).\n\nFor the AED model, where there is no latent variable, this is changed further to use a masked training loss instead for L_em.\n",
+            "strength_and_weaknesses": "Strengths:\n\n- Interesting idea to improve the latent variable, or in general for regularization.\n- There is the intent to release the source code.\n\nWeaknesses:\n\n- Some important aspects are unclear. See below.\n- The whole mathematical formulation has several issues. I think this already starts with framing it as EM-like. I cannot really pinpoint this to one specific aspect, but there are many things which are not quite right, and this also shows that in the end it needs many changes deviating from the original motivation, e.g. using mean-squared-error for the distillation instead of KL, and then also the AED model does not fit into the picture at all, and also requires another masked-based loss for the separate posterior model. This does not mean that the proposed method by itself is bad, but just the mathematical derivation or motivation seems wrong.\n- It uses pretrained models and brings in the aspect of SSL, although this is totally irrelevant for the proposed method, and actually distracts from it. This also means it cannot properly be compared to other results from the literature. It rather should follow the original exact task, and only use the right training data, and not use SSL.\n- It would be interesting to further study the behavior of the latent variable, specifically the alignments. There is some figure and some discussion on it but this could be extended much more.\n- The source code is just a dump of Fairseq, probably including their modifications. But there is no explanation of what code parts are actually changed, and also is not properly forked from the Fairseq repo, so it's really difficult to see the actual differences and changes to Fairseq.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Saying that the latent variable in conventional models does not depend on the target y was a bit confusing to me. Because when you actually compute the CTC loss, you actually compute the posterior p(z|x,y) for the loss. When carrying out the forward-backward computation for the error signal, this is actually exactly this posterior which you compute there.\n\nSo this is just a new way to compute this posterior. Instead of computing it exactly, it is now approximated by a separate model.\nBut the paper does not really explain this well and is rather explaining it in a somewhat obscure and confusing way.\n\nFor example: \"leveraging the target sequence as the model\u2019s additional training input\". This is wrong. In training of CTC or so, surely you leverage the target sequence. You do that when computing p(z|x,y) for the CTC loss.\n\nOr: \"their shortcoming is that the latent variable captures only the source-side information\". I don't really understand this. Surely it must be this way.\n\nFurther, I was all the time confused about how this actually applies to the AED model, and only somewhere in the middle realized that for the AED model, it does not really apply at all, but just uses a similar motivated loss and training method including the separate model.\nWhat is actually meant by \"conventional sequence model\" or \"seq2seq learning\"? This should really be clarified further. CTC is give as one example. So is it only about CTC? Or what about the other common models like hybrid NN-HMM, Transducer, attention-based encoder-decoder (AED), or segmental models? Later through reading, I think it's about CTC for speech, and AED for translation, so only those two model types, and nothing else. But this should be totally clear from the beginning on in the paper, probably even in the abstract.\n\nWhat is meant by CE-based objective function? CTC is a CE-based objective function as well. So this statement or categorization does not make sense to me. This is also not really defined anywhere, so this is a critical flaw. From other parts of the paper, I assume that \"CE-based objective\" is a very strange way of referring\u00a0to AED based models?\n\nIt seems that the CE-based EM-network does not really fit well into the whole mathematical motivation of the paper.\nDistillation loss, eq 4: Are these the latent variables? The latent variables are discrete, so the equation does not make sense then. Or are these actually the log probs for the latent vars? Or what exactly are\u00a0those \\hat{z}?\n\nI think it distracts from the actual work to use SSL pretrained models. The SSL part is in no way relevant for the work, and potentially hides some aspects.\n\n\"Latent CTC Alignment. As visualized in Figure 3, we contrasted the latent alignments\" - what does this mean? The latent variables are discrete. The figure does not seem to show any discrete values. So what exactly do we see in the figure?\n",
+            "summary_of_the_review": "The method by itself is interesting and probably could be a useful building block for better regularization.\n\nI think many aspects need more clarification, and maybe even the whole mathematical formulation and derivation should be improved, or reformulated.\n\nFurther, I think the baselines are badly chosen, and distract from studying the actual method.\n\nThe analysis could also be extended.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_ngMM"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_ngMM"
+        ]
+    },
+    {
+        "id": "HRkLLHQyaC",
+        "original": null,
+        "number": 3,
+        "cdate": 1666837942889,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666837942889,
+        "tmdate": 1666837942889,
+        "tddate": null,
+        "forum": "oWjudQ3w2y",
+        "replyto": "oWjudQ3w2y",
+        "invitation": "ICLR.cc/2023/Conference/Paper2173/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper introduces a method for seq2seq tasks which incorporates the target sequence itself to learn a latent variable that informs the target prediction. This is done by using an EM-network that conditions on the target, with cross-attention to the regular seq2seq encoder representations, yielding the latent representations. EM-network is trained to predict the source-target alignment using a CTC loss for speech recognition. For machine translation, the masked target is given as input to the EM-network and task is to reconstruct the actual target. The latent representation informed soft predictions are then distilled back into the seq2seq model. While the speech recognition setting seems more novel, the MT setting seems very similar to data2vec.\n",
+            "strength_and_weaknesses": "Strengths\n- An interesting approach to incorporate the target sequence to inform the latent variable for seq2seq tasks.\n- Empirical results show improvement in state-of-the-art on a speech recognition dataset and two machine translation datasets.\n\nWeaknesses\n- Since the EM network uses additional parameters over the other seq2seq baselines, it is not clear if the improvements are due to more parameters or learning a better latent variable. It will be helpful to clarify the number of parameters in the EM-network and the seq2seq model, and contrast it with the number of parameters in the baselines.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is mostly clear and easy to follow. It seems like an extension of data2vec that is at least novel for speech recognition tasks.\nThe source is code is provided, it should help with reproducibility.",
+            "summary_of_the_review": "I find the approach interesting overall, though it feels a small improvement over data2vec. I am recommending a weak accept.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_57uE"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2173/Reviewer_57uE"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "Na9JUTyDxQ",
+        "original": null,
+        "number": 1,
+        "cdate": 1666096524674,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666096524674,
+        "tmdate": 1670247990012,
+        "tddate": null,
+        "forum": "TtMJJWG_J1j",
+        "replyto": "TtMJJWG_J1j",
+        "invitation": "ICLR.cc/2023/Conference/Paper2257/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper presents a CNN/transformer based variational autoencoder for generation of molecular 3d structure from molecular graphs.\n",
+            "strength_and_weaknesses": "Strengths:\nThe paper deals with an important problem and presents a working solution that is fairly simple and effective.\n\nWeaknesses:\nThe novelty is limited - the main technical contribution appears to be a model that works well, built using standard CNN, transformer, VAE components.\n\nIt is unclear if the comparison with other methods is fair - results are taken directly from previous papers but is it the same test set that is used? According to the text, the authors randomly select 200 molecules. \n\nConfidence intervals are not provided for the results. With such a small test set, significance is difficult to determine.\n\nBecause a CNN is used, it appears that the method is not invariant to permutation of the atoms. It is not clear if this has negative implications for the performance.\n\nIt is not clear to me what the motivation is behind combining node and edge features in a tensor. This restricts the dimensions of the node and edge features to be identical, but on the other hand allows for standard CNN code to run on the representation. Is that the reason for this choice?\n\nThe relation of the proposed model to common GNN architectures is not fully described. If I understand correctly, a kernel of size 3xN is used? If it had been a 1xN kernel, I believe it would correspond exactly to a fully connected GNN which is commonly used. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is fairly easy to follow, and the main ideas are presented in sufficient detail.\n\nThere are several typos and grammatical errors etc. throughout the paper, which are easily fixed (not important for my assessment).\n\nThe definition of COV in eq. 4 seems to be incorrect (should not be for all R hat in C_g)\n\nThere appears to be some typos in the results in table 1 (at least in comparison with the corresponding table in the Uni-Mol paper.)",
+            "summary_of_the_review": "While I find the subject of the paper very interesting, my primary reason for recommending rejection is the lack of novelty and the limited empirical evaluation.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_8zkT"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_8zkT"
+        ]
+    },
+    {
+        "id": "X5-SMtbbb8",
+        "original": null,
+        "number": 2,
+        "cdate": 1666390158946,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666390158946,
+        "tmdate": 1666390158946,
+        "tddate": null,
+        "forum": "TtMJJWG_J1j",
+        "replyto": "TtMJJWG_J1j",
+        "invitation": "ICLR.cc/2023/Conference/Paper2257/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper illustrates a method for how to train a neural network to predict 3D conformers of small molecules starting from their 2D structures. Building on previous works such as CVGAE, the authors propose a few tweaks which are meant to improve the models\u2019 performance: 1) use a single tensor to represent both atom and bond information, and featurize the single tensor into atom-level vectors using a 1D convolution operation on the tensor; and 2) use a transformer architecture and combine 2D and 3D representations during training using a variant of cross attention. The authors demonstrate that with their method, they can achieve performance comparable to other similar SOTA methods.",
+            "strength_and_weaknesses": "The paper presents the authors\u2019 main ideas in a largely clear manner, and it introduces and mostly justifies the choices made. The implementation details are fairly clear. The authors also present an interesting analysis on the loss curves which show a tradeoff between the reconstruction and variational losses, which is very appreciated. The authors are relatively thorough in their benchmarks with other works.\n\nThere were, however, some areas where the paper makes some design decisions which might not be optimal:\n### Convolving over the input tensor with both atom and bond features can be problematic\nThe input tensor that is constructed is very heterogeneous, because it contains both atom feature vectors and bond feature vectors (side note: presumably, the atom feature vector is padded with 0s in order to make the two vectors equal size). Because the tensor is structured such that the atom features are along the diagonal, this means that a convolution operation over the tensor is not uniform. That is, consider an $N \\times 3 \\times 50$ convolutional kernel. The entry at $(0, 1, 0)$ will be multiplied against an atom feature in the first sliding window, and then it will be multiplied against a bond feature (which is twice the magnitude of the atom feature) in the next sliding window. This leads to the same entries in the kernel to experience entries in the tensor that are of varying magnitudes and meanings, which is suboptimal.\n### Convolution is not particularly natural for this kind of input\nFirstly, the input tensor is symmetric about the diagonal so the convolution sees redundant information. Combined with the issue brought up above, the redundancy structure is different for every sliding window (i.e. sometimes entries near the top and bottom are redundant, and other times entries near the middle are redundant).\n\nSecondly, because the molecules are variable sizes, the input tensor will need to be zero padded to a maximal size. This means that the same kernel will also experience zeros when there is padding. This can also lead to confusion because zero is also a meaningful value in the input tensor (which is mostly one-hot encoded)\n### Kabsch alignment shouldn\u2019t be necessary\nThe use of Kabsch alignment (or alignment in general) should not be necessary. Transformers retain the ordering of the input vectors/tokens. That is, the $i$th input token is mapped to the $i$th output token through the attention mechanism. This means that the use of alignment should not be needed, as each atom/token can be mapped to an output token.\n### Variation of cross attention is used without much justification\nThis is more of a minor point, but cross attention typically combines the key and value of one sequence with the query of another sequence. This work computes the key and query of the 2D tokens with the value of the 3D tokens. This is somewhat distinct from the traditional cross-attention mechanism. It would be good to have a justification for why this might work better than traditional cross attention.",
+            "clarity,_quality,_novelty_and_reproducibility": "The overall flow of the paper is quite good, and the explanations and figures and diagrams are very much appreciated. The authors do a good job of explaining their work. There are, however, several typos which need to be fixed. Here is an incomplete list to give an idea of the typos that I found:\n- \u201cindirect-leveraging\u201d in the abstract should be an em-dash instead of a hyphen\n- Figure 3 says \u201ctrainformer\u201d\n- The caption in Table 1 (and in the supplement) say \u201cparenthathese\u201d\n- Figure 5 caption says \u201cvalidatiom\u201d\n\nThere are also numerous grammatical issues, which I hope can be fixed, as well.\n\nIn terms of novelty, the paper is more limited. The novelties of the work (compared to previous works such as CVGAE and DMCG) are effectively to introduce a new format of input features, and use a variant of cross attention. Although these contributions are not trivial, the resulting model also does not demonstrate a significant improvement in performance over previous models (although they are somewhat more efficient).",
+            "summary_of_the_review": "The paper (other than the grammatical issues and typos) is well written, and flows nicely. It is informative and the figures are generally very enlightening. The benchmarks are decently well done, as well. However, the paper demonstrates limited novelty in the technical space, as the proposed tweaks to existing work are either questionable or small. The result of these tweaks also do not seem to lend to significantly improved performance beyond the existing methods.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_4X5j"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_4X5j"
+        ]
+    },
+    {
+        "id": "-pj2VGf7sg",
+        "original": null,
+        "number": 3,
+        "cdate": 1666610837765,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666610837765,
+        "tmdate": 1666610837765,
+        "tddate": null,
+        "forum": "TtMJJWG_J1j",
+        "replyto": "TtMJJWG_J1j",
+        "invitation": "ICLR.cc/2023/Conference/Paper2257/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper tackles the generation of 3D conformations of a molecule from its 2D graph. They propose to encode a molecular graph using\na fully connected and symmetric tensor. They use the standard VAE framework, where they build two input tensors with one encoding only the 2D molecular graph and the other also encoding 3D coordinates and distance. Both tensors go through the same feature engineering step and the generated feature vectors are fed through two separate transformer encoders. The output of these two encoders is then combined in an intuitive way to form the input for another transformer encoder for generating confirmation directly.",
+            "strength_and_weaknesses": "Strength:\nthe idea is to combine Atom and edge features into a single input by adding an additional dimension to\nthe adjacency matrix, making it a tensor where the diagonal section of the tensor holds the atom features sounds interesting.\n\nWeakness: the models seem to be really big (because of the input tensor)",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and the proposed method seems novel and interesting to the community. For the model to be fully reproducible, I detailed the experimental setup and the code should be published in the camera-ready version.",
+            "summary_of_the_review": "\n\nSome detailed comments: \n\n1. I wonder why the model needs two conditional encoders, one conditioned on the graph only and another one conditioned on both the graph and coordinate, why not directly use the latter since it has also graph information? \n\n2. I am a bit confused about section 2.3 where the second main idea is explained. ",
+            "correctness": "1: The main claims of the paper are incorrect or not at all supported by theory or empirical results.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_iXjq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_iXjq"
+        ]
+    },
+    {
+        "id": "WSpHd-Ah8sP",
+        "original": null,
+        "number": 4,
+        "cdate": 1666887599899,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666887599899,
+        "tmdate": 1666887599899,
+        "tddate": null,
+        "forum": "TtMJJWG_J1j",
+        "replyto": "TtMJJWG_J1j",
+        "invitation": "ICLR.cc/2023/Conference/Paper2257/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose TensorVAE, a relatively simple model for generating 3D conformations from 2D molecular graphs. TensorVAE employs 1) a unique feature engineering step that represents each molecule as a tensor (with or without 3D coordinates and distances), and 2) a VAE with two transformer encoders, one that encodes the graph (using the tensor input without 3D information) and the approximate posterior that produces latents from the 3D information, and a transformer decoder for the likelihood, where keys and queries come from the 2D graph representation, and values are the latents from the 3D posterior encoder. The loss is a standard roto-translation invariant loss.  The authors show that, using standard transformer architectures and training procedures, TensorVAE performs comparably to the best current methods at conformation generation using the GEOM dataset, and argue that TensorVAE is much simpler than the comparable models due to superior feature engineering.",
+            "strength_and_weaknesses": "Strengths:\n- Simple architecture and featurization\n- Original use of two encoders for 2D and 3D features in the VAE formulation that allows for 3D conformation generation from 2D graphs\n- (Near) state-of-the-art results for conformation generation (and QM9 property prediction)\n\nWeaknesses:\n- It is not clear that the proposed method of producing atom-tokens via 1D convolution on the input tensor is necessary. Any number of possible aggregation steps could have been used, many of which would likely have yielded similar results. One could also imagine performing a Tucker decomposition and using singular values as tokens, etc.\n- Moreover, it's not even clear if the tensor formulation is needed. The 1D convolution aggregates information about the radius-1 atomic environment (including virtual bonds). One could use any radius-1 atomic-environment hash as tokens with the proposed featurization, which would likely yield comparable results.",
+            "clarity,_quality,_novelty_and_reproducibility": "The presentation is clearly written, and the work appears to be of sufficient quality.\n\nThe feature engineering is marginally original (see weaknesses above). Combining 3D latents as values with 2D embeddings as keys and queries in the VAE formulation appears to be a novel way of learning to generate 3D confirmations from 2D graphs.\n\nThe authors claim everything is straightforward and provide no code.",
+            "summary_of_the_review": "The paper extends existing methods and molecular featurizations to achieve near state-of-the-art results for conformation generation. The paper spends a lot of time arguing for the superiority of the feature engineering used, but it is not at all clear that the results depend on that featurization. The authors could greatly improve this paper by demonstrating the value of the feature engineering beyond performance on benchmarks through ablation studies (e.g. removing aspects of the features) and studies of other featurizations that are not conflated with the tensor design (e.g., radius-1 atom environments).",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_n6uh"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2257/Reviewer_n6uh"
+        ]
+    }
+]

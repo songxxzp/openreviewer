@@ -1,0 +1,158 @@
+[
+    {
+        "id": "7NnCfs7osv1",
+        "original": null,
+        "number": 1,
+        "cdate": 1666214220708,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666214220708,
+        "tmdate": 1670805140967,
+        "tddate": null,
+        "forum": "uCNUPuhyuU",
+        "replyto": "uCNUPuhyuU",
+        "invitation": "ICLR.cc/2023/Conference/Paper1502/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper proposes a new objective function for mixed sample data augmentation (MSDA). Technically, the proposed Decoupled Mixup (DM) loss is equivalent to the summation of the original mixup loss and the additional losses that only consider one mixed target label while the other mixed target labels are ignored. For example, assuming a mixed label [0.7, 0.3, 0, 0] and a prediction probability [0.5, 0.45, 0.05, 0], then the DM loss is equivalent to `MixedCrossEntropy([0.7, 0.3, 0, 0], [0.5, 0.45, 0.05, 0])` (the original mixup loss) + `CrossEntropy([1, 0, 0], [0.91, 0.09, 0])` + `CrossEntropy([1, 0, 0], [0.9, 0.1, 0])` (called as \"decoupled\" mixup loss). The motivation of the proposed method is that the objective function of MSDA is highly correlated to the mixing ratio $\\lambda$: by ignoring the other mixed targets, the DM loss is \"decoupled\" with the mixing ratio $\\lambda$. The extensive study on image classification tasks (supervised and semi-supervised) shows that the proposed method is effective.",
+            "strength_and_weaknesses": "## Strength\n\n- Because the proposed method is invariant to the choice of the mixing strategy, the proposed method is easy to be adopted to any MSDA method.\n- The strongest strength of this paper is the expensive experimental results and consistent improvements.\n    - The extensive study shows that the proposed method is effective to the existing MSDA methods. Especially, this paper studies the effect of the proposed objective function on various benchmarks with state-of-the-art optimization techniques. For example, this paper explores not only ImageNet training with 300 epochs and cosine lr scheduling (a standard one) but also ResNet Strike Back (RSB)-ish advanced optimization settings or DeiT optimization settings.\n    - In my opinion, the ImageNet-1k experimental results (Table 2, 3, 4) will be helpful to researchers who work with ImageNet-1k benchmarks; as far as the reviewer knows, there are not many works that compare the existing state-of-the-art MSDA methods (Mixup, CutMix, ManifoldMixup, FMix, ResizeMix, SaliencyMix, PuzzleMix, AutoMix, SAMix) with the most advanced optimization settings, such as RSB or DeiT settings. E.g., considering the heavy computational resources of \"dynamic MSDA\" methods (SaliencyMix, PuzzleMix, AutoMix, SAMix), practitioners can choose ResizeMix + DM loss.\n    - This paper also explores transfer learning and semi-supervised learning scenario in state-of-the-art settings.\n\n\n## Weakness\n\n### Weak connection between label mismatching problem and the proposed method\n\nI cannot find any connection between the \"label mismatching problem\" and the \"decoupled Mixup loss\". Assuming we use a static Mixup method (e.g., Mixup), even if we use the DM loss, we still suffer from the label mismatching problem because the loss function still contains the original loss function. Recall that the label mismatching problem means that there exists a mismatch between a mixed sample and a mixed label; it means that if we want to solve this problem, we have to make a mixed label depending on a mixed sample. However, the mixed samples and the mixed labels by the proposed method are invariant; it will still suffer from the label mismatching problem if the base method suffers from the problem.\n\nAlthough this paper has a meaningful empirical contribution, in terms of academic publication, I think this paper should need more verifications for the statements and the motivation. I cannot find any connection between the proposed method and the motivation.\n\nAlso, as a minor comment, I cannot find any connection between \"data-efficient\" (the title) and the proposed method. I think there need to be more statements for why this method is data-efficient compared to the original mixup loss.\n\n### Weak motivation why we should \"decouple\" lambda and the objective function\n\nI presume that the motivation of this paper is removing (or reducing) the dependency of $\\lambda$ and the objective function. If the main motivation of this paper is \"addressing label mismatch\", then there should be more explanations of how removing the dependency of $\\lambda$ and the objective function (\"decoupling\") and label mismatch are related. More specifically, it is not clear to me how \"decouple\" fixes the label mismatch problem.\n\nMoreover, the proposed method still uses the original loss function. What happens if we only use $L_{DM(CE)}$ alone without $L_{MCE}$? If using $L_{DM(CE)}$ alone is worse than using $L_{MCE}$ alone, then I think it is hard to say that the proposed $L_{DM(CE)}$ itself is effective.\n\nFurthermore, to argue that the \"decoupling\" (ignoring the other mixing targets) is effective, then I think this paper should include the following baseline:\n\n- `CrossEntropy(target_1, prediction)` + `CrossEntropy(target_2, prediction)` => removing $\\lambda$ in the objective function\n\nIt is the same as \"Complete-label CutMix\" in Table 8 of CutMix paper, and it is known to be worse than the $\\lambda$ mixing strategy (following Table 8 in the CutMix paper). I think this result can make the submission stronger.\n\n### Minor\n\n- It seems that the title \"data-efficient\" and the motivation are not well-matched. I suggest using a different term rather than data-efficient in the title and Section 3.\n- $l$ of Equation (2) is not defined. Please fix the equation.\n- Suggestions for a better formatting\n    - Please specify the full terminology of AS (page 5). I presume AS stands for \"Asymmetrical strategy\".\n    - I would like to recommend inserting \"improvements\" in the tables (e.g., as Table 1 of CutMix paper).\n    - Please do not use `\\vspace{-XX}` between sections (e.g., page 5 \"3.2 Asymmetrical strategy\")\n    - Please do use `\\vspace{XX}` between a caption and a table (I usually recommend adding a space `~` between a caption and a table)\n    - Please make more spaces (e.g., `\\hfill`) between Table 2 and 3 (as well as Table 4 and 5).",
+            "clarity,_quality,_novelty_and_reproducibility": "I think the clarity of this paper is just okay, and this paper has room for improvement in terms of clarity. Especially, I think this paper has a very weak connection between motivation and the method (Please see weakness for details). I also left some comments related to the formatting. I feel some statements are not supported well (e.g., \"small lambda value suppress the confidence of predictions even if the mixed features are evident\" => why and how will this be harmful to the training?). I suggest revising the paper to focus on the effect of decoupling rather than the label mismatch problem.\n\nThe quality in terms of the experiments looks excellent. However, I think the technical contribution and novelty of this paper (for solving the label mismatch problem as motivation) are not very significant, considering that the proposed method looks invariant to the label mismatch problem.\n\nI think this paper will be reproducible relatively easily, considering that the base settings of this paper are widely-used ones (e.g., 300 epoch ImageNet-1k, DeiT training).",
+            "summary_of_the_review": "This paper shows great empirical improvements on various benchmarks. The extensive studies are impressive and show consistent improvements. As my comments in \"Strength\", this paper will be helpful for many practitioners working on ImageNet-1K.\n\nHowever, I think this paper has a large room for improvement in terms of academic publication. Especially, I think this paper needs a connection between motivation and the proposed method. I cannot find any reason why the proposed method will work. In terms of the label mismatch problem, I think this method will still suffer from the label mismatch problem because the label mismatch problem can be solved only by making the mixed sample and the mixed label dependent. Furthermore, I think this paper should compare using $L_{DM(CE)}$ alone as well. If using $L_{DM(CE)}$ alone does not work well, then it means that we need a better explanation (and motivation) of the effect of the combination of $L_{MCE}$ and $L_{DM(CE)}$, not only for $L_{DM(CE)}$.\n\nOverall, I think this paper does not reach the acceptance threshold of the ICLR conference.\n\n----\n\nDuring the reviewer-author discussion period, the authors provide additional experiments to resolve my concerns. However, as my last comment, I am still skeptical about revising my score because my concerns still remain. I will maintain my initial recommendation.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_A9VU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_A9VU"
+        ]
+    },
+    {
+        "id": "KcLO-wmfOFP",
+        "original": null,
+        "number": 2,
+        "cdate": 1666646985260,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666646985260,
+        "tmdate": 1666765630342,
+        "tddate": null,
+        "forum": "uCNUPuhyuU",
+        "replyto": "uCNUPuhyuU",
+        "invitation": "ICLR.cc/2023/Conference/Paper1502/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes a variant of the Mixup method that considers the label mismatch problem by decoupling (i.e., removing) the competitor's class in the softmax which can potentially cause mismatching between the mixed label and sample. The authors formulate the decoupled mixup cross-entropy loss ($L_{DM(CE)}$) that becomes an element of the proposed decoupled mixup (DM) loss  ($L_{DM}$) with the standard mixed cross-entropy loss ($L_{MCE}$). The authors claim that using the DM loss can address the label mismatch problem and argue a similar effect as dynamic mixup methods. The authors apply the DM loss on Image classification tasks on the datasets of CIFAR-100, Tiny-ImageNet, and ImageNet-1k with diverse network architectures and baseline Mixup methods. The authors apply the proposed loss not only to the static Mixup methods but to the so-called dynamic Mixup methods such as SaliencyMix, PuzzleMix, AutoMix, and SAMix. Moving further from the conventional image classification experiments, the authors further evaluate fine-tuning classification on FGVC datasets and semi-supervised learning methods. All the experimental results consistently back the effectiveness of the proposed loss.",
+            "strength_and_weaknesses": "Pros)\n+ The idea looks simple yet practical for the practitioners using Mixup in training.\n+ This paper provides extensive empirical studies to support the effectiveness of the proposed method.\n+ All the experimental results consistently improve when adopting the proposed loss upon the baseline Mixup methods.\n\nCons)\n- There is no clear evidence that decoupling the class can reduce the label mismatch. It hardly agrees that only performance improvements cannot support the claim. Instead, the authors should provide any empirical or theoretical backups of whether this is actually addressed through the proposed DM loss.\n- Some notations are not clearly presented:\n  - $p(a,b)$ seems to be the probability of the mixed samples; $p_a$ and $p_b$ must be scalars. I could understand it only after reading the manuscript carefully.\n  - l, i, and j in eq.(2)\n  - M in Section 2.2\n  - $y^i_a$, $y^j_b$ in proposition 2\n\nComments)\n- The authors claim that the proposed method can adaptively focus on discriminative features as the dynamic Mixup methods, but they seem to be conceptually different. If not, there should exist any backups for this. Presumably, the performance improvements upon the dynamic Mixup methods in Table 1 seem to support my concern.\n- How does \"the discriminatory of instances\" in p.2 be achieved through the proposed method?\n- Please explain in more detail why the regressing lambda is the problem.\n- Vanishing $\\lambda$ in eq.(2) release the gradient magnitude not to become having a dependency on $\\lambda$, but still unclear that 1) it affects the prediction; 2) it is actually connected with the label mismatching. Please clarify this.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is somewhat clearly presented, but the entire notations should be refined for a better presentation. This method seems to provide some novelty over the conventional Mixup-based methods. The reproducibility would not be a matter with the simple modification of the loss like this method.\n",
+            "summary_of_the_review": "This work provides a novel Mixup-based loss for consistent performance improvements on several datasets with many models. I like the constant improvements over diverse setups and scenarios. However, what I'm most concerned about is that there is actually novelty in the sense of a new loss of performance gains, but there doesn't seem to be enough evidence to support the author's claim. I recommend the authors revise the paper by providing more materials that show the link between the decoupling by the proposed DM loss and the label mismatch problem; consider more on the gap between embellishing the proposed method as a dynamic aspect and the ones categorized into dynamic methods.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_5tSp"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_5tSp"
+        ]
+    },
+    {
+        "id": "DrOdoTVh1x9",
+        "original": null,
+        "number": 3,
+        "cdate": 1666656735615,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666656735615,
+        "tmdate": 1666656735615,
+        "tddate": null,
+        "forum": "uCNUPuhyuU",
+        "replyto": "uCNUPuhyuU",
+        "invitation": "ICLR.cc/2023/Conference/Paper1502/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "In  this paper,  to solve the expensive computing resources problem of current dynamic mixup method, it proposed a method trying to transfer the decoupling mechanism of dynamic methods from the data level to the objective function level and propose the general decoupled mixup loss. The experimental results on supervised and semi-supervised tasks proved the effectiveness of DM.\n",
+            "strength_and_weaknesses": "The paper proposed a new loss function, and extends to the semi-supervised case and binary cross entropy form. the experimental results show that it\u2019s better than previous benchmarks. \nSome Questions:\n1. Some annotations are misleading.  like in formula (2),  where is l defined. For the asymmetrical strategy DM loss, the log(\\phi) is a matrix or a vector?\n2. What\u2019s the meaning of \u201cdata-efficient\u201d? Can you show the model performance under different sizes of dataset to prove the data-efficiency advantage over the baselines?\n3. As the paper argued, one of the advantages is that it\u2019s efficient computing, can you show experiments on how compute-efficient compared with the baselines?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper proposed an original loss function to optimize the mixup style objective. Extensive experimental results on the supervised and semi-supervised tasks valid the effectiveness of the proposed loss function.\n",
+            "summary_of_the_review": "In summary, the paper proposed a novel loss function and verified the effectiveness on different dataset and different tasks.  There are some minor clarity issues on the formulations. However, the paper doesn\u2019t provide proof on how \u201cdata-efficient\u201d of the proposed method is and there are no Quantitative results to show the computation efficiency advantage.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_baqd"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_baqd"
+        ]
+    },
+    {
+        "id": "bnaJeznOYO",
+        "original": null,
+        "number": 4,
+        "cdate": 1666760561752,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666760561752,
+        "tmdate": 1670528116585,
+        "tddate": null,
+        "forum": "uCNUPuhyuU",
+        "replyto": "uCNUPuhyuU",
+        "invitation": "ICLR.cc/2023/Conference/Paper1502/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper revisits the commonly used mixup technique and proposes to modify the loss function to achieve similar effect as the time-consuming search based methods. The proposed method is simple and proved effective across various tasks, including classification, semi-supervised learning on both small and large scale datasets. ",
+            "strength_and_weaknesses": "### Strength\n1. The proposed method is well motivated, simple, technically sound,  of generalizability. \n2. Extensively experiments are conducted to verify the proposed method across different tasks, datasets, and other alternative choices. \n3. The paper is well presented, with professional figures, table and language use. \n\n### Weaknesses\n1. Setting the parameter looks very important to the performance. Sensitivity analysis has been conducted in the one dataset, which shows the parameter is important to the performance. It is unclear how the parameters are set in other tasks. Considering that in many cases the. proposed method is slightly better than the naive mixup method, the value of this method would significantly reduce if it is non-trivial to tune the parameter to get results.\n\n2. The weakness of this work has not been discussed. As a plug-and-play tool like this, it would be highly valuable if the authors can reveal the weakness so that people can decide whether to adopt it for their own projects.   ",
+            "clarity,_quality,_novelty_and_reproducibility": "See the comments above. ",
+            "summary_of_the_review": "Overall this paper is good: it extends an existing widely-used technique with simple modification that produces good results across various tasks. There are some issues in the experiments, which I do not think undermine the value of this work. \n\n\nPost rebuttal comments: After reading the comments from other reviewers, I tend to reject this submission. While this submission indeed proposes a novel technique that generalizes well across various tasks, the technical contribution is slightly below the bar this prestigious conference. So, I would like to join other reviewers and vote for a rejection. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_4Ujo"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1502/Reviewer_4Ujo"
+        ]
+    }
+]

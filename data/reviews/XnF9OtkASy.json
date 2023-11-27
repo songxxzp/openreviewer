@@ -1,0 +1,158 @@
+[
+    {
+        "id": "qV5MIigR6-",
+        "original": null,
+        "number": 1,
+        "cdate": 1666613180379,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666613180379,
+        "tmdate": 1666614289872,
+        "tddate": null,
+        "forum": "XnF9OtkASy",
+        "replyto": "XnF9OtkASy",
+        "invitation": "ICLR.cc/2023/Conference/Paper4561/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes a novel approach Stein Variational Goal Generation (SVGG) to build on recent automatic curriculum learning techniques to address the difficulty of discontinuities in the state or goal spaces for goal-reaching tasks. Experiments show that SVGG achieves state-of-the-art results for hard-exploration RL tasks in several environments with low-dimensional state spaces and deterministic transition models.",
+            "strength_and_weaknesses": "The paper is well-written and the idea is simple but novel. However, I have some concerns and thus do not recommend acceptance. \n\nQ1. SVGG seems to be the direct combination of stein variational gradient and goal generation, which weakens the novelty of the paper.\n\nQ2. Recently, many related works [1-7] have been proposed to solve goal-reaching tasks. Some of them [4-6] learn a goal space capturing the inter-state reachability, which can address the difficulty of discontinuities in the goal spaces. More discussions about the comparison between SVGG and these methods are required.\n\nQ3. The environments used in the experiment section seem to be simple. How well does SVGG perform on RL tasks of complex environments?\n\nReferences:\n\n[1] Huang, Z., et al. Mapping state space using landmarks for universal goal reaching. NeurIPS, 2019.\n\n[2] Ghosh, Dibya, et al. \"Learning to reach goals via iterated supervised learning.\" ICLR 2021.\n\n[3] Hoang, Christopher, et al. \"Successor Feature Landmarks for Long-Horizon Goal-Conditioned Reinforcement Learning.\" Advances in Neural Information Processing Systems 34 (2021): 26963-26975.\n\n[4] Zhang, Tianren, et al. \"Generating adjacency-constrained subgoals in hierarchical reinforcement learning.\" NeurIPS, 2020.\n\n[5] Zhang, Tianren, et al. \u201cAdjacency constraint for efficient hierarchical reinforcement learning\u201d, IEEE TPAMI, 2022.\n\n[6] Chane-Sane, et al. \"Goal-conditioned reinforcement learning with imagined subgoals.\" ICML, 2021.\n\n[7] Kim, Junsu., et al. Landmark-guided subgoal generation in hierarchical reinforcement learning. NeurIPS, 2021.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly presented, but the novelty seems to be limited.",
+            "summary_of_the_review": "I have some concerns and thus do not recommend acceptance. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_ZXEG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_ZXEG"
+        ]
+    },
+    {
+        "id": "vCdeV32tw9",
+        "original": null,
+        "number": 2,
+        "cdate": 1666633349791,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666633349791,
+        "tmdate": 1666633349791,
+        "tddate": null,
+        "forum": "XnF9OtkASy",
+        "replyto": "XnF9OtkASy",
+        "invitation": "ICLR.cc/2023/Conference/Paper4561/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "Authors describe an automatic curriculum learning method for goal-based (reward is to reach a goal or not) multi-task RL they call SVGG. It keeps a set of current goals as particles, estimates their density using Stein Variational Gradient Descent, and keeps updating the particles to keep presenting interesting challenges to the agent without leaving already-learned goals behind to prevent catastrophic forgetting.\n\nThe estimation of the density relies on two models: D, behaving like a value function, estimating success rate for reaching a particular goal, and R, a more conservative model, not allowing to sample goals far away from what was achieved so far (with the motivation behind R being to not allow sampling invalid tasks).\n\nAuthors motivate the work with HER being prone to local optima when using Euclidean distance as the metric between goals which live in a discontinuous space.\n\nAuthors claim their approach could be easily adapted to settings where goals don't correspond to states to be reached. I would like the authors to expand on their statement, as it's not obvious for me how to extend the work.\n\nAuthors compare their method to MEGA and GoalGAN on 4 mazes from PointMaze, AntMaze,, and robotic-arm task FetchPickAndPlace.",
+            "strength_and_weaknesses": "## Strengths\n\nOn the high level, the mechanism of storing tasks in the buffer and attaching weights to them based on some criteria to maximize learnability makes sense.\n\nDevelopment of models which encourage similarity to already solved tasks as a method of preventing overestimation is an interesting idea (even though I'd love it to happen in a single model, see below).\n\n## Weaknesses\n\n### Splitting D and R\nD and R have a similar role: to estimate the density for whether a task is good for training. I don't find the motivation presented for splitting them (that R distinguishes \"unachievable\" tasks) convincing, as the tasks the paper tests on: PointMaze, and AntMaze don't have such tasks.\n\nIt seems to me that the actual role of R is to correct for overestimation behavior of D, but it should be possible to combine them into a single model (eg. with loss being a combination of conservative R and value-accurate D), which would make the method simpler.\n\nFurthermore, the theorem giving intuition about why the method works assumes that R behaves exactly like D (is 0 where $D<0$ and 1 elsewhere).[1]\n\n\n### Catastrophic forgetting\nThe main advantage of the work over MEGA the authors seem to stress is the ability of SVGG to escape catastrophic forgetting, as no goal will ever be \"forgotten\" when it's already learned, but will be continuously revisited. Overall, that's a desiderata that is simple to satisfy by just uniformly sampling previously achieved goals with some fixed probability $\\alpha$. In fact, the MEGA paper[2] proposed such a variant, calling it OMEGA (where they also estimate $\\alpha$). It seems appropriate to compare against that version of their work.\n\nFurthermore, I don't understand why $D=1$ would not lead to catastrophic forgetting for SVGG. As $q$, expressed by the particles means to approximate $p\\_{}goals = exp(f(D)) * R$, and $f(1) = 0$ for most of the tested $f$s (which makes most sense, we don't want to be oversampling solved tasks), the weight of tasks with $D=1$ would be $0$, even if they are present in $\\Omega$, leading to catastrophic forgetting.\n\n### Zone of Proximal Development\nChoosing $\\alpha$ and $\\beta$ fixed over training corresponds to prioritizing tasks of a particular level of difficulty (percentage of being solved). Eg. authors' choice of $\\alpha=\\beta$ corresponds to tasks with $D=1/2$ having the highest weight throughout the training, even though at the beginning the distribution of task difficulty (as measured by $D$) may be centered around 0.01 (meaning that tasks with $D=1/2$ would be way too hard, or most likely: having their difficulty overestimated). \n\nThis seems unintuitive, as the Curriculum Learning methods typically attempt to sample tasks of medium difficulty for the agent's current abilities, and requires a further explanation.\n\n### Exploration\n\nDespite the claim about working in non-Euclidean spaces, R seems to be strongly discouraging exploration: if the initial set of particles would be chosen in a deep corner of the task-space (because the initial policy is not able to explore well), the method will have to slowly go through the goals based on what OCSVM predicts as the boundary of the dataset, even if the policy, after a couple of steps, would be able to explore much wider and generate the new particles covering the space more uniformly.\n\n### Experiments\nThe experiments are not convincing enough. The domains are simpler than, e.g. the ones shown in MEGA (smaller mazes, less tasks). There are two baselines: one of them is 4 years old, and another one a the simpler version of the method presented in the MEGA paper. Ideally, I would like to see a comparison with 2>= current methods, eg. SPaCE [3] and OMEGA or fixed, $\\alpha>0$ version of MEGA.\n\nDespite the maze tasks (on which the improvement is shown) are simpler than the ones used in MEGA, the reference scores of MEGA are much worse (see their figure 3 in [3]), suggesting that something is wrong with the experimental protocol.\n\n## Suggestions\n\nI would like to see a discussion on why not embed the tasks in a better metric space than the Euclidean one, as it seems easier than the proposed method.\n\n[1] By the way, it seems that the proof says that $R=1$ on whole $G^+$, but the theorem assumes $R=1$ only on $\\tilde{G}$.\n\n[2] [Maximum Entropy Gain Exploration for Long Horizon Multi-goal Reinforcement Learning](https://arxiv.org/pdf/2007.02832.pdf)\n\n[3] [Self-Paced Context Evaluation for Contextual Reinforcement Learning](https://arxiv.org/pdf/2106.05110.pdf)",
+            "clarity,_quality,_novelty_and_reproducibility": "\n### Clarity comments\n\nIn theorem 1: I understand $D\\rightarrow 1$ as $D\\approx 1$, but if the authors meant taking a limit (wrt. what?), I'd appreciate it if they clarified it in the paper. Furthermore, $v$ is not defined in the main paper (only in the proof).\n\nIt's not entirely\tclear for me how the updated probabilities $p\\_{}goals$ are actually used. Are they estimated over each particle from $\\Omega$ at the beginning of each epoch and then used during sampling in \"Agent improvement\"? Is sampling for training $D$ and $R$ also following the distribution?\n\n### Evaluation\nThe paper is mostly understandable, although hard to follow in places when a reader is not that familiar with SVGD. The method seems novel, but the experimental results (and the weaknesses above) are not encouraging.\n\nThe claims in the paper are strong: \"SOTA results for hard-exploration RL problems\", \"(their method) actively adapts goals to useful areas, even with a poor model of success\", \"SVGG can be considered as a tradeoff between classical GCRL and evolutionary methods\", which I don't think are substantiated.\n\nI find the work reproducible.",
+            "summary_of_the_review": "The paper presents a new method. I have numerous concerns about its ability to meet the claims made in the paper, and the experimental results are not encouraging. Before these issues are addressed, I discourage publishing the paper at ICLR.",
+            "correctness": "1: The main claims of the paper are incorrect or not at all supported by theory or empirical results.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_ipWS"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_ipWS"
+        ]
+    },
+    {
+        "id": "_zijSLTSzT",
+        "original": null,
+        "number": 3,
+        "cdate": 1666699589280,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666699589280,
+        "tmdate": 1666699589280,
+        "tddate": null,
+        "forum": "XnF9OtkASy",
+        "replyto": "XnF9OtkASy",
+        "invitation": "ICLR.cc/2023/Conference/Paper4561/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper focuses on the problem of goal conditioned reinforcement learning (GCRL), where the authors propose a new way of sampling goals during the data collection phase. Specifically, the authors propose to sample goals with probability proportional to two factors: the prior distribution of goals and the intermediate difficulty of goals. The intermediate difficulty probability is measured by a beta distribution which is parameterized by a learned classifier to give high weight on goals that the agent can achieve only some of the time. This ensures that the generated goals stay within the valid regions, and are neither too easy nor too difficult. The authors then propose to learn this distribution via Stein variational gradient descent (SVGD) to obtain a goal generator model.\n\nThe authors evaluate the proposed method empirically on maze, ant maze and simulated robot pick and place environments, and the results suggest that the proposed method outperforms prior methods in terms of goal success rate and sample efficiency.\n",
+            "strength_and_weaknesses": "Overall I think the paper presents an interesting new technique of sampling goals. The idea is presented clearly and the evaluations are easy to follow. However I do have some concerns.\n\n\n### Strength\n\nThe proposed method is clearly presented and well motivated. I find the idea of weighting the desired goal probability with the intermediate difficulty and prior distribution very intuitive, and I can imagine a class of different methods building on top of this idea. I also find the ablation study and visualization of the proposed method is very informative. The behavior of the proposed method can be directly understood from the generated goals.\n\n\n### Weaknesses\n\nFrom my understanding of the paper, it seems like the core novelty of the paper is the particular goal distribution jointly weighted by the intermediate difficulty and goal prior. This objective is intuitive as it gives high weight to valid goals that have intermediate difficulty that the policy can only only some of the times. However, it is one of many other objectives that encourages similar things (for example, the GOID objective from Goal-GAN), so it is not clear to me why this particular choice is better. It would be important for the authors to justify the objective either theoretically or empirically.\n\n\nMoreover, once the desired goal distribution is formulated, it seems to me that SVGD is just a particular choice of generative models used to learn this goal distribution. Given an unnormalized probability density, many other techniques, such as MCMC, Langevin dynamics and variational inference, can be used to generate samples from this distribution, and some of them are much simpler than SVGD. Especially in the low-dimensional goal space that the authors experiment with, numerical integration can be accurately calculated to normalize the goal density. The mentioned recovery property can also be obtained by simply mixing the learned goal distribution with a uniform prior distribution.  Hence, it is not clear to me why SVGD is a good choice here.\n\n\nThe empirical performance of the proposed method is also not very strong. Among the domains the authors experiment with, only in 3 out of 6 domains the proposed method outperforms prior methods significantly.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is really well written and the proposed method is easy to follow. ",
+            "summary_of_the_review": "While I think the paper presents an interesting new technique of sampling goals, I believe that the proposed method is not sufficiently justified and the empirical performance is not very strong. Hence I cannot recommend acceptance of this paper in its current state.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_BQng"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_BQng"
+        ]
+    },
+    {
+        "id": "8veSqJ8WY-",
+        "original": null,
+        "number": 4,
+        "cdate": 1666711794103,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666711794103,
+        "tmdate": 1666711794103,
+        "tddate": null,
+        "forum": "XnF9OtkASy",
+        "replyto": "XnF9OtkASy",
+        "invitation": "ICLR.cc/2023/Conference/Paper4561/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "\nThis work considers a multi-goal learning setting where the agent learns across a diverse set of goals by building its own representation model of goal space. The work tackles exploration in a multi-goal learning setting since being able to learn across diverse goals during train plays a vital role for generalization. However, since the goal space requires exploration - the work proposes a new mechanism based on stein variational goal generation to tackle the goal exploration problem. \n",
+            "strength_and_weaknesses": "\t- This paper addresses the important problem of exploration in goal spaces, since to design a curriculum of goal generation for better generalization, it is important to learn a model that can help with exploration of new goals. The work is primarily based on context of automatic goal curriculum generation \n\t- One minor thing about the paper in general though is it provides too much not connected information in the write-up, making it hard to fully understand the context of the paper. It would be better if the paper could be written more clearly, with the main contributions focussed on. From the introduction itself, it was not clear what are the primary contributions of this work. \n\t- The work adapts from using SVGD in context of approximating the goal distribution for curriculum generation. Section 2.2 providing context of this, and stating out related work that uses SVGD is useful to see. \n\t- Section 3 in my opinion could have been written more clearly; and figure 1 could be explained better. The overall approach seems too complicated for actually being impactful for a general community. The work primarily focuses on hard exploration problem, and my understanding is that SVGD based approach is required for approximating a goal distribution, such that this learned model can then be used for novel goal generation? \n\t- I do not understand the context of equation 2? Why is the distribution of goals related to skills and valid goals? It would be helpful if authors could provide more context of why the distribution of goals that we are trying to approximate, indeed relies on these two? The text below equation (2) provides some context to this, and p_valid (g) is understandable; but how does the learned skills also depend on p(g) is perhaps not clear? My understanding is, we want to approximate goals but at the same time make sure these goals are achievable based on the learned skills? Is this the correct way to interpret this?\n\t- Equation 4 and 5 then provides a tractable approach to approximating these two terms, which are again dependent on learning two separate models?\n\t- Could the authors explain the coverage metric in more details? It seems like there is an approximation being made for this coverage metric? The problem seems intractable, and is the same as trying to approximate the state distribution for coverage? \nExperimental results in my opinion does not seem entirely convincing. The most difficult task seems to be the FetchPickandPlace and it is not clear if the improvements are significant, especially given the fact that the overall proposed model in this paper seems overly complicated (see below)",
+            "clarity,_quality,_novelty_and_reproducibility": "- The paper is not written clearly and it is difficult to fully understand the contributions of the work. There are at times too much details, but all appears convoluted in some way, making the primary contributions not explicit. \n\n- In terms of novelty, it may be that there are some components of the work that are novel (although my understanding from reading the paper is that it is mostly adapting from prior works). Most importantly, I think the proposed approach is overly complicated to achieve a rather achievable solution to the stated problems. Therefore, I am concerned about the practical use case of the work and its impact, if it gets accepted to a venue like ICLR. \n\n-It maybe that the paper is written in a way that the contributions were not clear enough; otherwise, the difficulty of the algorithm in the way it is derived - my primary concern is the reprodocubility of the work (not in terms of the results, but if someone actually tries to re-implement the proposed approach)",
+            "summary_of_the_review": "\nPlease see above - I think the contributions of the work were not clear enough and the overall model is too complicated to be of actual impact. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_TSmE"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4561/Reviewer_TSmE"
+        ]
+    }
+]

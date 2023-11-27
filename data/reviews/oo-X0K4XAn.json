@@ -1,0 +1,158 @@
+[
+    {
+        "id": "T9KkLt5r2A",
+        "original": null,
+        "number": 1,
+        "cdate": 1666258513401,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666258513401,
+        "tmdate": 1668860488948,
+        "tddate": null,
+        "forum": "oo-X0K4XAn",
+        "replyto": "oo-X0K4XAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3177/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes to learn an energy-based conditional generative model from trajectories of multiple particles. Specifically, the model (i) uses a graph neural network to encode partial trajectories into typed relations (each type is equivalently seen as a constraint) and then (ii) uses such information to define an energy score function by summing all the energy contributions of each relation. A standard gradient-based procedure for energy-based models is used to sample the full trajectory given the extracted relations, thus acting as a decoding process. The proposed model is learnt by maximising the conditional log-likelihood.\n\nFrom a conceptual point of view, the work differs from related approaches, including the neural relational inference (NRI), in the sense that it tackles the same problem of NRI using an energy-based formulation instead of a VAE one. From a computational point of view, the work replaces the explicit decoder in NRI with a sampling procedure (involving the use of second-order derivatives). From a task point of view, the energy-based formulation enables to tackle some challenges currently out of reach for NRI, including the OOD detection and the conditional generation of additional user-defined constraints (e.g. constraints defined as differentiable functions on the trajectories) introduced at test time.\n\nExperiments are conducted on 2 toy datasets, namely springs and charged particles, and 2 real datasets, including NBA SportVU and JPL Horizons.",
+            "strength_and_weaknesses": "**Strengths**\n- The paper is well-written. I enjoyed reading it.\n- The idea of learning an energy-based model in the dynamics setting is to my knowledge new. Maybe you can also consider some recent related work [1].\n- The proposed solution enables to tackle new challenges for the toy cases (OOD and conditional generation with user-defined constraints) and therefore has a good potential.\n\n**Weaknesses**\n- Several experimental comparisons against NCI are missing and should be included (see below for further details).\n- Code is not available.\n\nRegarding the first weakness:\n- Experiments (general) Computationally speaking, it is not clear how the proposed model compares against NRI. Specifically, while NRI uses an autoregressive model for the decoding process, NCI uses a gradient-based procedure for sampling, which requires the computation of second-order derivatives during training. How are these derivatives handled during training? And can you provide a discussion and perhaps a quantitative comparison both for training and inference with NRI?\n- Experiments (general). The proposed model is in essence a conditional generative model. How does the model generalise to predictions at future time steps larger than the ones seen during training? As far as I understand, the model can be iteratively applied by setting the initial state of the sampling process to the last generated portion of the trajectory, thus enabling to see further in the future. Is this correct? If so, why not comparing on this task against NRI?\n- Experiments (general). How does the model generalise to a different number of objects seen during training?\n- Experiments (toy) on traditional generation and edge classification tasks. In Table 1, NCI seems to achieve similar performance to NRI. In which sense is the model outperforming NRI, can you elaborate more on that? Additionally, I found a bit confusing the experiments on edge classification, as NCI is clearly inferior to NRI. What is the message here?\n- Experiments (real) why there is no comparison with NRI?\n\nRegarding the second weakness:\n\nAre you planning to integrally release the code?\n\nSome minor comments/curiosities:\n- The maximization of the conditional log-likelihood requires to minimize the energy score for training data while maximising it for generated data. Why this second optimisation term is not used in all the experiments, but only for OOD detection (as mentioned in the Appendix A)?\n- In Table 1, please add the lower bound baseline with known graph.\n- Can you think of other real cases other than the NBA dataset where additional constraints can be specified?\n- Last paragraph in the introduction: decompositionS of interactions is disentagleMENT -> decomposition of interactions is disentangled.\n\n[1] ModLaNets: Learning Generalisable Dynamics via Modularity and Physical Inductive Bias (ICML 2022)",
+            "clarity,_quality,_novelty_and_reproducibility": "**CLARITY**\n\nThe paper is well written.\n\n**QUALITY**\n\nOverall, the technical part of the paper is reasonable and complete. The experimental evaluation can be strengthened by adding additional comparisons with NRI (as mentioned above).\n\n**NOVELTY**\n\nThe idea of solving the considered problem by using an energy-based model is new and original. In particular, the work contributes to extend previous results on the composable properties of energy-based models (which have been previously observed for unconditional generative tasks) to the relational dynamic setting.",
+            "summary_of_the_review": "------- POST REBUTTAL -------------\n\nThe answers in the rebuttal partially address my concerns. Doubts still remain on the nature of the method and the experimental methodology (both in terms of predictive performance and computational cost).\n\nThe proposed model learns a conditional distribution $p(x|x_{partial})$, where $x$ and $x_{partial}$ are the full and partial trajectories, respectively. The definition in Section 4.3 Eq. (3) is not appropriate. The model is not conditioned on the constraints, which are learnt and not given, but it is conditioned on the partial trajectories. This is not only a minor technical issue, but it has also an important practical consequence. In fact, the model is, in all effect, autoregressive and the experiments should take into account this fact.\nMy original concern about the comparisons with neural relational inference (NRI) still remain after the rebuttal. In both old and new experiments, NRI outperforms the proposed method in terms of predictive performance for step 1 (both on toy and real data, see for example \"General comments 2/2 part. 2.2\"). However, when considering larger future steps predictions, namely 10 and 20 (for real), the phenomenon is inverted. This sheds some lights on the unfair methodology used in the comparisons. The proposed method has been trained to deal with predictions (up to 20 steps) contrarily to NRI, which deal with them in an autoregressive way. Therefore, the authors should consider the same conditions for comparisons and treat their model as an autoregressive one.\n\nAdditionally, the analysis in terms of computation for the proposed approach provided in the rebuttal is not informative. The authors have shown an empirical comparison against NRI by considering fixed values of batch size and trajectory length. What does it happen when increasing the number of particles, their feature dimensionality or the trajectory length? I expect that the computation of second-order derivatives (required by the training/decoding component) becomes quickly intractable in these cases, whereas NRI is still able to handle them. However, such analysis is still elusive and missing.\n\nOverall, I think that the idea of using an energy-based model is nice as enabling to handle new tasks, including OOD detection and dealing with new constraints at test time. However, I feel that the experimental analysis is still not complete and the main claims are not well supported (see e.g. in the abstract \"achieving more consistent long-rollouts than existing\napproaches\"). Consequently, I decrease my score.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_1k6S"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_1k6S"
+        ]
+    },
+    {
+        "id": "aVVj9nvlHz",
+        "original": null,
+        "number": 2,
+        "cdate": 1666599379856,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666599379856,
+        "tmdate": 1666599463571,
+        "tddate": null,
+        "forum": "oo-X0K4XAn",
+        "replyto": "oo-X0K4XAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3177/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents an implicit method based on an energy model for discovering the underlying model in a dynamical system and forecasting agents' future dynamical processes. Instead of using a VAE-like solution, this paper proposed a EBM-based solution. On a variety of simulated data, the authors demonstrate the effectiveness of their algorithm and achieve superior results compared to a reasonable baseline.",
+            "strength_and_weaknesses": "[Strength]\n* S1: The research topic's inspiration is vivid and captivating.\n\n[Weeknesses]\n* W_1: The paper was somewhat challenging to follow, and the logical connection between several lines was unclear. The entirety of section 2 did not aid comprehension of literature.\n* W_2: The empirical result is insignificant, and some baseline are absence(e.g. the recent work in section 2)\n\n* W_other: some misused of cite and citep(Intro, para3)\n",
+            "clarity,_quality,_novelty_and_reproducibility": "I have few question about the paper:\n* [Q1]: Does the encoder need a large number of training pairs? to capture the distinction between various Constrants?\n\n* [Q2]: What effect do the Langevin Dynamic steps M have on the final outcome? How about the size of Constrants T?\n\n`We illustrate how such a constraint decomposition of interactions enables more accurate long-horizon trajectory prediction performance over prior methods.`\n`we illustrate how such a constraint decompositions of interactions is disentanglement, enabling the recombination of constraints between separate trajectories, as well as the addition of novel test-time constraints.`\n* [Q3] I'm not quite grasping the concept; could you elaborate?",
+            "summary_of_the_review": "Overall, I tend to vote for negative results and my main concern comes from innovation. I am not convinced that the proposed method is innovative enough, especially compared to previous work such as NRI. There is still room for further exploration of the proposed method in terms of its practicality, training efficiency, and robustness.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_ShW2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_ShW2"
+        ]
+    },
+    {
+        "id": "HRZBST7R2bT",
+        "original": null,
+        "number": 3,
+        "cdate": 1666609253571,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666609253571,
+        "tmdate": 1666609253571,
+        "tddate": null,
+        "forum": "oo-X0K4XAn",
+        "replyto": "oo-X0K4XAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3177/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes neural constrain inference (NCI), a dynamics model which predicts future trajectories by inferring interactions between particles represented as sets of energy constraints, and sampling from the resulting energy-based model (EBM) using Langevin dynamics. It is demonstrated on various dynamics task that NCI yields lower rollout errors compared to methods based on standard feed-forward prediction, such as interaction networks. Additionally, various useful features of the method are demonstrated, namely disentanglement of interactions, the possibility of the recombination of different constraints, out-of-distribution prediction, and the introduction of novel hand-made constraints at test time.",
+            "strength_and_weaknesses": "Strengths:\n - The paper addresses an important problem in an interesting way, based on a clear motivation.\n - The method is sensible and clearly presented.\n - The quantitative empirical results are convincing and support the authors' claims.\n - The method's capabilities are thoroughly explored through additional experiments.\n\nWeaknesses:\n - The novelty of the paper is put into question by a concurrent work (see below).\n - The qualitative results seem to generally match the claims in the text, but are somewhat hard to read from static images. It would be useful if the authors would provide video comparisons of the predicted trajectories.\n - The claim of long-term stability of the rollouts could be explored further, beyond the 20 timesteps measured in Table 1. While due to the chaotic nature of the systems considered, it cannot be expected that predicted trajectories exactly match ground truth beyond this point, long term stability may still be evaluated. For instance, by providing long video sequences, or by measuring the degree to which physical conservation laws hold (as in https://arxiv.org/pdf/1910.02425.pdf Fig. 5).\n\n\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well written and the method is clearly explained. As discussed above, clarity of the qualitative results could be improved by providing videos. The appendix includes a detailed description of implementation details, which should suffice to reproduce the work. No code has been submitted, however.\n\nThe paper's proposed method appears novel, except for significant overlaps with a concurrent work (Rubanova et al., ICML 2022). The latter also proposes predicting trajectories by optimizing their adherence to a set of learned constraints. The main difference appears to be that the constraint function in Rubanova et al. is learned globally, whereas in the present work, their are inferred by an encoder network. This allows taking latent differences between interactions into account (e.g., charge polarity of particles). Additionally, the focus of the empirical evaluation is slightly different, with this paper putting a greater emphasis on disentanglement.\n\n\nQuestions and minor comments:\n - The attraction figure (Fig. 7) suggests that the particles' trajectories are printed starting with dark, opaque dots, which get increasingly lighter and more transparent as time passes. Intuitively, I would have expected the opposite direction. It might be useful to make this arrow of time more clear, at least in the few experiments in which it matters.\n - Is each predicted trajectory initialized entirely from noise, or is the known partial trajectory utilized?\n - How can the baseline models observe the randomized latent properties of the trajectories, such as the presence of springs or charge polarity? E.g., interaction networks by default only take a small number of prior observations into account, which might not be enough to infer interaction modes. Isn't this an unfair disadvantage?",
+            "summary_of_the_review": "Overall, this is a well written paper presenting an interesting idea, in a way that is well supported by experimental evaluations. While it could be argued that it offers limited novelty over Rubanova et al., I am of the opinion that when different aspects of a genuinely novel idea are concurrently developed by two papers, there is value in considering both perspectives. I am therefore leaning towards acceptance.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_C8J2"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_C8J2"
+        ]
+    },
+    {
+        "id": "UhKhsOp-sB",
+        "original": null,
+        "number": 4,
+        "cdate": 1666616046404,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666616046404,
+        "tmdate": 1666682836180,
+        "tddate": null,
+        "forum": "oo-X0K4XAn",
+        "replyto": "oo-X0K4XAn",
+        "invitation": "ICLR.cc/2023/Conference/Paper3177/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a way to learn the dynamics between interacting particles by learning the constraints between them. It shows it can predict trajectories on synthetic and real datasets.",
+            "strength_and_weaknesses": "Strength:\n- The paper is well-written and easy to follow\n- Paper shows good empirical results.\n\nWeaknesses:\n- Limited novelty, the main contribution is replacing the VAE in NRI with an EBM.\n- Unclear use of the term constraint. The so-called inferred constraints are simply the energy in the EMB. There is no real connection to any physical or mathematical constraint. I fail to see how this connects to constraints on the system, besides the fact that any generative model limits low-density areas. \n- Missing comparisons in the experimental section. Tab. 2 does not include NRI results, and both tables do not show recent relevant baselines for comparison, e.g. Graber & Swhing \"Dynamic Neural Relational Inference\", Salzmann et al \"Trajectron++: Dynamically-Feasible Trajectory Forecasting With Heterogeneous Data\", and Rubanova et al \"Constraint-based graph network simulator.\".\n- Regarding Rubanova et al, it is not \"Concurrent to our work\" as it has been on arxiv for almost a year now and published in ICML 2022.\n- It is not clear how the \"constraints\" related to actual relations and the lackluster accuracy in prediction is not promising.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written.\nThe quality of the experimental part is low, missing important comparisons.\nThe novelty is limited.\nThe work should be reproducible.",
+            "summary_of_the_review": "The two main issues I have with this paper are (1) It is unclear how the main concept of constraints is implemented besides the use of a EBM. (2)  The empirical evaluation is weak due to missing comparisons to more relevant and challenging baselines.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_m9s9"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3177/Reviewer_m9s9"
+        ]
+    }
+]

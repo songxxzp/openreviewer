@@ -1,0 +1,158 @@
+[
+    {
+        "id": "VcjDO1pp1qH",
+        "original": null,
+        "number": 1,
+        "cdate": 1666127473409,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666127473409,
+        "tmdate": 1666738020974,
+        "tddate": null,
+        "forum": "MT2l4ziaxeE",
+        "replyto": "MT2l4ziaxeE",
+        "invitation": "ICLR.cc/2023/Conference/Paper4753/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper proposes an offline RL method that combines a BCQ-style critic update (sample $k$ actions from $\\beta(a \\mid s)$ and take the max) and an AWR-style actor update. One important detail is that the behavioral policy $\\beta(a \\mid s)$ is fit using a much more powerful model class (a score-based generative model) than prior work. Empirically, the proposed method outperforms IQL and other baselines on the majority of tasks from D4RL and robomimic.",
+            "strength_and_weaknesses": "Strengths\n* Empirical results -- The empirical results are quite strong. If it is the case that these benefits are coming solely from the more powerful generative model (rather than the new offline RL algorithm), I think that would be a pretty interesting result. One reason it's surprising is that the policies that collect these datasets are usually pretty simple, so it's counterintuitive that we'd need really powerful density models to learn the behavioral policy.\n* It's great that the paper released code! \n\nWeaknesses\n* Relationship with prior work -- The paper does not sufficiently discuss the similarities with prior methods. As noted below, I think many of the claims about prior work are not true, and the proposed method is very similar to prior work. The strong empirical results suggest that this is simply a matter of writing -- situating the method relative to prior works, noting that the method is actually very similar to prior work (perhaps don't claim that as a contribution), and arguing that the score-based generative model is the important contribution. One way this could be done is to *not* propose any new method, but show that using a more powerful model for estimating $\\beta(a \\mid s)$ can be used to improve *existing* offline RL methods. In fact, the $s_\\psi$ and $Q(\\beta) + s_\\psi$ columns in Table 2 already do this.\n* Correctness -- I'm not sure about some of the arguments in the paper (see details below). Again, I think this is purely a problem with writing, but I suspect that many parts of the paper will have to be rewritten.\n* The proposed method seems to require per-domain hyperparameter tuning.\n\n\nThere are a number of claims that I'm unsure about.\n* \"behavioral cloning cannot extract a good policy\" -- This seems to contradict the earlier claim in the introduction that certain off-policy methods \"fall short compared to simple behavioral cloning.\"\n* \"high-fidelity behavioral cloning has not been achieved\" -- Cite. Note that IBC and [1] might be counterexamples.\n* \"despite the need in offline RL for precist estimation of behavior policy (Levine)\" -- Where does (Levine,) argue this?\n* \"have only been utilized with heuristics or proxy formulations\" -- I don't think this is true. Many prior works (including those cited) do provide theoretical justification for the proposed methods.\n* \"which was previously considered unnecessary or infeasible (...) \" -- I don't think these citations say this. Also, this countradicts the claim in the previous paragraph that (Levine 2020) argues for high-fidelity behavioral cloning.\n* Related work -- I think some of the categorization here isn't accurate. For example, some of the methods in the first paragraph do \"value learning,\" and arguably all of the methods in the first paragraph \"try to resolve the distribution shift problem\"\n* Related work, method -- I'd recommend acknowledging the large body of offline RL work that came before 2019. Much of it is referred to as \"batch RL\" rather than \"offline RL\".\n* \"$p(s, a) = Q_\\theta - Q^{\\pi_\\phi}$\" -- This is a neat idea, but seems different from what the rest of the paragraph discusses. Prior methods that estimate uncertainty are estimating the _magnitude_ of this difference, but not the _sign_ of the difference.\n* \"it has not been thoroughly investigated\" -- I don't think this is true. There is a fair bit of work in this area. For example, BRAC compares a bunch of different divergence measures.\n* \"can only be understood as ad-hoc methods\" -- I don't think this is true. Many offline RL papers (including those cited) include theoretical motivations for the proposed method. \n* \"where $\\pi_p(a \\mid s) = \\text{softmax}(-p(s, a))$ -- Is the $p(s, a)$ here different from the one defined in paragraph 3 of the method section? \n* Theorem 1 -- I think this is trivial, as KL control is a special case of regularized policy iteration (see, e.g., [2]).\n* \"K-th is an operator\" -- Is this only well defined for discrete actions?\n* Eq. 6 -- This doesn't integrate to one. I think the numerator is missing a term $\\delta(a \\in \\text{supp}(\\beta))$.\n\nMinor writing comments\n* Abstract -- it's a bit unclear how the proposed method is different from prior methods that add explicit behavioral cloning (e.g., BCQ, TD3+BC).\n* \"warrants consideration\" -- the passive voice is to be avoided.\n* \"attempts to use an explicitly trained behavioral cloning model in offline RL\" -- I think there are many more citations for this.\n* \"Offline RL is about exploitation\" -- I'm not sure this is true.\n* \"are preferred over\" -- Who prefers them? Add a citation\n* \"utilizes the half side of the information\" -- I didn't understand this.\n* \"support the idea\" -- What idea?\n* \"stabilizing the learning\" -- Does this refer to the learning of value-based methods?\n* \"value-based methods, which can be categorized as\" -- I think \"which\" is referring to the wrong noun\n* \"instantiating it can\" -- What does \"it\" refer to?\n* \"straightforwardly\" -- Cut.\n* $s_\\psi(s, a)$ -- It'd be good to formally state what this is defined to be (the gradient of ...)\n* AWR -- Cite Neumann 2008 [3], which proposed a similar method much earlier.\n* Table 2 -- I'd recommend positioning this Table one page earlier. Clarify what $s_\\phi$ is.\n* Figure A.1 -- It's hard to see the predicted density because it's occluded by the red Xs\n\n[1] https://arxiv.org/abs/2208.06193\n\n[2] https://proceedings.mlr.press/v97/geist19a/geist19a.pdf\n\n[3] https://proceedings.neurips.cc/paper/2008/file/f79921bbae40a577928b76d2fc3edc2a-Paper.pdf\n",
+            "clarity,_quality,_novelty_and_reproducibility": "**Novelty** -- I'll decompose the method into (1) a new offline RL method and (2) using a score-based generative model for estimating the behavioral policy.\n1. The precise form of the offline RL algorithm seems novel, but it is very similar to prior work; roughly speaking, it's a combination of BCQ and AWR. I think these similarities should be awknowledged and studied. If they are important, it'd be great to demonstrate that (e.g., compare AWR, BCQ, and the proposed methods, all using exactly the same hyperparameters and without using any score-based generative models). If they aren't important, I'd recommend ditching this contribution and just using one of the prior methods (no need to create another method if the existing methods work fine).\n2. Using a score-based generative model is relatively novel. One recent paper [1] is fairly similar, and should be mentioned; but, given that it was released in August, it seems fine to argue that that was concurrent work.\n\n**Quality** -- There are a few issues with both the writing and the experiments (see details above).\n\n**Reproducibility** -- The Appendix seems to contain the relevant experimental details, and the supplemental material includes code.\n\n\n[1] https://arxiv.org/abs/2208.06193",
+            "summary_of_the_review": "Overall, I think this paper is studying an interesting problem (how powerful explicit behavioral models can be used for offline RL). While the current experiments and writing have a number of limitations (see above),  I think that a revised version of the paper would make for a strong submission to a future conference.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_8gEu"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_8gEu"
+        ]
+    },
+    {
+        "id": "pRyP5GhLdzV",
+        "original": null,
+        "number": 2,
+        "cdate": 1666397235407,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666397235407,
+        "tmdate": 1666397235407,
+        "tddate": null,
+        "forum": "MT2l4ziaxeE",
+        "replyto": "MT2l4ziaxeE",
+        "invitation": "ICLR.cc/2023/Conference/Paper4753/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper presents a new offline RL algorithm that directly models the behavior policy with SOTA score-based generative models and use the learned behavior policy as an explicit constraint in offline RL. The authors argue that explicitly modeling behavior policy can avoid failure cases where previous methods with implicit behavior policy constraints seek the mode of the behavior policy and ignore rare but useful actions. Empirically, the methods outperform prior methods in D4RL and Robomimic datasets.",
+            "strength_and_weaknesses": "Strength:\n\n1. The idea of using a powerful generative model for learning explicit behavior policy to mitigate the issue of simply seeking the mode of the behavior actions is reasonable and intuitive.\n2. The empirical results are strong and show that the method can outperform prior BC and offline RL methods on D4RL (especially antmaze and kitchen tasks that require stitching) and Robomimic (where the data is mostly demos) tasks.\n3. The paper is clearly written and easy to follow.\n\nWeaknesses:\n\n1. I think the main point of using an explicit behavior policy is to avoid seeking the mode, overly mimicking the dataset, and not relying a proxy. However, these points are mostly based on intuition without clear empirical or theoretical evidence/justification. Theorem 1 simply shows the equivalence between soft policy iteration with penalty and policy iteration with KL regularization, which is less relevant to the main point of the paper. Therefore, I think the real justification of why this approach should be preferred is somewhat missing.\n2. The empirical results are nice, but I think the authors should compare to [1]. It is unclear if we just need a more expressive policy or we really need to model the behavior policy.\n\n[1] Wang, Zhendong, Jonathan J. Hunt, and Mingyuan Zhou. \"Diffusion policies as an expressive policy class for offline reinforcement learning.\" arXiv preprint arXiv:2208.06193 (2022).",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written. The quality of the paper can be seen in the section above. The novelty of paper is okay though not super original as the technical originality is simply applying a better generative model for the behavior policy. The paper seems to be reproducible as the authors provided code though I haven't run it myself.",
+            "summary_of_the_review": "Based on the comments above, I think I would to vote for a weak accept and it would be great if the authors address some of the concerns in the sections above.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_8jQf"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_8jQf"
+        ]
+    },
+    {
+        "id": "s6I3mVNH2nM",
+        "original": null,
+        "number": 3,
+        "cdate": 1666667124493,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666667124493,
+        "tmdate": 1666710707847,
+        "tddate": null,
+        "forum": "MT2l4ziaxeE",
+        "replyto": "MT2l4ziaxeE",
+        "invitation": "ICLR.cc/2023/Conference/Paper4753/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper studies if explicitly modeling the behavior policy is beneficial in offline RL. Focusing on offline RL methods based on value function penalizations, the authors argue that multiple previous methods all design the penalty in a way that reduces the chance of overestimating the value of out-of-support state-action pairs. Based on this observation, the authors hypothesize that a good penalty term should prohibit out-of-support state-action pairs. Based on this penalization scheme, the authors train a score-based generative model to guide an approximated policy iteration algorithm. On standard offline RL benchmark datasets, the authors show that the proposed method could outperform previous methods that do not explicitly model the behavior policy. ",
+            "strength_and_weaknesses": "### Strength\nThe paper is clearly presented and the proposed method achieve a good performance. \n\n### Weaknesses\nI didn't notice any big weakness. ",
+            "clarity,_quality,_novelty_and_reproducibility": "### Clarity and quality\nBoth clarity and quality are good. \n\n### Novelty\nThe use of score-based generative models and the approximated policy iteration procedure in offline RL settings are somewhat novel. \n\n### Reproducibility\nThe authors provided the code.",
+            "summary_of_the_review": "I'm inclined to accept this paper because the paper is clearly presented and the proposed method is well-justified. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_CL7N"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_CL7N"
+        ]
+    },
+    {
+        "id": "ArBmZUqZQYG",
+        "original": null,
+        "number": 4,
+        "cdate": 1666829290225,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666829290225,
+        "tmdate": 1666829354844,
+        "tddate": null,
+        "forum": "MT2l4ziaxeE",
+        "replyto": "MT2l4ziaxeE",
+        "invitation": "ICLR.cc/2023/Conference/Paper4753/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes a new offline RL algorithm--ARQ--that explicitly models the behavior policy and uses it in a support-constraint in the Bellman backup of the algorithm. The authors make the following contributions:\n\n(1) Relate many existing offline RL algorithms as using different penalty functions in the Bellman backup.\n\n(2) Propose ARQ, that instantiates the penalty function as a support constraint.\n\n(3) Evaluate ARQ and ablations against existing BC and offline RL algorithms.",
+            "strength_and_weaknesses": "Strengths:\n\n(1) The theoretical unification of existing offline RL algorithms is useful.\n\n(2) The algorithm achieves strong empirical performance on many different tasks, suggesting that modeling the behavior policy is not as difficult as previously anticipated. This opens the door for many new possible offline RL algorithms.\n\nWeaknesses:\n\n(1) The algorithm requires sampling many actions to compute the Bellman backup, which makes it much slower than existing offline RL algorithms. The authors do point this out as a limitation, however.\n\n(2) The algorithm is similar to many existing offline RL algorithms that use a support-constraint. Namely, MBS-PI in [1] looks extremely similar to me. The one difference I noticed is that the former performs policy-iteration, whereas ARQ uses AWR to extract a policy.\n\n[1] https://arxiv.org/pdf/2007.08202.pdf",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-written and its contributions are clear. One source of confusion seems to be that the authors use \\pi_\\phi to denote both the learned policy and the behavior policy? Namely, the authors evaluate two variants: one using the score-function and one using \\pi_\\phi. I interpreted the latter to mean using BC to learn the behavior policy. However, this is confusing because \\pi_\\phi also denotes the policy learned by the algorithm. It would be great if the authors could clarify this.\n\nRegarding novelty, I think that the comparison to related work can be a bit more thorough, particularly its comparison to other support-constraint algorithms as BEAR, MBS-PI, and IQL. Namely, the latter two seem to propose very similar algorithms. MBS-PI uses policy iteration rather than policy extraction,  and IQL uses a quantile loss rather than sampling from the support. The authors should provide a discussion on why ARQ may be preferred over both. ",
+            "summary_of_the_review": "Though I believe ARQ itself is quite similar to existing ones, and I am not sure why those differences may be advantageous, the algorithm achieves surprisingly good empirical performance. I believe that the paper demonstrates that modeling the behavior policy can be done effectively, and improve upon offline RL algorithms that explicitly avoid this. This, to me, is a surprising and novel finding. Because of this, I recommend that the paper be accepted.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_piV5"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4753/Reviewer_piV5"
+        ]
+    }
+]

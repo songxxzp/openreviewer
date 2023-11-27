@@ -1,0 +1,119 @@
+[
+    {
+        "id": "r6OiDLrugE",
+        "original": null,
+        "number": 1,
+        "cdate": 1666528545748,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666528545748,
+        "tmdate": 1666703578966,
+        "tddate": null,
+        "forum": "0g0X4H8yN4I",
+        "replyto": "0g0X4H8yN4I",
+        "invitation": "ICLR.cc/2023/Conference/Paper5613/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "Previous work has shown that transformers can be trained to be \"in-context learners (ICL) of linear functions\u201d. That is, given a couple of (x, y) pairs sampled from a line (that is also sampled randomly at test time), and a new x' from the same line in its context, a transformer can be trained to output the correct y'. \n\nThis work is focused on understanding *how* this happens. \n\nThis paper provides three pieces of evidence for the hypothesis that transformers in fact learn standard learning algorithms to acquire the skill described above. \n1. Construction: The authors provide a bottom-up construction demonstrating how a transformer can represent both a single step of gradient descent and a single step of Sherman-Morrison update in O(1) layers. This implies these steps can be composed in  a single model to \u201crun optimization\u201d during the forward pass. \n2. What \u201ccomputation\u201d an in-context learning transformer displays by testing how similar its outputs on held-out data is to well-known algorithms: The authors systematically show that 1) the best performing model behaves very similar to ordinary least squares when no noise is present, 2) when noise is added, the best model learns a solution that minimizes Bayes risk (very interesting). 3) Transformers that have their capacity restricted interpolate between different predictors. \n3. How learned in-context-learning transformers actually implement ICL: The authors present preliminary evidence, using auxiliary probes, that the activations of ICL transformers might extract the moment matrix and the parameter vector during the forward pass. \n\nIn addition to these pieces of evidence, the authors also propose a neat way of thinking about how a transformer might represent algorithmic operations (named the \"raw\" operation in the appendix), which might be useful in analyses in other domains. ",
+            "strength_and_weaknesses": "(The requests from the authors during the rebuttal phase is tagged below.)\n\n**STRENGTHS:**\n* **Scope and relevance:** Given the surge of interest in in-context learning, this paper is very timely in taking on a very important topic.\n* **Significance of contributions:** The paper does a great job illustrating how a transformer might implement an iterative optimizer in its weights. While I expect this work not to be the final word in how a transformer architecture might learn to be a linear function approximator, the questions asked by the authors seem to be the right ones and the provided answers seem novel and meaningful. \n* **Clarity:** The main body of the paper is written very well.\n* **\"RAW\" operator is useful:** While not discussed in the main body of the paper, the raw operator defined and used in the appendix for the constructions seem like a quite neat way to think about constructive proofs for transformers. \n\n**WEAKNESSES:**\n* **Dependence on the GELU activations:** If I'm not mistaken, the authors make use of the numerics of the GELU activation to show how a the feed-forward layers can implement the dot product and matrix multiplication operations. I have two concerns about this: \n  * It's not clear how small the activations need to be for the approximation to hold. (REQUEST) Would it be possible to add a plot in the appendix that shows how well $x * x = x^2$ is approximated with the GELU approximation? The x-axis could be the values between $-0.1$ to $+0.1$, and the y-axis would be the error in the approximation, or the proportion of the error to the x value.  \n  * Transformers that don't use this activation also display ICL capabilities, including the ability to be linear function approximators (happy to be corrected about this - perhaps GELU is much more important than I anticipate). \n  * In light of this, I'm not sure if the construction of $mul$ truly represent what the transformers might be learning (happy to be convinced otherwise during the rebuttal) . (REQUEST) Perhaps it'd be good to at least briefly discuss the dependence on GELU to get the $mul$ construction in the discussion section following Theorem 2? \n* **Mechanistic interpretability results lack control groups:** As the authors acknowledge, interpreting probing results is often tough. Hence, the results presented in Section 5 appear to be speculative as of now. (This limitation is acknowledged by the authors). (REQUEST) One approach to strengthen the results would be to produce Figure 4 (left and right) with randomly initialized, slightly trained and fully trained (but poorly performing in ICL) transformers. If these also yield comparable loss values, then discussion of the results of Section 5 should be reconsidered. \n* **Making Figure 2 denser to confirm a claim:** The authors claim that for all values of $\\sigma^2$ and $\\tau^2$, the right parameter that gives the best fit also is the one that minimizes Bayes risk. Figure 2, which seems to be what this sentence is based on, is a bit too sparse to really reach this conclusion. If it's possible, it would be great to make the plots a bit denser to see the trends a bit more clearly. That is, sample tau and sigma a bit denser to add more measurement points? Marking the MSPD between the transformer and the predictor using the optimal ridge parameter with a different marker for each value $\\tau$ and $\\sigma$ on the plots could also bring extra clarity perhaps? (nitpick) Lastly, perhaps a colormap that has a gradient determined by the value of the ridge parameter could also make the plot easier to read.\n* **Ambiguity in Figure 4 (right):** Figure 4 (right) isn't very clear to me. What are the x and y axes showing? \n\n\n**QUESTIONS TO AUTHORS:** (a bunch of REQUESTS): \n* **Position embeddings:** What kind of position embeddings did you use? (REQUEST) Space permitting, could you briefly discuss how you expect the choice of position embeddings to affect ICL result? If I'm not mistaken, the derivations in the appendix assume absolute position embeddings a'la the original transformer paper. \n* **Gradient descent with n steps as another benchmark predictor:** I was wondering if you considered observing whether a few steps of gradient descent (not just a single step) matches ICL performance of medium-shallow transformers? If the initial weights are initialized with zeros, gradient descent will presumably consistently lead to an increase in the norm of the implied weight vector. Since having an L2 penalty on the weight vector also has a similar effect, perhaps this is why ICL performance of medium-shallow transformers are matched well with the predictors with a ridge term. (Analogously, perhaps gradient descent with a couple of steps has low MSPD with ridge regression with an appropriately chosen lambda?)\n* **MLP used in the probe experiments:** Could you give further details regarding the MLP probe used in Section 5? \n",
+            "clarity,_quality,_novelty_and_reproducibility": "**QUALITY:** This is a high-quality submission that tackles an important problem and offers interesting and nontrivial insights. \n\n**CLARITY:** The paper is very well-written and clear. Here are a couple additional comments (BUNCH OF REQUESTS): \n* The first sentence of the second paragraph of the introduction imply that _all_ types of in-context learning can be understood via the framework discussed in the paper. It'd be better if the authors clarify that there exist other types of in-context learning (e.g. the one facilitated by induction heads), or change wording. \n* The \"d\" that appears in the bounds (e.g. \"with O(d) layers, they can compute ...\") isn't quite clear. Perhaps clarifying what this \"d\" stands for as early on in the introduction as possible would improve clarity.  \n* Could you specify in the layernorm equation (Eq 7) whether the first and second moments are computed using activations from all timesteps, or computed separately for each timestep? \n* The legend of Figure 1 (b) is a big confusing, as the legend on the Figure (a) doesn't, for example, have a solid black line labelled. \n* **Equation for ILW:** The expectation seems to be under $D$. What about $D_A$? How does that factor in the equation? Do you have a fixed $D_A$, or do you resample it every time you sample a $D$? (I presume it's the latter, but just wanted to make sure.)\n* **One step gradient descent:** Do you initialize the first guess with zeros, or do you actually initialize with noise? \n* **Making figures color-blind friendly:** (not urgent until camera-ready unless there's a colorblind reviewer) would it be possible to make the plots colorblind-friendly (or at least add equivalent figures in the appendix for this purpose)?\n\n**ORIGINALITY**: I believe the questions asked, as well as the insights provided are for the most part original/novel. \n\n\n**TYPOS:**  The paper has only a few typos. Here are a couple, in case it helps the authors.\n* 3rd paragraph of Introduction: \"... between different predictors as model depth __and__ training set ...\"\n* Between equation 2 and 3: \"where each \\vb is is\"\n* Theorem 1 and 2: There's a repeated \"the\" in the final sentence. \n* Image typo: The x axis of the right top plot in Figure 4 is half-occluded. \n\n",
+            "summary_of_the_review": "The authors provide a constructive, behavioural and mechanistic account of how transformer networks can in theory and practice learn to in-context-learn linear functions. \n\nThe paper is well-written with insightful questions and clear answers. I believe this is a good paper that deserves to be highlighted in NeurIPS. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_NUsG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_NUsG"
+        ]
+    },
+    {
+        "id": "9zPapCTXVt",
+        "original": null,
+        "number": 2,
+        "cdate": 1666678696366,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666678696366,
+        "tmdate": 1666678696366,
+        "tddate": null,
+        "forum": "0g0X4H8yN4I",
+        "replyto": "0g0X4H8yN4I",
+        "invitation": "ICLR.cc/2023/Conference/Paper5613/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper investigates the capability of transformer-based in-context learners (ICL) to implicitly implement learning algorithms. The authors consider a study-case of linear regression models to validate their hypothesis that ICL encode context-specific parametric models: 1) ICL implement linear models by encoding gradient descent 2) ICL implements closed-form computation of regression parameters with Sherman\u2013Morrison update. These results are summarized in Theorem 1 and 2 for a single-step update. The paper also investigates how the learned algorithm is implemented by investigating what intermediate quantities are being computed. The authors conducted probing experiments to assess if moment and weight vectors are computed for training linear regression ICL task. ",
+            "strength_and_weaknesses": "Strength\n- The paper provides theoretical insights on how ICL implements learning algorithms. This can be used to introduce new paradigm for training ICL\n- The paper is supported by experimental analysis on simulated data related to linear regression to validate the theoretical results \n- The paper investigated different scenario such as the case of noisy data\n\nWeakness\n- The paper derives the results for a single step of larger iterative algorithm\n- The presented results are derived for the case of linear regression and it is unclear how it extends to non-linear problems. \n- The experiments are conducted on toy datasets with normal distributions.\n- The probing experiments are not very conclusive\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is well-structured, clear and reads easily. The level of technical details provided in the main text is good. The supplementary material provides an extensive and very lengthy details on the derivation of different operators.  The paper has a placeholder link for the code, so I think that the results should be easily reproducible.\n",
+            "summary_of_the_review": "The paper gives important insights on how ICL encode its learning mechanism. The theoretical results of the paper are derived in the case of linear regression. It is shown that ICL is cable of encoding gradient descent and regression parameters via closed-form. This contribution is useful for better understanding how transformers work in general and specifically in the case of In-Context-Learning.",
+            "correctness": "1: The main claims of the paper are incorrect or not at all supported by theory or empirical results.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "Not applicable",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_5hCi"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_5hCi"
+        ]
+    },
+    {
+        "id": "DMu7zBenKI",
+        "original": null,
+        "number": 3,
+        "cdate": 1666686820786,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666686820786,
+        "tmdate": 1666686820786,
+        "tddate": null,
+        "forum": "0g0X4H8yN4I",
+        "replyto": "0g0X4H8yN4I",
+        "invitation": "ICLR.cc/2023/Conference/Paper5613/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "\nThis paper presents an investigation into large-language models' (LLMs) abilities to learn algorithms for in-context linear regression given only sample problems consisting of inputs and linearly related outputs, but no information about the true (linear) hypothesis class underlying these relationships.\n\nThe authors prove that transformer LLMs are capable of representing and performing the matrix operations needed to support 2 commonly algorithms for linear regression -- gradient descent and regression via rank-1 updates.\n\nAnd they also show that for a set of underdetermined regression problems generated by a particular (idealized) process, LLMs are capable of learning an algorithm for learning the minimum Bayes risk predictor (relative to that process). Further experiments are conducted to ellicit the effect of LLM model structure and capacity on the learning algorithms learned. The authors show that LLM capacity does influence which learning algorithms are derived, but how and to what extent is left unexplored.\n\nFinally, the authors use a set of \"probe\" experiments to understand how in-context regression fitting works inside an LLM. The experiments suggest that the LLMs are computing fundamental quantities like the moment and weight vectors, but exactly how these are being computed (or if the hypothesis class is even truly linear) is not determined and is left for future work.\n",
+            "strength_and_weaknesses": "\nStrengths:\nThis paper appears to be the first to investigate the neural mechansisms underpinning in-context learning for the very simple but non-trivial hypothesis class of linear regression models. The authors' finding that LLMs seem to mimic sensible and even Bayes-optimal learning algorithms is surprising and will surely motivate further research into understanding the power and limits of in-context learning.\n\nWeaknesses:\nAs the authors admit, their findings are suggestive but the exact mechanisms of in-context learning for linear regression are still not understood.\n\nAdditionally, there were some experiments I was surprised the authors did not perform:\n- examining how the dimensionality of the regression problem affects the learning algorithm derived for an LLM with a given capacity.\n- determining whether the LLM derives Bayes optimal learning rule for other choices of p(w) and p(x). In particular, ridge regression is the correct choice for the p(w) used. But would the LLM mimic Lasso regression if p(w) was a Laplace prior over the regression coefficients?\n",
+            "clarity,_quality,_novelty_and_reproducibility": "\nThe work in this paper is novel and of high quality. It is mostly clear but the probe technique leveraged in section 5 could use a lot more description to understand that set of experiments.\n\nMinor issues and typos:\n\nThe plots and legend in figure 3 are hard to read because there are many methods plotted in the same graph with identical colors.\n\nI believe there are some typos in the operator definitions of section 3.1. For instance:\n\n1. in the \"mov\" operator's definition, should the matrix's first column read H_{:,:t-1} and last column read H_{:,t+1:}?  And should the middle column's top and bottom rows contain an i' and j' rather than an i and j, respectively?\n\n2. for the \"div\" operator, the middle element is lacking proper subscripts and should be h_{i:j} / |h_{i'}|.\n\nSection 4.3:\n\n1. \"m\" should be capitalized to match \"M\" above\n\n2. for weighted KNN, it looks like the kernel function is missing. I.e., K( |xi - xj|^2 )*yj instead of |xi - xj|^2 * yj.\n",
+            "summary_of_the_review": "This paper is novel in that it provides the first examination of how in-context learning works for the simple but non-trivial learning problem of linear regression. Because in-context learning is a phenomenon that is just starting to be understood, and because this paper provides positive (though not conclusive) results, I advocate for acceptance to ICLR.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_p6X8"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper5613/Reviewer_p6X8"
+        ]
+    }
+]

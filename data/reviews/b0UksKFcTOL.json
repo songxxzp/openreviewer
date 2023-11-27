@@ -1,0 +1,119 @@
+[
+    {
+        "id": "r1IilhKrKEs",
+        "original": null,
+        "number": 1,
+        "cdate": 1666277584515,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666277584515,
+        "tmdate": 1670260904847,
+        "tddate": null,
+        "forum": "b0UksKFcTOL",
+        "replyto": "b0UksKFcTOL",
+        "invitation": "ICLR.cc/2023/Conference/Paper2259/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper proposes to marginalize (or rather, draw multiple samples from) latent variable policies as a means of improving estimates of policy entropy and Q-value estimates. The authors point out that a na\u00efve ELBO estimate can result in a loose bound (i.e., a biased estimate), so they suggest using a nested estimator and multi-level Monte Carlo. They perform experiments using continuous control environments from DeepMind control suite, both in the setting of joint-based and pixel-based observations. They find that their method outperforms SAC and TD3 in the joint-based setting and outperforms various world-model-based setups in the pixel-based setting.",
+            "strength_and_weaknesses": "**Strengths**\n\n- **Proposes a principled approach to improving entropy and Q-value estimates.** To the best of my understanding, the method proposed here appears principled, building off of previous methods for entropy estimation. While many previous works have generally ignored the fact that world model latent variables induce hierarchical policies, few previous works have taken advantage of this fact to improve entropy and value estimators.\n\n- **Builds off of popular existing methods.** The paper builds off of several established algorithms in the literature, namely SAC and world models. These algorithms have fairly widespread adoption in the academic literature, so there\u2019s a higher likelihood that methods built upon these algorithms will be more widely adopted, particularly if they are not difficult to implement.\n\n- **Uses standard benchmark setups/environments.** The authors evaluate SMAC using the DeepMind control suite, a standard set of continuous control environments built on MuJoCo. These environments are fairly commonly used in the literature, so demonstrating results here will likely be compelling to the deep RL sub-field.\n\n**Weaknesses**\n\n- **Fairly complex method for a fairly minimal performance boost.** Early in the paper, the authors lament that \u201cthe use of more expressive models have not gained nearly as much traction in the community\u2026these constructions often result in complicate[d] training procedures and are inefficient in practice.\u201d Two thoughts here: First, I would disagree with this characterization and analysis. Normalizing flow-based policies do not yield a significantly more complicated or inefficient procedure. Indeed, many modern neural network libraries (PyTorch, Tensorflow, and JAX/Distrax) make it trivial to implement these policies and sample / evaluate log-densities. It\u2019s not that these more expressive policies aren\u2019t useful. Rather, the limited boost in performance in our fairly simple benchmark environments hasn\u2019t sufficiently justified their widespread adoption. Second, the method presented here strikes me as more complicated than, for example, normalizing flow-based policies. I find it difficult to believe that SMAC would receive widespread adoption when normalizing flow-based policies have not.\n\n- **Unclear if the baselines are really appropriate/fair comparisons.** The authors, at times, appear to confuse the distinction between several proposals: 1) using hierarchical policies, 2) using more sophisticated/multi-sample estimators, and 3) their particular approach for estimation, which itself consists of multiple components (entropy and Q-value estimators). For instance, in some of their experiments, the authors only compare with SAC and TD3, claiming to show the benefits of hierarchical policies. This is hardly a novel finding, as it\u2019s well-known that more expressive policy distributions generally outperform less expressive ones. At the very least, I would have expected comparisons with normalizing-flow-based policies, which, having personally implemented these in one afternoon, are not difficult to use (and these do, indeed, outperform Gaussian policies in SAC). Likewise, in the only other set of experiments, the authors compare with \u201cLatent-SAC\u201d, SLAC, and Dreamer, but it\u2019s not at all clear what these baseline comparisons are meant to accomplish. Is the boost in performance coming from using multiple samples, or is it the estimator itself? Is it from having better value estimates, entropy estimates, or do they both contribute? Likewise, as far as I understand, this estimator could also be used with a model-based value estimator, so it\u2019s unclear whether the comparison with Dreamer tells us much about the setup proposed here.\n\n- **Somewhat minimal contribution.** While I\u2019m not discounting the insight and effort required to develop the main techniques (nested estimator with MLMC) in the paper, the main contribution of the paper reduces to just drawing more samples for estimation. Assuming we have a reasonable estimator, it\u2019s hardly surprising that drawing additional samples should yield improved entropy and value estimates, and likely, improved performance. The proposal of the paper is effectively to use a well-known knob within the existing RL framework to improve performance, which I view as a somewhat minimal contribution.",
+            "clarity,_quality,_novelty_and_reproducibility": "**Clarity** \u2014 The clarity of the paper, while generally good, could be somewhat improved. One unclear aspect was the notation. For instance, the authors conflate the latent state of the environment with the latent state of the model, when these two variables need not be defined in the same manner. In Eq. 9, the authors seeming write the entropy as being over the history (rather than the latent state and action), while in Eq. 10, they write the entropy as being conditional on the history. (Note: in Eq. 9, there\u2019s also a typo (?) in which r is denoted as a distribution over the latent state). And in Eq. 11, the authors refer to $\\pi$ as both the action policy as well as the posterior over latent states.\n\nI found Section 3.2.1. somewhat difficult to follow, as it\u2019s unclear exactly where the authors are employing amortized variational inference vs. exact probabilistic inference, etc. That is, it\u2019s not clear how many additional models are required to implement the authors\u2019 approach. In a similar vein, the authors claim to use \u201cstandard variational inference,\u201d when, as far as I can tell, they are making an assumption of amortization, i.e., I doubt that they are optimizing $q$ or $\\pi$ on a per-state basis.\n\nIn some cases, the underlying model assumptions go unstated, making it difficult to understand where the authors are making deliberate choices vs. following convention. To give some examples, the authors employ a filtering variational posterior over the world model latent state, yielding a looser bound than a smoothing variational posterior, without justifying this choice. They also insist on conditioning the policy purely on the current latent state, rather than (correctly) allowing the policy to depend on the entire history. \n\n**Quality** \u2014 Overall, the quality of the paper is reasonable, but there are several aspects that could be improved. In some places, the authors use sweeping generalizations or mischaracterizations.\n\n- For instance, on the first page, the authors claim that they want to learn complex, multi-modal behaviors, whereas many existing algorithms rely on local perturbations around a singe action. First, even with a uni-modal policy mapping, compounding local perturbations across time will still yield multi-modal trajectory densities. Second, this restriction to local perturbations is, in fact, a result of using parametric policies (i.e., neural networks), whereas an iteratively-optimized Gaussian policy (e.g., optimized through planning) can recover multiple modes. Finally, the authors do not definitively demonstrate that their approach results in complex multi-modal behavior.\n\n- The authors state that \u201ca majority of approaches for handling partial observability make use of world models,\u201d which is not well-supported by the literature. A variety of existing works do not use latent variable models to handle partial observability, instead relying on recurrent networks (see, e.g., MuZero/Muesli) to integrate information.\n\n- Elsewhere in the paper, the authors claim that \u201cSAC is often restricted to the use of policies where the entropy can be computed efficiently, e.g. a factorized Gaussian policy\u2026\u201d However, in the case of SAC, the authors employ a tanh on the policy output, using only a sample-based estimate of the entropy. Likewise, in many KL-regularized RL methods, e.g., MPO (Abdolmaleki, et al., 2018), the authors resort to sample-based estimates.\n\n- The authors claim, without any rigorous justification, that \u201cwith standard neural network architectures, a latent variable policy can universally approximate any distribution if given sufficient capacity.\u201d This is merely presented as a \u201cproposition,\u201d without any follow-up analysis to determine the degree to which this holds in practice, e.g., does the KL between the policy and Boltzmann optimal policy not decrease with added latent variables? If so, this would seem to contradict the finding from the hierarchical VAE and diffusion community, which is that hierarchy depth improves distribution flexibility. Is this purely a function of the \u201ccapacity\u201d of the policy networks, or are there other considerations?\n\n- The authors claim that \u201clatent variables can be used within the $Q$-function to better aggregate uncertainty\u201d but they do not verify this empirically.\n\nAs mentioned previously, the baselines for empirical comparison do not isolate the factors of the authors\u2019 proposal (i.e., hierarchy, multiple samples, variance reduction, etc.). This makes it difficult to assess the origin of the performance benefits, diminishing the quality of the empirical analysis.\n\nMinor point: Figure 5 is missing axis numbers.\n\n**Novelty** \u2014 The novelty of the proposed approach is somewhat limited. The main contribution of the paper is in combining several previously proposed ideas to improve multi-sample entropy and value estimates in the case of latent variable policies. This is entirely within existing framings, i.e., SAC and world models. And the specific combination and application of these techniques is novel to RL, it\u2019s fairly intuitive that using additional samples to improve entropy and values estimates should yield improved performance. In this sense, I found the proposed approach to be only marginally novel.\n\n**Reproducibility** \u2014 While it\u2019s difficult to assess, my guess is that the results are reproducible. The performance of the baselines looks to be in-line with previous works, suggesting that the authors\u2019 implementation is reasonable. And there is a clear trend of SMAC being marginally better than previous methods across environments (with multiple seeds), demonstrating that the improved estimator likely does improve performance. I appreciate that the authors included some ablations to assess the effect of different hyperparameters.",
+            "summary_of_the_review": "The paper provides a technique for improving entropy and values estimates in latent variable policies using multiple samples. While I believe that this is a useful idea, the somewhat limited novelty, combined with the marginal performance boost (over inappropriate baselines) leads me to feel that this paper is somewhat below the acceptance threshold. The paper could be improved by improving the baselines to illuminate the various aspects (i.e., hierarchy vs. multi-sample vs. variance) of the proposed method. The authors may also consider whether this method allows one to scale up to larger hierarchical policies to tackle more challenging tasks where performance gains may be more significant.\n\n\n**UPDATE:**\nI appreciate that the authors have corrected various issues in the text that I raised. The normalizing flows experiments also add a useful multi-modal baseline to the results. I have increased my score from 5 --> 6 to acknowledge the effort on the part of the authors. However, I still feel that the complexity of the method and its limited novelty do not warrant the somewhat minimal boost in performance as currently demonstrated in the paper. For instance, in light of the normalizing flows experiments (Figure 11), it appears SMAC has statistically significant performance benefits on only 1 (or maybe 2) of the 24 DM control suite environments. I do not find this to be a compelling argument in favor of using SMAC.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_fjCR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_fjCR"
+        ]
+    },
+    {
+        "id": "HmNOU0FefEJ",
+        "original": null,
+        "number": 2,
+        "cdate": 1666636546473,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666636546473,
+        "tmdate": 1670819751189,
+        "tddate": null,
+        "forum": "b0UksKFcTOL",
+        "replyto": "b0UksKFcTOL",
+        "invitation": "ICLR.cc/2023/Conference/Paper2259/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The paper proposes to use the latent variable policy for MaxEnt framework, which is testified to improve the sample efficiency and stability of RL. It uses some techniques to estimate the marginal entropy, as well as reducing the variances in the gradient. Experiments on DM control suite show the performance improvement of the proposed SMAC algorithm.\n",
+            "strength_and_weaknesses": "Strength: \n\nThe paper has good writing and clear delivery of the idea. Two techniques for solving the entropy estimation and variance reduction are effective. Experiments show performance improvement over previous algorithms almost consistently. Necessary ablation studies are conducted.\n\nWeakness:\n\nUnclear about Eq. (11). In Eq. (11), only the first sampling $s^{(0)}$ is used for sampling the action, while the other K $s$ are used for estimating the marginal entropy. Why is it? Why not use all $s$ for sampling action as well as estimating the entropy? Please explain in the paragraph.\n\nExplanations about notations. I\u2019m not clear about the upper scripts $(a), (b)$ in Eq.(12). Please explain this in the paragraph.\n\nMissing references and baselines. There is a related paper (Probabilistic mixture-of-experts for efficient deep reinforcement learning. Jie et al. 2021) which also adopts the Gaussian mixture model for policy function approximation. Also I think Dreamer-v2 should also serve as an important baseline method. The paper should compare the proposed method with these.\n\nThe variance reduction in Sec. 3.2.2 seems to be a computationally heavy one. Please compare the computational efficiency in the alation study about whether this variance reduction is applied or not.\n\nHow about the on-policy algorithms? The proposed SMAC algorithm seems to only be compared with off-policy algorithms like SAC and TD3. How about on-policy algorithms like PPO? Is SMAC possible to be applied on PPO with an on-policy update as well?\n\nIn sec 5.1, is this model-free setting? If so, please write it explicitly in the paragraph.\n\n\u201cReasonable number of particles\u201d. In Sec.5.1, the paper suggests to use a reasonable number of particles. What specific number is it, 8? What\u2019s the number of the particles in each experiment?\n\nPerformance improvement in most of the experiments over existing algorithms seems to be marginal. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper has good clarity, but some details about the algorithms need to be explained more. \n\nThe novelty of the proposed algorithm is not enough. The two main techniques in SMAC seem to be borrowed from previous literature, though may not in the RL papers. The factorized Gaussian distribution has been investigated a lot in previous research.\n",
+            "summary_of_the_review": "Overall, the paper is written well. But the novelty of the proposed algorithm is not high enough, and the experiments show marginally improved performance in most environments. Some important baselines are missed, and more experiments should be added to clarify the problems I asked in the Weakness section.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_cPcG"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_cPcG"
+        ]
+    },
+    {
+        "id": "SoxETlRu0R",
+        "original": null,
+        "number": 3,
+        "cdate": 1666675034831,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666675034831,
+        "tmdate": 1666675034831,
+        "tddate": null,
+        "forum": "b0UksKFcTOL",
+        "replyto": "b0UksKFcTOL",
+        "invitation": "ICLR.cc/2023/Conference/Paper2259/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper considers the problem of MaxEnt reinforcement learning, with the goal of increasing the expressiveness of the policy while still allowing for practical entropy maximization. The proposed method relies on latent variables to avoid complexities with using EBMs. \n\nThe challenge with directly using latent variables is that the entropy is difficult to estimate, therefore entropy maximization is difficult. Typically, we'd want to optimize latent variable models via variational approaches with the ELBO, but this gives a lower bound of likelihood, hence an upper bound of the entropy term and the maxent rl objective. Maximizing the upper bound of course leads to practical issues.\n\nInstead the paper proposes to use a technique in hierarchical inference (Sobolev & Vetrov 2019), which gives a lower bound estimate to the entropy term. The rough intuition is use multiple samples, but unlike IWAE, do so in a way that reuses samples, and this can be shown to flip the direction of the bound.\n\nWith this new estimator, the paper optimizes the maxent rl objective with variational methods on a latent variable model and shows improvements over SAC.\n",
+            "strength_and_weaknesses": "Strengths\nThe general idea makes sense, and the methodology is well explained. The technical contribution is not novel, but applying it to the RL setting appears to be novel.\n\nWeaknesses\nThe experiments don't seem to compare against energy based model and autoregressive model variants. The introduction says these \"complicate training procedures and are inefficient in practice\", but it seems important to provide experimental evidence.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The writing is clear, and the contribution is novel to the best of my knowledge. I would believe that the results are reproducible.\n",
+            "summary_of_the_review": "In summary the paper proposes a method for optimizing latent variable policies with the maxent RL objective, which is difficult to do with naive techniques.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_y62x"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper2259/Reviewer_y62x"
+        ]
+    }
+]

@@ -1,0 +1,158 @@
+[
+    {
+        "id": "vFcj85nkTp",
+        "original": null,
+        "number": 1,
+        "cdate": 1666167219772,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666167219772,
+        "tmdate": 1666167219772,
+        "tddate": null,
+        "forum": "s5NL0rQ31zJ",
+        "replyto": "s5NL0rQ31zJ",
+        "invitation": "ICLR.cc/2023/Conference/Paper4414/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors propose a new method to train spiking neural networks (SNNs) directly. The most efficient current method to do so is surrogate gradient (SG) learning where for the spike threshold the Heaviside step function is used in the forward pass, but a surrogate gradient (usually the derivative of a sigmoid function) is used in the backward pass instead of the true gradient, which causes \"gradient mismatch\". Here the authors propose that in the forward pass, one can alternate randomly between the Heaviside function and the antiderivative of the SG during training, while inference is always done with the Heaviside (otherwise it wouldn't be a SNN!). In terms of pros and cons:\n\nHeaviside:\nPros: it is the function that will be used during the inference\nCons: gradient mismatch\n\nAntiderivative of the SG:\nPros: no gradient mismatch\nCons: analog activations instead of spikes, which creates a discrepancy with inference.\n\nBy alternating between the two, the authors hope to take the best of both worlds, and they demonstrate that the idea seems to work in many experiments. \n\nThe authors also learn the width of the SG (alpha), but this has been done before.",
+            "strength_and_weaknesses": "STRENGTHS:\n\nAs far as I know, the alternating idea is new, and it seems to improve accuracy significantly at a marginal cost.\n\nWEAKNESSES:\n\nFig 3b is my favorite. We really see the advantage of alternating w.r.t. standard SG learning (p=1). Given that the accuracy boost is modest (~0.5%) I wonder if the authors could use error bars (with multiple seeds) to make sure that the boost is significant. Also, was this curve done with a trainable alpha? I would be curious to see if we still get a boost with a fixed alpha. Also, reporting the training accuracy would be useful (I suspect it decreases with p). Finally, the y-axis label is missing.\n\nIt's unclear what value was used for p in sections 5.1, 5.2, and 5.3.\n\nIt's unclear how the reset is done. Eq 1 shows that the potential goes to zero (hard reset) if s=1. However, with an analog s, say s=0.2, then the new potential is the previous one multiplied by gamma*0.8? This should be discussed.\n\nFang et al 2021 is cited, but it should appear in Tables 1 and 2.\n\nThe references are incomplete.\n* Eventprop (https://www.nature.com/articles/s41598-021-91786-z), which computes the exact gradients (then no gradient mismatch!) should be discussed\n* SEW ResNet (https://arxiv.org/abs/2102.04159) should be included in the tables.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Will the authors share their code?\n\nEq 2: shows a bias term that is not described in the text.\n\nEq 8: don't use the same variable name \"x\" inside and outside the integral\n\np4: \"In this way, there is no mismatching problem, but at the same time lacks the information from spikes.\" Rephrase.\n\np5: \"the gradient mismatching will gradually diminish with adaptive alpha\"\nThis is confusing. I think mismatch decreases if alpha->0, not if alpha is learnable.\n\nI suggest adding the number of trainable parameters of each model in Table 1, 2, 3 and 6.\n\nSome typos:\np7: \"Perforamnce\"\np8: \"Comparision\"\np9: \"CIAFR\"\n",
+            "summary_of_the_review": "A new and promising method for direct training of spiking neural networks.\n",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_YpMg"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_YpMg"
+        ]
+    },
+    {
+        "id": "OU99tYN2jhb",
+        "original": null,
+        "number": 2,
+        "cdate": 1666372000242,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666372000242,
+        "tmdate": 1669300819804,
+        "tddate": null,
+        "forum": "s5NL0rQ31zJ",
+        "replyto": "s5NL0rQ31zJ",
+        "invitation": "ICLR.cc/2023/Conference/Paper4414/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The authors describe a training method for SNNs where the binary activity is mixed with the smoothed sigmoid-like activation with a stochastic mask. The smoothed activation corresponds to the true network for which the surrogate gradient of the SNN is exact. Throughout training, the mask is released to go from a purely smoothed function at the first epochs towards a full SNN at the end. Some theoretical analysis justifies this training approach and the performance is studied empirically on many tasks.",
+            "strength_and_weaknesses": "The performance seems to improve with the suggested method but as far as I can see it is not ground breaking:\n\n1) In table 4 and table 5, I believe that we see most accurately the benefits of the training method. The fact that ASGL is robust with high width is rather trivial, since the alpha is further optimize in this case. But I find more informative that the ASGL performs 1.5% better than SG with the optimal width (alpha=1) in Table 4 and identically for image reconstruction in Table 5. This indicates that ASGL gives a meager improvement over a tuned SG which is not bad but not extremely impressive considering the additional hyperparameters that are being used.\n\nIn the other method, the method is compared with other models and seem to out perform all of them, but I understand that this probably because the authors used very strong baselines with other tricks which are independent of the ASGL method described prominently in the publication.\n\n2) The Figure 3 seems interesting to explain what is happening during training. I find the Figure 3 a) very surprising and interesting and there is perhaps something deep to understand behind that. I read the hypothetical explanation of the author for this, interesting point of view, maybe it's true. I find the other panels either trivial or hard to understand because there is no caption to explain what it means (I tried but I could not guess what is saying panel (e)).\n\nThe theory is interesting and insightful but it lacks rigor. I believe that it should not be described as a \"Theorem\". A theorem traditionally invites normally for a rigorous mathematical proof and rather as a mathematical \"analysis\" which has to be taken with some grain of salt considering the approximations which are made in the appendix. These are my main issues with this proof:\n\n4) I think a factor 1/L is missing in equation (22) in Appendix\n\n5) The Taylor expansion is performed although the Delta has no reason to be small apriori as far as I can see.\n\n6) The looks more like an approximate mathematical analysis which is perhaps insightful but the equality prominently described as a theorem in the main text is not a true equality. In my opinion, it is not ok to call that a theorem although it is insightful like so it should be presented differently in the main text.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clear and understandable and reasonably well written. The results are certainly reproducible given that it does not seem to vary so much from the SG baseline. ",
+            "summary_of_the_review": "Improving surrogate gradient training is very important both for the SNN community and on the broader topic of quantized networks. The hypothesis is reasonable, but the performance does no look very good when looking carefully (see my comment above). \n\nGiven that there is no reason for this method to be specific to SNN and not to apply on binary networks, I think a good paper on the topic should also cover the background literature on straight through estimators and quantized networks which gave birth to surrogate gradient methods and have now gone deeper than SNN research in the theoretical side.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_5XQe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_5XQe"
+        ]
+    },
+    {
+        "id": "xl2vneOiPE",
+        "original": null,
+        "number": 3,
+        "cdate": 1666598557982,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666598557982,
+        "tmdate": 1669194168149,
+        "tddate": null,
+        "forum": "s5NL0rQ31zJ",
+        "replyto": "s5NL0rQ31zJ",
+        "invitation": "ICLR.cc/2023/Conference/Paper4414/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The authors propose a method to modify Whetstone addressing the forward-backward mismatch issue (arising from the use of surrogate gradient functions) such that the information conveyed by spikes probabilistically contributes to the forward propagation of information. This method is referred to as adaptive smoothing gradient learning (ASGL). ASGL is implemented by a simple modification of the previous computational graph so that the additional computational cost is marginal. The performance of ASGL outperforms the previous algorithms on various datasets, CIFAR-10/100, DVS-CIFAR10, SHD.",
+            "strength_and_weaknesses": "Strength:\n\nThe proposed method is simple and in need of marginally additional computational cost. ASGL achieves the SOTA accuracy on static datasets (CIFAR-10/100) and event datasets (DVS-CIFAR10 and SHD), which is somewhat arguable though.\n\nWeaknesses:\n\n1. The neural net for ASGL is not a spiking neural net given that the operation is not based on asynchronous events but based on real-valued outputs calculated at every timestep. Therefore, the performance comparison of ASGL with other SNN learning algorithms based on 1b spike event packets is NOT fair at all. The neural net for ASGL is rather close to DNN given that real-valued outputs forward propagate through all layers at every timestep. Further, this model is not suitable for neuromorphic hardware based on asynchronous binary event propagation. Unlike the authors\u2019 claim that ASGL simultaneously addresses the advantages of whetstone and SNN, the model and methods rather address their disadvantages. \n\n2. For a fair comparison, ASGL should be compared with whetstone and other learning algorithms for DNNs rather than SNNs. If exist, the advantages of ASGL over DNNs should be addressed, e.g., computational/space complexities, accuracy gain, and so forth.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: the paper is well organized, and the presentation is clear.\n\nReproducibility: the authors' providing the code is appreciated.\n\nNovelty: ASGL is a modification of whetstone regarding the probabilistic address of spike information. The idea itself is novel.\n\nQuality: Given the issues addressed in the above section, the significance of the proposed work is marginal. ",
+            "summary_of_the_review": "The neural net considered in this work is not a spiking neural net, but it probabilistically depends on spike information as well. The activation is not in a form of binary spike, instead real-valued data. Additionally, the activation from each node is evaluated and conveyed to the postsynaptic neurons at every timestep, so that it should not be referred to as event. Therefore, the comparison of ASGL with other SNN algorithms is not fair at all. Particularly, the model is not suitable for any neuromorphic hardware, which considerably undermines the significance of the present work. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_tzdq"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_tzdq"
+        ]
+    },
+    {
+        "id": "7mPmveIqNTH",
+        "original": null,
+        "number": 4,
+        "cdate": 1666667127716,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666667127716,
+        "tmdate": 1669385236755,
+        "tddate": null,
+        "forum": "s5NL0rQ31zJ",
+        "replyto": "s5NL0rQ31zJ",
+        "invitation": "ICLR.cc/2023/Conference/Paper4414/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper analyzes the gradient mismatching problem in direct training neural networks and proposes a novel method to solve this problem by fusing the learnable relaxation degree into the network with random spike noise and get good results on both static and events datasets.",
+            "strength_and_weaknesses": "Strengths:\n1.\tIt is a novel and simple approach in the field of training spiking neural networks.\n2.\tThe presentation of this paper is generally good and easy to read.\n3.\tThe method proposed in this paper has a good performance.\n\nWeaknesses:\n1.\t1. The symbols in Section 4.3 are not very clearly explained.\n2.\tThis paper only experiments on the very small time steps (e.g.1\u30012) and lack of some experiments on slightly larger time steps (e.g. 4\u30016) to make better comparisons with other methods. I think it is necessary to analyze the impact of the time step on the method proposed in this paper.\n3.\tLack of experimental results on ImageNet to verify the method.\n\nQuestions:\n1.\tFig. 3 e. Since the preactivation values of two networks are the same membrane potentials, their output cosine similarity will be very high. Why not directly illustrate the results of the latter loss term of Eqn 13?\n2.     Is there any use of recurrent connections in the experiments in this paper? Apart from appendix A.5, I do not see the recurrent connections.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall this paper is well written and easy to follow. The originality exists but is not sufficient enough given that the problem itself was identified in another paper and not extended into a more general style in the current paper. The view could be broadened. ",
+            "summary_of_the_review": "Overall, this is an interesting paper that adds a new paragraph to improve the training of spiking neural network. The originality exists but is not sufficient enough given that the problem itself was identified in another paper and not extended into a more general style in the current paper. Also, the performance examination needs to be improved to support its validity on large dataset and compatibility with other existing pipelines like the augmentation. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_AKTD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper4414/Reviewer_AKTD"
+        ]
+    }
+]

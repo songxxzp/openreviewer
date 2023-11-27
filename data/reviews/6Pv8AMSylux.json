@@ -1,0 +1,158 @@
+[
+    {
+        "id": "TLD2SJhyObr",
+        "original": null,
+        "number": 1,
+        "cdate": 1666507204305,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666507204305,
+        "tmdate": 1666826362516,
+        "tddate": null,
+        "forum": "6Pv8AMSylux",
+        "replyto": "6Pv8AMSylux",
+        "invitation": "ICLR.cc/2023/Conference/Paper396/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "This paper introduced an activation compressed training (ACT) framework, called DIVISION. Specifically, DIVISION is inspired by the insight that DNN backward propagation mainly utilizes the low-frequency component (LFC) of the activation maps, while the majority of memory is for the storage of the high-frequency component (HFC) during the training. In this case, the proposed method stores two memory-efficient copies of activations instead of the original activations, which are average-pooled low-frequency activations and low-bit quantized high-frequency signals. At the time of backpropagation, DIVISION recovers the original size of activations by upsampling low-frequency signals and dequantizing high-frequency signals. Extensive experiments have shown the proposed method works and achieves faster training throughput than related baselines\n",
+            "strength_and_weaknesses": "### Strength\n\n1. This paper has a clear insight and motivation. In the experiments, the authors have shown that low-frequency components are more important for gradient computation than high-frequency components. To this end, the proposed DIVISION is well-motivated. The idea is also novel in the literature.\n2. The ablation studies are comprehensive. For example, Section 5.5 has clearly shown the effect of different hyperparameters in the proposed model.\n3. This paper is well written and easy to follow.\n\n### Weakness\n\nOverall, I appreciate the idea and novelty of this paper. However, the experiments and evaluations in this paper need major revision. Some results and observations are quite unusual. For example,\n\n1. I have experimented with ActNN (using official code) and Checkpointing (on both Vision Transformers and CNNs) to check the correctness of the experiment. In my observation, checkpointing is a strong baseline which should be faster than many ACT frameworks. However, the large gap between ActNN and Checkpointing in Figure 6 (a) is confusing. Moreover, according to the provided experimental settings (Figure 8), I compared checkpointing with ActNN (L3) based on ResNet-50 on my local RTX 3090 machine.  With a batch size of 64 and 224 $\\times$ 224 images, the results show that checkpointing is faster (310 images/s v.s. 280 images/s) than ActNN under a similar amount of memory-saving (3.2GB v.s. 3.4GB). Therefore, I keep skeptical about Figures 6 (a) and (b).\n2. In Figure 6 (c), fixed quantization achieves much worse performance, which is very unnatural. Fixed-bit quantization in ActNN performs favorably on ResNet. For example, L2 of ActNN quantizes activation into fixed 4 bits, but it still performs well. The authors need to give a detailed explanation here.\n3. In Figure 7 (b), it is counter-intuitive that using a batch size of 128 significantly slows down the throughput compared with using a batch size of 256. This figure also needs to be explained further.\n4. Despite the ablation studies, the main experiment in Table 1 shows that the memory-saving gain compared with ActNN is very minor.\n5. Apart from CNNs, how is the performance of DIVISION on Vision Transformers? And how do you compare with GACT [A] and Mesa [B]?\n\n\n### References\n[A] Liu, Xiaoxuan, et al. \"GACT: Activation compressed training for generic network architectures.\", *International Conference on Machine Learning (ICML) 2022*.\n\n[B] Pan, Zizheng, et al. \"Mesa: A Memory-saving Training Framework for Transformers.\" *arXiv preprint arXiv:2111.11124* (2021).\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The proposed method is well-motivated and has a clear insight. However, the experiments and evaluations are not convincing, especially the comparisons with baselines. The improvement over baseline is also minor. Overall, this paper needs significant revision in order to make the experimental results more clear.",
+            "summary_of_the_review": "Some experimental results are clearly not convincing, which leads to rejection. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "1: The contributions are neither significant nor novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "3: reject, not good enough"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_Eerz"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_Eerz"
+        ]
+    },
+    {
+        "id": "02YiRAMID1u",
+        "original": null,
+        "number": 2,
+        "cdate": 1666575887302,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666575887302,
+        "tmdate": 1670373365539,
+        "tddate": null,
+        "forum": "6Pv8AMSylux",
+        "replyto": "6Pv8AMSylux",
+        "invitation": "ICLR.cc/2023/Conference/Paper396/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a method for activation compressed training. The proposed method, DIVISION, takes a frequency-domain view of the activation map. They pointed out that high-frequency features are more robust to quantization than the low-frequency ones. To utilize this observation, the authors extracts low-frequency features (approximately) by average pooling, and only quantizes the high-frequency residual. They present a theorem to show only perseving low-frequency features yields tighter gradient error bound that only perserving high-frequency ones. The experiments are done for ResNets and DenseNets. Compared to the previous approach ActNN, the proposed method can achieve better accuracy and higher throughput due to its simplicity (does not need to estimate the per-tensor precision).",
+            "strength_and_weaknesses": "Strength:\n- Adopting frequency-domain features for ACT is somewhat novel.\n- The proposed approach is simple and effective.\n- The presentation is clear.\n\nWeaknesses:\n- The proposed approach might be limited to convolutional networks, or at least assuming that the feature map has the shape [N, C, H, W].\n\nThe authors can argue that the proposed method can be generalized to 1D or 3D problems with 1D/3D pooling. But as the feature statistics can differ across problems with different dimensions, whether the proposed approach is also effective for 1D/3D problems is still unclear. Moreover, I am not sure if the proposed approach can be applied to MLPs (just pure MLP, not MLP-Mixer, which are in fact 1x1 convolution), as MLPs are permutation-invariant.\n\nTo make the paper stronger, the authors might want to test on more transformer architectures, including the vision ones (Swin, etc.) and the text ones (such as BERT).\n\n- The significance might be still somewhat limited. There are some improvements over ActNN, like the accuracy of DenseNet-161 and the throughput. But I am not sure if the improvement is significant enough for an ICLR publication. The authors might also want to compare with more recent checkpointing approaches, such as Mesa and the hand-crafted checkpointing strategy for transformers (like those in Megatron-LM and DeepSpeed).\n\nOther questions:\n- Does the proof of Theorem 1 has anything to do with DCT or the frequency domain? I suspect that simply showing that |H^L - H| < |H^H - H| might be also sufficient to prove Theorem 1?\n\n- Should the window size be different for feature maps of different resolution? For example, the final 8x8 feature maps might require a smaller window size.",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: the paper is clearly written, with a detailed supplementary material.\nQuality: the technic sounds, though the contribution might be somewhat limited.\nNovelty: applying DCT for ACT is somewhat novel. However, as DCT is also applied frequently for computer vision previously (such as JPEG-ACT). The novelty might not be too much.\nReproducibility: the reproducibility is good.",
+            "summary_of_the_review": "The paper does make improvements to ACT for deep learning. The main weaknesses are the applicable range of the proposed method and the significance. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_PUeD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_PUeD"
+        ]
+    },
+    {
+        "id": "dc4esgwMpg",
+        "original": null,
+        "number": 3,
+        "cdate": 1666652579876,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666652579876,
+        "tmdate": 1666652579876,
+        "tddate": null,
+        "forum": "6Pv8AMSylux",
+        "replyto": "6Pv8AMSylux",
+        "invitation": "ICLR.cc/2023/Conference/Paper396/-/Official_Review",
+        "content": {
+            "confidence": "5: You are absolutely certain about your assessment. You are very familiar with the related work and checked the math/other details carefully.",
+            "summary_of_the_paper": "The presented work focuses on improving the efficiency of the training process by reducing memory cached during the backward propagation. Activation maps are split into low and high frequency components based on the observation that they don't affect the accuracy of the model equally. High precision copy of low frequency components is preserved, while the high frequency components are compressed, achieving over 10x compression of activation maps. \n",
+            "strength_and_weaknesses": "The proposed method is novel and interesting. The work is well structured. The problem is clearly introduced along with other existing methods, comparing their limitations and proposing ideas for improvements.  The stated hypothesis is analyzed from the experimental and theoretical perspectives.\n\nThe main weakness of the work is a limited number of datasets and topologies the method was evaluated with. It would be interesting to show that division into low and high frequency components can be applied to other problems as well. Specifically, it would be important to evaluate other types of layers that operate at the depth dimension, i.e., 1x1 convolutions. \n\nAnother limitation is the need selection/finding of other hyper parameters, i.e., B and Q. Some additional experiments showing that either they can be reused for other applications or quickly selected would be beneficial. Otherwise, the gain in training efficiency might not be that significant, if additional trainings have to be performed to find the best configurations. \n\nSome other ideas for improvement of the method include the use of bfloat16 instead of float16 for storing LFC and the use of per tensor symmetric quantization. ",
+            "clarity,_quality,_novelty_and_reproducibility": "The code of the proposed method is available, what helps with reproducibility of the work. The work is clear and well explained. Overall the paper is of a good quality and presents a novel approach to the activation compressed training. ",
+            "summary_of_the_review": "The work is interesting and presented claims are clear and supported by performed experiments. Some additional experiments would help to support it even more and show that it can be used in a wide range of applications, instead only for a small subset of solutions. Overall, the work is good in my opinion. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_xXpe"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_xXpe"
+        ]
+    },
+    {
+        "id": "bYdQjOXgZl",
+        "original": null,
+        "number": 4,
+        "cdate": 1666662174827,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666662174827,
+        "tmdate": 1666662174827,
+        "tddate": null,
+        "forum": "6Pv8AMSylux",
+        "replyto": "6Pv8AMSylux",
+        "invitation": "ICLR.cc/2023/Conference/Paper396/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors of the paper observe that the high-frequency component (HFC) of activation maps possesses the majority of memory cost for training but the model performance can be preserved even in the absence of the HFC component of activation maps. Based on the observation, the paper proposes a new activation compressed training method called Dual Activation Precision (DIVISION) that keep the low-frequency component (LFC) of activation maps in high-precision while quantizing the HFC of activation maps into low-bit.",
+            "strength_and_weaknesses": "- Strengths\n\n1. The paper introduce the concept of frequency domain to compress activation maps.\n\n2. The authors theoretically and empirically show that the LFC component of activation maps are much more critical to maintain the model performance than the HFC component of them.\n\n3. DIVISION consistently compresses activation maps with about 10x compression rate, while maintaining comparable model performance to normal training.\n\n\n\n- Weaknesses\n\n1. It is wondered whether $\\lambda_l^{L} > \\lambda_l^{H}$ in Theorem 1 can be guaranteed even when a different architecture (e.g., DenseNet-121) is utilized or the proportion of $W$ to $N$ is small (e.g., $W/N = 0.1$)\n\n2. Even if $\\lambda_l^{L} > \\lambda_l^{H}$ in Theorem 1 can be guaranteed for different architectures and the small proportion of  $W$ to $N$, it is doubtful if Theorem 1 is still valid when DIVISION is exploited instead of DCT. In other words, when applying the average pooling rather than the inverse DCT, does Theorem 1 still hold so that $\\text{GEB}_l^{L} < \\text{GEB}l^{H}$? If not, the theoretical analysis might seem to be ineffective\n\n3. When quantizing the HFC component of activation maps, the stochastic rounding is employed. Then, to obtain $V_l^{H}$ in Eq. (9), it is required to draw size($H_{l-1}$) samples, which seems to impose a significant burden on training. In addition, as $V_l^{H}$ varies depending on sampling, the performance of DIVISION might be likely to be different. Is there any performance degradation when using rounding instead of stochastic rounding?",
+            "clarity,_quality,_novelty_and_reproducibility": "\nThe paper is well structured and the main idea is clearly described.",
+            "summary_of_the_review": "It is questionable whether Section 3 has something to do with Section 4 as mentioned in Weakness 1 and 2. I would encourage the authors to revise the paper by addressing aforementioned weaknesses.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_R65G"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper396/Reviewer_R65G"
+        ]
+    }
+]

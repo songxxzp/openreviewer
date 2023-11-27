@@ -1,0 +1,159 @@
+[
+    {
+        "id": "3hNauYyjBs",
+        "original": null,
+        "number": 1,
+        "cdate": 1665962429141,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1665962429141,
+        "tmdate": 1668890144637,
+        "tddate": null,
+        "forum": "WH1yCa0TbB",
+        "replyto": "WH1yCa0TbB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3918/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a new technique for learning generative diffusion-based models of data in constrained (discrete / bounded / mixed) domains. Interestingly, the diffusion process occurs in continuous time and space, but is \"pinned\" to always generate outputs in a potentially discrete constrained set; this pinning is accomplished by incorporating Doob's h-transform into the learned process.\n\nThe paper starts with a clearly written introduction to x-bridges (constrained to points), the h-transform, and $\\Omega$-bridges (constrained to sets), and then introduces a parameterized family of such bridges, which can be used as a generative model. Next, it describes an approach for learning these bridges by minimizing the KL divergence between the parameterized family and a ground-truth mixture of point bridges, which turns out to be a straightforward score-matching objective.\n\nFinally, the authors present results on a wide variety of constrained domains introduced by previous works, including mixed-categorical-continuous tabular data, point clouds, categorical segmentation maps, and discretized images. Across all domains and metrics, their approach achieves improved results.",
+            "strength_and_weaknesses": "Strengths:\n\n- The paper is very clearly written, and provides sufficient background to understand the approach for readers who are unfamiliar with bridge processes and Doob's h-transform.\n- The technique itself is very elegant and principled, and appears to be both simple to implement and widely applicable.\n- The authors provide both a general, high-level framework (for arbitrary noise processes and constraint sets) and a concrete realization of it (using simple Brownian motion and constraints consisting of discrete sets, bounded intervals, and product spaces) which could be readily implemented for new tasks.\n- Empirically, the results are very strong across a wide range of existing tasks, outperforming many individual models designed for specific tasks.\n\nWeaknesses:\n\n- **(addressed by new revision)** It's not obvious to me that the learned process $\\mathbb{P}^{\\theta}$ can exactly capture the fixed posterior $\\mathbb{Q}^{\\Pi^*}$ used for training, and thus that minimizing the loss in (13) is sufficient in theory to obtain a correct terminal distribution. (But perhaps I am not understanding something. Empirically, at least, it seems to be able to do this in practice.)\n- The authors could discuss connections to prior work in a bit more depth.\n- Since the trained model and inference process use discrete step sizes in practice, the learned model doesn't always generate values within the constraint set, so some form of rounding is still necessary. (But hopefully the amount of rounding required is quite small!)",
+            "clarity,_quality,_novelty_and_reproducibility": "Overall, I enjoyed reading this paper. The authors did a great job of motivating their approach, discussing relevant background, and describing the technique.\n\nThe technique itself and the experiments both appear to be high quality; the framework is principled and general while also turning into a fairly straightforward implementation. Sufficient details appear to be provided to reproduce the work.\n\nThe main thing I did not understand was whether the parameterization of $\\mathbb{P}^{\\theta}$ in (10) is indeed sufficiently rich to exactly achieve $\\mathbb{P}^{\\theta} = \\mathbb{Q}^{\\Pi^*}$. In particular, $\\mathbb{P}^{\\theta}$ appears to be Markov by design, whereas $\\mathbb{Q}^{\\Pi^*}$ is a mixture distribution and seems potentially non-Markov. Additionally (12) explicitly allows $\\mathbb{Q}^{x}$ to be non-Markov. As such, it's not obvious to me that the model will always converge toward the correct solution.\n\nMy main questions thus are:\n1. Is it the case that $\\mathbb{Q}^{\\Pi^*}$ is actually Markov for the suggested diffusion models, e.g. for those used in Algorithm 1?\n2. When $\\mathbb{Q}^{\\Pi^*}$ is not Markov, does minimizing (13) still produce processes whose marginals are the same, e.g. that $\\mathbb{P}^\\theta_t = \\mathbb{Q}^{\\Pi^*}_t$ for all $t$ (and in particular for $t = T$)?\n\nIf 2 is true, that would be a very strong reason to prefer this training strategy in its full generality. If 1 is true, that would also be good motivation for the specific algorithm used, although it would be important to discuss the conditions under which it works (perhaps it has to do with $z_0$ being chosen as a single point rather than a distribution?). If neither are true, it's not obvious to me why it makes sense to minimize (13), other than \"because it works well empirically\". In any case I think this is an important discussion to include in the main paper.\n\nThere's some discussion of Markov-ness in the appendix, and Proposition A.3 seems to imply that the answer to my question 1 is yes, but I'm not sure. I was also confused by the claim \"On the other hand, when $v_0 = 0$, we have that $Q^x = Q(\\cdot|Z_T = x)$ ... and hence $\\mathbb{Q}^{\\Pi^*}$ is Markov following Proposition A.2.\"; shouldn't this be $Q^x = Q(\\cdot|Z_0 = 0, Z_T = x)$, in which case Proposition A.2 wouldn't apply?\n\n(A related but somewhat tangential question: Does minimizing (13) over the space of all functions always produce an $f^\\theta$ that satisfies the condition in Proposition 2.3?)\n\nIn terms of novelty, using Doob's h-transform to enforce constraints as part of the parameterization of $\\mathbb{P}^{\\theta}$ seems quite novel and is a significant contribution. On the other hand, the definition of $\\mathbb{Q}^{\\Pi^*}$ seems to be essentially the same as the corruption process discussed by Peluchetti (2021) and Wu et al. (2022), since the constraint set doesn't play a role there; the authors do acknowledge this but I feel that the connection could be discussed a bit more. Two other pieces of related work which might also be worth including:\n- [Li et al. (2022)](https://arxiv.org/abs/2205.14217) perform continuous-space diffusion for text using a rounding-based method\n- [Bortoli et al. (2021)](https://arxiv.org/abs/2106.01357v1) give another diffusion process based on Schrodinger bridges, which seem related\n\nA few other minor comments:\n- Citations are oddly formatted at the end of section 2 in \"referred to (e.g. Oksendal, 2013 ...) for more background\"; perhaps this should be `\\citet` instead of `\\citep`?\n- I was a bit confused by equation (6), since $z$ is used on the RHS but only $dz$ is present on the LHS. Is this because $dz$ is assumed so small that every $z$ in it has the same value of $q_{T|0}(x|z)$? (Perhaps this could be clarified in a footnote, and/or $z \\in dz$ could be included somewhere in the equation?)\n- In the equation between (8) and (9), should $Z_T = dx$ be $Z_T \\in dx$?\n- In section 2.3 at the end of page 4: I'm not sure it's true that most neural networks have bounded outputs; this seems very dependent on the architecture, although it would be very easy to enforce in practice.\n- What does \"in a way that is made precise in sequel\" refer to? Is it just the second half of the sentence (in which case this seems unnecessary) or is it supposed to refer to something else?",
+            "summary_of_the_review": "Overall this is a good paper, which clearly describes relevant background, introduces a novel and elegant technique, and shows that it does very well across a large number of tasks of interest to the community. As such, I think this paper should be accepted. I think this paper could be even stronger with a discussion of the conditions under which minimizing the proposed loss will guarantee that the learned model faithfully represents the data distribution given enough capacity (or, even better, a proof that this is always the case).\n\n*Updated review:* The authors have added a significantly expanded derivation in the appendix, which does indeed show that minimizing the proposed objective under the proposed parameterization exactly recovers the data distribution (and is furthermore a Markovization of the constrained diffusion process). Since this method appears to be both theoretically principled and empirically very strong, I have increased my score from 8 to 10. (However, most of the theoretical justification is in the appendix, and might be easy for readers to miss; I hope the authors can emphasize their theoretical contributions more in the final revision if this work is accepted.)",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "10: strong accept, should be highlighted at the conference"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_pq3t"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_pq3t"
+        ]
+    },
+    {
+        "id": "-usRaH4jts",
+        "original": null,
+        "number": 2,
+        "cdate": 1666473209265,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666473209265,
+        "tmdate": 1669683824406,
+        "tddate": null,
+        "forum": "WH1yCa0TbB",
+        "replyto": "WH1yCa0TbB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3918/-/Official_Review",
+        "content": {
+            "confidence": "2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors proposed to leverage Doob's h-transform to learn diffusion models within a constraint domain, including product spaces of any type, such as discrete, categorical, and their mix. Various experiments are conducted to demonstrate the interesting applications of such an algorithm.",
+            "strength_and_weaknesses": "**Pros:**\n\n1. The use of Doob's h-transform to steer the particles toward the desired point is an interesting idea and seems promising.\n\n\n**Cons:**\n\nSeveral claims may need to be justified:\n\n1. My **biggest concern** is if Doob's h transform can be extended to model the data distribution: since Doob's h transform is often used to steer the solution to some point at the terminal time, while the authors seem to naturally extend that to distributions. I suspect that this may **not be a trivial extension**. Any reference supporting similar ideas would be greatly appreciated.\n\nMinor: \n\n1. The use of the path measure $\\mathbb{Q}$ is slightly confusing. $d\\mathbb{Q}_t/dx$ is often referred to as a distribution instead of $\\mathbb{Q}_t$.\n\n2. I don't understand what $Z_T\\in dx$ means, it seems weird. \n\nOther minor issues:\n3. The figures and table in the appendix should use a better format. (larger font / y axis)",
+            "clarity,_quality,_novelty_and_reproducibility": "\n**Clarity**\n1. I am not convinced why Doob's h transform can be extended from point to distribution;\n2. are we using two networks or one network? it seems that $f^{\\theta}$ is one network, however, in section 3, the intractable $\\mathbb{P}^{\\theta, x}$ (due to the presence of neural force field; later replaced by $\\mathbb{Q}^x$) also seems to be approximated somehow. It seems to me that $\\eta^x$ alone is not trivial to estimate, not to mention about $\\eta^{\\Omega}$ which includes all possible data points $x$.\n",
+            "summary_of_the_review": "I like the idea of Doob's h transform in studying diffusion models in a constrained domain, however, a few fundamental claims seem to be quite rushed and not fully verified. There are quite a few weird mathematical notations with kind of ambitious claims. I would suggest the authors elaborate more on the methodology part and why Doob's h transform extends from point to distribution.\n\n\n========= post-review ==============\n\nThe variational gap should not be a severe issue due to the novelty in the methodologies to extend score matching with other (e.g. discrete) state spaces. ",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "details_of_ethics_concerns": "NA",
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_WZ2o"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_WZ2o"
+        ]
+    },
+    {
+        "id": "HQ8nzFFosb7",
+        "original": null,
+        "number": 3,
+        "cdate": 1666548061077,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666548061077,
+        "tmdate": 1669231439818,
+        "tddate": null,
+        "forum": "WH1yCa0TbB",
+        "replyto": "WH1yCa0TbB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3918/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a method to learn diffusion models which is forced to converge to a specified set of points. It does this by using Doob's h-transform, a classical tool in stochastic calculus. Experimental results show a general improvement when modeling data that has some sort of discrete structure (e.g. image pixel values).",
+            "strength_and_weaknesses": "Strengths\n-----------\n* The method is theoretically-principled (building off of known results in the stoch analysis literature). In addition, it is reasonably clean (for example avoiding simulating an SDE as is usual for diffusion models).\n* The empirical results are very convincing. In particular, there is extensive evaluation on many different datasets, including some applications of discrete diffusion which are novel.\n* The idea seems impactful. In particular, there seems to be a lot of work on learning diffusion models which generate discrete structured data.\n\nWeaknesses\n---------------\n* The proposed claim about diffusion processes that end on general compact spaces is not really supported. In particular, note that the proposed methodology would require an intractable integral over the whole domain. This is supported by the fact that experiments don't showcase this, even though such examples exist in the literature [1]. I would remove this claim especially in light of existing literature for diffusion models on manifolds.\n* There seems to be several technical limitations to the proposed approach:\n\n1) Since the gradient/eta term goes to infinity for $x \\notin \\Omega$,  there should be some numerical difficulties when training and sampling. In particular, since $f$ is constructed to be bounded, any small amount of numerical error should cause significant problems. Furthermore, for sampling, I imagine that really small step size must be used (or it should be annealed as $t \\to T$).\n\n2) Prop 2.3 is presented as a simple requirement that can be easily overcome (by making the neural network bounded). However, this only works when the activations are bounded (assuming an MLP like structure) and are not something like ReLU. Furthermore, while it is true that we still retain universal approximation, how does this work with the numerical blowup of the gradient/eta term (as described in 1)? In particular, does this significantly hamper training?\n\n3) The evaluation of the gradient/eta term requires a discrete summation over all points in the domain. This seems like it would very computational expensive (akin to the computational blowup of Gaussian Mixture Models). For experiments in this paper, this amounts to evaluating a 256^{32 x 32 x 3} GMM (at least for CIFAR). I don't believe that the paper touches upon this, and I also don't think naive techniques like MC sampling would work during training/sampling (due to pole-nature of the sampled points).\n\n4) The paper does not present a way to calculate exact log-likelihoods. This may be difficult since we are projecting from a continuous space to a discrete space, but this still represents a significant limitation when compared to vanilla SDE-diffusion models which normally have this.\n\n* The (Key et al. 2022) paper that is mentioned seems very similar, and the paper should devote more time and space to explain the differences. (It is technically concurrent work since it appeared in arxiv less than a month before ICLR submissions).\n* Some of the metrics used for evaluating the datasets are quite weak. For example, the experiments in 4.1 train another ML model to fit the generated datapoints, which seems like a very difficult comparison to make since there are so many hyperparameters to tune.\n\n[1] https://arxiv.org/abs/2202.02763",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity\n-------\nI found the paper to be reasonably clear except for (notably) the exposition. In particular, the exposition, while trying to remain faithful perhaps to the field of stoch analysis, greatly sacrifices clarity for generality. I would suggest the authors look into trimming this section into a more digestible form, perhaps moving general constructions to the appendix. There are also some minor typos that should be cleaned up (e.g. \"an simpler\" in page 1).\n\nQuality\n--------\nThe overall quality of the paper is reasonably high, as the methodology + experimental sections are reasonably extensive, and the idea is rather clean.\n\nNovelty\n---------\nThe paper is reasonably novel (introduces a new method based on existing literature in stoch analysis for an existing tasks). However, the comparison with concurrent work (Key et al. 2022 in the paper) should be extended with more details.\n\nReproducibility\n-----------------\nThe reproducibility is quite poor. No code is included (crucial for some experiments), and the appendix doesn't have key architectural details that are nontrivial (e.g. which activations are used and do they make the neural network bounded as per requirement). Additionally, the training scripts for the ML methods used in Sec 4.1 need to be included as well (since accuracy of these models is a highly brittle metric).",
+            "summary_of_the_review": "Overall, I lean to accept the paper as the method is relatively nice and the results are very convincing. Importantly, I found there to be some problems in the methodological setup, but this is to be expected due to the nature of the problem (continuous to discrete). My rating is conditioned on the authors responding to the comments above and updating the manuscript to reflect the limitations.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_bJKz"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_bJKz"
+        ]
+    },
+    {
+        "id": "9IeM_AanKG",
+        "original": null,
+        "number": 4,
+        "cdate": 1667017146156,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1667017146156,
+        "tmdate": 1670856581156,
+        "tddate": null,
+        "forum": "WH1yCa0TbB",
+        "replyto": "WH1yCa0TbB",
+        "invitation": "ICLR.cc/2023/Conference/Paper3918/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "The authors propose a method of learning diffusion models on constrained domains. Specifically, the propose to add a term composed of the gradient of a gaussian mixture model with bandwidth $T-t$ to encourage diffusion towards a domain embedded in Euclidean space. This is tested in a variety of domains against relevant models. ",
+            "strength_and_weaknesses": "Strengths:\n\n- A conceptually simple framework for enforcing discrete generation that is theoretically sound and works well experimentally\n- Comprehensive experiments on a number of domains including new domains, tabular data with both discrete and continuous data, and standard domains (discrete Cityscapes and CIFAR10).\n\nWeaknesses:\n\n- The GMM framework means that the current implementation is efficiently computable on discrete domains or domains that can be efficiently integrated over.\n- No mention of compute times. From my understanding generating CIFAR10 images requires a distance computation to ~2^17 points each of the 1000 diffusion steps? This seems like it would be quite slow for large domains.\n- For the Cityscapes and cifar10 comparisons, the parameters used are slightly different than those used in previous work. While these discrepancies are small, the performance improvements are also rather small. Since the numbers are taken from the prior papers, it would be useful to use the same setup as the prior papers for direct comparison of the methods.\n- The limitations of this work are not discussed in the limitations section.",
+            "clarity,_quality,_novelty_and_reproducibility": "I found the work quite clear and including useful theoretical presentation and useful experiments. There are a few parameters that are unclear, it would be helpful to be a bit more specific on parameter settings given these differ from the relevant comparisons a bit, currently it is difficult to judge how large these differences are.\n\nSmall things:\n\nan \u2014> a bottom of page 1\n\nIt would be useful to note the noise decay schedule used in prior work for a direct comparison.",
+            "summary_of_the_review": "I found this paper an enjoyable read. I would be curious as to the extra time it takes to evaluate for some of the larger categorical spaces. I would also suggest more specific parameter specifications, and more discussion of the limitations of the h-transform in terms of efficiency. ",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_EaLU"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper3918/Reviewer_EaLU"
+        ]
+    }
+]

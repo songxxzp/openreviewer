@@ -1,0 +1,158 @@
+[
+    {
+        "id": "KCACyaLdL7",
+        "original": null,
+        "number": 1,
+        "cdate": 1666551060798,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666551060798,
+        "tmdate": 1666551060798,
+        "tddate": null,
+        "forum": "4g7nCbpjNwd",
+        "replyto": "4g7nCbpjNwd",
+        "invitation": "ICLR.cc/2023/Conference/Paper1267/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "In this work the authors attempt to tackle the issue of large softmax inputs, particularly in attention layers of transformers. They propose to normalize the input to the softmax by min(\\sigma, \\gamma), where \\gamma is a constant, and \\sigma is the unscaled norm of the input logits. They show that this normalization seems to improve performance on a variety of tasks, and in addition makes hyperparameter transfer (specifically, changing the attention dimension) more robust.",
+            "strength_and_weaknesses": "The method is a very simple and elegant solution to the problem of logit normalization in the attention layer of transformer networks. The method seems to lead to small performance gains in many settings, and some performance loss in other settings. The most striking result in my mind is figure 3 (d) - that hyperparameter transfer, in terms of hidden size/head dimension, is more robust with the softmax norm.\n\nFigures 3a and 3c are interesting in particular. It seems that for a small number of epochs the method is helpful, but for a large number of epochs it may not be (or even is slightly worse than the baseline). It does seem that the method helps with increasing depth. For figure 3 (a), what happens if the normalization is used early but not later? It seems that it may hurt more than be helpful at later training epochs. For figure 3 (c), how was hyperparameter tuning done for large depth? If both methods were tuned well, then the result seems quite significant.\n\nOne experiment that would greatly strengthen the paper is the comparison of the method with the 1/d scaling for the attention layers (with no norm-softmax) - and possibly an experiment where gamma is given by d instead of \\sqrt{d}. The 1/d scaling has also been brought up as a method for fixing anomalously large softmax inputs in attention layers, and I'm curious about the relationship between the two methods.\n\nAnother interesting experiment would be tuning the inverse-temperature of the softmax after normalization, as in https://arxiv.org/abs/2010.07344. It's possible that the normalization scale of 1 is sub-optimal for attention - there may be cases where a slightly larger softmax norm allows for more useful non-linearities in the attention mask.",
+            "clarity,_quality,_novelty_and_reproducibility": "Work is novel and clearly presented.",
+            "summary_of_the_review": "Overall the method is simple and a good attempt at dealing with the large softmax input problem that plagues attention layers in large models. The ability to transfer hyperparameters more easily across geometry is particularly impressive. If some of the details from Figure 3 were more fleshed out, giving stronger results from the method, I would be comfortable switching my review result to an 8 - the paper is almost there.",
+            "correctness": "4: All of the claims and statements are well-supported and correct.",
+            "technical_novelty_and_significance": "4: The contributions are significant, and do not exist in prior works.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_ax8S"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_ax8S"
+        ]
+    },
+    {
+        "id": "tPh13KBenA",
+        "original": null,
+        "number": 2,
+        "cdate": 1666626761967,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666626761967,
+        "tmdate": 1666626761967,
+        "tddate": null,
+        "forum": "4g7nCbpjNwd",
+        "replyto": "4g7nCbpjNwd",
+        "invitation": "ICLR.cc/2023/Conference/Paper1267/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper propose a normalization method, NormSoftmax, to remedy the optimization difficulty of softmax when using attention model or cross entropy loss function. Their method is easy to implement, its effectiveness is verified on several data tasks including CIFAR10, Imagenet, and three NLP translation datasets.",
+            "strength_and_weaknesses": "Strengths: writing is good, I can easily get the main points of this paper. \n\nWeakness: \n\n1) The motivation of this paper seems not convincing. As far as I can see, the motivation of Normsoftmax is based on the reasoning in sec 3.1, that \"the variance of softmax input experiences rapid and huge change during training, especially in the initial stage, which explains why training from scratch is difficult.\". I agree with the observation that the softmax inputs suffer from high variance during early training (fig 2 shows that),  but it's not the unique property of softmax, the statistics of batch normalization also fluctuate dramatically at early stage (see fig 2(a) in [1]), and these phenomenons can be well interpreted by the findings of [2], that the training trajectory usually starts from a rugged place to a flat local optimum on loss landscape. The main question is: is this feature bad? Can it really slow down the training process or harm the final performance of the trained model? Current paper is lack of justification on this fundamental reasoning.\n\n2) Current experimental results are not sufficient to verify the effectiveness of the proposed method. The form of Normsoftmax is very simple, which I don't regard as a disadvantage, but very convincing experimental results are required to prove its effectiveness. However, the gap between Normsoftmax and its baseline is too minor: VIT on CIFAR10 is not a good setting to show empirical evidence, let alone the performance is not in SOTA level; As for imagenet and NLP dataset, the improvement on training speed and final performance are both subtle.\n\n3)  Cost analysis (sec 3.4) is ambiguous. Fusing $\\gamma$ into linear layer is feasible, but computing $\\sigma (x/\\gamma )$ still requires extra memory/computation cost during inference, right? I suggest conducting thorough ablation study to study the extra cost brought by Normsoftmax.\n\n[1] Yan, Junjie, et al. \"Towards Stabilizing Batch Statistics in Backward Propagation of Batch Normalization.\" ICLR. 2019.\n\n[2] Li, Hao, et al. \"Visualizing the loss landscape of neural nets.\" NIPS (2018).",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity: motivation and method description is clear, but some reasoning may be missing as I explain it in weakness part;\n\nNovelty: Though the form of method is very simple, I think it's a novel way to address the potential issue of softmax.\n\nReproducibility: I think the the proposed method can be easily reproduced.",
+            "summary_of_the_review": "I think two major weaknesses needed to be solved to improve the quality of the paper: first, justify the reasoning that why Normsoftmax can improve the training of neural network by stabilizing the softmax input; second, provide more convincing empirical evidence to verify the effectiveness.",
+            "correctness": "2: Several of the paper\u2019s claims are incorrect or not well-supported.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_7Jaw"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_7Jaw"
+        ]
+    },
+    {
+        "id": "7eVwiH4hFMK",
+        "original": null,
+        "number": 3,
+        "cdate": 1666707799423,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666707799423,
+        "tmdate": 1666707893427,
+        "tddate": null,
+        "forum": "4g7nCbpjNwd",
+        "replyto": "4g7nCbpjNwd",
+        "invitation": "ICLR.cc/2023/Conference/Paper1267/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper proposes a variant of the softmax function used in many modules of recently developed deep neural networks.\nThe authors first point out the shortcoming of the softmax function, which is unstable in the initial stage of model training.\nThe key idea of the proposed method is to borrow the normalization technique, e.g., layer-normalization, for stabilizing the training to incorporate the variance term in softmax computation.\nThe experiments are conducted on simple image classification and machine translation benchmark datasets.\nThe results show that the proposed method performed better in the initial training phase stage.\n",
+            "strength_and_weaknesses": "Strength:\n* Motivation of this study is understandable.\n* The method is reasonable.\n* This paper is well-organized, easy to follow the main points of this paper.\n\n\nWeaknesses:\n* While the effectiveness of the proposed method only shown in the initial stage of the training phase, it is hard to feel that this method is really effective in the actual use case. I understand the effectiveness, but broader impact in the community seems limited.\n* The deep normalization may lead the gradient vanishing problem. This paper does not discuss this point. Therefore, it may have a potential drawback when the model becomes much deeper.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "This paper is basically easy to follow.\nTo my knowledge, the method itself seems original and novel, though the method consists of the combination of well known techniques.\n\nThe reproducibility of the proposed method is unknown for the current status since the experiments are not conducted only on a limited settings.",
+            "summary_of_the_review": "This paper has certain amount of contributions to the community.\nHowever, the advantage of the proposed method is only limited to the initial stage of the training phase.\nIt would be much better to consider and show a scenario that the proposed method can show much better advantages.\n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_syPR"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_syPR"
+        ]
+    },
+    {
+        "id": "tjBFCp-l3_",
+        "original": null,
+        "number": 4,
+        "cdate": 1666787981889,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666787981889,
+        "tmdate": 1666789533246,
+        "tddate": null,
+        "forum": "4g7nCbpjNwd",
+        "replyto": "4g7nCbpjNwd",
+        "invitation": "ICLR.cc/2023/Conference/Paper1267/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper extends the Logit Normalization technique by centering and introducing  a threshold  gamma in the denominator, which is referred to as NormSoftMax. Experimental results indicate that NormSoftMax works well in a number of DNN models with either croess-entropy loss or attention modules.  ",
+            "strength_and_weaknesses": "Strength: \nNormSoftMax extends Logit Normalization by introducing centering and a threshold  gamma in the denominator. \n\nWeaknesses:\n1. The introduction does not clearly describe the close relationship between Logit Normalization and NormSoftMax. The authors should first mention the drawbacks of Logit Normalization and then motivate NormSoftMax. Note that Logit Normalization is designed to address a similar issue as NormSoftMax. That is, to reduce the dynamics of the inputs to softmax to make the training easier. \n2.  I don't get why Logit Normalization is not compared with NormSoftMax  in their experiments. Or NormSoftMax with gamma=infty is reduced to  Logit Normalization. If it is true, I don't see the advantage of  NormSoftMax with finite gamma. Please correct me if I am wrong. \n",
+            "clarity,_quality,_novelty_and_reproducibility": "1. Motivation for NormSoftMax in introduction needs to be elaborated, starting from  the drawbacks of Logit Normalization if there is any.  \n\n2. I don't get the relationship between logit  normalisation and Logit Normalization in (8). is NormSoftMax with gamma=infty is reduced to  Logit Normalization?\n\n2. The experiment is not convincing without evaluation of Logit Normalization. ",
+            "summary_of_the_review": "I think NormSoftMax need to be properly motivated in introduction by properly introducing  Logit Normalization. The experiments need to be elaborated to demonstrate the advantage of  NormSoftMax  over Logit Normalization.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "5: marginally below the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_Eoot"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper1267/Reviewer_Eoot"
+        ]
+    }
+]

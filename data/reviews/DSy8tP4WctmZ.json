@@ -1,0 +1,158 @@
+[
+    {
+        "id": "mzT-TajJja",
+        "original": null,
+        "number": 1,
+        "cdate": 1666557498938,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666557498938,
+        "tmdate": 1669942334964,
+        "tddate": null,
+        "forum": "DSy8tP4WctmZ",
+        "replyto": "DSy8tP4WctmZ",
+        "invitation": "ICLR.cc/2023/Conference/Paper495/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "The paper presents a fast, voxelized algorithm for implicit surface reconstruction and novel view synthesis. It addresses limitations of previous methods in preserving fine geometric details by a two-stage training procedure starting with a coarse resolution grid and moving on to finer resolution, a two-branch color network, and a hierarchical geometry feature that promotes inter-voxel coherence. Surface reconstruction and novel view synthesis results are presented on the DTU and BlendedMVS datasets, along with comparisons to relevant methods. Extensive ablation studies are also presented.",
+            "strength_and_weaknesses": "Strengths\n\nThe paper presents an approach for neural surface reconstruction employing an SDF representation decomposed in voxels. To accelerate convergence, the authors adopt a two-stage training procedure. I consider this a strength of the paper, but not a major one. It is not surprising that such a scheme is fast and also effective, as long as the coarse grid is of sufficient resolution.\n\nThe dual color network is novel to the best of my knowledge.  It comprises two branches that aim to synthesize accurate colors in novel viewpoints. The design is motivated by the observation that color and geometry drift apart as larger contexts are considered for geometric optimization. The two branches are based on different feature inputs, but also share information, to synthesize correct views while contributing to geometry optimization and fast convergence.\n\nThe hierarchical geometry feature enables information propagation across voxels by considering neighborhoods of different size, mitigating a limitation of voxel-based formulations. In my opinion, this is the most important contribution of the paper.\n\nThe smoothness priors are shown to be effective experimentally. This indicates that the dual color network and the hierarchical geometric features do not oversmooth. It may have been possible to achieve sufficient regularization with the other components of the network, but since this is not the case, the additional terms defined in Section 5.3 contribute. (The impact of all network components and their interactions on convergence time is unclear.)\n\nThe proposed approach is faster than many alternatives relying on global representations, but see also below for a relevant weakness.\n\nAn important strength of the paper is that ablations studies for all aspects are presented in the main paper and the supplement.\n\nWeaknesses\n\nA minor question, not necessarily a weakness, in my opinion is the loss function associated with the dual color network. It is unclear to me why the loss aims at having both branches achieve perfect view synthesis independently. It may be more advantageous to require that the combination of the two branches achieves this goal.\n\nThe method is fast, but it is much slower than the na\u00efve baseline constructed by the authors at the end of Section 3, specifically DVGO with an SDF representation. This is not surprising due to the second stage of training, but weakens the argument that the proposed method somehow advances the efficiency of neural surface reconstruction methods. It seems to be on the efficiency-fidelity curve of voxel-based approaches.\n\nAn important weakness in the evaluation is that the comparison with DVGO, which is similar to the na\u00efve baseline, is performed on different datasets than those used by the authors of DVGO. In particular, four of the five datasets used in the DVGO paper are missing, with only BlendedMVS used in both papers. The four missing datasests are: Synthetic-NeRF (Mildenhall et al., ECCV 2020), Synthetic-NSVF (Liu et al., NeurIPS 2020 \u2013 see below), Tanks & Temples (Knapitsch et al., SIGGRAPH 2017) and DeepVoxels (Sitzmann et al., CVPR 2019). Some of these papers are not even cited. (See below.) PointNeRF by Xu et al., which is cited, presents results on the DTU dataset with better PSNR, SSIM and LPIPS than the proposed method, while also being faster.\n\nThe surface reconstruction results on DTU, as measured by the average of the Chamfer distances between the reconstructed and ground truth points in both directions, are much weaker than those of recent MVS methods. MVS reconstructions are in the order of 0.3-0.35 mm while the proposed method is at 0.72 mm. (MVS papers use the same test set on DTU, which may be different than the one used here and by DVGO, but I assume that the statistics should be similar on average.) Chamfer distance may not measure interesting properties of the surfaces such as smoothness and watertightness, but the authors accept it as a metric. \n\nBased on the above, novel view synthesis should be the focus of the evaluation, since NeRF-style methods are not ready to be used for explicit surface reconstruction yet. Therefore, additional experiments on datasets widely used in the NeRF literature are needed to demonstrate the advantages of the proposed method.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "The paper is clearly written and easy to follow. The work is of high quality and contains original ideas, but I have concerns, listed above, on whether it is significant, or an incremental step compared to recent literature. \n\nSome important information, including the choice of the dimensions of the voxel grid and the way to obtain an explicit representation of the surfaces (for the geometric criteria used in the quantitative results), can only be found in the supplement.\n\nRelated work is presented briefly but clearly. There are some important omissions, including the following:\nLingjie Liu, Jiatao Gu, Kyaw Zaw Lin, Tat-Seng Chua, and Christian Theobalt. Neural sparse voxel fields. In NeurIPS,2020.\nVincent Sitzmann, Justus Thies, Felix Heide, Matthias Nie\u00dfner, Gordon Wetzstein, and Michael Zollhoefer. Deepvoxels: Learning persistent 3d feature embeddings. In CVPR, 2019.\nThe unrefereed (arXiv) versions of several papers are cited instead of the refereed ones. For example, the DVGO paper by Sun et al. has been published at CVPR 2022. The same is true for the work of Darmon et al. and PointNeRF by Xu et al. The paper by Lombardi et al. has been published in the ACM Transactions on Graphics. All references for which this happens should be corrected.\n\nThe term \u201cfeature\u201d is overloaded in Section 5, in particular in Section 5.2. It is used both for the \u201cgeometric feature\u201d f^geo and the \u201clocal feature\u201d f^feat.\n\nThere are some typos scattered throughout the paper. The following are a few examples.\np. 2: \u201cunder-constraint\u201d should be \u201cunder-constrained\u201d\np. 6, below (7): \u201cgain\u201d seems out of place. \u201cObtain\u201d would be better. The following line includes \u201cthe approximate normal vector n^l in R^3 is to normalize\u201d which can be improved.\np. 6, first line of Sec. 5.3: I suggest specifying that there are two, not several, regularization terms. Several suggests that a lot of heuristics are needed for convergence.\n",
+            "summary_of_the_review": "At least two of the key ideas of the paper, specifically the dual color network and the hierarchical feature design, are novel, but it is unclear to me how effective they are beyond the context of the algorithm presented here. I was hoping that a thorough evaluation, including comparisons with previous work, would answer this question. The results presented in the paper are extensive, but they fall short of this because they are not performed on the same datasets as the most relevant previous methods. Important relevant work, such as PointNeRF, is omitted from the evaluation. I consider this kind of evaluation necessary for making a decision in favor of acceptance.\n\n+++ UPDATE DURING DISCUSSION +++\n\nI have been convinced by the authors\u2019 responses and I have upgraded my rating of the paper. \n",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_kZqD"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_kZqD"
+        ]
+    },
+    {
+        "id": "4D7hozLLqkN",
+        "original": null,
+        "number": 2,
+        "cdate": 1666653894688,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666653894688,
+        "tmdate": 1670252255091,
+        "tddate": null,
+        "forum": "DSy8tP4WctmZ",
+        "replyto": "DSy8tP4WctmZ",
+        "invitation": "ICLR.cc/2023/Conference/Paper495/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper introduces voxurf - a method for surface reconstruction that combines explicit voxel representations with SDF-based volume rendering. On top of naive combination of existing techniques, the key ideas are: employing a coarse-to-fine strategy, such that coarse geometry is estimated first; a dual color network, which is supposed to encourage better consistency between appearance and geometry, adding \"hierarchical features\" and smoothness priors, which are meant to improve propagation of information across different voxels and make optimization easier. Quantitative results are convincing, and method seems to provide a significant speed up over (some) competitive. \n",
+            "strength_and_weaknesses": "Strength:\n+ The overall approach is reasonable - it makes sense that one needs more capacity and some notion of locality to optimize \n+ Quantitative results are pretty convincing: the method seems to be outperforming the strong baselines methods it builds upon - NeuS and DVGO.\n+ Authors claim 20x improvement over fully implicit representation - which is not surprising (also see quality/misc below) but still impressive. \n\nWeaknesses:\n- The method does \"just\" combine NeuS objective with explicit voxel-based representation from DVGO, plus some additional (primarily smoothness and consistency promoting) inductive biases and priors in architecture and optimization process. \n- The effects of smoothness priors are not thoroughly evaluated - in particular it would be important to know if using naive combination of DVGO+NeuS and smoothness already leads to good results.\n- (minor) Qualitative results on NVS are quite similar to DVGO (it is worth looking at the supplementary material). In fact, I find on some of the examples DVGO has better specularities (see Scan 114) .\n- (minor) Similarly, geometry results seem to be very similar to NeuS, in some cases (it seems) NeuS providing less noisy reconstructions: snowman's nose on Scan 69, can on Scan 97.\n",
+            "clarity,_quality,_novelty_and_reproducibility": "Clarity:\n- The paper is mostly easy to follow. \n- I did find it a bit confusing that the motivation in Section 4 is presented separately from the solution in Section 5. Might be worth at least hinting on what is coming later: e.g. does adding features actually help and if not what would help with appearance-geometry consistency. Explanations on dual color network are not very formal, and it is not fully clear if there are any guarantees on why that would work? E.g. it is possible that the model simply ignores some of the inputs?\n\nNovelty:\n- The method is indeed very similar to DVGO, even though it employs a different (also already existing) volume rendering scheme. It is not clear if the paper contains sufficient additional insights: the dual color network and geometry features sort of make sense, but (arguably) seem like ad-hoc solutions without formal reasoning behind those.\n\nQuality/Misc:\n- The paper does not seem to have significant issues with quality. \n- The claimed speed up is a bit confusing, considering that DVGO runs much faster than that? Yes, it is much worse in CD - but would that still be the case for DVGO+little bit of smoothness priors?\n",
+            "summary_of_the_review": "This work presents a well-performing and efficient method for neural surface reconstruction, but it is not fully clear if it contains enough non-trivial ideas. I still believe that the overall method is interesting, and could be valuable to the community. Thus I am leaning more towards accept.\n---\nAfter going through author's rebuttal, and looking at the additional ablation studies they pointed out, I am recommending accepting this work to ICLR. ",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_8Ao6"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_8Ao6"
+        ]
+    },
+    {
+        "id": "m9Puhr4m4L",
+        "original": null,
+        "number": 3,
+        "cdate": 1666668584127,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666668584127,
+        "tmdate": 1666669107169,
+        "tddate": null,
+        "forum": "DSy8tP4WctmZ",
+        "replyto": "DSy8tP4WctmZ",
+        "invitation": "ICLR.cc/2023/Conference/Paper495/-/Official_Review",
+        "content": {
+            "confidence": "3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.",
+            "summary_of_the_paper": "This paper presents a hybrid voxel-grid- and MLP-based neural surface reconstruction method called Voxurf, that is both fast and accurate. It uses the volumetric representation of a voxel grid to expedite training, while proposing a two-stage training process, a novel network that captures the relationship between color and geometry, and a more expressive SDF feature, all in order to improve reconstruction accuracy. \n\nThe paper also provides a study on architecture design for hybrid volume/MLP geometry estimation models. This study motivates the insight behind the design decisions in the proposed method, and also provides clarity on how this work differentiates itself from prior research, such as DVGO (Sun et al., 2021) and NeuS (Wang et al., 2021).\n\nExperiments are performed on two common, relevant datasets, DTU and BlendedMVS, and the results demonstrate improvements in surface reconstruction quality with faster convergence times. Furthermore, ablation studies are included to test individual aspects of the proposed architecture.",
+            "strength_and_weaknesses": "**Strengths**\n\n* The choice of baseline as the straightforward combination of DVGO (Sun et al., 2021) and NeuS (Wang et al., 2021) is effective for demonstrating the performance improvements that Voxurf offers. The improved speed and reconstruction accuracy results helps to answer the gut-response question of \"why not just combine them?\".\n\n* The architecture design analysis in Section 4 and references to it in the methodology explanation in Section 5 is very helpful to motivate and explain design decisions. This paper takes great pains to justify the network architecture and loss function. In many papers, this insight is often omitted or overly brief, which limits the ability of future researchers to learn from the work. \n\n* The proposed idea to low-pass filter the SDF volume with a Gaussian kernel, in particular, seems to have an important effect on producing smooth surface reconstructions. Although, it may be fair to question whether the emphasis on smooth outputs is overdone, as Figure 7 appears to show fine detail being smoothed away when combining both TV regularization and the Gaussian filtering. Evaluating the impact of each of the two smoothing components is an ablation study that is missing, and the paper would benefit from including.\n\n\n**Weaknesses**\n\n* Section 4 describes the key to maintaining a coherence coarse shape to be the local feature, pointing out the poor geometry in Figure 2 case (1)(b) as an example of how ignoring the local feature leads to noisy reconstructions. On the other hand, Figure 2 case (2)(b) uses the same setup but provides top performance (and also qualitatively looks pretty clean). Moreover, it strongly preserves the coarse shape and maintains fine detail. This figure seems to undercut the point of the claim.\n\n* Table 2 presents a comparison of surface reconstruction and novel view synthesis on the DTU dataset. Although Voxurf is proposed to combine the speed benefits of DVGO with the output quality of NeuS, it is an interesting result to see that DVGO outperforms NeuS on novel view synthesis metrics at baseline. Moreover, Voxurf is only marginally better than DVGO for novel view synthesis despite taking 3.5x as long to train. Now, in terms of surface reconstruction metrics, Voxurf supports its claims by outperforming NeuS significantly in reconstruction quality in a fraction of the time. However, this discrepancy ought to be explained. Is it a problem with the expressiveness of the PSNR and SSIM metrics for NVS? Perhaps there is diminishing returns in NVS as reconstruction accuracy increases?\n\n* Both DTU and BlendedMVS consist of fairly small scenes. One of the stated benefits of volumetric representations is the faster convergence speed, especially for large scenes with many cameras. It would improve the case for the proposed method to evaluate it on larger scene datasets such as ScanNet (Dai et al., 2017). That would provide stronger support to differentiate it from methods like Instant-NGP (Muller et al., 2021) or NerfFusion (Zhang et al., 2022).",
+            "clarity,_quality,_novelty_and_reproducibility": "**Quality**\n\nThis paper demonstrates a high-quality research process in which design decisions are well-motivated and experiments are devised to clearly test the impact of the design. Comparisons with prior work are reasonably exhaustive, and effective analysis is performed on the experiments and ablation studies.\n\n**Clarity**\n\nThe paper is organized and reasonably easy to follow. The paper regularly draws links between motivations, designs, and analyses, which helps maintain a linear relationship between insight and outcome.\n\n**Originality**\n\nThis work builds heavily on prior works such as DVGO (Sun et al., 2021) and NeuS (Wang et al., 2021). It also applies some well established components, like a Total Variation regularizer (Rudin & Osher, 1994). However, it incorporates its own new ideas, such as the hierarchical geometric feature to mitigate the spatial incoherence of volumetric representations and low pass filtering on the SDF voxel grid prior to interpolation. The additional insight provided by the architecture design study lends credence to the originality of the proposed solution.",
+            "summary_of_the_review": "This paper effectively makes the case for Voxurf as an efficient solution for high quality neural surface reconstruction. The paper is well motivated, sufficiently evaluated, and clear with its insights. There are areas the paper could be improved, specifically in building out some of the experimental analysis further. Nevertheless, I would recommend this paper for acceptance to ICLR.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "empirical_novelty_and_significance": "3: The contributions are significant and somewhat new. Aspects of the contributions exist in prior work.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "8: accept, good paper"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_7aTz"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_7aTz"
+        ]
+    },
+    {
+        "id": "_mATVF3naH",
+        "original": null,
+        "number": 4,
+        "cdate": 1666670520208,
+        "mdate": null,
+        "ddate": null,
+        "tcdate": 1666670520208,
+        "tmdate": 1666670520208,
+        "tddate": null,
+        "forum": "DSy8tP4WctmZ",
+        "replyto": "DSy8tP4WctmZ",
+        "invitation": "ICLR.cc/2023/Conference/Paper495/-/Official_Review",
+        "content": {
+            "confidence": "4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.",
+            "summary_of_the_paper": "This paper deals with the problem of fast and accurate surface reconstruction by combining the explicit volumetric based representation with the implicit function. They further improve acurracy of surface geometry reconstruction by 1) enforcing color-geometry dependency with a dual color network, 2) including hierachical geometry feature, 3) incorporating smoothness constraints in the SDF field. They have demonstrated superior performance on the reconstructed geometry and rendered images, and achieved relatively fast convergence as compared with baseline method on Nerf.",
+            "strength_and_weaknesses": "Strength:\n-- First of all, this paper has addressed a very critical issue when training Nerf, which is the extremely high computational cost. They have adopted the Direct Voxel representation and the key insight is to design a dual color network to model the color-geometry dependency. They have achieved better performance on fast convergence as compared with NeuS, and more accurate geometry as compared with DVGO and the naive combination of DVGO and NeuS.\n\n\nWeakness:\n-- I have some concerns about the assumption on color-geometry dependency. In some cases or scenes, the surface texture is not correlated with the geometry/normal. For example, we could simply have a plane with printed textures. I wonder how could this kind of situation being handled by the proposed framework.\n-- After checking all the implementation details, I still didn't get the idea of how to render images just from geometry branch. It is rather unclear for this part.\n-- The smoothness term is a bit tricky. How to tune the weighting parameters to stop over-smoothing? \n-- A straightfoward implementation is to directly replace the density prediction with SDF in DVGO paper. And the authors have demonstrated this baseline in Fig.1. But I want to know what if we apply this smoothness constraints in this baseline method, will we also get very good geometry as well as fast convergence. For my understanding, it seems that the smoothness constraints have played an important role to have good reconstruction on the geometry. \n-- It would be better to also discuss limitations of the proposed method.",
+            "clarity,_quality,_novelty_and_reproducibility": "-- The overall idea is clear, although it might not be easy to understand some part in the framework. I have listed some issues that need to be clarified. \n-- It might not be easy to implement the method by just looking into the paper, but the authors have claimed to release the code.\n-- The method is novel, not but very significant contributions in proposing very exciting new insights.",
+            "summary_of_the_review": "In general, I think this paper has achieved good performance as compared with SOTA methods. My major concerns are: 1) the gemoetry rendering branch is not clear; 2) whether smoothness plays major roles in achieving good geometry reconstruction; 3) the smoothness term is a bit tricky to tune.",
+            "correctness": "3: Some of the paper\u2019s claims have minor issues. A few statements are not well-supported, or require small changes to be made correct.",
+            "technical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "empirical_novelty_and_significance": "2: The contributions are only marginally significant or novel.",
+            "flag_for_ethics_review": [
+                "NO."
+            ],
+            "recommendation": "6: marginally above the acceptance threshold"
+        },
+        "signatures": [
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_VHoF"
+        ],
+        "readers": [
+            "everyone"
+        ],
+        "nonreaders": [],
+        "writers": [
+            "ICLR.cc/2023/Conference",
+            "ICLR.cc/2023/Conference/Paper495/Reviewer_VHoF"
+        ]
+    }
+]
