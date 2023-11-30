@@ -48,10 +48,10 @@ def get_pdfs():
         if index <= pdf_files_count:
             continue  # 跳过
 
-        pdf_url = f'https://api.openreview.net/pdf?id={note.id}'
+        pdf_url = f'https://api2.openreview.net/pdf?id={note.id}'
         response = requests.get(pdf_url)
-        print(f"getting the pdf of {note.content['title']} ...")
         if response.status_code == 200:
+            print(f"getting the pdf of {note.content['title']} ...")
             with open(f'data/iclr2024/pdfs/{note.id}.pdf', 'wb') as pdf_file:
                 pdf_file.write(response.content)
 
@@ -110,11 +110,12 @@ def get_rebuttals():
             with open(f'id.json', 'w') as outfile:
                 json.dump(paired_reviews_responses, outfile, indent=4)
 
-get_rebuttals()
+# get_rebuttals()
+get_pdfs()
 
-pdf_files_count = len([name for name in os.listdir('data/iclr2024/rebuttals') if os.path.isfile(os.path.join('data/iclr2024/rebuttals', name))])
-print(pdf_files_count)
-# get_reviewer()
+# pdf_files_count = len([name for name in os.listdir('data/iclr2024/rebuttals') if os.path.isfile(os.path.join('data/iclr2024/rebuttals', name))])
+# print(pdf_files_count)
+# # get_reviewer()
 # get_basic_info()
 # get_reviewer()
 # get_rebuttals()
