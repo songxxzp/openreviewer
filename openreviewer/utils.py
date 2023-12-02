@@ -1,8 +1,14 @@
 import json
 import os
 
+import torch
+
+import torch.distributed as dist
+
 from typing import List, Tuple, Dict, Union, Optional
 from functools import partial
+
+from transformers import PreTrainedTokenizer, PreTrainedModel, GenerationConfig
 
 from openreviewer.common import vicuna_system_prompt
 
@@ -29,8 +35,8 @@ def build_vicuna_input(messages: List[Tuple], system_message: str=vicuna_system_
     return ret, prompt, response
 
 
-def vicuna_sample_processor(prompt, response):
-    _ , vicuna_prompt, response = build_vicuna_input([["USER", prompt], ['ASSISTANT', response]])
+def vicuna_sample_processor(prompt, response, system_message=vicuna_system_prompt):
+    _ , vicuna_prompt, response = build_vicuna_input([["USER", prompt], ['ASSISTANT', response]], system_message)
     return vicuna_prompt, response
 
 

@@ -1,5 +1,7 @@
 import json
 
+import torch
+
 from torch.utils.data import Dataset
 
 from openreviewer.common import model_without_positional_ids
@@ -37,7 +39,10 @@ class InstructionTuningDataset(Dataset):
         tokenized_sample = []
         
         for i, sample in enumerate(samples):
-            prompt, response = self.process_func(sample[self.prompt_key], sample[self.response_key])
+            if 'system_prompt' in sample:
+                prompt, response = self.process_func(sample[self.prompt_key], sample[self.response_key], sample['system_prompt'])
+            else:
+                prompt, response = self.process_func(sample[self.prompt_key], sample[self.response_key])
             prompt_tokens = self.tokenizer.encode(prompt, add_special_tokens=True)
             response_tokens = self.tokenizer.encode(response, add_special_tokens=False)
             if self.tokenizer.eos_token_id not in response_tokens[-1:]:

@@ -2,7 +2,7 @@ DISTRIBUTED_ARGS="--nproc_per_node 1 \
                   --nnodes 1 \
                   --node_rank 0 \
                   --master_addr localhost \
-                  --master_port 10728"
+                  --master_port 41971"
 
 DEEPSPEED_CONFIG="/root/autodl-tmp/workspace/openreviewer/config/zero2.json"
 SEED=42

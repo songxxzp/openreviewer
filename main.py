@@ -6,6 +6,7 @@ import random
 
 import torch
 import deepspeed
+import numpy as np
 import torch.distributed as dist
 import torch.nn.functional as F
 
@@ -16,12 +17,14 @@ from datetime import timedelta
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTrainedModel, GenerationConfig, PreTrainedTokenizer
 from deepspeed.ops.adam import DeepSpeedCPUAdam
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, DistributedSampler
+from peft import LoraConfig, get_peft_model
 
 from openreviewer.arguments import get_args
 from openreviewer.dataset import InstructionTuningDataset
 from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint
 from openreviewer.scheduler import CosineWarmUpScheduler
+from openreviewer.common import freeze_ffn_target_moudles, lora_target_modules
 
 
 def get_dataset(args, tokenizer, process_func=vicuna_sample_processor) -> Dataset:
@@ -35,6 +38,8 @@ def get_dataset(args, tokenizer, process_func=vicuna_sample_processor) -> Datase
         tokenizer=tokenizer,
         process_func=process_func
     )
+
+    return dataset
 
 
 def train(args, model, optimizer, scheduler, tokenizer, dataset):
@@ -63,7 +68,7 @@ def train(args, model, optimizer, scheduler, tokenizer, dataset):
     epoch = 0  # TODO
 
     model.train()
-    model.gradient_checkpointing_enable()
+    # model.gradient_checkpointing_enable()
 
     for iteration, (input_batch, gen_batch, other_batch) in enumerate(dataloader):
         global_loss = 0
@@ -94,7 +99,7 @@ def train(args, model, optimizer, scheduler, tokenizer, dataset):
         move_dict_to_device(gen_batch, torch.device('cpu'))
 
     model.eval()
-    save_checkpoint(save_path, model, tokenizer)
+    save_checkpoint(args.save_path, model, tokenizer)
 
 
 def main():
@@ -128,25 +133,42 @@ def main():
         ds_config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
 
     # load model
-    model = AutoModel.from_pretrained(args.model_path, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(args.model_path, trust_remote_code=True)
     model.cuda()
 
-    optimizer = DeepSpeedCPUAdam(student_model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    # freeze ffn
+    # print_rank("Freezing FFN")
+    # for name, module in model.named_parameters():
+    #     if any([k in name for k in freeze_ffn_target_moudles[args.model_type]]):
+    #         module.requires_grad = False
+    # print(model)
+
+    # use lora
+    lora_config = LoraConfig(  # TODO: check this config
+        r=8, 
+        lora_alpha=32, 
+        target_modules=lora_target_modules[args.model_type],  # chatglm2
+        lora_dropout=0.05, 
+        bias="none", 
+        task_type="CAUSAL_LM"
+    )
+    model = get_peft_model(model, lora_config)
+
+    optimizer = DeepSpeedCPUAdam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     lr_scheduler = CosineWarmUpScheduler(
         optimizer,
         num_warmup_steps=args.warmup_steps,
         total_steps=args.total_iters,
         eta_min=args.min_lr
     )
-
     model, optimizer, _, lr_scheduler = deepspeed.initialize(
-        model=student_model,
+        model=model,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         config=ds_config
     )
 
-    training(
+    train(
         args,
         model=model,
         optimizer=optimizer,
