@@ -17,6 +17,7 @@ def add_data_args(parser: argparse.ArgumentParser):
     group.add_argument("--data-path", type=str, default=None)
     group.add_argument("--data-name", type=str, default=None)
     group.add_argument("--dataset-type", type=str, default="InstructionTuningDataset")
+    group.add_argument("--data-type", type=str, default="pairs")
     group.add_argument("--max-length", type=int, default=1024)
     group.add_argument("--max-prompt-length", type=int, default=512)
     group.add_argument("--num-workers", type=int, default=4)
@@ -28,7 +29,7 @@ def add_train_args(parser: argparse.ArgumentParser):
     group = parser.add_argument_group('training', 'training arguments')
     group.add_argument("--total-iters", type=int, default=100)
     group.add_argument("--warmup-steps", type=int, default=100)
-    group.add_argument("--batch-size", type=int, default=2)
+    group.add_argument("--batch-size", type=int, default=1)
     group.add_argument("--gradient-accumulation-steps", type=int, default=1)
     group.add_argument("--save-path", type=str, default=None)
 
@@ -55,6 +56,8 @@ def get_args() -> argparse.Namespace:
     parser = deepspeed.add_config_arguments(parser)
 
     args, unknown = parser.parse_known_args()
+
+    args.global_batch_size = args.batch_size * args.gradient_accumulation_steps
 
     print(f"Unkown args: {unknown}")
     print(f"args: {args}")

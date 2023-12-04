@@ -22,22 +22,33 @@ from peft import LoraConfig, get_peft_model
 
 from openreviewer.arguments import get_args
 from openreviewer.dataset import InstructionTuningDataset
-from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint
+from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint, openreviewer_data_preprocessor
 from openreviewer.scheduler import CosineWarmUpScheduler
 from openreviewer.common import freeze_ffn_target_moudles, lora_target_modules
 
 
-def get_dataset(args, tokenizer, process_func=vicuna_sample_processor) -> Dataset:
+def get_dataset(args, tokenizer, process_func=vicuna_sample_processor, preprocessor=None) -> Dataset:
     if args.dataset_type == "InstructionTuningDataset":
         DatasetClass = InstructionTuningDataset
     else:
         raise NotImplementedError(f"Not implemented dataset: {args.dataset_type}.")
-    dataset = DatasetClass(
-        args,
-        path=args.data_path,
-        tokenizer=tokenizer,
-        process_func=process_func
-    )
+    
+    if preprocessor is not None:
+        with open(args.data_path, 'r', encoding='utf-8') as f:
+            data = [json.loads(line) for line in f]
+        dataset = DatasetClass(
+            args,
+            path_or_data=preprocessor(data),
+            tokenizer=tokenizer,
+            process_func=process_func
+        )
+    else:
+        dataset = DatasetClass(
+            args,
+            path_or_data=args.data_path,
+            tokenizer=tokenizer,
+            process_func=process_func
+        )
 
     return dataset
 
@@ -66,12 +77,13 @@ def train(args, model, optimizer, scheduler, tokenizer, dataset):
     )
 
     epoch = 0  # TODO
+    iteration = 0
+    global_loss = 0
 
     model.train()
     # model.gradient_checkpointing_enable()
 
-    for iteration, (input_batch, gen_batch, other_batch) in enumerate(dataloader):
-        global_loss = 0
+    for num_samples, (input_batch, gen_batch, other_batch) in enumerate(dataloader):
         move_dict_to_device(input_batch, model.device)
         move_dict_to_device(other_batch, model.device)
         move_dict_to_device(gen_batch, model.device)
@@ -90,13 +102,19 @@ def train(args, model, optimizer, scheduler, tokenizer, dataset):
         dist.all_reduce(loss, dist.ReduceOp.SUM, group=dp_group)
         global_loss += loss.item() / dp_world_size / args.gradient_accumulation_steps
 
-        # logging
-        print_rank(f"iteration: {iteration}, loss: {global_loss}")
-
         # cleaning
         move_dict_to_device(input_batch, torch.device('cpu'))
         move_dict_to_device(other_batch, torch.device('cpu'))
         move_dict_to_device(gen_batch, torch.device('cpu'))
+
+        if (num_samples + 1) % args.gradient_accumulation_steps == 0:
+            iteration += 1
+        else:
+            continue
+
+        # logging
+        print_rank(f"iteration: {iteration}, loss: {global_loss}, lr: {model.lr_scheduler.get_last_lr()[0]}")
+        global_loss = 0
 
     model.eval()
     save_checkpoint(args.save_path, model, tokenizer)
@@ -123,7 +141,9 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
 
-    dataset = get_dataset(args, tokenizer)
+    dataset = get_dataset(args, tokenizer, preprocessor=openreviewer_data_preprocessor if args.data_type == "openreview" else None)
+
+    print_rank(f"num samples: {len(dataset)}")
 
     # load ds_config
     with open(args.deepspeed_config, 'r', encoding='utf-8') as f:
@@ -134,31 +154,25 @@ def main():
 
     # load model
     model = AutoModelForCausalLM.from_pretrained(args.model_path, trust_remote_code=True)
-    model.cuda()
-
-    # freeze ffn
-    # print_rank("Freezing FFN")
-    # for name, module in model.named_parameters():
-    #     if any([k in name for k in freeze_ffn_target_moudles[args.model_type]]):
-    #         module.requires_grad = False
-    # print(model)
+    model.gradient_checkpointing_enable()
 
     # use lora
     lora_config = LoraConfig(  # TODO: check this config
         r=8, 
-        lora_alpha=32, 
-        target_modules=lora_target_modules[args.model_type],  # chatglm2
+        lora_alpha=16, 
+        target_modules=lora_target_modules[args.model_type],
         lora_dropout=0.05, 
         bias="none", 
         task_type="CAUSAL_LM"
     )
     model = get_peft_model(model, lora_config)
+    model.cuda()
 
     optimizer = DeepSpeedCPUAdam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     lr_scheduler = CosineWarmUpScheduler(
         optimizer,
         num_warmup_steps=args.warmup_steps,
-        total_steps=args.total_iters,
+        total_steps=len(dataset) // (args.batch_size * args.gradient_accumulation_steps),
         eta_min=args.min_lr
     )
     model, optimizer, _, lr_scheduler = deepspeed.initialize(

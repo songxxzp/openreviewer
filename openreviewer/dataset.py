@@ -8,18 +8,21 @@ from openreviewer.common import model_without_positional_ids
 
 
 class InstructionTuningDataset(Dataset):
-    def __init__(self, args, path, tokenizer, prompt_key='prompt', response_key='response', process_func=None, max_samples=None):
+    def __init__(self, args, path_or_data, tokenizer, process_func=None, max_samples=None):
         self.model_type = args.model_type
-        self.path = path
+        # self.path = path
         self.max_length = args.max_length
         self.max_prompt_length = args.max_prompt_length
-        with open(path, 'r', encoding='utf-8') as f:
-            self.data = [json.loads(line) for line in f]
+        if isinstance(path_or_data, list):
+            self.data = path_or_data
+        else:
+            with open(path_or_data, 'r', encoding='utf-8') as f:
+                self.data = [json.loads(line) for line in f]
         if max_samples is not None:
             self.data = self.data[:max_samples]
         self.tokenizer = tokenizer
-        self.prompt_key = prompt_key
-        self.response_key = response_key
+        # self.prompt_key = prompt_key
+        # self.response_key = response_key
         self.process_func = process_func if process_func is not None else lambda x,y : (x,y)
 
         self.model_without_positional_ids = model_without_positional_ids
@@ -39,10 +42,7 @@ class InstructionTuningDataset(Dataset):
         tokenized_sample = []
         
         for i, sample in enumerate(samples):
-            if 'system_prompt' in sample:
-                prompt, response = self.process_func(sample[self.prompt_key], sample[self.response_key], sample['system_prompt'])
-            else:
-                prompt, response = self.process_func(sample[self.prompt_key], sample[self.response_key])
+            prompt, response = self.process_func(sample)
             prompt_tokens = self.tokenizer.encode(prompt, add_special_tokens=True)
             response_tokens = self.tokenizer.encode(response, add_special_tokens=False)
             if self.tokenizer.eos_token_id not in response_tokens[-1:]:
