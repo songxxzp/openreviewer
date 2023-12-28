@@ -1,6 +1,7 @@
 import torch
 import vllm
 import os
+import re
 import json
 from openreviewer.common import vicuna_system_prompt
 from openreviewer.utils import build_vicuna_input
@@ -46,8 +47,7 @@ llm = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(),
 
 def get_divided_text(text, category):
     messages = [
-        ["USER", "Prompt:/n/n Hierarchically analyze the following passage and provide a breakdown using points 1, 2, 3, and so on. Your output should not have much difference compared with input./n/n Input:/n/n" 
-            + text["value"]],
+        ["USER", "The input is the"+category+"part of a review of a paper. "+"Hierarchically analyze this input passage after 'Input:' and provide a breakdown using points 1, 2, 3, and so on. Your output shouldn't add or delete any words comparing with the input. You only need to add breakdown numbers to the iuput. /n For example,  if my input is 'This paper proposed an end-to-end general-purpose any-to-any MM-LLM system, NExT-GPT, by connecting an LLM with multimodal adaptors and different diffusion decoders.', your output should be: '1.This paper proposed an end-to-end general-purpose any-to-any MM-LLM system, NExT-GPT /n 2.by connecting an LLM with multimodal adaptors and different diffusion decoders. /n'. /n Input:/n" + text["value"]],
         ["ASSISTANT", "This part is not used when producing prompt."]
     ]
 
@@ -61,8 +61,12 @@ def get_divided_text(text, category):
         max_tokens=4096
     )
     outputs = llm.generate(prompts, sampling_params)
+    outputs = outputs[0].outputs[0].text
+    split_points = re.split(r'\d+\.', outputs)[1:]
+
+    result_list = [point.strip() for point in split_points if point.strip()]
     
-    return outputs[0].outputs[0].text
+    return result_list
 
 def reform_review(review):
     reformed_review = dict()
@@ -89,12 +93,13 @@ def extract_reviews_from_json(jsonString):
     return data 
 
 dir = '/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews/'
-target_dir = '/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews_/'
+target_dir = '/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews_2/'
 entries = os.listdir(dir)
 
 for entry in entries:
-    print(entry)
-    with open(dir + entry, "r", encoding='utf-8') as f:
-        data = extract_reviews_from_json(f.read())
-        with open(target_dir + entry, "w") as write:
-            json.dump(data, write)
+    if os.path.exists(target_dir + entry) == False :
+        print(entry)
+        with open(dir + entry, "r", encoding='utf-8') as f:
+            data = extract_reviews_from_json(f.read())
+            with open(target_dir + entry, "w") as write:
+                json.dump(data, write)
