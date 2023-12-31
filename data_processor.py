@@ -1,23 +1,22 @@
 import json
 import os
+import tqdm
 
 from typing import List, Dict, Any
 
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
 
-# pdfs_path = "/root/autodl-tmp/data/1204/pdfstxt"
+
+model_path = "/root/autodl-tmp/model/vicuna-7b-v1.5-16k"
+max_section_length = 2048
+
 pdfs_path = "/root/autodl-tmp/data/iclr2024/pdfstxt"
 note_path = "/root/autodl-tmp/workspace/openreviewer/data/iclr2024/notes.jsonl"
 reviews_path = "/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews"
-splited_reviews_path = "/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews_2"
+splited_reviews_path = "/root/autodl-tmp/workspace/openreviewer/data/iclr2024/reviews_merge"
 rebuttals_path = "/root/autodl-tmp/workspace/openreviewer/data/iclr2024/rebuttals"
-# save_path = "/root/autodl-tmp/data/iclr2024/1227.jsonl"
-save_path = "/root/autodl-tmp/workspace/openreviewer/example-1227.jsonl"
+save_path = "/root/autodl-tmp/data/iclr2024/processed-1231-merge-2048.jsonl"
 
-# pdfs_path = "data/iclr2024/pdfstxt"
-# note_path = "data/iclr2024/notes.jsonl"
-# reviews_path = "data/iclr2024/reviews"
-# rebuttals_path = "data/iclr2024/rebuttals"
-# save_path = "data/iclr2024/1204_3k.jsonl"
 
 chapters = {
     "ABSTRACT": True,
@@ -38,13 +37,12 @@ def split_iclr_pdf(content, keep_chapters) -> Dict[str, str]:
         if(not keep_chapters[keys[i]]):
             continue
         start_key = keys[i]
-        end_key = keys[i + 1] if i + 1 < len(keys) else None
-        paper_dict[start_key] = extract_part(content, start_key, end_key)
+        paper_dict[start_key] = extract_part(content, start_key, keep_chapters)
 
     return paper_dict
 
 
-def filter_iclr_pdf(content, keep_chapters) -> str:
+def filter_iclr_pdf(content, keep_chapters):
     # iclr键值
 
     paper_dict = {}
@@ -53,26 +51,42 @@ def filter_iclr_pdf(content, keep_chapters) -> str:
         if(not keep_chapters[keys[i]]):
             continue
         start_key = keys[i]
-        end_key = keys[i + 1] if i + 1 < len(keys) else None
-        paper_dict[start_key] = extract_part(content, start_key, end_key)
+        paper_dict[start_key] = extract_part(content, start_key, keep_chapters)
 
     formatted_string = ""
     for key, value in paper_dict.items():
-        formatted_string += f"{key}\n\n{value}\n\n\n"
+        if value == "":
+            continue
+        formatted_string += f"{value}\n\n"
 
     return formatted_string
 
 
-def extract_part(text, start_key, end_key) -> str:
+def extract_part(text, start_key, end_keys) -> str:
+    # 在start_key后面加上换行符进行查找
+    # print(text)
     start_index = text.lower().find(start_key.lower())
     if start_index == -1:
         return ""
-    
-    if end_key:
-        end_index = text.lower().find(end_key.lower(), start_index)
-    else:
-        end_index = len(text)
 
+    # 初始化结束索引为文本末尾
+    end_index = len(text)
+
+    # 遍历每个end_key寻找最近的结束位置
+    for end_key, value in end_keys.items():
+        # print(end_key)
+        if(end_key == start_key):
+            continue
+        # 在end_key前后加上换行符进行查找
+        temp_index = text.lower().find(end_key.lower(), start_index)
+        if temp_index != -1 and temp_index < end_index and temp_index > start_index + 40:
+            end_index = temp_index
+
+    # 如果没有找到合适的end_key，则返回空字符串
+    if end_index == len(text):
+        return ""
+
+    # 截取并返回文本
     return text[start_index:end_index].strip()
 
 
@@ -120,6 +134,8 @@ def score_parser(parsed_review: Dict[str, Any]) -> Dict[str, int]:
 
 
 def main():
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+
     with open(note_path, "r", encoding="utf-8") as f:
         notes = [json.loads(l) for l in f]
     
@@ -156,7 +172,7 @@ def main():
 
     samples = []
 
-    for note in notes:
+    for note in tqdm.tqdm(notes):
         assert note["id"] == note["forum"]
         if (not note["forum"] in pdfs) or (not note["forum"] in reviews) or (not note["forum"] in splited_reviews):
             print(note["forum"])
@@ -178,8 +194,15 @@ def main():
             "id": note["id"],
             "forum": note["forum"],
         }
-        samples.append(sample)
-        break
+        if sample["Text"] is not None and sample["Splited_Text"] is not None:
+            flag = True
+            for section, content in sample["Splited_Text"].items():
+                if len(tokenizer.encode(content)) > max_section_length:
+                    flag = False
+                    break
+            if flag:
+                samples.append(sample)
+            # break  # remove this after debug
     
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     with open(save_path, 'w', encoding='utf-8') as f:
