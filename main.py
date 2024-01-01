@@ -21,8 +21,8 @@ from torch.utils.data import Dataset, DataLoader, DistributedSampler
 from peft import LoraConfig, get_peft_model
 
 from openreviewer.arguments import get_args
-from openreviewer.dataset import InstructionTuningDataset
-from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint, openreviewer_data_preprocessor
+from openreviewer.dataset import InstructionTuningDataset, MultiTurnDataset
+from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint, openreviewer_data_preprocessor, reviewer_agent_preprocessor, reviewer_agent_processor
 from openreviewer.scheduler import CosineWarmUpScheduler
 from openreviewer.common import freeze_ffn_target_moudles, lora_target_modules
 
@@ -30,6 +30,8 @@ from openreviewer.common import freeze_ffn_target_moudles, lora_target_modules
 def get_dataset(args, tokenizer, process_func=vicuna_sample_processor, preprocessor=None) -> Dataset:
     if args.dataset_type == "InstructionTuningDataset":
         DatasetClass = InstructionTuningDataset
+    elif args.dataset_type == "MultiTurnDataset":
+        DatasetClass = MultiTurnDataset
     else:
         raise NotImplementedError(f"Not implemented dataset: {args.dataset_type}.")
     
@@ -40,14 +42,16 @@ def get_dataset(args, tokenizer, process_func=vicuna_sample_processor, preproces
             args,
             path_or_data=preprocessor(data),
             tokenizer=tokenizer,
-            process_func=process_func
+            process_func=process_func,
+            max_samples=args.max_samples
         )
     else:
         dataset = DatasetClass(
             args,
             path_or_data=args.data_path,
             tokenizer=tokenizer,
-            process_func=process_func
+            process_func=process_func,
+            max_samples=args.max_samples
         )
 
     return dataset
@@ -141,7 +145,12 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
 
-    dataset = get_dataset(args, tokenizer, preprocessor=openreviewer_data_preprocessor if args.data_type == "openreview" else None)
+    if args.data_type == "openreview":
+        dataset = get_dataset(args, tokenizer, preprocessor=openreviewer_data_preprocessor)
+    elif args.data_type == "ReviewerAgent":
+        dataset = get_dataset(args, tokenizer, process_func=reviewer_agent_processor, preprocessor=reviewer_agent_preprocessor)
+    else:
+        dataset = get_dataset(args, tokenizer, preprocessor=None)
 
     print_rank(f"num samples: {len(dataset)}")
 

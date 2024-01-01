@@ -1,5 +1,7 @@
 import json
 import os
+import random
+import copy
 
 import torch
 
@@ -76,6 +78,85 @@ def openreviewer_data_preprocessor(samples):
         for response in responses:
             dataset.append({"system_message": system_prompt, "prompt": prompt, "response": response})
     return dataset
+
+
+def reviewer_agent_preprocessor(samples):
+    dataset = []
+    for sample in samples:
+        for review in sample['Reviews']:
+            new_sample = copy.copy(sample)
+            new_sample['review'] = review
+            dataset.append(new_sample)
+    return dataset
+
+
+def reviewer_agent_processor(tokenizer, sample: Dict):
+    sections = ['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION']
+    assessments = ['summaries', 'strengths', 'weaknesses', 'questions']
+
+    Title = sample['Title']
+    Keywords = ", ".join(sample['Keywords'])
+    Abstract = sample['Abstract']
+    review = sample['review']
+    # dict_keys(['Title', 'Author', 'Abstract', 'Keywords', 'Reviews', 'Text', 'Splited_Text', 'TLDR', 'cdate', 'id', 'forum'])
+    # dict_keys(['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION'])
+    # dict_keys(['id', 'forum', 'replyto', 'rating', 'confidence', 'soundness', 'presentation', 'contribution', 'summary', 'strengths', 'weaknesses', 'questions', 'splited_summaries', 'splited_questions', 'splited_weaknesses', 'splited_strengths', 'score', 'splited_summaries_matched', 'splited_questions_matched', 'splited_weaknesses_matched', 'splited_strengths_matched'])
+
+    Seed = random.randint(0, 65535)
+    elements = [
+        (0, f"You are the No.{Seed} reviewer of openreivew. You are reviewing the paper titled {Title}. The keywords are {Keywords}. You will read this paper and write a review for it.\n\n")
+    ]
+    assessment_dict = {}
+    for assessment in assessments:
+        assessment_dict[assessment] = []
+    for section in sections:
+        elements.append((0, f"Read the {section} of this paper, and write down your reading notes, such as summaries, questions, weaknesses, or strengths:\n\n"))
+        elements.append((0, sample['Splited_Text'][section] + '\n\n'))
+        elements.append((0, f"Now write down your note for the {section} of this paper, such as summaries, questions, weaknesses, or strengths:\n\n"))
+
+        local_text = ""
+        for assessment in assessments:
+            flag = False
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    flag = True
+                    break
+            if not flag:
+                continue
+
+            local_text += f"{assessment.upper()}:\n"
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    assessment_dict[assessment].append(splited_assessment)
+                    local_text += f"{splited_assessment}\n"
+            local_text += '\n'
+        elements.append((1, local_text))
+    
+    for assessment in assessments:
+        elements.append((0, f"You will read through your note about {assessment.upper()}, then write down the {assessment.upper()} for the paper. Your note about {assessment.upper()}:\n\n"))
+        for splited_assessment in assessment_dict[assessment]:
+            elements.append((0, f"{splited_assessment}\n"))
+        elements.append((0, f"\n"))
+        elements.append((0, f"Your final {assessment.upper()}:\n\n"))
+        elements.append((1, f"{review['summary' if assessment == 'summaries' else assessment]}\n\n"))
+
+    elements.append((0, f"Now give this article a score from multiple dimensions:\n\n"))
+    elements.append((1, f"soundness: {review['soundness']}\n\npresentation: {review['presentation']}\n\ncontribution: {review['contribution']}\n\nrating: {review['rating']}\n\nconfidence: {review['confidence']}\n\n"))
+
+    input_ids = tokenizer.encode('', add_special_tokens=True)
+    loss_mask = [0] * len(input_ids)
+
+    for element in elements:
+        io_mark, string = element
+        tokens = tokenizer.encode(string, add_special_tokens=False)
+        if io_mark == 0:
+            loss_mask += [0] * len(tokens)
+        elif io_mark == 1:
+            tokens.append(tokenizer.eos_token_id)
+            loss_mask += [1] * len(tokens)
+        input_ids += tokens
+    
+    return input_ids, loss_mask
 
 
 def print_rank(*args, rank=0, **kwargs):
