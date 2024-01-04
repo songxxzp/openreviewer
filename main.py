@@ -22,7 +22,7 @@ from peft import LoraConfig, get_peft_model
 
 from openreviewer.arguments import get_args
 from openreviewer.dataset import InstructionTuningDataset, MultiTurnDataset
-from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint, openreviewer_data_preprocessor, reviewer_agent_preprocessor, reviewer_agent_processor
+from openreviewer.utils import vicuna_sample_processor, print_rank, broadcast_model, move_dict_to_device, save_checkpoint, openreviewer_data_preprocessor, reviewer_agent_preprocessor, reviewer_agent_processor, reviewer_baseline_processor, reviewer_baseline_preprocessor
 from openreviewer.scheduler import CosineWarmUpScheduler
 from openreviewer.common import freeze_ffn_target_moudles, lora_target_modules
 
@@ -113,6 +113,8 @@ def train(args, model, optimizer, scheduler, tokenizer, dataset):
 
         if (num_samples + 1) % args.gradient_accumulation_steps == 0:
             iteration += 1
+            if iteration % args.save_interval == 0:
+                save_checkpoint(os.path.join(args.save_path, str(iteration)), model, tokenizer)
         else:
             continue
 
@@ -149,6 +151,8 @@ def main():
         dataset = get_dataset(args, tokenizer, preprocessor=openreviewer_data_preprocessor)
     elif args.data_type == "ReviewerAgent":
         dataset = get_dataset(args, tokenizer, process_func=reviewer_agent_processor, preprocessor=reviewer_agent_preprocessor)
+    elif args.data_type == "ReviewerBaseline":
+        dataset = get_dataset(args, tokenizer, process_func=reviewer_baseline_processor, preprocessor=reviewer_baseline_preprocessor)
     else:
         dataset = get_dataset(args, tokenizer, preprocessor=None)
 

@@ -173,7 +173,7 @@ class MultiTurnDataset(Dataset):
             input_batch["position_ids"][i][:len(input_ids) - 1] = torch.arange(0, len(input_ids) - 1, dtype=torch.long)
 
             other_batch["labels"][i][:len(input_ids) - 1] = torch.tensor(input_ids[1:], dtype=torch.long)
-            other_batch["loss_mask"][i] = torch.tensor(loss_masks, dtype=torch.long)
+            other_batch["loss_mask"][i][:len(input_ids) - 1] = torch.tensor(loss_masks[1:], dtype=torch.long)
 
             # other_batch["response_ids"][i][:len(input_ids)] = torch.tensor(input_ids, dtype=torch.long)
             # other_batch["attention_mask"][i][:len(input_ids)] = 1

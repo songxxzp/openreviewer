@@ -86,26 +86,131 @@ def reviewer_agent_preprocessor(samples):
         for review in sample['Reviews']:
             new_sample = copy.copy(sample)
             new_sample['review'] = review
+            new_sample['part'] = False
+            dataset.append(new_sample)
+
+            new_sample = copy.copy(sample)
+            new_sample['review'] = review
+            new_sample['part'] = True
             dataset.append(new_sample)
     return dataset
 
 
-def reviewer_agent_processor(tokenizer, sample: Dict):
+def reviewer_baseline_preprocessor(samples):
+    dataset = []
+    for sample in samples:
+        for review in sample['Reviews']:
+            new_sample = copy.copy(sample)
+            new_sample['review'] = review
+            new_sample['part'] = False
+            dataset.append(new_sample)
+    return dataset
+
+
+def reviewer_baseline_processor(tokenizer, sample: Dict):
     sections = ['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION']
     assessments = ['summaries', 'strengths', 'weaknesses', 'questions']
 
+    # Abstract = sample['Abstract']
     Title = sample['Title']
     Keywords = ", ".join(sample['Keywords'])
-    Abstract = sample['Abstract']
     review = sample['review']
-    # dict_keys(['Title', 'Author', 'Abstract', 'Keywords', 'Reviews', 'Text', 'Splited_Text', 'TLDR', 'cdate', 'id', 'forum'])
-    # dict_keys(['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION'])
-    # dict_keys(['id', 'forum', 'replyto', 'rating', 'confidence', 'soundness', 'presentation', 'contribution', 'summary', 'strengths', 'weaknesses', 'questions', 'splited_summaries', 'splited_questions', 'splited_weaknesses', 'splited_strengths', 'score', 'splited_summaries_matched', 'splited_questions_matched', 'splited_weaknesses_matched', 'splited_strengths_matched'])
-
     Seed = random.randint(0, 65535)
+
     elements = [
         (0, f"You are the No.{Seed} reviewer of openreivew. You are reviewing the paper titled {Title}. The keywords are {Keywords}. You will read this paper and write a review for it.\n\n")
     ]
+
+    assessment_dict = {}
+    for assessment in assessments:
+        assessment_dict[assessment] = []
+    for section in sections:
+        # elements.append((0, f"Read the {section} of this paper, and write down your reading notes, such as summaries, questions, weaknesses, or strengths:\n\n"))
+        elements.append((0, sample['Splited_Text'][section] + '\n\n'))
+        # elements.append((0, f"Now write down your note for the {section} of this paper, such as summaries, questions, weaknesses, or strengths:\n\n"))
+
+        local_text = ""
+        for assessment in assessments:
+            flag = False
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    flag = True
+                    break
+            if not flag:
+                continue
+
+            local_text += f"{assessment.upper()}:\n"
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    assessment_dict[assessment].append(splited_assessment)
+                    local_text += f"{splited_assessment}\n"
+            local_text += '\n'
+        # elements.append((1, local_text))
+    
+    for assessment in assessments:
+        # elements.append((0, f"You will read through your note about {assessment.upper()}, then write down the {assessment.upper()} for the paper. Your note about {assessment.upper()}:\n\n"))
+        # for splited_assessment in assessment_dict[assessment]:
+        #     elements.append((0, f"{splited_assessment}\n"))
+        # elements.append((0, f"\n"))
+        elements.append((0, f"Your final {assessment.upper()}:\n\n"))
+        elements.append((1, f"{review['summary' if assessment == 'summaries' else assessment]}\n\n"))
+
+    elements.append((0, f"Now give this article a score from multiple dimensions:\n\n"))
+    elements.append((0, f"soundness: "))
+    elements.append((1, f"{review['soundness']}\n"))
+    elements.append((0, f"presentation: "))
+    elements.append((1, f"{review['presentation']}\n"))
+    elements.append((0, f"contribution: "))
+    elements.append((1, f"{review['contribution']}\n"))
+    elements.append((0, f"rating: "))
+    elements.append((1, f"{review['rating']}\n"))
+    elements.append((0, f"confidence: "))
+    elements.append((1, f"{review['confidence']}\n"))
+
+    start_message = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER:"
+    input_ids = tokenizer.encode(start_message, add_special_tokens=True)
+    loss_mask = [0] * len(input_ids)
+
+    last_turn = 0
+
+    for element in elements:
+        io_mark, string = element
+        if io_mark != last_turn:
+            if io_mark == 1:
+                assistant_token = tokenizer.encode("ASSISTANT:", add_special_tokens=False)
+                input_ids += assistant_token
+                loss_mask += [0] * len(assistant_token)
+                # string = "ASSISTANT: " + string
+            elif io_mark == 0:
+                string = "USER: " + string
+            else:
+                raise AssertionError(f"Unkown io_mark {io_mark}")
+        tokens = tokenizer.encode(string, add_special_tokens=False)
+        if io_mark == 0:
+            loss_mask += [0] * len(tokens)
+        elif io_mark == 1:
+            tokens.append(tokenizer.eos_token_id)
+            loss_mask += [1] * len(tokens)
+        input_ids += tokens
+        last_turn = io_mark
+    
+    return input_ids, loss_mask
+
+
+def reviewer_agent_processor_full(tokenizer, sample: Dict):
+    sections = ['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION']
+    assessments = ['summaries', 'strengths', 'weaknesses', 'questions']
+
+    # Abstract = sample['Abstract']
+    Title = sample['Title']
+    Keywords = ", ".join(sample['Keywords'])
+    review = sample['review']
+    Seed = random.randint(0, 65535)
+
+    elements = [
+        (0, f"You are the No.{Seed} reviewer of openreivew. You are reviewing the paper titled {Title}. The keywords are {Keywords}. You will read this paper and write a review for it.\n\n")
+    ]
+
     assessment_dict = {}
     for assessment in assessments:
         assessment_dict[assessment] = []
@@ -141,13 +246,35 @@ def reviewer_agent_processor(tokenizer, sample: Dict):
         elements.append((1, f"{review['summary' if assessment == 'summaries' else assessment]}\n\n"))
 
     elements.append((0, f"Now give this article a score from multiple dimensions:\n\n"))
-    elements.append((1, f"soundness: {review['soundness']}\n\npresentation: {review['presentation']}\n\ncontribution: {review['contribution']}\n\nrating: {review['rating']}\n\nconfidence: {review['confidence']}\n\n"))
+    elements.append((0, f"soundness: "))
+    elements.append((1, f"{review['soundness']}\n"))
+    elements.append((0, f"presentation: "))
+    elements.append((1, f"{review['presentation']}\n"))
+    elements.append((0, f"contribution: "))
+    elements.append((1, f"{review['contribution']}\n"))
+    elements.append((0, f"rating: "))
+    elements.append((1, f"{review['rating']}\n"))
+    elements.append((0, f"confidence: "))
+    elements.append((1, f"{review['confidence']}\n"))
 
-    input_ids = tokenizer.encode('', add_special_tokens=True)
+    start_message = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER:"
+    input_ids = tokenizer.encode(start_message, add_special_tokens=True)
     loss_mask = [0] * len(input_ids)
+
+    last_turn = 0
 
     for element in elements:
         io_mark, string = element
+        if io_mark != last_turn:
+            if io_mark == 1:
+                assistant_token = tokenizer.encode("ASSISTANT:", add_special_tokens=False)
+                input_ids += assistant_token
+                loss_mask += [0] * len(assistant_token)
+                # string = "ASSISTANT: " + string
+            elif io_mark == 0:
+                string = "USER: " + string
+            else:
+                raise AssertionError(f"Unkown io_mark {io_mark}")
         tokens = tokenizer.encode(string, add_special_tokens=False)
         if io_mark == 0:
             loss_mask += [0] * len(tokens)
@@ -155,8 +282,106 @@ def reviewer_agent_processor(tokenizer, sample: Dict):
             tokens.append(tokenizer.eos_token_id)
             loss_mask += [1] * len(tokens)
         input_ids += tokens
+        last_turn = io_mark
     
     return input_ids, loss_mask
+
+
+def reviewer_agent_processor_part(tokenizer, sample: Dict):
+    sections = ['ABSTRACT', 'INTRODUCTION', 'EXPERIMENTS', 'RESULTS', 'CONCLUSION']
+    assessments = ['summaries', 'strengths', 'weaknesses', 'questions']
+
+    # Abstract = sample['Abstract']
+    Title = sample['Title']
+    Keywords = ", ".join(sample['Keywords'])
+    review = sample['review']
+    Seed = random.randint(0, 65535)
+
+    elements = [
+        (0, f"You are the No.{Seed} reviewer of openreivew. You are reviewing the paper titled {Title}. The keywords are {Keywords}. You will read this paper and write a review for it.\n\n")
+    ]
+
+    assessment_dict = {}
+    for assessment in assessments:
+        assessment_dict[assessment] = []
+    for section in sections:
+        # elements.append((0, f"Read the {section} of this paper, and write down your reading notes, such as summaries, questions, weaknesses, or strengths:\n\n"))
+        # elements.append((0, sample['Splited_Text'][section] + '\n\n'))
+        # elements.append((0, f"Now write down your note for the {section} of this paper, such as summaries, questions, weaknesses, or strengths:\n\n"))
+
+        local_text = ""
+        for assessment in assessments:
+            flag = False
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    flag = True
+                    break
+            if not flag:
+                continue
+
+            local_text += f"{assessment.upper()}:\n"
+            for splited_assessment, splited_assessment_matched in zip(review[f'splited_{assessment}'], review[f'splited_{assessment}_matched']):
+                if splited_assessment_matched == section:
+                    assessment_dict[assessment].append(splited_assessment)
+                    local_text += f"{splited_assessment}\n"
+            local_text += '\n'
+        # elements.append((1, local_text))
+    
+    for assessment in assessments:
+        elements.append((0, f"You will read through your note about {assessment.upper()}, then write down the {assessment.upper()} for the paper. Your note about {assessment.upper()}:\n\n"))
+        for splited_assessment in assessment_dict[assessment]:
+            elements.append((0, f"{splited_assessment}\n"))
+        elements.append((0, f"\n"))
+        elements.append((0, f"Your final {assessment.upper()}:\n\n"))
+        elements.append((1, f"{review['summary' if assessment == 'summaries' else assessment]}\n\n"))
+
+    elements.append((0, f"Now give this article a score from multiple dimensions:\n\n"))
+    elements.append((0, f"soundness: "))
+    elements.append((1, f"{review['soundness']}\n"))
+    elements.append((0, f"presentation: "))
+    elements.append((1, f"{review['presentation']}\n"))
+    elements.append((0, f"contribution: "))
+    elements.append((1, f"{review['contribution']}\n"))
+    elements.append((0, f"rating: "))
+    elements.append((1, f"{review['rating']}\n"))
+    elements.append((0, f"confidence: "))
+    elements.append((1, f"{review['confidence']}\n"))
+
+    start_message = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER:"
+    input_ids = tokenizer.encode(start_message, add_special_tokens=True)
+    loss_mask = [0] * len(input_ids)
+
+    last_turn = 0
+
+    for element in elements:
+        io_mark, string = element
+        if io_mark != last_turn:
+            if io_mark == 1:
+                assistant_token = tokenizer.encode("ASSISTANT:", add_special_tokens=False)
+                input_ids += assistant_token
+                loss_mask += [0] * len(assistant_token)
+                # string = "ASSISTANT: " + string
+            elif io_mark == 0:
+                string = "USER: " + string
+            else:
+                raise AssertionError(f"Unkown io_mark {io_mark}")
+        tokens = tokenizer.encode(string, add_special_tokens=False)
+        if io_mark == 0:
+            loss_mask += [0] * len(tokens)
+        elif io_mark == 1:
+            tokens.append(tokenizer.eos_token_id)
+            loss_mask += [1] * len(tokens)
+        input_ids += tokens
+        last_turn = io_mark
+    
+    return input_ids, loss_mask
+
+
+def reviewer_agent_processor(tokenizer, sample: Dict):
+    if sample['part']:
+        return reviewer_agent_processor_part(tokenizer, sample)
+    else:
+        return reviewer_agent_processor_full(tokenizer, sample)
 
 
 def print_rank(*args, rank=0, **kwargs):

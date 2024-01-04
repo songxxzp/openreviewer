@@ -21,6 +21,7 @@ def add_data_args(parser: argparse.ArgumentParser):
     group.add_argument("--max-length", type=int, default=1024)
     group.add_argument("--max-prompt-length", type=int, default=512)
     group.add_argument("--num-workers", type=int, default=4)
+    group.add_argument("--max-samples", type=int, default=None)
 
     return parser
 
@@ -32,6 +33,7 @@ def add_train_args(parser: argparse.ArgumentParser):
     group.add_argument("--batch-size", type=int, default=1)
     group.add_argument("--gradient-accumulation-steps", type=int, default=1)
     group.add_argument("--save-path", type=str, default=None)
+    group.add_argument("--save-interval", type=int, default=48)
 
     return parser
 
